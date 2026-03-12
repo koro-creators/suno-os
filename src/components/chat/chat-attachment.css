@@ -1,0 +1,94 @@
+.chat-attachment-btn {
+  color: var(--color-subtle);
+  padding: 4px;
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.chat-attachment-btn:hover {
+  color: var(--color-secondary);
+}
+
+.chat-attachment-previews {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+}
+
+.chat-attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  animation: fadeUp 0.2s ease;
+}
+
+.chat-attachment-preview-thumb {
+  width: 36px;
+  height: 20px;
+  border-radius: 3px;
+  object-fit: cover;
+  background: var(--color-hover);
+}
+
+.chat-attachment-preview-name {
+  font-size: 11px;
+  color: var(--color-secondary);
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-attachment-preview-size {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-subtle);
+}
+
+.chat-attachment-preview-remove {
+  color: var(--color-subtle);
+  padding: 2px;
+}
+
+.chat-attachment-preview-remove:hover {
+  color: var(--color-status-error);
+}
+
+/* Upload progress card in chat */
+.chat-upload-card {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  animation: fadeUp 0.25s ease;
+}
+
+.chat-upload-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.chat-upload-card-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+
+.chat-upload-card-size {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-subtle);
+}
+
+.chat-upload-card-status {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-top: 6px;
+}

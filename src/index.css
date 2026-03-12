@@ -15,6 +15,12 @@
   --color-online: #22C55E;
   --color-offline: #EF4444;
 
+  --color-status-queued: #A1A1AA;
+  --color-status-uploading: #3B82F6;
+  --color-status-processing: #F59E0B;
+  --color-status-completed: #22C55E;
+  --color-status-error: #EF4444;
+
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'GeistMono', 'SF Mono', 'Fira Code', monospace;
 
