@@ -82,5 +82,5 @@ export const INGEST_POLL_INTERVAL = 5000;
 
 // Google Drive Picker
 export const GOOGLE_PICKER_API_KEY = "AIzaSyDgxLPmp-UqaCOui5n4rYq-2twZx6Lig6g";
-export const GOOGLE_OAUTH_CLIENT_ID = ""; // TODO: create OAuth client in GCP Console
+export const GOOGLE_OAUTH_CLIENT_ID = "280770524531-bec14euajv8n70is7l099b7v6ct08nrm.apps.googleusercontent.com";
 export const GOOGLE_DRIVE_SCOPES = "https://www.googleapis.com/auth/drive.readonly";
