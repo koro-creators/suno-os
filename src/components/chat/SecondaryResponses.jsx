@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { AGENTS } from "../../config";
+import { parseMarkdown } from "../../helpers/markdown";
 
 export default function SecondaryResponses({ responses }) {
   const [open, setOpen] = useState(false);
@@ -43,9 +44,11 @@ export default function SecondaryResponses({ responses }) {
                 >
                   {agent?.label || r.agent_id}
                 </span>
-                <div style={{ marginTop: 4, whiteSpace: "pre-wrap", fontSize: 14, color: "#ddd" }}>
-                  {r.content}
-                </div>
+                <div
+                  className="msg-assistant-content"
+                  style={{ marginTop: 4, fontSize: 14 }}
+                  dangerouslySetInnerHTML={{ __html: parseMarkdown(r.content) }}
+                />
               </div>
             );
           })}
