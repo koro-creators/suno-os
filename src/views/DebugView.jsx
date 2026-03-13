@@ -39,6 +39,16 @@ export default function DebugView({ clientId }) {
   const [threadsError, setThreadsError] = useState(null);
   const [detailError, setDetailError] = useState(null);
   const intervalRef = useRef(null);
+  const [prevClientId, setPrevClientId] = useState(clientId);
+
+  // Render-time reset when clientId changes (React-recommended pattern)
+  if (clientId !== prevClientId) {
+    setPrevClientId(clientId);
+    setThreads([]);
+    setSelectedId(null);
+    setDetail(null);
+    setThreadsLoading(true);
+  }
 
   // Fetch debug status (checkpointer type)
   useEffect(() => {
@@ -48,8 +58,10 @@ export default function DebugView({ clientId }) {
       .catch(() => setCheckpointer(null));
   }, []);
 
-  // Fetch thread list
+  // Fetch thread list (includes loading state to avoid setState in effect body)
   const fetchThreads = useCallback(() => {
+    setThreadsLoading(true);
+    setThreadsError(null);
     fetch(`${API_BASE}/debug/threads?client_id=${clientId}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -58,7 +70,6 @@ export default function DebugView({ clientId }) {
       .then((data) => {
         setThreads(data);
         setThreadsLoading(false);
-        setThreadsError(null);
       })
       .catch((e) => {
         setThreadsError(e.message);
@@ -67,26 +78,16 @@ export default function DebugView({ clientId }) {
   }, [clientId]);
 
   useEffect(() => {
-    setThreadsLoading(true);
-    setThreads([]);
-    setSelectedId(null);
-    setDetail(null);
-    fetchThreads();
-
+    fetchThreads(); // eslint-disable-line react-hooks/set-state-in-effect -- data fetching pattern
     intervalRef.current = setInterval(fetchThreads, REFRESH_INTERVAL);
     return () => clearInterval(intervalRef.current);
   }, [fetchThreads]);
 
   // Fetch thread detail on selection
-  useEffect(() => {
-    if (!selectedId) {
-      setDetail(null);
-      return;
-    }
+  const fetchDetail = useCallback((threadId) => {
     setDetailLoading(true);
     setDetailError(null);
-
-    fetch(`${API_BASE}/debug/thread/${selectedId}`)
+    fetch(`${API_BASE}/debug/thread/${threadId}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -99,7 +100,12 @@ export default function DebugView({ clientId }) {
         setDetailError(e.message);
         setDetailLoading(false);
       });
-  }, [selectedId]);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    fetchDetail(selectedId); // eslint-disable-line react-hooks/set-state-in-effect -- data fetching pattern
+  }, [selectedId, fetchDetail]);
 
   // Compute max duration for timeline bar scaling
   const maxDuration =
