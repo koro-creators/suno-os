@@ -552,15 +552,25 @@ export default function ChatView({ clientId }) {
                   className={`agent-chip ${mentionActive || isDefault ? 'active' : ''}`}
                   style={{ '--agent-color': a.color }}
                   onClick={() => {
-                    const cleaned = input.replace(/^@\w+\s*/i, '');
-                    setInput(`@${a.id} ${cleaned}`);
+                    if (mentionActive) {
+                      // Remove @mention to go back to multi-agent mode
+                      setInput(input.replace(/^@\w+\s*/i, ''));
+                    } else {
+                      // Insert @mention for direct agent addressing
+                      const cleaned = input.replace(/^@\w+\s*/i, '');
+                      setInput(`@${a.id} ${cleaned}`);
+                    }
                     inputRef.current?.focus();
                   }}
+                  title={mentionActive ? "Clique para remover @mention (modo multi-agente)" : `@${a.id} — endereçar diretamente`}
                 >
                   {a.label}
                 </button>
               );
             })}
+            <span style={{ fontSize: 10, color: "#555", marginLeft: 4 }}>
+              {input.match(/^@\w/) ? "modo direto" : "auto"}
+            </span>
           </div>
         </div>
       </footer>
