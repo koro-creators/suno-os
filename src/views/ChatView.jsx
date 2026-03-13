@@ -130,6 +130,46 @@ export default function ChatView({ clientId }) {
               ...prev, status: "done",
               tokensIn: p.tokens_in, tokensOut: p.tokens_out, durationMs: p.duration_ms,
             } : null);
+          } else if (p.type === "trace_tool_call") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                toolCalls: [...(m.toolCalls || []),
+                  { agent_id: p.agent_id, tool: p.tool, input: p.input, status: "running" }
+                ],
+              } : m
+            ));
+          } else if (p.type === "trace_tool_result") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                toolCalls: (m.toolCalls || []).map(tc =>
+                  tc.tool === p.tool && tc.status === "running"
+                    ? { ...tc, status: "done", result_preview: p.result_preview }
+                    : tc
+                ),
+              } : m
+            ));
+          } else if (p.type === "trace_refinement") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                refinements: [...(m.refinements || []),
+                  { agent_id: p.agent_id, query: p.query, iteration: p.iteration, status: "running" }
+                ],
+              } : m
+            ));
+          } else if (p.type === "trace_refinement_done") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                refinements: (m.refinements || []).map(r =>
+                  r.agent_id === p.agent_id && r.status === "running"
+                    ? { ...r, status: "done", summary: p.summary }
+                    : r
+                ),
+              } : m
+            ));
           } else if (p.type === "trace_error") {
             setTraceInfo(prev => prev ? {
               ...prev, status: "error", error: p.error, durationMs: p.duration_ms,
