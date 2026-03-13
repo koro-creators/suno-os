@@ -255,6 +255,44 @@
   letter-spacing: 0.3px;
 }
 
+/* ── Agent Chips ─────────────────────────────────────────────── */
+
+.agent-chips { display: flex; gap: 6px; padding: 8px 0 0; flex-wrap: wrap; }
+.agent-chip {
+  font-size: 12px; padding: 4px 12px; border-radius: 16px;
+  border: 1px solid var(--agent-color, #555); background: transparent;
+  color: var(--agent-color, #aaa); cursor: pointer; transition: all 0.15s;
+}
+.agent-chip:hover, .agent-chip.active {
+  background: color-mix(in srgb, var(--agent-color) 15%, transparent);
+  border-color: var(--agent-color);
+}
+
+/* ── Agent Badge ─────────────────────────────────────────────── */
+
+.agent-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 4px;
+  background: color-mix(in srgb, var(--agent-color) 15%, transparent);
+  color: var(--agent-color); font-weight: 500; margin-bottom: 4px; display: inline-block;
+}
+
+/* ── Execution Card ──────────────────────────────────────────── */
+
+.execution-card {
+  display: flex; align-items: center; gap: 12px; font-size: 11px;
+  padding: 6px 12px; border-radius: 6px; background: #1e1e2e;
+  border: 1px solid #2a2a3e; color: #94a3b8; margin-top: 4px;
+}
+.execution-card.streaming { border-color: #f59e0b40; }
+.execution-card.done { border-color: #22c55e40; }
+.execution-card.error { border-color: #ef444440; }
+.execution-agent { font-weight: 600; color: #e2e8f0; }
+.execution-status { color: #f59e0b; }
+.execution-duration { font-family: monospace; }
+.execution-tokens { color: #64748b; }
+.execution-context { color: #3b82f6; }
+.execution-error { color: #ef4444; }
+
 /* ── Responsive ──────────────────────────────────────────────── */
 
 @media (max-width: 768px) {

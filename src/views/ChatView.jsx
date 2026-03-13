@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Film } from "lucide-react";
-import { API_BASE, FALLBACKS } from "../config";
+import { AGENTS, API_BASE, FALLBACKS } from "../config";
 import { parseMarkdown } from "../helpers/markdown";
 import useUpload from "../hooks/useUpload";
 import { AttachButton, AttachmentPreviews } from "../components/chat/ChatAttachment";
@@ -19,28 +19,31 @@ function LoadingDots() {
   );
 }
 
-export default function ChatView({ agent, clientId, AgentIcon }) {
+export default function ChatView({ clientId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [threadId, setThreadId] = useState(() => `${clientId}:user-${Date.now()}`);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [lastAgent, setLastAgent] = useState("videorag");
+  const [traceInfo, setTraceInfo] = useState(null);
 
   const { queue: uploadQueue, addFiles: uploadFiles } = useUpload();
 
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
-  const isVideoRAG = agent.id === "videorag";
+  const currentAgent = AGENTS.find(a => a.id === lastAgent) || AGENTS[0];
+  const isVideoRAG = lastAgent === "videorag";
 
   useEffect(() => {
     setMessages([
-      { id: 0, role: "system-greeting", agent: agent.id, content: agent.hint },
+      { id: 0, role: "system-greeting", agent: lastAgent, content: currentAgent.hint },
     ]);
     setThreadId(`${clientId}:user-${Date.now()}`);
     setPendingFiles([]);
     inputRef.current?.focus();
-  }, [agent, clientId]);
+  }, [clientId]); // Remove agent dependency — only reset on client change
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,11 +51,11 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
 
   const resetChat = useCallback(() => {
     setMessages([
-      { id: 0, role: "system-greeting", agent: agent.id, content: agent.hint },
+      { id: 0, role: "system-greeting", agent: lastAgent, content: currentAgent.hint },
     ]);
     setThreadId(`${clientId}:user-${Date.now()}`);
     setPendingFiles([]);
-  }, [agent, clientId]);
+  }, [lastAgent, currentAgent, clientId]);
 
   // --- Attachment handlers ---
   const handleAttachFiles = async (fileList) => {
@@ -86,7 +89,21 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
         if (d === "[DONE]") break;
         try {
           const p = JSON.parse(d);
-          if (p.text) {
+          if (p.type === "trace_start") {
+            setTraceInfo({
+              agentId: p.agent_id, qdrantHits: p.qdrant_hits,
+              contextChunks: p.context_chunks, startTime: Date.now(), status: "streaming",
+            });
+          } else if (p.type === "trace_end") {
+            setTraceInfo(prev => prev ? {
+              ...prev, status: "done",
+              tokensIn: p.tokens_in, tokensOut: p.tokens_out, durationMs: p.duration_ms,
+            } : null);
+          } else if (p.type === "trace_error") {
+            setTraceInfo(prev => prev ? {
+              ...prev, status: "error", error: p.error, durationMs: p.duration_ms,
+            } : null);
+          } else if (p.text) {
             full += p.text;
             const snap = full;
             setMessages((prev) => prev.map((m) => (m.id === asstId ? { ...m, content: snap } : m)));
@@ -114,20 +131,33 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
 
   // --- Send agent chat ---
   const sendAgentChat = async (text) => {
+    // Parse @mention
+    const mentionMatch = text.match(/^@(videorag|copy|persona|roteiro|brief)\s/i);
+    let agentId = lastAgent;
+    let cleanText = text;
+    if (mentionMatch) {
+      agentId = mentionMatch[1].toLowerCase();
+      cleanText = text.slice(mentionMatch[0].length);
+      setLastAgent(agentId);
+    }
+
+    setLoading(true);
+    setTraceInfo(null);
+
     const asstId = Date.now() + 100;
-    const asstMsg = { id: asstId, role: "assistant", content: "", streaming: true };
+    const asstMsg = { id: asstId, role: "assistant", content: "", streaming: true, agentId };
     setMessages((p) => [...p, asstMsg]);
 
     try {
       const res = await fetch(`${API_BASE}/agent/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thread_id: threadId, client_id: clientId, agent_id: agent.id, message: text }),
+        body: JSON.stringify({ thread_id: threadId, client_id: clientId, agent_id: agentId, message: cleanText }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await readSSEStream(res, asstId);
     } catch {
-      await simulateStream(FALLBACKS[agent.id] || "Erro ao conectar.", asstId);
+      await simulateStream(FALLBACKS[agentId] || "Erro ao conectar.", asstId);
     }
   };
 
@@ -216,9 +246,20 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
     }
 
     // Normal text-only send
-    const userMsg = { id: Date.now(), role: "user", content: text };
+    // Parse @mention
+    const mentionMatch = text.match(/^@(videorag|copy|persona|roteiro|brief)\s/i);
+    let agentId = lastAgent;
+    let cleanText = text;
+    if (mentionMatch) {
+      agentId = mentionMatch[1].toLowerCase();
+      cleanText = text.slice(mentionMatch[0].length);
+      setLastAgent(agentId);
+    }
+    setTraceInfo(null);
+
+    const userMsg = { id: Date.now(), role: "user", content: text }; // Show original text with @mention
     const asstId = Date.now() + 1;
-    const asstMsg = { id: asstId, role: "assistant", content: "", streaming: true };
+    const asstMsg = { id: asstId, role: "assistant", content: "", streaming: true, agentId };
     setMessages((p) => [...p, userMsg, asstMsg]);
 
     try {
@@ -228,15 +269,15 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
         body: JSON.stringify({
           thread_id: threadId,
           client_id: clientId,
-          agent_id: agent.id,
-          message: text,
+          agent_id: agentId,
+          message: cleanText,
         }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await readSSEStream(res, asstId);
     } catch {
-      await simulateStream(FALLBACKS[agent.id] || "Erro ao conectar.", asstId);
+      await simulateStream(FALLBACKS[agentId] || "Erro ao conectar.", asstId);
     }
 
     setLoading(false);
@@ -255,10 +296,10 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
       <header className="chat-header">
         <div>
           <div className="chat-header-info">
-            <span className="chat-header-title">{agent.label}</span>
+            <span className="chat-header-title">Chat</span>
             <span className="chat-header-client">{clientId.toUpperCase()}</span>
           </div>
-          <div className="chat-header-hint">{agent.hint}</div>
+          <div className="chat-header-hint">{currentAgent.hint}</div>
         </div>
         <button className="btn-clear" onClick={resetChat} aria-label="Limpar conversa">
           limpar
@@ -271,10 +312,7 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
             if (msg.role === "system-greeting") {
               return (
                 <div key={msg.id} className="msg-greeting">
-                  <div className="msg-greeting-label">
-                    <AgentIcon size={12} aria-hidden="true" />
-                    {agent.label.toUpperCase()}
-                  </div>
+                  <div className="msg-greeting-label">{currentAgent.label.toUpperCase()}</div>
                   <div className="msg-greeting-text">{msg.content}</div>
                 </div>
               );
@@ -304,12 +342,15 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
               );
             }
             if (msg.role === "assistant") {
+              const agentInfo = AGENTS.find(a => a.id === msg.agentId);
               return (
                 <article key={msg.id} className="msg-assistant">
-                  <div className="msg-label">
-                    <AgentIcon size={12} aria-hidden="true" />
-                    {agent.label.toUpperCase()}
-                  </div>
+                  {msg.agentId && (
+                    <span className="agent-badge" style={{ '--agent-color': agentInfo?.color || '#888' }}>
+                      {agentInfo?.label || msg.agentId}
+                    </span>
+                  )}
+                  <div className="msg-label">{agentInfo?.label?.toUpperCase() || 'ASSISTENTE'}</div>
                   {msg.content ? (
                     <div className="msg-assistant-content">
                       <p
@@ -328,6 +369,28 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
             }
             return null;
           })}
+          {traceInfo && (
+            <div className={`execution-card ${traceInfo.status}`}>
+              <span className="execution-agent">
+                {AGENTS.find(a => a.id === traceInfo.agentId)?.label || traceInfo.agentId}
+              </span>
+              {traceInfo.status === "streaming" && (
+                <span className="execution-status">gerando resposta...</span>
+              )}
+              {traceInfo.status === "done" && (
+                <>
+                  <span className="execution-duration">{(traceInfo.durationMs / 1000).toFixed(1)}s</span>
+                  <span className="execution-tokens">{traceInfo.tokensIn + traceInfo.tokensOut} tokens</span>
+                  {traceInfo.contextChunks > 0 && (
+                    <span className="execution-context">{traceInfo.contextChunks} chunks</span>
+                  )}
+                </>
+              )}
+              {traceInfo.status === "error" && (
+                <span className="execution-error">{traceInfo.error}</span>
+              )}
+            </div>
+          )}
           <div ref={endRef} />
         </div>
       </div>
@@ -344,7 +407,7 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={agent.placeholder}
+              placeholder={currentAgent.placeholder}
               rows={1}
               className="chat-textarea"
               aria-label="Sua mensagem"
@@ -360,6 +423,26 @@ export default function ChatView({ agent, clientId, AgentIcon }) {
           </div>
           <div className="chat-input-hint">
             <kbd>Enter</kbd> enviar &middot; <kbd>Shift+Enter</kbd> nova linha
+          </div>
+          <div className="agent-chips">
+            {AGENTS.map(a => {
+              const mentionActive = input.toLowerCase().startsWith(`@${a.id} `);
+              const isDefault = !input.match(/^@\w/) && lastAgent === a.id;
+              return (
+                <button
+                  key={a.id}
+                  className={`agent-chip ${mentionActive || isDefault ? 'active' : ''}`}
+                  style={{ '--agent-color': a.color }}
+                  onClick={() => {
+                    const cleaned = input.replace(/^@\w+\s*/i, '');
+                    setInput(`@${a.id} ${cleaned}`);
+                    inputRef.current?.focus();
+                  }}
+                >
+                  {a.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </footer>
