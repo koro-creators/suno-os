@@ -7,6 +7,7 @@ import { AttachButton, AttachmentPreviews } from "../components/chat/ChatAttachm
 import ProgressBar from "../components/ui/ProgressBar";
 import StatusBadge from "../components/ui/StatusBadge";
 import { validateVideoFile, generateThumbnail, formatFileSize } from "../helpers/video";
+import SecondaryResponses from "../components/chat/SecondaryResponses";
 import "./ChatView.css";
 
 function LoadingDots() {
@@ -90,7 +91,36 @@ export default function ChatView({ clientId }) {
         if (d === "[DONE]") break;
         try {
           const p = JSON.parse(d);
-          if (p.type === "trace_start") {
+          if (p.type === "trace_classify" || p.type === "trace_classify_fallback") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? { ...m, classification: p } : m
+            ));
+          } else if (p.type === "trace_context") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                contextAgents: [...(m.contextAgents || []),
+                  { agent_id: p.agent_id, status: p.status, summary: p.summary }
+                ].filter((v, i, a) =>
+                  a.findIndex(x => x.agent_id === v.agent_id && x.status === v.status) === i
+                ),
+              } : m
+            ));
+          } else if (p.type === "trace_secondary") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                secondaryResponses: [...(m.secondaryResponses || []),
+                  { agent_id: p.agent_id, content: p.content }
+                ],
+              } : m
+            ));
+          } else if (p.type === "trace_start") {
+            if (p.is_primary) {
+              setMessages(prev => prev.map(m =>
+                m.id === asstId ? { ...m, agentId: p.agent_id } : m
+              ));
+            }
             setTraceInfo({
               agentId: p.agent_id, qdrantHits: p.qdrant_hits,
               contextChunks: p.context_chunks, startTime: Date.now(), status: "streaming",
@@ -153,7 +183,12 @@ export default function ChatView({ clientId }) {
       const res = await fetch(`${API_BASE}/agent/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thread_id: threadId, client_id: clientId, agent_id: agentId, message: cleanText }),
+        body: JSON.stringify({
+          thread_id: threadId,
+          client_id: clientId,
+          ...(mentionMatch ? { agent_id: agentId } : {}),
+          message: cleanText,
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await readSSEStream(res, asstId);
@@ -271,7 +306,7 @@ export default function ChatView({ clientId }) {
         body: JSON.stringify({
           thread_id: threadId,
           client_id: clientId,
-          agent_id: agentId,
+          ...(mentionMatch ? { agent_id: agentId } : {}),
           message: cleanText,
         }),
       });
@@ -362,6 +397,9 @@ export default function ChatView({ clientId }) {
                             (msg.streaming ? '<span class="msg-cursor" aria-hidden="true"></span>' : ""),
                         }}
                       />
+                      {msg.secondaryResponses && (
+                        <SecondaryResponses responses={msg.secondaryResponses} />
+                      )}
                     </div>
                   ) : (
                     <LoadingDots />
