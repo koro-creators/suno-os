@@ -1,26 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  Play,
-  PenTool,
-  UserRound,
-  Clapperboard,
-  FileSearch,
-  Upload,
-  Menu,
-  X,
-} from "lucide-react";
-import { API_BASE, AGENTS, CLIENTS } from "./config";
+import { Upload, Menu, X, MessageSquare, Activity } from "lucide-react";
+import { API_BASE, CLIENTS } from "./config";
 import ChatView from "./views/ChatView";
 import IngestView from "./views/IngestView";
+import DebugView from "./views/DebugView";
 import "./App.css";
 
-const ICON_MAP = { Play, PenTool, UserRound, Clapperboard, FileSearch };
-function getAgentIcon(agent) {
-  return ICON_MAP[agent.iconName] || Play;
-}
-
 export default function KoroStudio() {
-  const [agent, setAgent] = useState(AGENTS[0]);
   const [clientId, setClientId] = useState("santander");
   const [apiOnline, setApiOnline] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,7 +19,6 @@ export default function KoroStudio() {
       .catch(() => setApiOnline(false));
   }, []);
 
-  const AgentIcon = getAgentIcon(agent);
   const statusLabel = apiOnline === true ? "online" : apiOnline === false ? "offline" : "loading";
   const statusText = apiOnline === true ? "API Online" : apiOnline === false ? "API Offline" : "Verificando...";
 
@@ -76,25 +61,17 @@ export default function KoroStudio() {
           </select>
         </div>
 
-        <nav className="sidebar-agents" aria-label="Agentes">
-          <div className="sidebar-section-label">Agentes</div>
-          {AGENTS.map((ag) => {
-            const Icon = getAgentIcon(ag);
-            const active = view === "chat" && agent.id === ag.id;
-            return (
-              <button
-                key={ag.id}
-                className="agent-btn"
-                data-active={active}
-                onClick={() => { setAgent(ag); setView("chat"); setSidebarOpen(false); }}
-                aria-current={active ? "page" : undefined}
-                aria-label={`Agente ${ag.label}`}
-              >
-                <span className="agent-btn-icon" aria-hidden="true"><Icon size={16} /></span>
-                <span className="agent-btn-label">{ag.label}</span>
-              </button>
-            );
-          })}
+        <nav className="sidebar-nav" aria-label="Navegação">
+          <div className="sidebar-section-label">Navegação</div>
+          <button
+            className="agent-btn"
+            data-active={view === "chat"}
+            onClick={() => { setView("chat"); setSidebarOpen(false); }}
+            aria-current={view === "chat" ? "page" : undefined}
+          >
+            <span className="agent-btn-icon" aria-hidden="true"><MessageSquare size={16} /></span>
+            <span className="agent-btn-label">Chat</span>
+          </button>
         </nav>
 
         <div className="sidebar-ingest">
@@ -109,6 +86,16 @@ export default function KoroStudio() {
             <span className="agent-btn-icon" aria-hidden="true"><Upload size={16} /></span>
             <span className="agent-btn-label">Ingestão</span>
           </button>
+          <button
+            className="agent-btn"
+            data-active={view === "debug"}
+            onClick={() => { setView("debug"); setSidebarOpen(false); }}
+            aria-current={view === "debug" ? "page" : undefined}
+            aria-label="Debug"
+          >
+            <span className="agent-btn-icon" aria-hidden="true"><Activity size={16} /></span>
+            <span className="agent-btn-label">Debug</span>
+          </button>
         </div>
 
         <div className="sidebar-footer">
@@ -119,11 +106,9 @@ export default function KoroStudio() {
       </aside>
 
       <main className="main">
-        {view === "chat" ? (
-          <ChatView agent={agent} clientId={clientId} AgentIcon={AgentIcon} />
-        ) : (
-          <IngestView clientId={clientId} />
-        )}
+        {view === "chat" && <ChatView clientId={clientId} />}
+        {view === "ingest" && <IngestView clientId={clientId} />}
+        {view === "debug" && <DebugView clientId={clientId} />}
       </main>
     </div>
   );
