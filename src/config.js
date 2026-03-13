@@ -5,8 +5,7 @@ export const AGENTS = [
     id: "videorag",
     label: "VideoRAG",
     iconName: "Play",
-    system:
-      "Você é um assistente especializado em análise de vídeos publicitários indexados. Responda com base nos vídeos disponíveis, citando timestamps e elementos visuais relevantes.",
+    color: "#3b82f6",
     placeholder: "Pergunte sobre os vídeos indexados...",
     hint: "Análise de campanhas em vídeo",
   },
@@ -14,8 +13,7 @@ export const AGENTS = [
     id: "copy",
     label: "Copy",
     iconName: "PenTool",
-    system:
-      "Você é um redator publicitário sênior especializado em campanhas brasileiras. Gere copies impactantes, diretos e adequados ao canal solicitado. Entregue sempre variações.",
+    color: "#f59e0b",
     placeholder: "Descreva o produto, tom e canal...",
     hint: "Geração de textos publicitários",
   },
@@ -23,8 +21,7 @@ export const AGENTS = [
     id: "persona",
     label: "Persona",
     iconName: "UserRound",
-    system:
-      "Você é um simulador de personas sintéticas para pesquisa de marketing. Incorpore completamente a persona descrita e responda como ela — com suas dores, linguagem, objeções e desejos reais. Nunca quebre o personagem.",
+    color: "#8b5cf6",
     placeholder: "Descreva a persona ou solicite uma simulação...",
     hint: "Simulação de consumidor sintético",
   },
@@ -32,8 +29,7 @@ export const AGENTS = [
     id: "roteiro",
     label: "Roteiro",
     iconName: "Clapperboard",
-    system:
-      "Você é um diretor criativo e roteirista especializado em filmes publicitários brasileiros. Crie roteiros estruturados com cenas numeradas, diálogos, direção de arte, trilha sonora sugerida e indicações técnicas de câmera.",
+    color: "#22c55e",
     placeholder: "Descreva o conceito, produto e duração...",
     hint: "Roteiros e filmes publicitários",
   },
@@ -41,8 +37,7 @@ export const AGENTS = [
     id: "brief",
     label: "Brief",
     iconName: "FileSearch",
-    system:
-      "Você é um estrategista de marketing especializado em análise e destrinchamento de briefs. Identifique gaps, oportunidades não exploradas, públicos-alvo, tom de voz ideal, KPIs relevantes e proponha perguntas que o cliente ainda não fez.",
+    color: "#ec4899",
     placeholder: "Cole ou descreva o brief aqui...",
     hint: "Análise e estruturação de briefs",
   },
