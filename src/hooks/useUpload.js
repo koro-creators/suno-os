@@ -28,9 +28,14 @@ function createUploadItem(file, clientId, campaignName) {
 
 export default function useUpload() {
   const [queue, setQueue] = useState([]);
+  const queueRef = useRef(queue);
   const xhrMap = useRef(new Map());
   const pollingMap = useRef(new Map());
   const failureCountMap = useRef(new Map());
+  const uploadingRef = useRef(new Set());
+
+  // Keep ref in sync for external consumers (avoids stale closures)
+  useEffect(() => { queueRef.current = queue; }, [queue]);
 
   const updateItem = useCallback((id, updates) => {
     setQueue((prev) => prev.map((item) => (item.id === id ? { ...item, ...updates } : item)));
@@ -102,52 +107,95 @@ export default function useUpload() {
     [updateItem, stopPolling]
   );
 
-  // --- Upload via XMLHttpRequest ---
+  // --- Upload via GCS signed URL (3-step) ---
   const uploadFile = useCallback(
-    (item) => {
+    async (item) => {
       updateItem(item.id, { status: "uploading", progress: 0 });
 
-      const xhr = new XMLHttpRequest();
-      xhrMap.current.set(item.id, xhr);
+      try {
+        // Step 1: Request signed URL from backend
+        const urlRes = await fetch(`${API_BASE}/ingest/request-upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: item.file.name,
+            content_type: item.file.type || "video/mp4",
+            client_id: item.clientId,
+            campaign_name: item.campaignName,
+          }),
+        });
 
-      const formData = new FormData();
-      formData.append("file", item.file);
-      formData.append("client_id", item.clientId);
-      formData.append("campaign_name", item.campaignName);
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 30);
-          updateItem(item.id, { progress: pct });
+        if (!urlRes.ok) {
+          const err = await urlRes.json().catch(() => ({}));
+          throw new Error(err.detail || `Erro ao solicitar URL: HTTP ${urlRes.status}`);
         }
-      };
 
-      xhr.onload = () => {
-        xhrMap.current.delete(item.id);
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            updateItem(item.id, { status: "processing", progress: 30, jobId: data.job_id });
-            startPolling(item.id, data.job_id);
-          } catch {
-            updateItem(item.id, { status: "error", error: "Resposta inválida do servidor" });
-          }
-        } else {
-          updateItem(item.id, { status: "error", error: `Erro HTTP ${xhr.status}` });
+        const { signed_url, job_id } = await urlRes.json();
+        updateItem(item.id, { jobId: job_id });
+
+        // Step 2: Upload directly to GCS via XHR (for progress tracking)
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhrMap.current.set(item.id, xhr);
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 30);
+              updateItem(item.id, { progress: pct });
+            }
+          };
+
+          xhr.onload = () => {
+            xhrMap.current.delete(item.id);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error(`Erro no upload para GCS: HTTP ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => {
+            xhrMap.current.delete(item.id);
+            reject(new Error("Erro de rede no upload"));
+          };
+
+          xhr.onabort = () => {
+            xhrMap.current.delete(item.id);
+            reject(new Error("Upload cancelado"));
+          };
+
+          xhr.open("PUT", signed_url);
+          xhr.setRequestHeader("Content-Type", item.file.type || "video/mp4");
+          xhr.send(item.file);
+        });
+
+        // Step 3: Notify backend to start processing
+        const confirmRes = await fetch(`${API_BASE}/ingest/complete-upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            job_id,
+            client_id: item.clientId,
+            campaign_name: item.campaignName,
+          }),
+        });
+
+        if (!confirmRes.ok) {
+          const err = await confirmRes.json().catch(() => ({}));
+          throw new Error(err.detail || `Erro ao confirmar upload: HTTP ${confirmRes.status}`);
         }
-      };
 
-      xhr.onerror = () => {
+        uploadingRef.current.delete(item.id);
+        updateItem(item.id, { status: "processing", progress: 30, jobId: job_id });
+        startPolling(item.id, job_id);
+
+      } catch (err) {
+        uploadingRef.current.delete(item.id);
         xhrMap.current.delete(item.id);
-        updateItem(item.id, { status: "error", error: "Erro de rede ao enviar" });
-      };
-
-      xhr.onabort = () => {
-        xhrMap.current.delete(item.id);
-      };
-
-      xhr.open("POST", `${API_BASE}/ingest/upload`);
-      xhr.send(formData);
+        if (err.message !== "Upload cancelado") {
+          updateItem(item.id, { status: "error", error: err.message });
+        }
+      }
     },
     [updateItem, startPolling]
   );
@@ -158,8 +206,9 @@ export default function useUpload() {
     const available = MAX_CONCURRENT_UPLOADS - uploading;
     if (available <= 0) return;
 
-    const queued = queue.filter((i) => i.status === "queued");
+    const queued = queue.filter((i) => i.status === "queued" && !uploadingRef.current.has(i.id));
     queued.slice(0, available).forEach((item) => {
+      uploadingRef.current.add(item.id);
       uploadFile(item);
     });
   }, [queue, uploadFile]);
@@ -221,6 +270,7 @@ export default function useUpload() {
     (id) => {
       const item = queue.find((i) => i.id === id);
       if (!item || item.status !== "error") return;
+      uploadingRef.current.delete(id);
       updateItem(id, { status: "queued", progress: 0, error: null });
     },
     [queue, updateItem]
@@ -230,5 +280,5 @@ export default function useUpload() {
     setQueue((prev) => prev.filter((i) => i.status !== "completed"));
   }, []);
 
-  return { queue, addFiles, cancelItem, retryItem, clearCompleted };
+  return { queue, queueRef, addFiles, cancelItem, retryItem, clearCompleted };
 }

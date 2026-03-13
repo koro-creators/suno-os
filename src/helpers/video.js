@@ -5,7 +5,7 @@ export function validateVideoFile(file) {
     return { valid: false, error: "Formato não suportado. Use MP4, MOV, AVI ou WebM." };
   }
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: "Arquivo muito grande. Máximo 500MB." };
+    return { valid: false, error: "Arquivo muito grande. Máximo 500 MB." };
   }
   return { valid: true, error: null };
 }

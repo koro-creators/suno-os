@@ -72,7 +72,7 @@ export const VALID_VIDEO_MIMES = [
   "video/webm",
 ];
 
-export const MAX_FILE_SIZE = 524288000; // 500MB
+export const MAX_FILE_SIZE = 524288000; // 500MB (upload direto para GCS)
 export const MAX_CONCURRENT_UPLOADS = 2;
 export const POLL_INTERVAL_NORMAL = 3000;
 export const POLL_INTERVAL_BACKOFF = 15000;

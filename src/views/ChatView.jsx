@@ -28,7 +28,7 @@ export default function ChatView({ clientId }) {
   const [lastAgent, setLastAgent] = useState("videorag");
   const [traceInfo, setTraceInfo] = useState(null);
 
-  const { queue: uploadQueue, addFiles: uploadFiles } = useUpload();
+  const { queueRef: uploadQueueRef, addFiles: uploadFiles } = useUpload();
 
   const endRef = useRef(null);
   const inputRef = useRef(null);
@@ -43,7 +43,8 @@ export default function ChatView({ clientId }) {
     setThreadId(`${clientId}:user-${Date.now()}`);
     setPendingFiles([]);
     inputRef.current?.focus();
-  }, [clientId]); // Remove agent dependency — only reset on client change
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally reset only on client change
+  }, [clientId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -201,17 +202,18 @@ export default function ChatView({ clientId }) {
       filesToUpload.forEach((f) => fileList.items.add(f.file));
       uploadFiles(fileList.files, clientId, "");
 
-      // Wait for completion by watching queue changes
+      // Wait for completion using ref (avoids stale closure)
       await new Promise((resolve) => {
         const check = () => {
-          const relevant = uploadQueue.filter(
+          const current = uploadQueueRef.current;
+          const relevant = current.filter(
             (item) => filesToUpload.some((f) => f.fileName === item.fileName)
           );
           const allDone = relevant.length > 0 && relevant.every(
             (item) => item.status === "completed" || item.status === "error"
           );
           if (allDone) {
-            // Update progress messages
+            clearInterval(interval);
             relevant.forEach((item, i) => {
               if (uploadMsgIds[i]) {
                 setMessages((p) => p.map((m) =>
@@ -224,8 +226,8 @@ export default function ChatView({ clientId }) {
             resolve();
           }
         };
+        const interval = setInterval(check, 1000);
         check();
-        const interval = setInterval(() => check(), 1000);
         setTimeout(() => { clearInterval(interval); resolve(); }, 600000);
       });
 
