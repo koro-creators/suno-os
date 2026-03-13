@@ -8,6 +8,7 @@ import ProgressBar from "../components/ui/ProgressBar";
 import StatusBadge from "../components/ui/StatusBadge";
 import { validateVideoFile, generateThumbnail, formatFileSize } from "../helpers/video";
 import SecondaryResponses from "../components/chat/SecondaryResponses";
+import PipelineProgress from "../components/chat/PipelineProgress";
 import "./ChatView.css";
 
 function LoadingDots() {
@@ -91,7 +92,41 @@ export default function ChatView({ clientId }) {
         if (d === "[DONE]") break;
         try {
           const p = JSON.parse(d);
-          if (p.type === "trace_classify" || p.type === "trace_classify_fallback") {
+          if (p.type === "trace_pipeline") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? { ...m, pipeline: p.stages, isPipeline: true } : m
+            ));
+          } else if (p.type === "trace_stage_start") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                currentStage: { stage: p.stage, label: p.label, agents: p.agents, is_primary: p.is_primary },
+                pipelineStages: [...(m.pipelineStages || []),
+                  { stage: p.stage, label: p.label, agents: p.agents, status: "running" }
+                ],
+              } : m
+            ));
+          } else if (p.type === "trace_stage_end") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                pipelineStages: (m.pipelineStages || []).map(s =>
+                  s.stage === p.stage ? { ...s, status: "done" } : s
+                ),
+              } : m
+            ));
+          } else if (p.type === "trace_stage_agent") {
+            setMessages(prev => prev.map(m =>
+              m.id === asstId ? {
+                ...m,
+                stageAgents: [...(m.stageAgents || []),
+                  { agent_id: p.agent_id, status: p.status, summary: p.summary, duration_ms: p.duration_ms }
+                ].filter((v, i, a) =>
+                  a.findIndex(x => x.agent_id === v.agent_id && x.status === v.status) === i
+                ),
+              } : m
+            ));
+          } else if (p.type === "trace_classify" || p.type === "trace_classify_fallback") {
             setMessages(prev => prev.map(m =>
               m.id === asstId ? { ...m, classification: p } : m
             ));
@@ -437,6 +472,9 @@ export default function ChatView({ clientId }) {
                             (msg.streaming ? '<span class="msg-cursor" aria-hidden="true"></span>' : ""),
                         }}
                       />
+                      {msg.pipelineStages && (
+                        <PipelineProgress stages={msg.pipelineStages} stageAgents={msg.stageAgents} />
+                      )}
                       {msg.secondaryResponses && (
                         <SecondaryResponses responses={msg.secondaryResponses} />
                       )}
