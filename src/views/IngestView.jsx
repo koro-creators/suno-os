@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { HardDrive } from "lucide-react";
 import useUpload from "../hooks/useUpload";
+import useDriveUpload from "../hooks/useDriveUpload";
 import useIngestStatus from "../hooks/useIngestStatus";
 import UploadZone from "../components/upload/UploadZone";
 import UploadQueue from "../components/upload/UploadQueue";
+import DriveButton from "../components/upload/DriveButton";
 import VideoCard from "../components/upload/VideoCard";
 import "./IngestView.css";
 
 export default function IngestView({ clientId }) {
   const [campaignName, setCampaignName] = useState("");
   const { queue, addFiles, cancelItem, retryItem } = useUpload();
+  const { driveQueue, openDrivePicker, cancelDriveItem, retryDriveItem, isPickerLoading } = useDriveUpload();
   const { videos, error, refresh } = useIngestStatus(clientId);
 
   const handleFiles = (files) => {
@@ -20,8 +22,10 @@ export default function IngestView({ clientId }) {
   const processingVideos = videos.filter((v) => v.status === "processing" || v.status === "queued");
   const errorVideos = videos.filter((v) => v.status === "error");
 
+  const combinedQueue = [...queue, ...driveQueue];
+
   const totalIndexed = completedVideos.length;
-  const totalProcessing = processingVideos.length + queue.filter((i) => i.status !== "completed" && i.status !== "error").length;
+  const totalProcessing = processingVideos.length + combinedQueue.filter((i) => i.status !== "completed" && i.status !== "error").length;
 
   return (
     <div className="ingest-view">
@@ -51,7 +55,17 @@ export default function IngestView({ clientId }) {
             />
           </div>
 
-          <UploadQueue items={queue} onCancel={cancelItem} onRetry={retryItem} />
+          <UploadQueue
+            items={combinedQueue}
+            onCancel={(id) => {
+              const isDrive = driveQueue.some((i) => i.id === id);
+              isDrive ? cancelDriveItem(id) : cancelItem(id);
+            }}
+            onRetry={(id) => {
+              const isDrive = driveQueue.some((i) => i.id === id);
+              isDrive ? retryDriveItem(id) : retryItem(id);
+            }}
+          />
 
           {error && (
             <div className="ingest-error-banner">
@@ -89,15 +103,10 @@ export default function IngestView({ clientId }) {
             </>
           )}
 
-          <div className="ingest-drive-placeholder">
-            <span className="ingest-drive-label">
-              <HardDrive size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
-              Google Drive
-            </span>
-            <button className="ingest-drive-btn" disabled title="Em breve">
-              Conectar Pasta
-            </button>
-          </div>
+          <DriveButton
+            onPick={() => openDrivePicker(clientId, campaignName)}
+            isLoading={isPickerLoading}
+          />
         </div>
       </div>
     </div>
