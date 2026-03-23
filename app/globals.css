@@ -26,8 +26,8 @@
   --text-muted: #475569;
 
   /* Orbit */
-  --orbit-line: rgba(255, 255, 255, 0.12);
-  --orbit-hover: rgba(255, 255, 255, 0.2);
+  --orbit-line: rgba(255, 200, 1, 0.12);
+  --orbit-hover: rgba(255, 200, 1, 0.22);
 }
 
 body {
@@ -37,6 +37,36 @@ body {
     "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Star field: ~18 tiny particles scattered across the background */
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.18) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.08) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,200,1,0.14) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.07) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.06) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(255,255,255,0.13) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,200,1,0.1) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.09) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.07) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(255,255,255,0.11) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,200,1,0.08) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.14) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.06) 0.5px, transparent 0.5px),
+    radial-gradient(circle, rgba(255,255,255,0.2) 0.5px, transparent 0.5px);
+  background-size:
+    13% 17%, 19% 23%, 7% 11%, 29% 31%, 41% 43%,
+    53% 57%, 17% 37%, 67% 73%, 83% 19%, 37% 61%,
+    71% 89%, 11% 53%, 47% 13%, 89% 41%, 23% 79%,
+    61% 67%, 79% 29%, 43% 83%;
+  background-position:
+    7% 13%, 23% 67%, 41% 31%, 59% 81%, 77% 19%,
+    11% 53%, 33% 87%, 51% 43%, 69% 7%, 87% 61%,
+    5% 77%, 29% 11%, 47% 59%, 63% 29%, 81% 71%,
+    15% 41%, 37% 73%, 55% 17%;
 }
 
 @keyframes blink {
@@ -73,12 +103,62 @@ body {
   }
 }
 
+/* Improvement 8: Slow orbit rotation */
+@keyframes slow-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Improvement 8: Planet float */
+@keyframes float {
+  0%, 100% { transform: scale(1) translateY(0px); }
+  50%       { transform: scale(1) translateY(-3px); }
+}
+
+/* Same float but allowing a hover scale override — used by PlanetNode/MoonNode inline JS */
+@keyframes float-only {
+  0%, 100% { translate: 0 0px; }
+  50%       { translate: 0 -3px; }
+}
+
+/* Improvement 8: Connector line pulse */
+@keyframes connector-pulse {
+  0%, 100% { opacity: 0.03; }
+  50%       { opacity: 0.10; }
+}
+
 .orbit-appear {
   animation: orbit-appear 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .orbit-ring-pulse {
   animation: orbit-pulse 4s ease-in-out infinite;
+}
+
+.orbit-ring-rotate-slow {
+  animation:
+    orbit-pulse 4s ease-in-out infinite,
+    slow-rotate 120s linear infinite;
+}
+
+.orbit-ring-rotate-mid {
+  animation:
+    orbit-pulse 4s ease-in-out infinite,
+    slow-rotate 80s linear infinite;
+}
+
+.orbit-ring-rotate-fast {
+  animation:
+    orbit-pulse 4s ease-in-out infinite,
+    slow-rotate 50s linear infinite;
+}
+
+.planet-float {
+  animation: float-only 4s ease-in-out infinite;
+}
+
+.connector-line-pulse {
+  animation: connector-pulse 4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -97,7 +177,18 @@ body {
     transform: scale(1) !important;
   }
 
-  .orbit-ring-pulse {
+  .orbit-ring-pulse,
+  .orbit-ring-rotate-slow,
+  .orbit-ring-rotate-mid,
+  .orbit-ring-rotate-fast {
+    animation: none !important;
+  }
+
+  .planet-float {
+    animation: none !important;
+  }
+
+  .connector-line-pulse {
     animation: none !important;
   }
 }

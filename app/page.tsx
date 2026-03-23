@@ -26,10 +26,10 @@ function getLabelPosition(angle: number): 'top' | 'bottom' | 'left' | 'right' {
 }
 
 function planetSize(skillCount: number): number {
-  // Map skill count (3-6) to size (28-36)
+  // Map skill count (3-6) to size (38-48)
   const min = 3, max = 6;
   const clamped = Math.max(min, Math.min(max, skillCount));
-  return 28 + ((clamped - min) / (max - min)) * 8;
+  return 38 + ((clamped - min) / (max - min)) * 10;
 }
 
 export default function Home() {
@@ -56,12 +56,16 @@ export default function Home() {
         label: entry.client.name,
         color: entry.client.color,
         size: planetSize(entry.client.skills.length),
+        meta: `${entry.client.skills.length} skills`,
         orbitIndex,
         angle,
         labelPosition: getLabelPosition(angle) as 'top' | 'bottom' | 'left' | 'right',
       };
     });
   });
+
+  // Count total skills across all clients for metadata
+  const totalSkills = clients.reduce((sum, c) => sum + c.skills.length, 0);
 
   return (
     <main className="flex flex-col h-screen overflow-hidden bg-void">
@@ -72,11 +76,56 @@ export default function Home() {
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: 'Suno', color: 'var(--sun)', size: 52 }}
-          orbitRadii={[80, 140, 200]}
+          center={{ label: 'Suno', color: 'var(--sun)', size: 80 }}
+          orbitRadii={[120, 200, 280]}
           items={items}
           onItemClick={(id) => router.push(`/${id}`)}
         />
+
+        {/* Improvement 6: Editorial typography block */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 24,
+            right: 28,
+            textAlign: 'right',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '3rem',
+              fontWeight: 200,
+              color: 'rgba(255,255,255,0.05)',
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            01
+          </div>
+          <div
+            style={{
+              fontSize: '0.6rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              color: 'rgba(255,255,255,0.18)',
+              marginTop: 4,
+            }}
+          >
+            Sistema Solar
+          </div>
+          <div
+            style={{
+              fontSize: '0.45rem',
+              letterSpacing: '0.08em',
+              color: 'rgba(255,255,255,0.1)',
+              marginTop: 3,
+            }}
+          >
+            {clients.length} biomas &middot; {totalSkills} skills
+          </div>
+        </div>
       </div>
     </main>
   );

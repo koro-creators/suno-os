@@ -47,14 +47,14 @@ export default function SkillPage({
       id: moon.slug,
       label: moon.name,
       color: skillColor,
-      size: 24 + (idx % 2) * 4, // 24-28px
+      size: 30 + (idx % 2) * 6, // 30-36px
       orbitIndex,
       angle,
       labelPosition: (idx % 2 === 0 ? 'bottom' : 'top') as 'top' | 'bottom',
     };
   });
 
-  const orbitRadii = moons.length <= 3 ? [80] : [80, 140];
+  const orbitRadii = moons.length <= 3 ? [110] : [110, 180];
 
   return (
     <main className="flex flex-col h-screen overflow-hidden bg-void">
@@ -73,7 +73,7 @@ export default function SkillPage({
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: skill.name, color: skillColor, size: 56 }}
+          center={{ label: skill.name, color: skillColor, size: 68 }}
           orbitRadii={orbitRadii}
           items={items}
           showChildLabels={true}
@@ -84,7 +84,7 @@ export default function SkillPage({
         <div
           style={{
             position: 'absolute',
-            top: 'calc(50% + 44px)',
+            top: 'calc(50% + 50px)',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
@@ -115,6 +115,51 @@ export default function SkillPage({
           >
             {typeLabels[skill.type] || skill.type} &middot; {moons.length} areas
           </span>
+        </div>
+
+        {/* Improvement 6: Editorial typography block */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 24,
+            right: 28,
+            textAlign: 'right',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '3rem',
+              fontWeight: 200,
+              color: 'rgba(255,255,255,0.05)',
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            03
+          </div>
+          <div
+            style={{
+              fontSize: '0.6rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              color: 'rgba(255,255,255,0.18)',
+              marginTop: 4,
+            }}
+          >
+            Skill
+          </div>
+          <div
+            style={{
+              fontSize: '0.45rem',
+              letterSpacing: '0.08em',
+              color: 'rgba(255,255,255,0.1)',
+              marginTop: 3,
+            }}
+          >
+            {typeLabels[skill.type] || skill.type} &middot; {moons.length} áreas
+          </div>
         </div>
       </div>
     </main>

@@ -16,8 +16,8 @@ interface SkillGroupProps {
   animationDelay?: number;
 }
 
-const MOON_ORBIT_RADIUS = 36;
-const MOON_SIZE = 8;
+const MOON_ORBIT_RADIUS = 40;
+const MOON_SIZE = 10;
 
 export default function SkillGroup({
   skill,
@@ -48,7 +48,7 @@ export default function SkillGroup({
         ...(animationDelay !== undefined ? { animationDelay: `${animationDelay}ms` } : {}),
       }}
     >
-      {/* Micro orbit ring for moons */}
+      {/* Micro orbit ring for moons — no ringIndex to keep inner-most rotation */}
       <OrbitRing radius={MOON_ORBIT_RADIUS} />
 
       {/* Planet at center of group */}
@@ -56,6 +56,7 @@ export default function SkillGroup({
         color={color}
         size={planetSize}
         label={skill.name}
+        meta={`${skill.moons.length} áreas`}
         labelPosition="bottom"
         x={0}
         y={0}

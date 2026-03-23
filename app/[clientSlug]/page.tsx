@@ -37,23 +37,26 @@ export default function ClientPage({
     const offset = orbitOffsets[orbitIndex] ?? 0;
     const angle = offset + (360 / skillsInOrbit.length) * positionInOrbit;
     const skillColor = getSkillTypeColor(skill.type);
-    const size = 32 + (skill.moons.length / 3) * 4; // 32-36px based on moons
+    const size = 40 + (skill.moons.length / 3) * 6; // 40-46px based on moons
 
     return {
       id: skill.slug,
       label: skill.name,
       color: skillColor,
-      size: Math.min(36, Math.max(32, size)),
+      size: Math.min(46, Math.max(40, size)),
       orbitIndex,
       angle,
       children: skill.moons.map((moon) => ({
         id: moon.id,
         color: skillColor,
-        size: moon.name.length > 5 ? 9 : 8,
+        size: moon.name.length > 5 ? 11 : 10,
       })),
       skill,
     };
   });
+
+  // Count total moons across all skills for metadata
+  const totalAreas = client.skills.reduce((sum, s) => sum + s.moons.length, 0);
 
   return (
     <main className="flex flex-col h-screen overflow-hidden bg-void">
@@ -67,8 +70,8 @@ export default function ClientPage({
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: client.name, color: client.color, size: 60 }}
-          orbitRadii={[90, 160, 220]}
+          center={{ label: client.name, color: client.color, size: 72 }}
+          orbitRadii={[120, 200, 280]}
           items={items}
           showChildLabels={false}
           onItemClick={(id) => router.push(`/${clientSlug}/${id}`)}
@@ -79,6 +82,51 @@ export default function ClientPage({
           activeType={activeFilter}
           onFilter={setActiveFilter}
         />
+
+        {/* Improvement 6: Editorial typography block */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 24,
+            right: 28,
+            textAlign: 'right',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '3rem',
+              fontWeight: 200,
+              color: 'rgba(255,255,255,0.05)',
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            02
+          </div>
+          <div
+            style={{
+              fontSize: '0.6rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.14em',
+              color: 'rgba(255,255,255,0.18)',
+              marginTop: 4,
+            }}
+          >
+            Bioma
+          </div>
+          <div
+            style={{
+              fontSize: '0.45rem',
+              letterSpacing: '0.08em',
+              color: 'rgba(255,255,255,0.1)',
+              marginTop: 3,
+            }}
+          >
+            {client.skills.length} skills &middot; {totalAreas} áreas
+          </div>
+        </div>
       </div>
     </main>
   );

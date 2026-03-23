@@ -15,8 +15,8 @@ export default function CenterNode({ label, color, size }: CenterNodeProps) {
         height: size,
         transform: 'translate(-50%, -50%)',
         borderRadius: '50%',
-        backgroundColor: color,
-        boxShadow: `0 0 30px color-mix(in srgb, ${color} 40%, transparent), 0 0 80px color-mix(in srgb, ${color} 15%, transparent)`,
+        background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 140%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
+        boxShadow: `0 0 ${size * 0.4}px color-mix(in srgb, ${color} 50%, transparent), 0 0 ${size * 1.2}px color-mix(in srgb, ${color} 20%, transparent)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -25,7 +25,7 @@ export default function CenterNode({ label, color, size }: CenterNodeProps) {
     >
       <span
         style={{
-          fontSize: '0.5rem',
+          fontSize: size >= 72 ? '0.6rem' : '0.5rem',
           fontWeight: 700,
           textTransform: 'uppercase',
           letterSpacing: '0.08em',

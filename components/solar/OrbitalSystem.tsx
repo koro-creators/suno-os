@@ -17,6 +17,8 @@ interface OrbitalItemConfig {
   orbitIndex: number;
   angle?: number;
   labelPosition?: 'top' | 'bottom' | 'left' | 'right';
+  /** Optional metadata shown on hover below label */
+  meta?: string;
   children?: Array<{ id: string; color: string; size: number }>;
   /** Pass full Skill object when rendering SkillGroups */
   skill?: Skill;
@@ -48,7 +50,8 @@ export default function OrbitalSystem({
   const positions = useOrbitalLayout(orbitalItems, orbitRadii);
 
   const largestRadius = Math.max(...orbitRadii, 0);
-  const containerSize = largestRadius * 2 + 80; // padding for labels
+  // Extra padding for larger planets + labels (was 80, bumped to 120)
+  const containerSize = largestRadius * 2 + 120;
 
   const posMap = new Map(positions.map((p) => [p.id, p]));
 
@@ -64,10 +67,38 @@ export default function OrbitalSystem({
         height: containerSize,
       }}
     >
-      {/* Orbit rings */}
+      {/* Orbit rings — pass ringIndex for tiered rotation speed */}
       {orbitRadii.map((radius, idx) => (
-        <OrbitRing key={idx} radius={radius} />
+        <OrbitRing key={idx} radius={radius} ringIndex={idx} />
       ))}
+
+      {/* Connector lines from center to each planet (z below planets) */}
+      {items.map((item) => {
+        const pos = posMap.get(item.id);
+        if (!pos) return null;
+
+        const angle = Math.atan2(pos.y, pos.x);
+        const dist = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
+
+        return (
+          <div
+            key={`conn-${item.id}`}
+            className="connector-line-pulse"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: dist,
+              height: 1,
+              transformOrigin: '0 50%',
+              transform: `rotate(${angle}rad)`,
+              background: 'linear-gradient(90deg, rgba(255,200,1,0.1) 0%, rgba(255,200,1,0.02) 100%)',
+              pointerEvents: 'none',
+              zIndex: 2,
+            }}
+          />
+        );
+      })}
 
       {/* Center */}
       <CenterNode label={center.label} color={center.color} size={center.size} />
@@ -120,6 +151,7 @@ export default function OrbitalSystem({
             color={item.color}
             size={item.size}
             label={item.label}
+            meta={item.meta}
             labelPosition={item.labelPosition}
             x={pos.x}
             y={pos.y}

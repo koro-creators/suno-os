@@ -28,9 +28,14 @@ export default function MoonNode({
   onClick,
   animationDelay,
 }: MoonNodeProps) {
+  const ambientGlow = `0 0 5px color-mix(in srgb, ${color} 20%, transparent)`;
+
   return (
     <div
-      className={animationDelay !== undefined ? 'orbit-appear' : undefined}
+      className={[
+        animationDelay !== undefined ? 'orbit-appear' : '',
+        'planet-float',
+      ].filter(Boolean).join(' ')}
       onClick={onClick}
       style={{
         position: 'absolute',
@@ -39,8 +44,9 @@ export default function MoonNode({
         width: size,
         height: size,
         borderRadius: '50%',
-        backgroundColor: color,
-        opacity: 0.7,
+        background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 130%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 65%, black) 100%)`,
+        opacity: 0.8,
+        boxShadow: ambientGlow,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 200ms ease-out, box-shadow 200ms ease-out, opacity 200ms ease-out',
         zIndex: 5,
@@ -55,8 +61,8 @@ export default function MoonNode({
       onMouseLeave={(e) => {
         const el = e.currentTarget;
         el.style.transform = 'scale(1)';
-        el.style.opacity = '0.7';
-        el.style.boxShadow = 'none';
+        el.style.opacity = '0.8';
+        el.style.boxShadow = ambientGlow;
       }}
     >
       <span
