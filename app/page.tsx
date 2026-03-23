@@ -61,61 +61,62 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Orbit semicircles — centered on sun position, right half visible */}
-        {sorted.map((_, idx) => {
-          // Sun center is at x=30 (620/2 - 280), semicircles radiate from there
-          const radius = 350 + idx * 130;
-          const diameter = radius * 2;
+        {/* Sun center X coordinate */}
+        {(() => {
+          // Sun center = left(-280) + 620/2 = 30px from left edge
+          const sunCenterX = 30;
+          // Planet orbit radii — each planet sits at this distance from sun center
+          const orbitRadii = sorted.map((_, idx) => 340 + idx * 150);
+          // Slight vertical offsets for organic feel
+          const yOffsets = [15, -20, 10, -28, 18, -14, 22];
+
           return (
-            <div
-              key={`orbit-semi-${idx}`}
-              style={{
-                position: 'absolute',
-                left: 30 - radius,
-                top: `calc(50% - ${radius}px)`,
-                width: diameter,
-                height: diameter,
-                borderRadius: '50%',
-                border: '1px solid rgba(255,200,1,0.1)',
-                boxShadow: '0 0 8px rgba(255,200,1,0.02), inset 0 0 8px rgba(255,200,1,0.01)',
-                pointerEvents: 'none',
-                zIndex: 1,
-              }}
-            />
+            <>
+              {/* Orbit semicircles — aligned to each planet */}
+              {orbitRadii.map((radius, idx) => {
+                const diameter = radius * 2;
+                return (
+                  <div
+                    key={`orbit-semi-${idx}`}
+                    style={{
+                      position: 'absolute',
+                      left: sunCenterX - radius,
+                      top: `calc(50% - ${radius}px)`,
+                      width: diameter,
+                      height: diameter,
+                      borderRadius: '50%',
+                      border: '1px solid rgba(255,200,1,0.1)',
+                      boxShadow: '0 0 8px rgba(255,200,1,0.02), inset 0 0 8px rgba(255,200,1,0.01)',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  />
+                );
+              })}
+
+              {/* Planets — absolute positioned on their orbit */}
+              {sorted.map((client, idx) => {
+                const size = planetSize(client.skills.length);
+                const radius = orbitRadii[idx];
+                // Planet X = sunCenterX + radius (rightmost point of the semicircle)
+                const planetX = sunCenterX + radius;
+                const yOffset = yOffsets[idx] ?? 0;
+
+                return (
+                  <Planet
+                    key={client.slug}
+                    client={client}
+                    size={size}
+                    planetX={planetX}
+                    yOffset={yOffset}
+                    delay={idx * 80}
+                    onClick={() => router.push(`/${client.slug}`)}
+                  />
+                );
+              })}
+            </>
           );
-        })}
-
-        {/* Planets — horizontal row */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0,
-            marginLeft: 360,
-            marginRight: 40,
-            flex: 1,
-            justifyContent: 'space-between',
-            position: 'relative',
-            zIndex: 10,
-          }}
-        >
-          {sorted.map((client, idx) => {
-            const size = planetSize(client.skills.length);
-            // Slight vertical offset for organic feel
-            const yOffset = [12, -18, 8, -25, 15, -12, 20][idx] ?? 0;
-
-            return (
-              <Planet
-                key={client.slug}
-                client={client}
-                size={size}
-                yOffset={yOffset}
-                delay={idx * 80}
-                onClick={() => router.push(`/${client.slug}`)}
-              />
-            );
-          })}
-        </div>
+        })()}
 
         {/* Editorial typography */}
         <div
@@ -141,12 +142,14 @@ export default function Home() {
 function Planet({
   client,
   size,
+  planetX,
   yOffset,
   delay,
   onClick,
 }: {
   client: typeof clients[number];
   size: number;
+  planetX: number;
   yOffset: number;
   delay: number;
   onClick: () => void;
@@ -160,13 +163,17 @@ function Planet({
     <div
       className="orbit-appear planet-float"
       style={{
+        position: 'absolute',
+        left: planetX - size / 2,
+        top: '50%',
+        transform: `translateY(calc(-50% + ${yOffset}px))`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: 0,
         cursor: 'pointer',
-        transform: `translateY(${yOffset}px)`,
         animationDelay: `${delay}ms`,
+        zIndex: 10,
       }}
       onClick={onClick}
       onMouseEnter={() => {
