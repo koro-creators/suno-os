@@ -10,8 +10,8 @@ const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
 
 // 1 planet per orbit — sun on left, planets extend right
 // Orbits spaced generously for large planets
-const ORBIT_START = 220;
-const ORBIT_STEP = 48;
+const ORBIT_START = 230;
+const ORBIT_STEP = 72;
 const orbitRadii = sorted.map((_, i) => ORBIT_START + i * ORBIT_STEP);
 
 // Angles clustered to the right (roughly -45° to +45°) with slight vertical spread
