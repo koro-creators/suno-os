@@ -1,12 +1,14 @@
+import { ReactNode } from 'react';
 import Logo from './Logo';
 import Breadcrumb from './Breadcrumb';
 
 interface AppHeaderProps {
   breadcrumbs: { label: string; href: string }[];
   rightLabel?: string;
+  rightSection?: ReactNode;
 }
 
-export default function AppHeader({ breadcrumbs, rightLabel }: AppHeaderProps) {
+export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: AppHeaderProps) {
   return (
     <header
       className="sticky top-0 z-50 flex items-center justify-between px-lg py-sm"
@@ -22,6 +24,7 @@ export default function AppHeader({ breadcrumbs, rightLabel }: AppHeaderProps) {
       <Breadcrumb items={breadcrumbs} />
 
       <div className="flex items-center gap-3">
+        {rightSection}
         {rightLabel && (
           <span
             className="text-text-muted uppercase select-none"
