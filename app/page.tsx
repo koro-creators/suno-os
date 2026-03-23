@@ -5,19 +5,19 @@ import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
 import OrbitalSystem from '@/components/solar/OrbitalSystem';
 
-// Distribute clients across orbits based on skill count
-// Sort by skill count ascending to place fewer-skill clients on inner orbits
+// Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
 
-// 2 inner, 3 middle, 2 outer
-const orbitAssignments: { client: typeof clients[number]; orbitIndex: number }[] = [
-  ...sorted.slice(0, 2).map((c) => ({ client: c, orbitIndex: 0 })),
-  ...sorted.slice(2, 5).map((c) => ({ client: c, orbitIndex: 1 })),
-  ...sorted.slice(5, 7).map((c) => ({ client: c, orbitIndex: 2 })),
-];
+// 1 planet per orbit — 7 orbits for 7 clients
+// Sun is 320px (radius 160), orbits start at 210 and increase
+const ORBIT_START = 210;
+const ORBIT_STEP = 36;
+const orbitRadii = sorted.map((_, i) => ORBIT_START + i * ORBIT_STEP);
+
+// Each planet gets a unique angle — spread them organically
+const planetAngles = [25, 155, 290, 70, 200, 340, 110];
 
 function getLabelPosition(angle: number): 'top' | 'bottom' | 'left' | 'right' {
-  // Normalize angle to 0-360
   const a = ((angle % 360) + 360) % 360;
   if (a >= 45 && a < 135) return 'bottom';
   if (a >= 135 && a < 225) return 'left';
@@ -26,42 +26,26 @@ function getLabelPosition(angle: number): 'top' | 'bottom' | 'left' | 'right' {
 }
 
 function planetSize(skillCount: number): number {
-  // Map skill count (3-6) to size (38-48)
   const min = 3, max = 6;
   const clamped = Math.max(min, Math.min(max, skillCount));
-  return 38 + ((clamped - min) / (max - min)) * 10;
+  return 32 + ((clamped - min) / (max - min)) * 12;
 }
 
 export default function Home() {
   const router = useRouter();
 
-  // Compute even angle distribution per orbit
-  const perOrbit: Map<number, typeof orbitAssignments> = new Map();
-  for (const entry of orbitAssignments) {
-    const list = perOrbit.get(entry.orbitIndex) || [];
-    list.push(entry);
-    perOrbit.set(entry.orbitIndex, list);
-  }
-
-  // Offset per orbit so planets don't align horizontally
-  const orbitOffsets = [30, 70, 15];
-
-  const items = Array.from(perOrbit.entries()).flatMap(([orbitIndex, entries]) => {
-    const count = entries.length;
-    const offset = orbitOffsets[orbitIndex] ?? 0;
-    return entries.map((entry, i) => {
-      const angle = offset + (360 / count) * i;
-      return {
-        id: entry.client.slug,
-        label: entry.client.name,
-        color: entry.client.color,
-        size: planetSize(entry.client.skills.length),
-        meta: `${entry.client.skills.length} skills`,
-        orbitIndex,
-        angle,
-        labelPosition: getLabelPosition(angle) as 'top' | 'bottom' | 'left' | 'right',
-      };
-    });
+  const items = sorted.map((client, idx) => {
+    const angle = planetAngles[idx] ?? idx * 51;
+    return {
+      id: client.slug,
+      label: client.name,
+      color: client.color,
+      size: planetSize(client.skills.length),
+      meta: `${client.skills.length} skills`,
+      orbitIndex: idx,
+      angle,
+      labelPosition: getLabelPosition(angle) as 'top' | 'bottom' | 'left' | 'right',
+    };
   });
 
   // Count total skills across all clients for metadata
@@ -76,8 +60,8 @@ export default function Home() {
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: 'Suno', color: 'var(--sun)', size: 80 }}
-          orbitRadii={[120, 200, 280]}
+          center={{ label: 'Suno', color: 'var(--sun)', size: 320 }}
+          orbitRadii={orbitRadii}
           items={items}
           onItemClick={(id) => router.push(`/${id}`)}
         />

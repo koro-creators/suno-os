@@ -28,23 +28,23 @@ export default function ClientPage({
     ? client.skills.filter((s) => s.type === activeFilter)
     : client.skills;
 
-  // Distribute skills evenly across 3 orbits with angular offsets
-  const orbitOffsets = [40, 85, 10];
+  // 1 skill per orbit — each skill gets its own ring
+  const SKILL_ORBIT_START = 140;
+  const SKILL_ORBIT_STEP = 40;
+  const skillOrbitRadii = filteredSkills.map((_, i) => SKILL_ORBIT_START + i * SKILL_ORBIT_STEP);
+  const skillAngles = [30, 160, 280, 75, 210, 330, 120, 250];
+
   const items = filteredSkills.map((skill, idx) => {
-    const orbitIndex = idx % 3;
-    const skillsInOrbit = filteredSkills.filter((_, i) => i % 3 === orbitIndex);
-    const positionInOrbit = skillsInOrbit.indexOf(skill);
-    const offset = orbitOffsets[orbitIndex] ?? 0;
-    const angle = offset + (360 / skillsInOrbit.length) * positionInOrbit;
     const skillColor = getSkillTypeColor(skill.type);
-    const size = 40 + (skill.moons.length / 3) * 6; // 40-46px based on moons
+    const angle = skillAngles[idx] ?? idx * 51;
+    const size = 34 + (skill.moons.length / 3) * 6;
 
     return {
       id: skill.slug,
       label: skill.name,
       color: skillColor,
-      size: Math.min(46, Math.max(40, size)),
-      orbitIndex,
+      size: Math.min(44, Math.max(34, size)),
+      orbitIndex: idx,
       angle,
       children: skill.moons.map((moon) => ({
         id: moon.id,
@@ -70,8 +70,8 @@ export default function ClientPage({
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: client.name, color: client.color, size: 72 }}
-          orbitRadii={[120, 200, 280]}
+          center={{ label: client.name, color: client.color, size: 200 }}
+          orbitRadii={skillOrbitRadii}
           items={items}
           showChildLabels={false}
           onItemClick={(id) => router.push(`/${clientSlug}/${id}`)}

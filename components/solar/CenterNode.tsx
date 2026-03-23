@@ -25,7 +25,7 @@ export default function CenterNode({ label, color, size }: CenterNodeProps) {
     >
       <span
         style={{
-          fontSize: size >= 72 ? '0.6rem' : '0.5rem',
+          fontSize: size >= 200 ? '1.2rem' : size >= 100 ? '0.8rem' : '0.5rem',
           fontWeight: 700,
           textTransform: 'uppercase',
           letterSpacing: '0.08em',

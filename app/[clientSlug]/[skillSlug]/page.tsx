@@ -31,30 +31,24 @@ export default function SkillPage({
   const skillColor = getSkillTypeColor(skill.type);
   const moons = skill.moons;
 
-  // Distribute moons across 2 orbits: if <=3, orbit 0 only; if >3, distribute
-  const items = moons.map((moon, idx) => {
-    const orbitIndex = moons.length <= 3 ? 0 : idx < Math.ceil(moons.length / 2) ? 0 : 1;
-    const moonsInOrbit = moons.filter((_, i) => {
-      if (moons.length <= 3) return true;
-      const oi = i < Math.ceil(moons.length / 2) ? 0 : 1;
-      return oi === orbitIndex;
-    });
-    const positionInOrbit = moonsInOrbit.indexOf(moon);
-    const orbitOffset = orbitIndex === 0 ? 45 : 20;
-    const angle = orbitOffset + (360 / moonsInOrbit.length) * positionInOrbit;
+  // 1 moon per orbit
+  const MOON_ORBIT_START = 110;
+  const MOON_ORBIT_STEP = 45;
+  const moonOrbitRadii = moons.map((_, i) => MOON_ORBIT_START + i * MOON_ORBIT_STEP);
+  const moonAngles = [40, 170, 300, 100, 230];
 
+  const items = moons.map((moon, idx) => {
+    const angle = moonAngles[idx] ?? idx * 72;
     return {
       id: moon.slug,
       label: moon.name,
       color: skillColor,
-      size: 30 + (idx % 2) * 6, // 30-36px
-      orbitIndex,
+      size: 28 + (idx % 2) * 6,
+      orbitIndex: idx,
       angle,
-      labelPosition: (idx % 2 === 0 ? 'bottom' : 'top') as 'top' | 'bottom',
+      labelPosition: (angle > 90 && angle < 270 ? 'left' : 'right') as 'left' | 'right',
     };
   });
-
-  const orbitRadii = moons.length <= 3 ? [110] : [110, 180];
 
   return (
     <main className="flex flex-col h-screen overflow-hidden bg-void">
@@ -73,8 +67,8 @@ export default function SkillPage({
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: skill.name, color: skillColor, size: 68 }}
-          orbitRadii={orbitRadii}
+          center={{ label: skill.name, color: skillColor, size: 140 }}
+          orbitRadii={moonOrbitRadii}
           items={items}
           showChildLabels={true}
           onItemClick={(id) => router.push(`/${clientSlug}/${skillSlug}/${id}`)}
