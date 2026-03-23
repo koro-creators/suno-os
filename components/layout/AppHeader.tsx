@@ -1,6 +1,10 @@
+'use client';
+
 import { ReactNode } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import Logo from './Logo';
 import Breadcrumb from './Breadcrumb';
+import { useTheme } from './ThemeProvider';
 
 interface AppHeaderProps {
   breadcrumbs: { label: string; href: string }[];
@@ -9,14 +13,16 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: AppHeaderProps) {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header
       className="sticky top-0 z-50 flex items-center justify-between px-lg py-sm"
       style={{
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(8, 13, 20, 0.7)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+        backgroundColor: 'var(--header-bg)',
+        borderBottom: '1px solid var(--border-subtle)',
       }}
     >
       <Logo />
@@ -32,7 +38,7 @@ export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: App
               fontSize: '0.6rem',
               letterSpacing: '0.12em',
               padding: '0.25rem 0.6rem',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: '9999px',
             }}
           >
@@ -40,12 +46,47 @@ export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: App
           </span>
         )}
 
+        {/* Theme toggle */}
+        <button
+          aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+          onClick={toggleTheme}
+          style={{
+            width: 28,
+            height: 28,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '9999px',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'color 200ms ease, border-color 200ms ease, transform 200ms ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+            (e.currentTarget as HTMLButtonElement).style.transform = 'rotate(180deg)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
+            (e.currentTarget as HTMLButtonElement).style.transform = 'rotate(0deg)';
+          }}
+        >
+          {theme === 'dark' ? (
+            <Sun size={12} strokeWidth={1.5} />
+          ) : (
+            <Moon size={12} strokeWidth={1.5} />
+          )}
+        </button>
+
+        {/* Avatar */}
         <div
           className="rounded-full bg-nebula flex-shrink-0"
           style={{
             width: 28,
             height: 28,
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid var(--border-subtle)',
           }}
         />
       </div>

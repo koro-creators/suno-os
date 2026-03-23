@@ -165,9 +165,9 @@ export default function SkillPage({
             userSelect: 'none',
           }}
         >
-          <div style={{ fontSize: '3rem', fontWeight: 200, color: 'rgba(255,255,255,0.05)', lineHeight: 1, letterSpacing: '-0.02em' }}>03</div>
-          <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.18)', marginTop: 4 }}>Skill</div>
-          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.1)', marginTop: 3 }}>
+          <div style={{ fontSize: '3rem', fontWeight: 200, color: 'var(--editorial-text)', lineHeight: 1, letterSpacing: '-0.02em' }}>03</div>
+          <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--editorial-label)', marginTop: 4 }}>Skill</div>
+          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>
             {typeLabels[skill.type]} · {moons.length} áreas
           </div>
         </div>
@@ -284,7 +284,7 @@ function MoonPlanet({
           style={{
             width: 1,
             height: 20,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+            background: 'linear-gradient(180deg, var(--connector-color) 0%, var(--connector-fade) 100%)',
           }}
         />
       </div>

@@ -36,7 +36,7 @@ export default function ChatPanel() {
           width: isOpen ? 320 : 40,
           flexShrink: 0,
           backgroundColor: 'var(--deep)',
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          borderLeft: '1px solid var(--border-subtle)',
           display: 'flex',
           flexDirection: 'column',
           transition: 'width 200ms ease',
@@ -121,7 +121,7 @@ export default function ChatPanel() {
               alignItems: 'center',
               gap: 8,
               padding: '16px 16px 12px',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              borderBottom: '1px solid var(--border-subtle)',
               flexShrink: 0,
             }}
           >
@@ -209,11 +209,11 @@ export default function ChatPanel() {
                       backgroundColor:
                         msg.role === 'user'
                           ? 'var(--nebula)'
-                          : 'rgba(255,255,255,0.04)',
+                          : 'var(--surface-hover)',
                       border:
                         msg.role === 'user'
-                          ? '1px solid rgba(255,255,255,0.08)'
-                          : '1px solid rgba(255,255,255,0.05)',
+                          ? '1px solid var(--border-subtle)'
+                          : '1px solid var(--border-subtle)',
                       fontSize: '0.72rem',
                       lineHeight: 1.5,
                       color:
@@ -254,7 +254,7 @@ export default function ChatPanel() {
           <div
             style={{
               padding: '12px',
-              borderTop: '1px solid rgba(255,255,255,0.06)',
+              borderTop: '1px solid var(--border-subtle)',
               flexShrink: 0,
             }}
           >
@@ -263,8 +263,8 @@ export default function ChatPanel() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                backgroundColor: 'var(--surface-hover)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: '9999px',
                 padding: '7px 14px',
                 opacity: 0.5,

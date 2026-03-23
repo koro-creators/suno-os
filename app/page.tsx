@@ -82,7 +82,7 @@ export default function Home() {
                       width: diameter,
                       height: diameter,
                       borderRadius: '50%',
-                      border: '1px solid rgba(255,200,1,0.1)',
+                      border: '1px solid var(--orbit-line)',
                       boxShadow: '0 0 8px rgba(255,200,1,0.02), inset 0 0 8px rgba(255,200,1,0.01)',
                       pointerEvents: 'none',
                       zIndex: 1,
@@ -126,9 +126,9 @@ export default function Home() {
             userSelect: 'none',
           }}
         >
-          <div style={{ fontSize: '3rem', fontWeight: 200, color: 'rgba(255,255,255,0.05)', lineHeight: 1, letterSpacing: '-0.02em' }}>01</div>
-          <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.18)', marginTop: 4 }}>Sistema Solar</div>
-          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.1)', marginTop: 3 }}>{clients.length} biomas &middot; {totalSkills} skills</div>
+          <div style={{ fontSize: '3rem', fontWeight: 200, color: 'var(--editorial-text)', lineHeight: 1, letterSpacing: '-0.02em' }}>01</div>
+          <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--editorial-label)', marginTop: 4 }}>Sistema Solar</div>
+          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>{clients.length} biomas &middot; {totalSkills} skills</div>
         </div>
       </div>
     </main>
@@ -260,7 +260,7 @@ function Planet({
           style={{
             width: 1,
             height: 20,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+            background: 'linear-gradient(180deg, var(--connector-color) 0%, var(--connector-fade) 100%)',
           }}
         />
       </div>

@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme="dark"] {
   /* Background */
   --void: #080D14;
   /* Surface level 1 */
@@ -28,6 +29,58 @@
   /* Orbit */
   --orbit-line: rgba(255, 200, 1, 0.12);
   --orbit-hover: rgba(255, 200, 1, 0.22);
+
+  /* Semantic tokens */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --connector-color: rgba(255, 255, 255, 0.15);
+  --connector-fade: rgba(255, 255, 255, 0.04);
+  --editorial-text: rgba(255, 255, 255, 0.05);
+  --editorial-label: rgba(255, 255, 255, 0.18);
+  --editorial-meta: rgba(255, 255, 255, 0.1);
+  --surface-hover: rgba(255, 255, 255, 0.03);
+  --header-bg: rgba(8, 13, 20, 0.7);
+}
+
+[data-theme="light"] {
+  /* Background */
+  --void: #F5F2EB;
+  /* Surface level 1 */
+  --deep: #FFFFFF;
+  /* Surface level 2 */
+  --nebula: #EDE9E0;
+  /* Borders, separators */
+  --twilight: #D4CFC6;
+
+  /* Accent */
+  --sun: #D4A017;
+
+  /* Skill colors */
+  --criacao: #D4A017;
+  --midia: #2563EB;
+  --planejamento: #059669;
+
+  /* Text */
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
+  --text-muted: #8A8A7A;
+
+  /* Orbit */
+  --orbit-line: rgba(0, 0, 0, 0.08);
+  --orbit-hover: rgba(0, 0, 0, 0.15);
+
+  /* Semantic tokens */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --connector-color: rgba(0, 0, 0, 0.1);
+  --connector-fade: rgba(0, 0, 0, 0.02);
+  --editorial-text: rgba(0, 0, 0, 0.04);
+  --editorial-label: rgba(0, 0, 0, 0.35);
+  --editorial-meta: rgba(0, 0, 0, 0.2);
+  --surface-hover: rgba(0, 0, 0, 0.03);
+  --header-bg: rgba(245, 242, 235, 0.85);
+}
+
+[data-theme="light"] body {
+  background-image: none;
 }
 
 body {

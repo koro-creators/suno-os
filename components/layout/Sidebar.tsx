@@ -38,7 +38,7 @@ export default function Sidebar() {
         width: isOpen ? 260 : 40,
         flexShrink: 0,
         backgroundColor: 'var(--deep)',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        borderRight: '1px solid var(--border-subtle)',
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 200ms ease',
@@ -102,7 +102,7 @@ export default function Sidebar() {
                   if (!isActive) {
                     (e.currentTarget as HTMLDivElement).style.color = 'var(--text-secondary)';
                   }
-                  (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255,255,255,0.03)';
+                  (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--surface-hover)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLDivElement).style.color = isActive ? 'var(--sun)' : 'var(--text-muted)';
@@ -247,7 +247,7 @@ function NavItem({
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.backgroundColor = isActive
           ? 'rgba(255,200,1,0.06)'
-          : 'rgba(255,255,255,0.03)';
+          : 'var(--surface-hover)';
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.backgroundColor = isActive
@@ -299,7 +299,7 @@ function RecentItem({ label, color }: { label: string; color: string }) {
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.color = 'var(--text-primary)';
-        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255,255,255,0.03)';
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--surface-hover)';
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.color = 'var(--text-secondary)';
