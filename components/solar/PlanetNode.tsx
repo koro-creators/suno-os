@@ -162,6 +162,7 @@ export default function PlanetNode({
           >
             <span
               ref={labelRef}
+              className="solar-label"
               style={{
                 fontSize: '0.6rem',
                 textTransform: 'uppercase',
@@ -177,6 +178,7 @@ export default function PlanetNode({
             {meta && (
               <span
                 ref={metaRef}
+                className="solar-meta"
                 style={{
                   fontSize: '0.5rem',
                   letterSpacing: '0.04em',

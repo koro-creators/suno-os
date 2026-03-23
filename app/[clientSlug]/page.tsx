@@ -44,7 +44,7 @@ export default function ClientPage({
   const yOffsets = [12, -22, 16, -28, 20, -15, 24, -10];
 
   return (
-    <main className="flex flex-col h-screen overflow-hidden bg-void">
+    <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[
           { label: 'Home', href: '/' },
@@ -245,6 +245,7 @@ function SkillPlanet({
       {/* Label */}
       <span
         ref={labelRef}
+        className="solar-label"
         style={{
           fontSize: '0.6rem',
           textTransform: 'uppercase',
@@ -262,6 +263,7 @@ function SkillPlanet({
       {/* Meta — always visible for touch support */}
       <span
         ref={metaRef}
+        className="solar-meta"
         style={{
           fontSize: '0.5rem',
           letterSpacing: '0.04em',

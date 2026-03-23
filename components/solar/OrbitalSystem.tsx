@@ -70,9 +70,9 @@ export default function OrbitalSystem({
         height: containerSize,
       }}
     >
-      {/* Orbit rings — pass ringIndex for tiered rotation speed */}
+      {/* Orbit rings */}
       {orbitRadii.map((radius, idx) => (
-        <OrbitRing key={idx} radius={radius} ringIndex={idx} />
+        <OrbitRing key={idx} radius={radius} />
       ))}
 
       {/* Connector lines from center to each planet (z below planets) */}
@@ -86,8 +86,8 @@ export default function OrbitalSystem({
         return (
           <div
             key={`conn-${item.id}`}
-            className="connector-line-pulse"
             style={{
+              opacity: 0.06,
               position: 'absolute',
               top: '50%',
               left: '50%',

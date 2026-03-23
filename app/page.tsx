@@ -21,7 +21,7 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <main className="flex flex-col h-screen overflow-hidden bg-void">
+    <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[{ label: 'Home', href: '/' }]}
         rightLabel="7 biomas"
@@ -222,6 +222,7 @@ function Planet({
       {/* Label on top */}
       <span
         ref={labelRef}
+        className="solar-label"
         style={{
           fontSize: '0.65rem',
           textTransform: 'uppercase',
@@ -239,6 +240,7 @@ function Planet({
       {/* Meta — always visible for touch support */}
       <span
         ref={metaRef}
+        className="solar-meta"
         style={{
           fontSize: '0.5rem',
           letterSpacing: '0.04em',

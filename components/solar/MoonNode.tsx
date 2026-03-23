@@ -91,6 +91,7 @@ export default function MoonNode({
       }}
     >
       <span
+        className="solar-label"
         style={{
           position: 'absolute',
           fontSize: '0.55rem',

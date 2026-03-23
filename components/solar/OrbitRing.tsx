@@ -1,16 +1,11 @@
 interface OrbitRingProps {
   radius: number;
   highlighted?: boolean;
-  /** 0 = inner, 1 = middle, 2 = outer. Controls rotation speed. */
-  ringIndex?: number;
 }
 
-const rotationClass = ['orbit-ring-rotate-fast', 'orbit-ring-rotate-mid', 'orbit-ring-rotate-slow'];
-
-export default function OrbitRing({ radius, highlighted, ringIndex }: OrbitRingProps) {
+export default function OrbitRing({ radius, highlighted }: OrbitRingProps) {
   const diameter = radius * 2;
-  const animClass =
-    ringIndex !== undefined ? rotationClass[ringIndex] ?? 'orbit-ring-pulse' : 'orbit-ring-pulse';
+  const animClass = 'orbit-ring-pulse';
 
   return (
     <div

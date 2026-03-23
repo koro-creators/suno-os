@@ -51,7 +51,7 @@ export default function SkillPage({
   });
 
   return (
-    <main className="flex flex-col h-screen overflow-hidden bg-void">
+    <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[
           { label: 'Home', href: '/' },

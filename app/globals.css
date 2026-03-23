@@ -135,22 +135,15 @@ body {
   animation: orbit-pulse 4s ease-in-out infinite;
 }
 
-.orbit-ring-rotate-slow {
-  animation:
-    orbit-pulse 4s ease-in-out infinite,
-    slow-rotate 120s linear infinite;
+/* orbit-ring-rotate-slow/mid/fast removed — continuous rotation is against UX guidelines */
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.orbit-ring-rotate-mid {
-  animation:
-    orbit-pulse 4s ease-in-out infinite,
-    slow-rotate 80s linear infinite;
-}
-
-.orbit-ring-rotate-fast {
-  animation:
-    orbit-pulse 4s ease-in-out infinite,
-    slow-rotate 50s linear infinite;
+.page-enter {
+  animation: page-fade-in 300ms ease-out;
 }
 
 /* planet-float removed — hover glow provides sufficient feedback */
@@ -160,6 +153,16 @@ body {
 
 .connector-line-pulse {
   opacity: 0.06;
+}
+
+@media (max-width: 768px) {
+  /* Increase label readability on mobile */
+  .solar-label {
+    font-size: 0.75rem !important;
+  }
+  .solar-meta {
+    font-size: 0.65rem !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -179,9 +182,7 @@ body {
   }
 
   .orbit-ring-pulse,
-  .orbit-ring-rotate-slow,
-  .orbit-ring-rotate-mid,
-  .orbit-ring-rotate-fast {
+  .page-enter {
     animation: none !important;
   }
 

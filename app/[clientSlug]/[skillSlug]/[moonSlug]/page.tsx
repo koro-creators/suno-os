@@ -38,7 +38,7 @@ export default function MoonPage({
   const skillColor = getSkillTypeColor(skill.type);
 
   return (
-    <main className="flex flex-col h-screen bg-space">
+    <main className="page-enter flex flex-col h-screen bg-space">
       <AppHeader
         breadcrumbs={[
           { label: 'Home', href: '/' },
