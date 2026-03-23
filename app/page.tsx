@@ -8,12 +8,9 @@ import AppHeader from '@/components/layout/AppHeader';
 // Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
 
-// Planet sizes: 40-110px based on skill count (like Solar Series)
-function planetSize(skillCount: number): number {
-  const min = 3, max = 6;
-  const clamped = Math.max(min, Math.min(max, skillCount));
-  return 40 + ((clamped - min) / (max - min)) * 70;
-}
+// Planet sizes following real solar system proportions:
+// Mercury(35), Venus(55), Earth(55), Mars(42), Jupiter(110), Saturn(90), Uranus(65)
+const solarSizes = [35, 55, 55, 42, 110, 90, 65];
 
 const totalSkills = clients.reduce((sum, c) => sum + c.skills.length, 0);
 
@@ -96,7 +93,7 @@ export default function Home() {
 
               {/* Planets — absolute positioned on their orbit */}
               {sorted.map((client, idx) => {
-                const size = planetSize(client.skills.length);
+                const size = solarSizes[idx] ?? 50;
                 const radius = orbitRadii[idx];
                 // Planet X = sunCenterX + radius (rightmost point of the semicircle)
                 const planetX = sunCenterX + radius;
