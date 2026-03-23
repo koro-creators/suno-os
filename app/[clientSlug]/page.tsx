@@ -206,18 +206,14 @@ function SkillPlanet({
       style={{
         position: 'absolute',
         left: planetX - size / 2,
-        top: '50%',
-        transform: `translateY(calc(-50% + ${yOffset}px))`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        top: `calc(50% - ${size / 2}px)`,
+        width: size,
+        height: size,
         cursor: navigating ? 'wait' : 'pointer',
         animationDelay: `${delay}ms`,
         zIndex: 10,
         opacity: navigating ? 0.5 : 1,
         outline: 'none',
-        boxShadow: focusVisible ? '0 0 0 3px rgba(255,200,1,0.5)' : undefined,
-        borderRadius: '50%',
         transition: 'opacity 200ms ease',
         pointerEvents: navigating ? 'none' : 'auto',
       }}
@@ -242,52 +238,61 @@ function SkillPlanet({
         if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
       }}
     >
-      {/* Label */}
-      <span
-        ref={labelRef}
-        className="solar-label"
-        style={{
-          fontSize: '0.6rem',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--text-secondary)',
-          transition: 'color 200ms ease',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          marginBottom: 4,
-        }}
-      >
-        {skill.name}
-      </span>
-
-      {/* Meta — always visible for touch support */}
-      <span
-        ref={metaRef}
-        className="solar-meta"
-        style={{
-          fontSize: '0.5rem',
-          letterSpacing: '0.04em',
-          color: 'var(--text-muted)',
-          transition: 'color 200ms ease',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          marginBottom: 4,
-        }}
-      >
-        {typeLabel[skill.type]} · {skill.moons.length} áreas
-      </span>
-
-      {/* Connector line */}
+      {/* Label + meta + connector — above the circle */}
       <div
         style={{
-          width: 1,
-          height: 20,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           marginBottom: 6,
+          pointerEvents: 'none',
         }}
-      />
+      >
+        <span
+          ref={labelRef}
+          className="solar-label"
+          style={{
+            fontSize: '0.6rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--text-secondary)',
+            transition: 'color 200ms ease',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            marginBottom: 2,
+          }}
+        >
+          {skill.name}
+        </span>
+        <span
+          ref={metaRef}
+          className="solar-meta"
+          style={{
+            fontSize: '0.5rem',
+            letterSpacing: '0.04em',
+            color: 'var(--text-muted)',
+            transition: 'color 200ms ease',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            marginBottom: 4,
+          }}
+        >
+          {typeLabel[skill.type]} · {skill.moons.length} áreas
+        </span>
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+          }}
+        />
+      </div>
 
-      {/* Planet */}
+      {/* Planet circle — aligned to orbit */}
       <div
         ref={ref}
         style={{

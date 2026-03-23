@@ -27,7 +27,7 @@ export default function Home() {
         rightLabel="7 biomas"
       />
 
-      <div id="main-content" className="flex-1 relative min-h-0 flex items-center">
+      <div id="main-content" className="flex-1 relative min-h-0">
         {/* Sun — anchored to left edge, half visible */}
         <div
           style={{
@@ -182,19 +182,14 @@ function Planet({
       style={{
         position: 'absolute',
         left: planetX - size / 2,
-        top: '50%',
-        transform: `translateY(calc(-50% + ${yOffset}px))`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 0,
+        top: `calc(50% - ${size / 2}px)`,
+        width: size,
+        height: size,
         cursor: navigating ? 'wait' : 'pointer',
         animationDelay: `${delay}ms`,
         zIndex: 10,
         opacity: navigating ? 0.5 : 1,
         outline: 'none',
-        boxShadow: focusVisible ? '0 0 0 3px rgba(255,200,1,0.5)' : undefined,
-        borderRadius: '50%',
         transition: 'opacity 200ms ease',
         pointerEvents: navigating ? 'none' : 'auto',
       }}
@@ -219,52 +214,61 @@ function Planet({
         if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
       }}
     >
-      {/* Label on top */}
-      <span
-        ref={labelRef}
-        className="solar-label"
-        style={{
-          fontSize: '0.65rem',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--text-secondary)',
-          transition: 'color 200ms ease',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          marginBottom: 4,
-        }}
-      >
-        {client.name}
-      </span>
-
-      {/* Meta — always visible for touch support */}
-      <span
-        ref={metaRef}
-        className="solar-meta"
-        style={{
-          fontSize: '0.5rem',
-          letterSpacing: '0.04em',
-          color: 'var(--text-muted)',
-          transition: 'color 200ms ease',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          marginBottom: 4,
-        }}
-      >
-        {client.skills.length} skills
-      </span>
-
-      {/* Connector line */}
+      {/* Label + meta + connector — positioned above the circle */}
       <div
         style={{
-          width: 1,
-          height: 24,
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           marginBottom: 6,
+          pointerEvents: 'none',
         }}
-      />
+      >
+        <span
+          ref={labelRef}
+          className="solar-label"
+          style={{
+            fontSize: '0.65rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--text-secondary)',
+            transition: 'color 200ms ease',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            marginBottom: 2,
+          }}
+        >
+          {client.name}
+        </span>
+        <span
+          ref={metaRef}
+          className="solar-meta"
+          style={{
+            fontSize: '0.5rem',
+            letterSpacing: '0.04em',
+            color: 'var(--text-muted)',
+            transition: 'color 200ms ease',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            marginBottom: 4,
+          }}
+        >
+          {client.skills.length} skills
+        </span>
+        <div
+          style={{
+            width: 1,
+            height: 20,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+          }}
+        />
+      </div>
 
-      {/* Planet circle */}
+      {/* Planet circle — this is what aligns to the orbit */}
       <div
         ref={ref}
         style={{
@@ -272,9 +276,8 @@ function Planet({
           height: size,
           borderRadius: '50%',
           background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${client.color} 60%, white) 0%, ${client.color} 50%, color-mix(in srgb, ${client.color} 70%, black) 100%)`,
-          boxShadow: ambientGlow,
+          boxShadow: focusVisible ? `${ambientGlow}, 0 0 0 3px rgba(255,200,1,0.5)` : ambientGlow,
           transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
-          flexShrink: 0,
         }}
       />
     </div>
