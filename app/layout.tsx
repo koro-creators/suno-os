@@ -22,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
-      <body>
+    <html lang="pt-BR" className={inter.variable} data-theme="dark" suppressHydrationWarning>
+      <body className="antialiased bg-void text-text-primary">
         <ThemeProvider>
           <a
             href="#main-content"
