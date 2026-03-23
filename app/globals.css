@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Background */
+  --void: #080D14;
+  /* Surface level 1 */
+  --deep: #0F1923;
+  /* Surface level 2 */
+  --nebula: #1B2B3A;
+  /* Borders, separators */
+  --twilight: #263A4D;
+
+  /* Accent */
+  --sun: #FFC801;
+
+  /* Skill colors */
+  --criacao: #FFC801;
+  --midia: #3B82F6;
+  --planejamento: #10B981;
+
+  /* Text */
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #475569;
+
+  /* Orbit */
+  --orbit-line: rgba(255, 255, 255, 0.07);
+  --orbit-hover: rgba(255, 255, 255, 0.12);
+}
+
+body {
+  background-color: var(--void);
+  color: var(--text-primary);
+  font-family: "Helvetica Neue", "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
