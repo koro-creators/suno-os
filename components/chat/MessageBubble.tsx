@@ -1,12 +1,17 @@
 import { cn } from '@/lib/utils';
+import ResultActions from './ResultActions';
 
 interface MessageBubbleProps {
   role: 'user' | 'assistant';
   content: string;
   highlight?: { label: string; body: string };
+  showActions?: boolean;
+  onGenerateVariation?: () => void;
+  onSave?: () => void;
+  isSaved?: boolean;
 }
 
-export default function MessageBubble({ role, content, highlight }: MessageBubbleProps) {
+export default function MessageBubble({ role, content, highlight, showActions, onGenerateVariation, onSave, isSaved }: MessageBubbleProps) {
   const isUser = role === 'user';
 
   return (
@@ -40,6 +45,16 @@ export default function MessageBubble({ role, content, highlight }: MessageBubbl
           </div>
         )}
       </div>
+
+      {showActions && role === 'assistant' && (
+        <ResultActions
+          content={content}
+          highlightBody={highlight?.body}
+          onGenerateVariation={onGenerateVariation!}
+          onSave={onSave!}
+          isSaved={isSaved ?? false}
+        />
+      )}
     </div>
   );
 }
