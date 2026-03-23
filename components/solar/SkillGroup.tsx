@@ -13,6 +13,7 @@ interface SkillGroupProps {
   color: string;
   planetSize: number;
   onClick: () => void;
+  animationDelay?: number;
 }
 
 const MOON_ORBIT_RADIUS = 36;
@@ -25,6 +26,7 @@ export default function SkillGroup({
   color,
   planetSize,
   onClick,
+  animationDelay,
 }: SkillGroupProps) {
   const groupSize = (MOON_ORBIT_RADIUS + MOON_SIZE) * 2;
   const offset = groupSize / 2;
@@ -36,12 +38,14 @@ export default function SkillGroup({
 
   return (
     <div
+      className={animationDelay !== undefined ? 'orbit-appear' : undefined}
       style={{
         position: 'absolute',
         left: `calc(50% + ${x}px - ${offset}px)`,
         top: `calc(50% + ${y}px - ${offset}px)`,
         width: groupSize,
         height: groupSize,
+        ...(animationDelay !== undefined ? { animationDelay: `${animationDelay}ms` } : {}),
       }}
     >
       {/* Micro orbit ring for moons */}

@@ -73,11 +73,12 @@ export default function OrbitalSystem({
       <CenterNode label={center.label} color={center.color} size={center.size} />
 
       {/* Items */}
-      {items.map((item) => {
+      {items.map((item, idx) => {
         const pos = posMap.get(item.id);
         if (!pos) return null;
 
         const hasChildren = item.children && item.children.length > 0;
+        const staggerDelay = idx * 50;
 
         // Level 3: moon nodes with labels
         if (showChildLabels) {
@@ -91,6 +92,7 @@ export default function OrbitalSystem({
               x={pos.x}
               y={pos.y}
               onClick={() => onItemClick(item.id)}
+              animationDelay={staggerDelay}
             />
           );
         }
@@ -106,6 +108,7 @@ export default function OrbitalSystem({
               color={item.color}
               planetSize={item.size}
               onClick={() => onItemClick(item.id)}
+              animationDelay={staggerDelay}
             />
           );
         }
@@ -121,6 +124,7 @@ export default function OrbitalSystem({
             x={pos.x}
             y={pos.y}
             onClick={() => onItemClick(item.id)}
+            animationDelay={staggerDelay}
           />
         );
       })}

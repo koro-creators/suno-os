@@ -8,6 +8,7 @@ interface MoonNodeProps {
   x: number;
   y: number;
   onClick?: () => void;
+  animationDelay?: number;
 }
 
 const labelStyles: Record<string, React.CSSProperties> = {
@@ -25,9 +26,11 @@ export default function MoonNode({
   x,
   y,
   onClick,
+  animationDelay,
 }: MoonNodeProps) {
   return (
     <div
+      className={animationDelay !== undefined ? 'orbit-appear' : undefined}
       onClick={onClick}
       style={{
         position: 'absolute',
@@ -41,6 +44,7 @@ export default function MoonNode({
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 200ms ease-out, box-shadow 200ms ease-out, opacity 200ms ease-out',
         zIndex: 5,
+        ...(animationDelay !== undefined ? { animationDelay: `${animationDelay}ms` } : {}),
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget;

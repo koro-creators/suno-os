@@ -8,6 +8,7 @@ export default function OrbitRing({ radius, highlighted }: OrbitRingProps) {
 
   return (
     <div
+      className="orbit-ring-pulse"
       style={{
         position: 'absolute',
         top: '50%',
