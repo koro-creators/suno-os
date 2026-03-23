@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { BibliotecaItem } from '@/lib/types';
 import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useStreamingText } from '@/hooks/useStreamingText';
@@ -8,6 +8,9 @@ import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
 import ChatInput from './ChatInput';
 import ContextSidebar from './ContextSidebar';
+import PromptTemplateBar from './PromptTemplateBar';
+import VariationCards from './VariationCards';
+import { getTemplatesForChat } from '@/data/prompt-templates';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,6 +20,7 @@ interface Message {
 
 interface ChatInterfaceProps {
   moonSlug: string;
+  skillSlug: string;
   clientSlug: string;
   biblioteca: BibliotecaItem[];
 }
@@ -28,9 +32,17 @@ const GENERIC_FALLBACK: { content: string; highlight?: { label: string; body: st
     'Entendido. Estou analisando o contexto e preparando uma resposta personalizada com base na biblioteca do cliente e nas melhores praticas do setor.',
 };
 
-export default function ChatInterface({ moonSlug, clientSlug, biblioteca }: ChatInterfaceProps) {
+export default function ChatInterface({ moonSlug, skillSlug, clientSlug, biblioteca }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [pendingHighlight, setPendingHighlight] = useState<{ label: string; body: string } | undefined>();
+  const [savedMessages, setSavedMessages] = useState<Set<number>>(new Set());
+  const [variations, setVariations] = useState<Record<number, {
+    variants: string[];
+    selectedIndex: number;
+    originalHighlight?: { label: string; body: string };
+  }>>({});
+
+  const templates = getTemplatesForChat(skillSlug, moonSlug);
   const { text: streamingText, isStreaming, startStreaming } = useStreamingText();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const responseIndexRef = useRef<Record<string, number>>({});
@@ -87,15 +99,80 @@ export default function ChatInterface({ moonSlug, clientSlug, biblioteca }: Chat
     [isStreaming, clientSlug, moonSlug, startStreaming],
   );
 
+  function handleGenerateVariation(msgIndex: number) {
+    const msg = messages[msgIndex];
+    // Find matching response from mock data
+    const clientKey = `${clientSlug}-${moonSlug}`;
+    const responses = chatResponsesByMoon[clientKey] ?? chatResponsesByMoon[moonSlug];
+    const matchedResponse = responses?.find(r =>
+      msg.content.includes(r.content.substring(0, 40))
+    );
+
+    const variantTexts = matchedResponse?.variants ?? [
+      `Versão alternativa: ${msg.content.substring(0, 80)}...`,
+      `Outra abordagem: ${msg.content.substring(0, 80)}...`,
+    ];
+
+    setVariations(prev => ({
+      ...prev,
+      [msgIndex]: {
+        variants: variantTexts,
+        selectedIndex: 0,
+        originalHighlight: msg.highlight,
+      },
+    }));
+  }
+
+  function toggleSave(msgIndex: number) {
+    setSavedMessages(prev => {
+      const next = new Set(prev);
+      if (next.has(msgIndex)) next.delete(msgIndex);
+      else next.add(msgIndex);
+      return next;
+    });
+  }
+
   return (
     <div className="grid h-full" style={{ gridTemplateColumns: '1fr 280px' }}>
       {/* Left: Chat area */}
       <div className="flex flex-col overflow-hidden">
         {/* Message list */}
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-lg">
-          {messages.map((msg, i) => (
-            <MessageBubble key={i} role={msg.role} content={msg.content} highlight={msg.highlight} />
-          ))}
+          {messages.length === 0 && !isStreaming && (
+            <div className="flex flex-1 items-center justify-center">
+              <PromptTemplateBar templates={templates} onSelect={(prompt) => handleSend(prompt)} />
+            </div>
+          )}
+
+          {messages.map((msg, i) => {
+            const isAssistant = msg.role === 'assistant';
+            const isLastAndStreaming = false; // completed messages are never streaming
+            return (
+              <React.Fragment key={i}>
+                <MessageBubble
+                  role={msg.role}
+                  content={msg.content}
+                  highlight={msg.highlight}
+                  showActions={isAssistant && !isLastAndStreaming}
+                  onGenerateVariation={() => handleGenerateVariation(i)}
+                  onSave={() => toggleSave(i)}
+                  isSaved={savedMessages.has(i)}
+                />
+                {isAssistant && variations[i] && (
+                  <VariationCards
+                    original={msg.content}
+                    originalHighlight={variations[i].originalHighlight}
+                    variants={variations[i].variants}
+                    selectedIndex={variations[i].selectedIndex}
+                    onSelect={(idx) => setVariations(prev => ({
+                      ...prev,
+                      [i]: { ...prev[i], selectedIndex: idx },
+                    }))}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
 
           {/* Streaming message or indicator */}
           {isStreaming && streamingText && (

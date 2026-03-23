@@ -75,6 +75,7 @@ export default function MoonPage({
       <div id="main-content" className="flex-1 overflow-hidden">
         <ChatInterface
           moonSlug={moonSlug}
+          skillSlug={skillSlug}
           clientSlug={clientSlug}
           biblioteca={bibliotecaByClient[clientSlug] || []}
         />
