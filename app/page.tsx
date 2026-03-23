@@ -38,8 +38,8 @@ export default function Home() {
             width: 620,
             height: 620,
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 55% 45%, color-mix(in srgb, var(--sun) 60%, white) 0%, var(--sun) 40%, color-mix(in srgb, var(--sun) 70%, black) 100%)',
-            boxShadow: '0 0 150px color-mix(in srgb, var(--sun) 35%, transparent), 0 0 400px color-mix(in srgb, var(--sun) 15%, transparent)',
+            background: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--sun) 85%, white) 0%, var(--sun) 60%, color-mix(in srgb, var(--sun) 60%, black) 100%)',
+            boxShadow: '0 0 60px color-mix(in srgb, var(--sun) 15%, transparent), 0 0 150px color-mix(in srgb, var(--sun) 6%, transparent)',
             zIndex: 5,
             display: 'flex',
             alignItems: 'center',
@@ -159,7 +159,7 @@ function Planet({
   const metaRef = useRef<HTMLSpanElement>(null);
   const [navigating, setNavigating] = useState(false);
   const [focusVisible, setFocusVisible] = useState(false);
-  const ambientGlow = `0 0 8px color-mix(in srgb, ${client.color} 20%, transparent)`;
+  const ambientGlow = 'none';
 
   const handleClick = () => {
     setNavigating(true);
@@ -200,7 +200,7 @@ function Planet({
       onMouseEnter={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1.08)';
-          ref.current.style.boxShadow = `0 0 24px color-mix(in srgb, ${client.color} 45%, transparent), 0 0 60px color-mix(in srgb, ${client.color} 18%, transparent)`;
+          ref.current.style.boxShadow = 'none';
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-primary)';
         if (metaRef.current) metaRef.current.style.color = 'var(--text-secondary)';
@@ -208,7 +208,7 @@ function Planet({
       onMouseLeave={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1)';
-          ref.current.style.boxShadow = ambientGlow;
+          ref.current.style.boxShadow = 'none';
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
         if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
@@ -275,8 +275,8 @@ function Planet({
           width: size,
           height: size,
           borderRadius: '50%',
-          background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${client.color} 60%, white) 0%, ${client.color} 50%, color-mix(in srgb, ${client.color} 70%, black) 100%)`,
-          boxShadow: focusVisible ? `${ambientGlow}, 0 0 0 3px rgba(255,200,1,0.5)` : ambientGlow,
+          backgroundColor: client.color,
+          boxShadow: focusVisible ? '0 0 0 3px rgba(255,200,1,0.5)' : 'none',
           transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
         }}
       />

@@ -64,8 +64,8 @@ export default function ClientPage({
             width: 500,
             height: 500,
             borderRadius: '50%',
-            background: `radial-gradient(circle at 55% 45%, color-mix(in srgb, ${client.color} 60%, white) 0%, ${client.color} 40%, color-mix(in srgb, ${client.color} 70%, black) 100%)`,
-            boxShadow: `0 0 120px color-mix(in srgb, ${client.color} 30%, transparent), 0 0 300px color-mix(in srgb, ${client.color} 12%, transparent)`,
+            background: `radial-gradient(circle at 50% 50%, color-mix(in srgb, ${client.color} 85%, white) 0%, ${client.color} 60%, color-mix(in srgb, ${client.color} 60%, black) 100%)`,
+            boxShadow: `0 0 60px color-mix(in srgb, ${client.color} 15%, transparent), 0 0 150px color-mix(in srgb, ${client.color} 6%, transparent)`,
             zIndex: 5,
             display: 'flex',
             alignItems: 'center',
@@ -177,7 +177,7 @@ function SkillPlanet({
   const [navigating, setNavigating] = useState(false);
   const [focusVisible, setFocusVisible] = useState(false);
   const color = getSkillTypeColor(skill.type);
-  const ambientGlow = `0 0 8px color-mix(in srgb, ${color} 20%, transparent)`;
+  const ambientGlow = 'none';
 
   const typeLabel: Record<string, string> = {
     criacao: 'Criação',
@@ -224,7 +224,7 @@ function SkillPlanet({
       onMouseEnter={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1.08)';
-          ref.current.style.boxShadow = `0 0 24px color-mix(in srgb, ${color} 45%, transparent), 0 0 60px color-mix(in srgb, ${color} 18%, transparent)`;
+          ref.current.style.boxShadow = 'none';
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-primary)';
         if (metaRef.current) metaRef.current.style.color = 'var(--text-secondary)';
@@ -232,7 +232,7 @@ function SkillPlanet({
       onMouseLeave={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1)';
-          ref.current.style.boxShadow = ambientGlow;
+          ref.current.style.boxShadow = 'none';
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
         if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
@@ -299,8 +299,8 @@ function SkillPlanet({
           width: size,
           height: size,
           borderRadius: '50%',
-          background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 60%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
-          boxShadow: ambientGlow,
+          backgroundColor: color,
+          boxShadow: 'none',
           transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
           flexShrink: 0,
         }}

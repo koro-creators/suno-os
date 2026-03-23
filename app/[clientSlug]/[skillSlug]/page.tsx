@@ -69,8 +69,8 @@ export default function SkillPage({
             width: 400,
             height: 400,
             borderRadius: '50%',
-            background: `radial-gradient(circle at 55% 45%, color-mix(in srgb, ${skillColor} 60%, white) 0%, ${skillColor} 40%, color-mix(in srgb, ${skillColor} 70%, black) 100%)`,
-            boxShadow: `0 0 100px color-mix(in srgb, ${skillColor} 25%, transparent), 0 0 250px color-mix(in srgb, ${skillColor} 10%, transparent)`,
+            background: `radial-gradient(circle at 50% 50%, color-mix(in srgb, ${skillColor} 85%, white) 0%, ${skillColor} 60%, color-mix(in srgb, ${skillColor} 60%, black) 100%)`,
+            boxShadow: `0 0 60px color-mix(in srgb, ${skillColor} 15%, transparent), 0 0 150px color-mix(in srgb, ${skillColor} 6%, transparent)`,
             zIndex: 5,
             display: 'flex',
             alignItems: 'center',
@@ -197,7 +197,7 @@ function MoonPlanet({
   const labelRef = useRef<HTMLSpanElement>(null);
   const [navigating, setNavigating] = useState(false);
   const [focusVisible, setFocusVisible] = useState(false);
-  const ambientGlow = `0 0 8px color-mix(in srgb, ${color} 20%, transparent)`;
+  const ambientGlow = 'none';
 
   const handleClick = useCallback(() => {
     setNavigating(true);
@@ -238,14 +238,14 @@ function MoonPlanet({
       onMouseEnter={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1.08)';
-          ref.current.style.boxShadow = `0 0 24px color-mix(in srgb, ${color} 45%, transparent), 0 0 60px color-mix(in srgb, ${color} 18%, transparent)`;
+          ref.current.style.boxShadow = 'none';
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-primary)';
       }}
       onMouseLeave={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1)';
-          ref.current.style.boxShadow = ambientGlow;
+          ref.current.style.boxShadow = 'none';
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
       }}
@@ -296,8 +296,8 @@ function MoonPlanet({
           width: size,
           height: size,
           borderRadius: '50%',
-          background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 60%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
-          boxShadow: ambientGlow,
+          backgroundColor: color,
+          boxShadow: 'none',
           transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
           flexShrink: 0,
         }}
