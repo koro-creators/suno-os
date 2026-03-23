@@ -65,7 +65,7 @@ export default function SkillPage({
         <BackButton href={`/${clientSlug}`} label={client.name} />
       </div>
 
-      <div className="flex-1 relative min-h-0">
+      <div id="main-content" className="flex-1 relative min-h-0">
         <OrbitalSystem
           center={{ label: skill.name, color: skillColor, size: 140 }}
           orbitRadii={moonOrbitRadii}

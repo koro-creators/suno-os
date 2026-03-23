@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
 
@@ -27,7 +27,7 @@ export default function Home() {
         rightLabel="7 biomas"
       />
 
-      <div className="flex-1 relative min-h-0 flex items-center">
+      <div id="main-content" className="flex-1 relative min-h-0 flex items-center">
         {/* Sun — anchored to left edge, half visible */}
         <div
           style={{
@@ -157,11 +157,28 @@ function Planet({
   const ref = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const metaRef = useRef<HTMLSpanElement>(null);
+  const [navigating, setNavigating] = useState(false);
+  const [focusVisible, setFocusVisible] = useState(false);
   const ambientGlow = `0 0 8px color-mix(in srgb, ${client.color} 20%, transparent)`;
+
+  const handleClick = () => {
+    setNavigating(true);
+    onClick();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
 
   return (
     <div
-      className="orbit-appear planet-float"
+      className="orbit-appear"
+      role="button"
+      tabIndex={0}
+      aria-label={`${client.name} — ${client.skills.length} skills`}
       style={{
         position: 'absolute',
         left: planetX - size / 2,
@@ -171,18 +188,27 @@ function Planet({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 0,
-        cursor: 'pointer',
+        cursor: navigating ? 'wait' : 'pointer',
         animationDelay: `${delay}ms`,
         zIndex: 10,
+        opacity: navigating ? 0.5 : 1,
+        outline: 'none',
+        boxShadow: focusVisible ? '0 0 0 3px rgba(255,200,1,0.5)' : undefined,
+        borderRadius: '50%',
+        transition: 'opacity 200ms ease',
+        pointerEvents: navigating ? 'none' : 'auto',
       }}
-      onClick={onClick}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onFocus={() => setFocusVisible(true)}
+      onBlur={() => setFocusVisible(false)}
       onMouseEnter={() => {
         if (ref.current) {
           ref.current.style.transform = 'scale(1.08)';
           ref.current.style.boxShadow = `0 0 24px color-mix(in srgb, ${client.color} 45%, transparent), 0 0 60px color-mix(in srgb, ${client.color} 18%, transparent)`;
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-primary)';
-        if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
+        if (metaRef.current) metaRef.current.style.color = 'var(--text-secondary)';
       }}
       onMouseLeave={() => {
         if (ref.current) {
@@ -190,7 +216,7 @@ function Planet({
           ref.current.style.boxShadow = ambientGlow;
         }
         if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
-        if (metaRef.current) metaRef.current.style.color = 'transparent';
+        if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
       }}
     >
       {/* Label on top */}
@@ -210,13 +236,13 @@ function Planet({
         {client.name}
       </span>
 
-      {/* Meta (appears on hover) */}
+      {/* Meta — always visible for touch support */}
       <span
         ref={metaRef}
         style={{
           fontSize: '0.5rem',
           letterSpacing: '0.04em',
-          color: 'transparent',
+          color: 'var(--text-muted)',
           transition: 'color 200ms ease',
           whiteSpace: 'nowrap',
           userSelect: 'none',

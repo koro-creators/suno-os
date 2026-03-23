@@ -44,12 +44,13 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="Como posso ajudar?"
         disabled={disabled}
-        className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted outline-none"
+        className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted outline-none focus-visible:outline-none"
+        style={{ caretColor: 'var(--sun)' }}
       />
       <button
         onClick={handleSend}
         disabled={disabled || !value.trim()}
-        className="flex shrink-0 items-center justify-center rounded-full bg-sun text-void transition-opacity disabled:opacity-40"
+        className="flex shrink-0 items-center justify-center rounded-full bg-sun text-void transition-opacity disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sun"
         style={{ width: 32, height: 32 }}
         aria-label="Enviar mensagem"
       >

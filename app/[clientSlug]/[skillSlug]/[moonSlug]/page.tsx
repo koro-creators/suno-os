@@ -72,7 +72,7 @@ export default function MoonPage({
         }
       />
 
-      <div className="flex-1 overflow-hidden">
+      <div id="main-content" className="flex-1 overflow-hidden">
         <ChatInterface
           moonSlug={moonSlug}
           clientSlug={clientSlug}

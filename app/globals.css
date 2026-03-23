@@ -96,7 +96,7 @@ body {
 
 @keyframes orbit-pulse {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.85;
   }
   50% {
     opacity: 1;
@@ -121,10 +121,10 @@ body {
   50%       { translate: 0 -3px; }
 }
 
-/* Improvement 8: Connector line pulse */
+/* Connector line pulse — removed; connectors are now static */
 @keyframes connector-pulse {
-  0%, 100% { opacity: 0.03; }
-  50%       { opacity: 0.10; }
+  0%, 100% { opacity: 0.06; }
+  50%       { opacity: 0.06; }
 }
 
 .orbit-appear {
@@ -153,12 +153,13 @@ body {
     slow-rotate 50s linear infinite;
 }
 
+/* planet-float removed — hover glow provides sufficient feedback */
 .planet-float {
-  animation: float-only 4s ease-in-out infinite;
+  /* no continuous animation */
 }
 
 .connector-line-pulse {
-  animation: connector-pulse 4s ease-in-out infinite;
+  opacity: 0.06;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -185,10 +186,10 @@ body {
   }
 
   .planet-float {
-    animation: none !important;
+    /* already has no animation */
   }
 
   .connector-line-pulse {
-    animation: none !important;
+    opacity: 0.06 !important;
   }
 }

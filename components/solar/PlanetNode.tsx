@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 interface PlanetNodeProps {
   color: string;
@@ -64,16 +64,37 @@ export default function PlanetNode({
 }: PlanetNodeProps) {
   const labelRef = useRef<HTMLSpanElement>(null);
   const metaRef = useRef<HTMLSpanElement>(null);
+  const [focusVisible, setFocusVisible] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const isHorizontal = labelPosition === 'left' || labelPosition === 'right';
   const ambientGlow = `0 0 6px color-mix(in srgb, ${color} 25%, transparent)`;
+  const focusRing = '0 0 0 3px rgba(255,200,1,0.5)';
+
+  const ariaLabel = [label, meta].filter(Boolean).join(' — ') || undefined;
+
+  const handleClick = () => {
+    if (!onClick) return;
+    setNavigating(true);
+    onClick();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
 
   return (
     <div
-      className={[
-        animationDelay !== undefined ? 'orbit-appear' : '',
-        'planet-float',
-      ].filter(Boolean).join(' ')}
-      onClick={onClick}
+      className={animationDelay !== undefined ? 'orbit-appear' : ''}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? ariaLabel : undefined}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onFocus={() => setFocusVisible(true)}
+      onBlur={() => setFocusVisible(false)}
       style={{
         position: 'absolute',
         left: `calc(50% + ${x}px - ${size / 2}px)`,
@@ -82,25 +103,30 @@ export default function PlanetNode({
         height: size,
         borderRadius: '50%',
         background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 60%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
-        boxShadow: ambientGlow,
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
+        boxShadow: focusVisible
+          ? `${ambientGlow}, ${focusRing}`
+          : ambientGlow,
+        cursor: onClick ? (navigating ? 'wait' : 'pointer') : 'default',
+        outline: 'none',
+        opacity: navigating ? 0.5 : 1,
+        transition: 'transform 200ms ease-out, box-shadow 200ms ease-out, opacity 200ms ease-out',
         zIndex: 5,
+        pointerEvents: navigating ? 'none' : 'auto',
         ...(animationDelay !== undefined ? { animationDelay: `${animationDelay}ms` } : {}),
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget;
         el.style.transform = 'scale(1.08)';
-        el.style.boxShadow = `0 0 20px color-mix(in srgb, ${color} 40%, transparent), 0 0 60px color-mix(in srgb, ${color} 15%, transparent)`;
+        el.style.boxShadow = `0 0 20px color-mix(in srgb, ${color} 40%, transparent), 0 0 60px color-mix(in srgb, ${color} 15%, transparent)${focusVisible ? `, ${focusRing}` : ''}`;
         if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
-        if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
+        if (metaRef.current) metaRef.current.style.color = 'var(--text-secondary)';
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget;
         el.style.transform = 'scale(1)';
-        el.style.boxShadow = ambientGlow;
+        el.style.boxShadow = focusVisible ? `${ambientGlow}, ${focusRing}` : ambientGlow;
         if (labelRef.current) labelRef.current.style.color = 'var(--text-muted)';
-        if (metaRef.current) metaRef.current.style.color = 'transparent';
+        if (metaRef.current) metaRef.current.style.color = 'var(--text-muted)';
       }}
     >
       {label && (
@@ -154,7 +180,7 @@ export default function PlanetNode({
                 style={{
                   fontSize: '0.5rem',
                   letterSpacing: '0.04em',
-                  color: 'transparent',
+                  color: 'var(--text-muted)',
                   transition: 'color 200ms ease',
                   whiteSpace: 'nowrap',
                   userSelect: 'none',
