@@ -44,8 +44,8 @@
 [data-theme="light"] {
   /* Background */
   --void: #F5F2EB;
-  /* Surface level 1 */
-  --deep: #FFFFFF;
+  /* Surface level 1 — same off-white for sidebar/chat/header consistency */
+  --deep: #F5F2EB;
   /* Surface level 2 */
   --nebula: #EDE9E0;
   /* Borders, separators */
