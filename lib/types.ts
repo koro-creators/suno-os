@@ -33,4 +33,11 @@ export interface BibliotecaItem {
 export interface MockChatResponse {
   content: string;
   highlight?: { label: string; body: string };
+  variants?: string[];
+}
+
+export interface PromptTemplate {
+  id: string;
+  label: string;
+  prompt: string;
 }
