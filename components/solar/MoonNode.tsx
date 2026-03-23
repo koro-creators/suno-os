@@ -44,7 +44,7 @@ export default function MoonNode({
         width: size,
         height: size,
         borderRadius: '50%',
-        background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 130%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 65%, black) 100%)`,
+        background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 60%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 65%, black) 100%)`,
         opacity: 0.8,
         boxShadow: ambientGlow,
         cursor: onClick ? 'pointer' : 'default',

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sunOS — Melhorias Visuais</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #080d14;
+    color: #F1F5F9;
+  }
+
+  .header {
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .header h1 { font-size: 1.4rem; font-weight: 300; }
+  .header h1 strong { font-weight: 600; }
+  .header h1 .dot { color: #FFC801; }
+  .header p { color: #475569; font-size: 0.8rem; margin-top: 0.25rem; }
+
+  .improvements {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .improvement {
+    background: #0f1923;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .imp-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .imp-number {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #FFC801;
+    background: rgba(255,200,1,0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+  .imp-title { font-size: 0.9rem; font-weight: 500; }
+  .imp-impact {
+    margin-left: auto;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+  .impact-high { color: #FFC801; background: rgba(255,200,1,0.08); border: 1px solid rgba(255,200,1,0.15); }
+  .impact-med { color: #3B82F6; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); }
+
+  .imp-body {
+    padding: 1.5rem;
+  }
+  .imp-desc {
+    color: #94A3B8;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Before/After comparison */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .comp-side {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .comp-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .comp-label.before { color: #475569; }
+  .comp-label.after { color: #FFC801; }
+  .comp-content {
+    padding: 1.5rem;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== IMPROVEMENT 1: Background texture ===== */
+  .bg-current { background: #080d14; }
+  .bg-improved {
+    background: #080d14;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.1) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.12) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 90%, rgba(255,255,255,0.08) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 50%, rgba(255,255,255,0.1) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.06) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 80%, rgba(255,255,255,0.18) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 20%, rgba(255,255,255,0.08) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,0.12) 0%, transparent 100%),
+      radial-gradient(0.5px 0.5px at 15% 45%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(0.5px 0.5px at 85% 35%, rgba(255,255,255,0.15) 0%, transparent 100%),
+      radial-gradient(0.5px 0.5px at 45% 95%, rgba(255,255,255,0.1) 0%, transparent 100%);
+  }
+  .bg-current .center-dot, .bg-improved .center-dot {
+    width: 40px; height: 40px; border-radius: 50%; background: #FFC801;
+    box-shadow: 0 0 20px rgba(255,200,1,0.3), 0 0 60px rgba(255,200,1,0.1);
+  }
+
+  /* ===== IMPROVEMENT 2: Orbit lines ===== */
+  .orbit-demo {
+    position: relative;
+    width: 200px;
+    height: 200px;
+  }
+  .orbit-current {
+    position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .orbit-improved {
+    position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 0 8px rgba(255,255,255,0.03), inset 0 0 8px rgba(255,255,255,0.02);
+  }
+  .orbit-golden {
+    position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border: 1px solid rgba(255,200,1,0.12);
+    box-shadow: 0 0 12px rgba(255,200,1,0.04), inset 0 0 8px rgba(255,200,1,0.02);
+  }
+  .s1 { width: 80px; height: 80px; }
+  .s2 { width: 140px; height: 140px; }
+  .s3 { width: 190px; height: 190px; }
+  .dot-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 24px; height: 24px; border-radius: 50%; background: #FFC801;
+    box-shadow: 0 0 15px rgba(255,200,1,0.3);
+    z-index: 2;
+  }
+  .dot-planet {
+    position: absolute; border-radius: 50%; z-index: 2;
+  }
+
+  /* ===== IMPROVEMENT 3: Connector lines ===== */
+  .connector-demo {
+    position: relative; width: 200px; height: 200px;
+  }
+  .connector-line {
+    position: absolute;
+    top: 50%; left: 50%;
+    height: 1px;
+    transform-origin: left center;
+    background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  }
+  .connector-line-gold {
+    position: absolute;
+    top: 50%; left: 50%;
+    height: 1px;
+    transform-origin: left center;
+    background: linear-gradient(90deg, rgba(255,200,1,0.12) 0%, rgba(255,200,1,0.03) 100%);
+  }
+
+  /* ===== IMPROVEMENT 4: Labels ===== */
+  .label-current {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569;
+  }
+  .label-improved {
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  .label-improved .line {
+    width: 16px; height: 1px; background: rgba(255,255,255,0.15);
+  }
+  .label-improved span {
+    font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.12em; color: #94A3B8;
+    font-weight: 500;
+  }
+  .label-improved .meta {
+    font-size: 0.45rem; color: #475569; letter-spacing: 0.08em; text-transform: none;
+    margin-top: 1px;
+  }
+
+  /* ===== IMPROVEMENT 5: Planet glow ===== */
+  .planet-current {
+    width: 34px; height: 34px; border-radius: 50%; background: #EF4444;
+  }
+  .planet-hover-current {
+    width: 34px; height: 34px; border-radius: 50%; background: #EF4444;
+    box-shadow: 0 0 20px rgba(239,68,68,0.4), 0 0 60px rgba(239,68,68,0.15);
+    transform: scale(1.08);
+  }
+  .planet-improved {
+    width: 34px; height: 34px; border-radius: 50%; background: #EF4444;
+    box-shadow: 0 0 4px rgba(239,68,68,0.15);
+  }
+  .planet-hover-improved {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff6b6b 0%, #EF4444 50%, #dc2626 100%);
+    box-shadow: 0 0 20px rgba(239,68,68,0.5), 0 0 50px rgba(239,68,68,0.2), 0 0 80px rgba(239,68,68,0.08);
+  }
+
+  /* ===== IMPROVEMENT 6: Typography ===== */
+  .typo-section {
+    display: flex; flex-direction: column; gap: 0.75rem; text-align: left; width: 100%;
+  }
+
+  .summary {
+    background: rgba(255,200,1,0.04);
+    border: 1px solid rgba(255,200,1,0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .summary h3 {
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: #FFC801;
+  }
+  .summary ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .summary li {
+    font-size: 0.75rem;
+    color: #94A3B8;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .summary li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.4em;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #FFC801;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>sun<strong>OS</strong><span class="dot">.</span> Melhorias Visuais</h1>
+  <p>Baseado nas referencias (Simon Page, Blueprint, Retro Poster) + UI/UX Pro Max</p>
+</div>
+
+<div class="improvements">
+
+  <!-- 1. BACKGROUND TEXTURE -->
+  <div class="improvement">
+    <div class="imp-header">
+      <span class="imp-number">01</span>
+      <span class="imp-title">Background com estrelas/particulas</span>
+      <span class="imp-impact impact-high">Alto impacto</span>
+    </div>
+    <div class="imp-body">
+      <p class="imp-desc">Todas as referencias tem textura no fundo — estrelas, particulas, noise. O nosso e flat puro. Adicionar star field sutil com radial-gradients cria atmosfera espacial sem peso de performance.</p>
+      <div class="comparison">
+        <div class="comp-side">
+          <div class="comp-label before">Atual — flat</div>
+          <div class="comp-content bg-current"><div class="center-dot"></div></div>
+        </div>
+        <div class="comp-side">
+          <div class="comp-label after">Proposta — star field</div>
+          <div class="comp-content bg-improved"><div class="center-dot"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ORBIT LINES -->
+  <div class="improvement">
+    <div class="imp-header">
+      <span class="imp-number">02</span>
+      <span class="imp-title">Orbitas com tom dourado/warm (estilo Simon Page)</span>
+      <span class="imp-impact impact-high">Alto impacto</span>
+    </div>
+    <div class="imp-body">
+      <p class="imp-desc">Na ref do Simon Page (International Year of Astronomy), as orbitas sao douradas/warm, nao brancas. Isso cria coesao com o amarelo Suno e uma atmosfera mais quente e elegante. Adicionar um glow sutil inset/outset nos aneis.</p>
+      <div class="comparison">
+        <div class="comp-side">
+          <div class="comp-label before">Atual — branco frio</div>
+          <div class="comp-content bg-improved">
+            <div class="orbit-demo">
+              <div class="orbit-current s1"></div>
+              <div class="orbit-current s2"></div>
+              <div class="orbit-current s3"></div>
+              <div class="dot-center"></div>
+              <div class="dot-planet" style="width:14px;height:14px;background:#EF4444;top:4px;left:45%;"></div>
+              <div class="dot-planet" style="width:12px;height:12px;background:#8B5CF6;top:38%;right:4px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-side">
+          <div class="comp-label after">Proposta — dourado warm + glow</div>
+          <div class="comp-content bg-improved">
+            <div class="orbit-demo">
+              <div class="orbit-golden s1"></div>
+              <div class="orbit-golden s2"></div>
+              <div class="orbit-golden s3"></div>
+              <div class="dot-center"></div>
+              <div class="dot-planet" style="width:14px;height:14px;background:#EF4444;top:4px;left:45%;box-shadow:0 0 8px rgba(239,68,68,0.2);"></div>
+              <div class="dot-planet" style="width:12px;height:12px;background:#8B5CF6;top:38%;right:4px;box-shadow:0 0 8px rgba(139,92,246,0.2);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CONNECTOR LINES -->
+  <div class="improvement">
+    <div class="imp-header">
+      <span class="imp-number">03</span>
+      <span class="imp-title">Connector lines do centro aos planetas</span>
+      <span class="imp-impact impact-med">Medio impacto</span>
+    </div>
+    <div class="imp-body">
+      <p class="imp-desc">Refs 1 e 2 mostram linhas finas conectando o centro (sol) a cada planeta. Cria hierarquia visual e guia o olho. Implementar como gradient lines que desvanecem do centro pra fora. Aparecem/intensificam no hover.</p>
+      <div class="comparison">
+        <div class="comp-side">
+          <div class="comp-label before">Atual — sem conectores</div>
+          <div class="comp-content bg-improved">
+            <div class="orbit-demo">
+              <div class="orbit-golden s2"></div>
+              <div class="dot-center"></div>
+              <div class="dot-planet" style="width:14px;height:14px;background:#22C55E;top:10px;right:20px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-side">
+          <div class="comp-label after">Proposta — gradient connectors</div>
+          <div class="comp-content bg-improved">
+            <div class="orbit-demo">
+              <div class="orbit-golden s2"></div>
+              <div class="dot-center"></div>
+              <div class="connector-line-gold" style="width:80px;transform:rotate(-35deg);"></div>
+              <div class="dot-planet" style="width:14px;height:14px;background:#22C55E;top:10px;right:20px;box-shadow:0 0 10px rgba(34,197,94,0.3);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. LABELS WITH CONNECTORS -->
+  <div class="improvement">
+    <div class="imp-header">
+      <span class="imp-number">04</span>
+      <span class="imp-title">Labels editoriais com linha conectora + metadata</span>
+      <span class="imp-impact impact-high">Alto impacto</span>
+    </div>
+    <div class="imp-body">
+      <p class="imp-desc">Nas refs, labels nao flutuam soltos — tem uma linha fina conectando ao planeta. Algumas mostram dados extras (num skills, ultimo uso). Estilo editorial/infografico vs. UI generica.</p>
+      <div class="comparison">
+        <div class="comp-side">
+          <div class="comp-label before">Atual — texto solto</div>
+          <div class="comp-content" style="gap:2rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <div style="width:30px;height:30px;border-radius:50%;background:#EF4444;"></div>
+              <span class="label-current">SANTANDER</span>
+            </div>
+          </div>
+        </div>
+        <div class="comp-side">
+          <div class="comp-label after">Proposta — editorial com connector + meta</div>
+          <div class="comp-content" style="gap:2rem;">
+            <div style="display:flex;align-items:center;gap:0;">
+              <div style="width:30px;height:30px;border-radius:50%;background:#EF4444;box-shadow:0 0 8px rgba(239,68,68,0.2);"></div>
+              <div class="label-improved" style="margin-left:0;">
+                <div class="line"></div>
+                <div>
+                  <span>Santander</span>
+                  <div class="meta">6 skills · 18 areas</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. PLANET VISUAL QUALITY -->
+  <div class="improvement">
+    <div class="imp-header">
+      <span class="imp-number">05</span>
+      <span class="imp-title">Planetas com gradiente radial sutil + ambient glow</span>
+      <span class="imp-impact impact-med">Medio impacto</span>
+    </div>
+    <div class="imp-body">
+      <p class="imp-desc">Planetas flat parecem circulos de UI. Com radial-gradient sutil (ponto de luz no top-left) e ambient glow permanente (muito sutil), ganham dimensao. No hover, o glow intensifica.</p>
+      <div class="comparison">
+        <div class="comp-side">
+          <div class="comp-label before">Atual — flat + hover abrupto</div>
+          <div class="comp-content" style="gap:2rem;">
+            <div style="text-align:center">
+              <div class="planet-current" style="margin:0 auto;"></div>
+              <div style="font-size:0.5rem;color:#475569;margin-top:0.5rem;">REST</div>
+            </div>
+            <div style="text-align:center">
+              <div class="planet-hover-current" style="margin:0 auto;"></div>
+              <div style="font-size:0.5rem;color:#475569;margin-top:0.5rem;">HOVER</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-side">
+          <div class="comp-label after">Proposta — gradiente + ambient glow</div>
+          <div class="comp-content" style="gap:2rem;">
+            <div style="text-align:center">
+              <div class="planet-improved" style="margin:0 auto;"></div>
+              <div style="font-size:0.5rem;color:#475569;margin-top:0.5rem;">REST (ambient)</div>
+            </div>
+            <div style="text-align:center">
+              <div class="planet-hover-improved" style="margin:0 auto;"></div>
+              <div style="font-size:0.5rem;color:#475569;margin-top:0.5rem;">HOVER (radial gradient)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. EDITORIAL TYPOGRAPHY -->
+  <div class="improvement">
+    <div class="imp-header">
+      <span class="imp-number">06</span>
+      <span class="imp-title">Tipografia editorial no canto (estilo Simon Page)</span>
+      <span class="imp-impact impact-med">Medio impacto</span>
+    </div>
+    <div class="imp-body">
+      <p class="imp-desc">O poster Simon Page tem texto editorial no canto — titulo grande + descricao pequena. Podemos adicionar um bloco tipografico no canto da Home e do Bioma com info contextual (nome do nivel, contagem, etc.).</p>
+      <div class="comparison">
+        <div class="comp-side">
+          <div class="comp-label before">Atual — so header</div>
+          <div class="comp-content" style="align-items:flex-start;justify-content:flex-start;padding:1rem;">
+            <div class="typo-section">
+              <div style="font-size:0.6rem;color:#475569;text-transform:uppercase;letter-spacing:0.1em;">Header padrao</div>
+              <div style="font-size:0.8rem;color:#94A3B8;">sunOS. &nbsp; Home &nbsp; 7 biomas</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-side">
+          <div class="comp-label after">Proposta — bloco editorial</div>
+          <div class="comp-content" style="align-items:flex-end;justify-content:flex-end;padding:1.5rem;">
+            <div style="text-align:right;">
+              <div style="font-size: 2.5rem; font-weight: 200; color: rgba(255,255,255,0.06); line-height: 1;">01</div>
+              <div style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: #94A3B8; margin-top: 0.25rem;">Sistema Solar</div>
+              <div style="font-size: 0.45rem; color: #475569; line-height: 1.5; max-width: 180px; margin-top: 0.35rem;">7 biomas ativos · 31 skills · Ultima atividade ha 2h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <h3>Resumo — 6 Melhorias</h3>
+    <ul>
+      <li><strong>Star field</strong> — background com particulas de estrelas via CSS gradients</li>
+      <li><strong>Orbitas douradas</strong> — linhas warm/golden com glow sutil (estilo Simon Page)</li>
+      <li><strong>Connector lines</strong> — gradientes do centro aos planetas</li>
+      <li><strong>Labels editoriais</strong> — linha conectora + metadata (num skills, areas)</li>
+      <li><strong>Planetas com profundidade</strong> — radial-gradient + ambient glow permanente</li>
+      <li><strong>Tipografia editorial</strong> — bloco de contexto no canto inferior direito</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

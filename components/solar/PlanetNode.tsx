@@ -81,7 +81,7 @@ export default function PlanetNode({
         width: size,
         height: size,
         borderRadius: '50%',
-        background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 140%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
+        background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 60%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
         boxShadow: ambientGlow,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
