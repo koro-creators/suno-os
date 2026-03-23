@@ -56,7 +56,7 @@ export default function SkillPage({
   const orbitRadii = moons.length <= 3 ? [80] : [80, 140];
 
   return (
-    <main className="flex flex-col min-h-screen bg-space">
+    <main className="flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[
           { label: 'Home', href: '/' },
@@ -70,7 +70,7 @@ export default function SkillPage({
         <BackButton href={`/${clientSlug}`} label={client.name} />
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0">
         <OrbitalSystem
           center={{ label: skill.name, color: skillColor, size: 56 }}
           orbitRadii={orbitRadii}

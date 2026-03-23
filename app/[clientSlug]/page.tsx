@@ -54,7 +54,7 @@ export default function ClientPage({
   });
 
   return (
-    <main className="flex flex-col min-h-screen bg-space">
+    <main className="flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[
           { label: 'Home', href: '/' },
@@ -63,7 +63,7 @@ export default function ClientPage({
         rightLabel={`${client.skills.length} skills`}
       />
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0">
         <OrbitalSystem
           center={{ label: client.name, color: client.color, size: 60 }}
           orbitRadii={[90, 160, 220]}

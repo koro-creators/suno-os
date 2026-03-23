@@ -64,13 +64,13 @@ export default function Home() {
   });
 
   return (
-    <main className="flex flex-col min-h-screen bg-space">
+    <main className="flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[{ label: 'Home', href: '/' }]}
         rightLabel="7 biomas"
       />
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0">
         <OrbitalSystem
           center={{ label: 'Suno', color: 'var(--sun)', size: 52 }}
           orbitRadii={[80, 140, 200]}
