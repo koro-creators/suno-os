@@ -38,10 +38,10 @@ export default function SkillPage({
 
   // Sun center X = left(-180) + 400/2 = 20px from left edge
   const sunCenterX = 20;
-  const ORBIT_START = 280;
-  const ORBIT_STEP = 160;
+  const ORBIT_START = 380;
+  const ORBIT_STEP = 150;
   const orbitRadii = moons.map((_, i) => ORBIT_START + i * ORBIT_STEP);
-  const yOffsets = [14, -20, 18, -12, 22];
+  const yOffsets = [0, 0, 0, 0, 0];
 
   return (
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">

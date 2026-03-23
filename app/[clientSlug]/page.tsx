@@ -38,10 +38,10 @@ export default function ClientPage({
 
   // Sun center X = left(-220) + 500/2 = 30px from left edge
   const sunCenterX = 30;
-  const ORBIT_START = 300;
-  const ORBIT_STEP = 140;
+  const ORBIT_START = 400;
+  const ORBIT_STEP = 130;
   const orbitRadii = filteredSkills.map((_, i) => ORBIT_START + i * ORBIT_STEP);
-  const yOffsets = [12, -22, 16, -28, 20, -15, 24, -10];
+  const yOffsets = [0, 0, 0, 0, 0, 0, 0, 0];
 
   return (
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
