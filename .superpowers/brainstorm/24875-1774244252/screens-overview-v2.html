@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sunOS — Telas v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --void: #080d14;
+    --deep: #0f1923;
+    --nebula: #1b2b3a;
+    --twilight: #263a4d;
+    --sun: #FFC801;
+    --criacao: #FFC801;
+    --midia: #3B82F6;
+    --planejamento: #10B981;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #475569;
+    --orbit-line: rgba(255,255,255,0.07);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--void);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .page-header h1 { font-size: 1.5rem; font-weight: 300; margin-bottom: 0.25rem; }
+  .page-header h1 span { font-weight: 600; }
+  .page-header h1 .dot { color: var(--sun); }
+  .page-header p { color: var(--text-muted); font-size: 0.8rem; }
+
+  .screens {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .screen-section {
+    background: var(--deep);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .screen-label {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .screen-label .level {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--sun);
+    background: rgba(255,200,1,0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .screen-label .route {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .screen-label .name {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .screen-mockup {
+    position: relative;
+    min-height: 520px;
+    background: var(--void);
+    overflow: hidden;
+  }
+
+  /* ======== SHARED HEADER ======== */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(8,13,20,0.8);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+  }
+  .logo { font-size: 1.1rem; font-weight: 300; letter-spacing: -0.01em; }
+  .logo strong { font-weight: 600; }
+  .logo .dot { color: var(--sun); }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .breadcrumb .active { color: var(--text-primary); }
+  .breadcrumb .sep { opacity: 0.3; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .level-indicator {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    padding: 0.25rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--nebula);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* ======== SOLAR SYSTEM CORE ======== */
+  .solar-system {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .orbit {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--orbit-line);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .sun-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--sun);
+    box-shadow: 0 0 30px rgba(255,200,1,0.4), 0 0 80px rgba(255,200,1,0.15);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sun-center span {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--void);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Planet — larger sizes, positioned ON orbit rings */
+  .planet {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .planet:hover { transform: scale(1.15); }
+
+  .planet-label {
+    position: absolute;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    transition: color 0.2s, opacity 0.2s;
+  }
+  .planet:hover .planet-label { color: var(--text-secondary); }
+
+  /* ======== LEVEL 1: HOME — 440px system ======== */
+  .home-system { width: 440px; height: 440px; }
+  .home-system .sun-center { width: 52px; height: 52px; }
+
+  /* Orbit radii: 80px, 140px, 200px (from center) */
+  .home-system .orbit-1 { width: 160px; height: 160px; }
+  .home-system .orbit-2 { width: 280px; height: 280px; }
+  .home-system .orbit-3 { width: 400px; height: 400px; }
+
+  /* Connector lines - dashed, from center outward */
+  .connector {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 1px;
+    transform-origin: left center;
+    z-index: 1;
+    overflow: hidden;
+  }
+  .connector-line {
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 3px, transparent 3px, transparent 7px);
+  }
+
+  /*
+    Planets placed ON the orbit rings using trigonometry.
+    Orbit 1 (r=80): BMG, Stone
+    Orbit 2 (r=140): Vivo, MRV, Sicredi
+    Orbit 3 (r=200): Santander, Americanas
+    Center of system = 220, 220. Planet offset = -half its size.
+  */
+
+  /* Orbit 3 — r=200px */
+  /* Santander: angle ~30deg => cx=220+200*cos(30)=393, cy=220-200*sin(30)=120 */
+  .p-santander {
+    width: 36px; height: 36px; background: #EF4444;
+    left: 375px; top: 102px;
+  }
+  .p-santander:hover { box-shadow: 0 0 24px rgba(239,68,68,0.45), 0 0 60px rgba(239,68,68,0.15); }
+  .p-santander .planet-label { top: -20px; left: 50%; transform: translateX(-50%); }
+
+  /* Americanas: angle ~210deg => cx=220+200*cos(210)=47, cy=220-200*sin(210)=320 */
+  .p-americanas {
+    width: 32px; height: 32px; background: #F97316;
+    left: 31px; top: 304px;
+  }
+  .p-americanas:hover { box-shadow: 0 0 24px rgba(249,115,22,0.45), 0 0 60px rgba(249,115,22,0.15); }
+  .p-americanas .planet-label { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+
+  /* Orbit 2 — r=140px */
+  /* Vivo: angle ~80deg => cx=220+140*cos(80)=244, cy=220-140*sin(80)=82 */
+  .p-vivo {
+    width: 34px; height: 34px; background: #8B5CF6;
+    left: 227px; top: 65px;
+  }
+  .p-vivo:hover { box-shadow: 0 0 24px rgba(139,92,246,0.45), 0 0 60px rgba(139,92,246,0.15); }
+  .p-vivo .planet-label { top: -20px; left: 50%; transform: translateX(-50%); }
+
+  /* MRV: angle ~200deg => cx=220+140*cos(200)=88, cy=220-140*sin(200)=268 */
+  .p-mrv {
+    width: 30px; height: 30px; background: #06B6D4;
+    left: 73px; top: 253px;
+  }
+  .p-mrv:hover { box-shadow: 0 0 24px rgba(6,182,212,0.45), 0 0 60px rgba(6,182,212,0.15); }
+  .p-mrv .planet-label { bottom: -20px; left: 50%; transform: translateX(-50%); }
+
+  /* Sicredi: angle ~310deg => cx=220+140*cos(310)=310, cy=220-140*sin(310)=327 */
+  .p-sicredi {
+    width: 34px; height: 34px; background: #22C55E;
+    left: 293px; top: 310px;
+  }
+  .p-sicredi:hover { box-shadow: 0 0 24px rgba(34,197,94,0.45), 0 0 60px rgba(34,197,94,0.15); }
+  .p-sicredi .planet-label { bottom: -20px; left: 50%; transform: translateX(-50%); }
+
+  /* Orbit 1 — r=80px */
+  /* BMG: angle ~140deg => cx=220+80*cos(140)=159, cy=220-80*sin(140)=169 */
+  .p-bmg {
+    width: 28px; height: 28px; background: #F472B6;
+    left: 145px; top: 155px;
+  }
+  .p-bmg:hover { box-shadow: 0 0 24px rgba(244,114,182,0.45), 0 0 60px rgba(244,114,182,0.15); }
+  .p-bmg .planet-label { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+
+  /* Stone: angle ~350deg => cx=220+80*cos(350)=299, cy=220-80*sin(350)=234 */
+  .p-stone {
+    width: 28px; height: 28px; background: #A3E635;
+    left: 285px; top: 220px;
+  }
+  .p-stone:hover { box-shadow: 0 0 24px rgba(163,230,53,0.45), 0 0 60px rgba(163,230,53,0.15); }
+  .p-stone .planet-label { left: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+
+  /* ======== LEVEL 2: CLIENT ======== */
+  .client-system { width: 400px; height: 400px; }
+  .client-system .orbit-1 { width: 150px; height: 150px; }
+  .client-system .orbit-2 { width: 260px; height: 260px; }
+  .client-system .orbit-3 { width: 370px; height: 370px; }
+
+  .client-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #EF4444;
+    box-shadow: 0 0 30px rgba(239,68,68,0.3), 0 0 80px rgba(239,68,68,0.1);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .client-center span {
+    font-size: 0.4rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .skill-planet {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .skill-planet:hover { transform: scale(1.15); }
+  .skill-label {
+    position: absolute;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+  }
+
+  /* Skills on orbit rings — system center at 200,200 */
+  /* Orbit 2 r=130: Texto Radio (45deg), Copy Social (135deg), Plano Midia (225deg) */
+  /* Orbit 3 r=185: Report Perf (0deg), Persona (160deg), Brief (280deg) */
+
+  /* Texto de Radio — orbit 2, 45deg => 200+130*cos(45)=292, 200-130*sin(45)=108 */
+  .sk-texto { width: 32px; height: 32px; background: var(--criacao); left: 276px; top: 92px; }
+  .sk-texto:hover { box-shadow: 0 0 24px rgba(255,200,1,0.45), 0 0 60px rgba(255,200,1,0.15); }
+  .sk-texto .skill-label { top: -22px; left: 50%; transform: translateX(-50%); color: var(--criacao); }
+
+  /* Copy Social — orbit 2, 135deg => 200+130*cos(135)=108, 200-130*sin(135)=108 */
+  .sk-copy { width: 30px; height: 30px; background: var(--criacao); left: 93px; top: 93px; }
+  .sk-copy:hover { box-shadow: 0 0 24px rgba(255,200,1,0.45), 0 0 60px rgba(255,200,1,0.15); }
+  .sk-copy .skill-label { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); color: var(--criacao); }
+
+  /* Plano de Midia — orbit 2, 240deg => 200+130*cos(240)=135, 200-130*sin(240)=313 */
+  .sk-plano { width: 34px; height: 34px; background: var(--midia); left: 118px; top: 296px; }
+  .sk-plano:hover { box-shadow: 0 0 24px rgba(59,130,246,0.45), 0 0 60px rgba(59,130,246,0.15); }
+  .sk-plano .skill-label { bottom: -22px; left: 50%; transform: translateX(-50%); color: var(--midia); }
+
+  /* Report Performance — orbit 3, 350deg => 200+185*cos(350)=382, 200-185*sin(350)=232 */
+  .sk-report { width: 28px; height: 28px; background: var(--midia); left: 368px; top: 218px; }
+  .sk-report:hover { box-shadow: 0 0 24px rgba(59,130,246,0.45), 0 0 60px rgba(59,130,246,0.15); }
+  .sk-report .skill-label { left: calc(100% + 10px); top: 50%; transform: translateY(-50%); color: var(--midia); }
+
+  /* Persona Sintetica — orbit 3, 170deg => 200+185*cos(170)=18, 200-185*sin(170)=168 */
+  .sk-persona { width: 32px; height: 32px; background: var(--planejamento); left: 2px; top: 152px; }
+  .sk-persona:hover { box-shadow: 0 0 24px rgba(16,185,129,0.45), 0 0 60px rgba(16,185,129,0.15); }
+  .sk-persona .skill-label { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); color: var(--planejamento); }
+
+  /* Brief Builder — orbit 3, 290deg => 200+185*cos(290)=263, 200-185*sin(290)=374 */
+  .sk-brief { width: 30px; height: 30px; background: var(--planejamento); left: 248px; top: 359px; }
+  .sk-brief:hover { box-shadow: 0 0 24px rgba(16,185,129,0.45), 0 0 60px rgba(16,185,129,0.15); }
+  .sk-brief .skill-label { bottom: -22px; left: 50%; transform: translateX(-50%); color: var(--planejamento); }
+
+  /* Filter pills */
+  .filter-bar {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+  }
+  .filter-pill {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-pill:hover { border-color: rgba(255,255,255,0.2); color: var(--text-secondary); }
+  .filter-pill.active { border-color: var(--sun); color: var(--sun); background: rgba(255,200,1,0.08); }
+
+  /* ======== LEVEL 3: CHAT ======== */
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    height: calc(520px - 45px);
+  }
+
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+  }
+
+  .msg {
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .msg-user {
+    background: var(--nebula);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    color: var(--text-primary);
+  }
+  .msg-assistant {
+    background: rgba(255,255,255,0.03);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    color: var(--text-secondary);
+  }
+  .typing { display: inline-flex; gap: 4px; }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-muted); animation: blink 1.4s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,60%,100% { opacity:0.3; } 30% { opacity:1; } }
+
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .chat-input {
+    display: flex;
+    align-items: center;
+    background: var(--deep);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 0.6rem 0.6rem 0.6rem 1.25rem;
+    gap: 0.5rem;
+  }
+  .chat-input input {
+    flex: 1; background: none; border: none;
+    color: var(--text-primary); font-size: 0.875rem;
+    font-family: inherit; outline: none;
+  }
+  .chat-input input::placeholder { color: var(--text-muted); }
+  .send-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--sun); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .send-btn svg { width: 14px; height: 14px; fill: var(--void); }
+
+  .context-sidebar { padding: 1.25rem; overflow-y: auto; }
+  .ctx-section { margin-bottom: 1.25rem; }
+  .ctx-section-title {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-muted); margin-bottom: 0.6rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .ctx-section-title .dot-sm { width: 5px; height: 5px; border-radius: 50%; }
+  .ctx-item {
+    font-size: 0.75rem; color: var(--text-secondary);
+    padding: 0.4rem 0.6rem; background: rgba(255,255,255,0.02);
+    border-radius: 6px; margin-bottom: 0.35rem;
+    border-left: 2px solid rgba(255,255,255,0.06);
+  }
+  .ctx-item.active { border-left-color: var(--sun); background: rgba(255,200,1,0.03); }
+
+  .hitl-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.65rem; color: var(--planejamento);
+    background: rgba(16,185,129,0.08); padding: 0.3rem 0.6rem;
+    border-radius: 20px; border: 1px solid rgba(16,185,129,0.15);
+  }
+  .hitl-badge .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--planejamento); animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+  }
+
+  .screen-desc {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: var(--deep);
+  }
+  .screen-desc h4 { font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem; }
+  .screen-desc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .screen-desc li {
+    font-size: 0.7rem; color: var(--text-muted);
+    background: rgba(255,255,255,0.03); padding: 0.2rem 0.6rem;
+    border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>sun<span>OS</span><span class="dot">.</span> Telas v2</h1>
+  <p>Planetas alinhados nas orbitas, circulos maiores</p>
+</div>
+
+<div class="screens">
+
+  <!-- ==================== LEVEL 1: HOME ==================== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 1</span>
+      <span class="name">Home — Sistema Solar de Clientes</span>
+      <span class="route">/</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb"><span class="active">Home</span></div>
+        <div class="header-right">
+          <span class="level-indicator">7 biomas</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="solar-system home-system">
+        <div class="orbit orbit-1"></div>
+        <div class="orbit orbit-2"></div>
+        <div class="orbit orbit-3"></div>
+
+        <div class="sun-center"><span>Suno</span></div>
+
+        <!-- Orbit 3 planets -->
+        <div class="planet p-santander"><div class="planet-label">Santander</div></div>
+        <div class="planet p-americanas"><div class="planet-label">Americanas</div></div>
+
+        <!-- Orbit 2 planets -->
+        <div class="planet p-vivo"><div class="planet-label">Vivo</div></div>
+        <div class="planet p-mrv"><div class="planet-label">MRV</div></div>
+        <div class="planet p-sicredi"><div class="planet-label">Sicredi</div></div>
+
+        <!-- Orbit 1 planets -->
+        <div class="planet p-bmg"><div class="planet-label">BMG</div></div>
+        <div class="planet p-stone"><div class="planet-label">Stone</div></div>
+      </div>
+    </div>
+    <div class="screen-desc">
+      <h4>Ajustes v2</h4>
+      <ul>
+        <li>Planetas posicionados com trigonometria SOBRE os aneis</li>
+        <li>Circulos 28-36px (antes 18-28px)</li>
+        <li>Distribuicao: 2 na orbita interna, 3 na media, 2 na externa</li>
+        <li>Glow mais pronunciado no hover</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== LEVEL 2: CLIENT ==================== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 2</span>
+      <span class="name">Bioma do Cliente — Skills</span>
+      <span class="route">/santander</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span>
+          <span class="sep">/</span>
+          <span class="active">Santander</span>
+        </div>
+        <div class="header-right">
+          <span class="level-indicator">6 skills</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="solar-system client-system">
+        <div class="orbit orbit-1"></div>
+        <div class="orbit orbit-2"></div>
+        <div class="orbit orbit-3"></div>
+
+        <div class="client-center"><span>Santander</span></div>
+
+        <!-- Skills on orbits -->
+        <div class="skill-planet sk-texto"><div class="skill-label">Texto de Radio</div></div>
+        <div class="skill-planet sk-copy"><div class="skill-label">Copy Social</div></div>
+        <div class="skill-planet sk-plano"><div class="skill-label">Plano de Midia</div></div>
+        <div class="skill-planet sk-report"><div class="skill-label">Report Perf.</div></div>
+        <div class="skill-planet sk-persona"><div class="skill-label">Persona Sintetica</div></div>
+        <div class="skill-planet sk-brief"><div class="skill-label">Brief Builder</div></div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-pill active">Todos</div>
+        <div class="filter-pill">Criacao</div>
+        <div class="filter-pill">Midia</div>
+        <div class="filter-pill">Planejamento</div>
+      </div>
+    </div>
+    <div class="screen-desc">
+      <h4>Ajustes v2</h4>
+      <ul>
+        <li>Skills 28-34px (antes 20-26px)</li>
+        <li>Posicionados com angulos sobre orbitas 2 e 3</li>
+        <li>Espaco uniforme entre planetas</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== LEVEL 3: CHAT ==================== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 3</span>
+      <span class="name">Skill Chat — Texto de Radio</span>
+      <span class="route">/santander/texto-de-radio</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span><span class="sep">/</span>
+          <span>Santander</span><span class="sep">/</span>
+          <span class="active">Texto de Radio</span>
+        </div>
+        <div class="header-right">
+          <div style="display:flex;align-items:center;gap:0.4rem;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--criacao);box-shadow:0 0 8px rgba(255,200,1,0.3);"></div>
+            <span class="level-indicator">Criacao</span>
+          </div>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="chat-layout">
+        <div class="chat-main">
+          <div class="chat-messages">
+            <div class="msg msg-user">Preciso de um spot de 30 segundos pro Santander Van. Tom descontraido, publico jovem.</div>
+            <div class="msg msg-assistant">
+              Aqui vai uma opcao de roteiro para o Santander Van, 30 segundos, tom descontraido:
+              <div style="margin-top:0.75rem;padding:0.75rem;background:rgba(255,200,1,0.04);border-left:2px solid var(--sun);border-radius:0 6px 6px 0;font-size:0.8rem;">
+                <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--sun);margin-bottom:0.4rem;">Roteiro — Spot Radio 30"</div>
+                LOC: Imagina um banco que cabe no seu bolso e entende o seu corre...
+              </div>
+            </div>
+            <div class="msg msg-user">Bom! Agora faz uma versao mais formal pro publico 35+.</div>
+            <div class="msg msg-assistant">
+              <div class="typing"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <div class="chat-input">
+              <input type="text" placeholder="Como posso ajudar?" disabled>
+              <button class="send-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="context-sidebar">
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--sun);"></div>
+              Biblioteca
+            </div>
+            <div class="ctx-item active">Tom de voz Santander</div>
+            <div class="ctx-item">Restricoes legais banking</div>
+            <div class="ctx-item">Dados demograficos SP</div>
+            <div class="ctx-item">Historico campanhas Q4</div>
+          </div>
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--midia);"></div>
+              Agentes
+            </div>
+            <div class="ctx-item">Copywriter</div>
+            <div class="ctx-item">Revisor</div>
+          </div>
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--planejamento);"></div>
+              Validacao
+            </div>
+            <div class="hitl-badge">
+              <div class="pulse"></div>
+              Human-in-the-Loop ativo
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-desc">
+      <h4>Chat (sem alteracoes)</h4>
+      <ul>
+        <li>Layout split mantido</li>
+        <li>Streaming simulado com typing dots</li>
+        <li>Context sidebar com Biblioteca + Agentes + HITL</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

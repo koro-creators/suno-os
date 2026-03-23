@@ -16,9 +16,9 @@ const typeLabels: Record<string, string> = {
 export default function MoonPage({
   params,
 }: {
-  params: Promise<{ clientSlug: string; skillSlug: string; moonSlug: string }>;
+  params: { clientSlug: string; skillSlug: string; moonSlug: string };
 }) {
-  const { clientSlug, skillSlug, moonSlug } = React.use(params);
+  const { clientSlug, skillSlug, moonSlug } = params;
 
   const client = getClientBySlug(clientSlug);
   if (!client) {

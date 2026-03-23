@@ -12,9 +12,9 @@ import { SkillType } from '@/lib/types';
 export default function ClientPage({
   params,
 }: {
-  params: Promise<{ clientSlug: string }>;
+  params: { clientSlug: string };
 }) {
-  const { clientSlug } = React.use(params);
+  const { clientSlug } = params;
   const router = useRouter();
   const client = getClientBySlug(clientSlug);
 

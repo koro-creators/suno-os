@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sunOS — Nivel 2 com Luas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --void: #080d14;
+    --deep: #0f1923;
+    --nebula: #1b2b3a;
+    --twilight: #263a4d;
+    --sun: #FFC801;
+    --criacao: #FFC801;
+    --midia: #3B82F6;
+    --planejamento: #10B981;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #475569;
+    --orbit-line: rgba(255,255,255,0.07);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--void);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(8,13,20,0.8);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+  }
+  .logo { font-size: 1.1rem; font-weight: 300; letter-spacing: -0.01em; }
+  .logo strong { font-weight: 600; }
+  .logo .dot { color: var(--sun); }
+  .breadcrumb {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.75rem; color: var(--text-muted);
+  }
+  .breadcrumb .active { color: var(--text-primary); }
+  .breadcrumb .sep { opacity: 0.3; }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .level-indicator {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-muted); padding: 0.25rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+  }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--nebula); border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Main canvas */
+  .canvas {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 45px);
+    overflow: hidden;
+  }
+
+  /* Main orbits */
+  .orbit {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--orbit-line);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .orbit-1 { width: 200px; height: 200px; }
+  .orbit-2 { width: 400px; height: 400px; }
+  .orbit-3 { width: 600px; height: 600px; }
+
+  /* Client center */
+  .client-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #EF4444;
+    box-shadow: 0 0 30px rgba(239,68,68,0.3), 0 0 80px rgba(239,68,68,0.1);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .client-center span {
+    font-size: 0.45rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Skill planet (agrupador) */
+  .skill-group {
+    position: absolute;
+    z-index: 5;
+  }
+
+  .skill-planet {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: default;
+    position: relative;
+    z-index: 3;
+    transition: box-shadow 0.2s;
+  }
+
+  .skill-name {
+    position: absolute;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Moon orbit — micro ring around skill */
+  .moon-orbit {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.04);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  /* Moon */
+  .moon {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 6;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .moon:hover {
+    transform: scale(1.3);
+  }
+  .moon-label {
+    position: absolute;
+    white-space: nowrap;
+    font-size: 0.5rem;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    transition: color 0.15s;
+    pointer-events: none;
+  }
+  .moon:hover .moon-label {
+    color: var(--text-secondary);
+  }
+
+  /* ======= SKILL GROUPS POSITIONED ON ORBITS ======= */
+  /* Canvas center is 50vw, 50vh. Using calc for centering. */
+  /* All positions relative to the skill-group anchor */
+
+  /* === TEXTO DE RADIO — Orbit 2, angle 60deg === */
+  /* cx = 50vw + 200*cos(60) = 50vw + 100, cy = 50vh - 200*sin(60) = 50vh - 173 */
+  .sg-texto {
+    left: calc(50vw + 100px - 18px);
+    top: calc(50vh - 173px - 18px);
+  }
+  .sg-texto .skill-planet { background: var(--criacao); box-shadow: 0 0 14px rgba(255,200,1,0.2); }
+  .sg-texto .skill-name { bottom: calc(100% + 40px); left: 50%; transform: translateX(-50%); color: var(--criacao); }
+  .sg-texto .moon-orbit { width: 100px; height: 100px; }
+  /* Moons: 3 items at angles 0, 120, 240 on r=50 from planet center(18,18) */
+  .sg-texto .m1 { width: 12px; height: 12px; background: rgba(255,200,1,0.7); left: calc(18px + 44px - 6px); top: calc(18px - 6px); }
+  .sg-texto .m1:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-texto .m1 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-texto .m2 { width: 11px; height: 11px; background: rgba(255,200,1,0.6); left: calc(18px - 22px - 5px); top: calc(18px + 38px - 5px); }
+  .sg-texto .m2:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-texto .m2 .moon-label { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-texto .m3 { width: 11px; height: 11px; background: rgba(255,200,1,0.6); left: calc(18px - 22px - 5px); top: calc(18px - 38px - 5px); }
+  .sg-texto .m3:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-texto .m3 .moon-label { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+
+  /* === COPY SOCIAL — Orbit 2, angle 170deg === */
+  .sg-copy {
+    left: calc(50vw - 197px - 18px);
+    top: calc(50vh - 35px - 18px);
+  }
+  .sg-copy .skill-planet { background: var(--criacao); box-shadow: 0 0 14px rgba(255,200,1,0.2); }
+  .sg-copy .skill-name { right: calc(100% + 50px); top: 50%; transform: translateY(-50%); color: var(--criacao); }
+  .sg-copy .moon-orbit { width: 96px; height: 96px; }
+  .sg-copy .m1 { width: 12px; height: 12px; background: rgba(255,200,1,0.7); left: calc(18px - 6px); top: calc(18px - 44px - 6px); }
+  .sg-copy .m1:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-copy .m1 .moon-label { top: -16px; left: 50%; transform: translateX(-50%); }
+  .sg-copy .m2 { width: 11px; height: 11px; background: rgba(255,200,1,0.6); left: calc(18px + 38px - 5px); top: calc(18px + 25px - 5px); }
+  .sg-copy .m2:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-copy .m2 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-copy .m3 { width: 11px; height: 11px; background: rgba(255,200,1,0.6); left: calc(18px - 38px - 5px); top: calc(18px + 25px - 5px); }
+  .sg-copy .m3:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-copy .m3 .moon-label { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+
+  /* === ROTEIRO DE VIDEO — Orbit 2, angle 290deg === */
+  .sg-roteiro {
+    left: calc(50vw + 68px - 18px);
+    top: calc(50vh + 188px - 18px);
+  }
+  .sg-roteiro .skill-planet { background: var(--criacao); box-shadow: 0 0 14px rgba(255,200,1,0.2); }
+  .sg-roteiro .skill-name { left: calc(100% + 50px); top: 50%; transform: translateY(-50%); color: var(--criacao); }
+  .sg-roteiro .moon-orbit { width: 92px; height: 92px; }
+  .sg-roteiro .m1 { width: 12px; height: 12px; background: rgba(255,200,1,0.7); left: calc(18px + 40px - 6px); top: calc(18px - 6px); }
+  .sg-roteiro .m1:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-roteiro .m1 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-roteiro .m2 { width: 11px; height: 11px; background: rgba(255,200,1,0.6); left: calc(18px - 5px); top: calc(18px + 40px - 5px); }
+  .sg-roteiro .m2:hover { box-shadow: 0 0 14px rgba(255,200,1,0.5); }
+  .sg-roteiro .m2 .moon-label { bottom: -16px; left: 50%; transform: translateX(-50%); }
+
+  /* === PLANO DE MIDIA — Orbit 3, angle 120deg === */
+  .sg-plano {
+    left: calc(50vw - 150px - 18px);
+    top: calc(50vh - 260px - 18px);
+  }
+  .sg-plano .skill-planet { background: var(--midia); box-shadow: 0 0 14px rgba(59,130,246,0.2); }
+  .sg-plano .skill-name { bottom: calc(100% + 44px); left: 50%; transform: translateX(-50%); color: var(--midia); }
+  .sg-plano .moon-orbit { width: 100px; height: 100px; }
+  .sg-plano .m1 { width: 12px; height: 12px; background: rgba(59,130,246,0.7); left: calc(18px + 44px - 6px); top: calc(18px - 20px - 6px); }
+  .sg-plano .m1:hover { box-shadow: 0 0 14px rgba(59,130,246,0.5); }
+  .sg-plano .m1 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-plano .m2 { width: 11px; height: 11px; background: rgba(59,130,246,0.6); left: calc(18px - 40px - 5px); top: calc(18px - 5px); }
+  .sg-plano .m2:hover { box-shadow: 0 0 14px rgba(59,130,246,0.5); }
+  .sg-plano .m2 .moon-label { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-plano .m3 { width: 11px; height: 11px; background: rgba(59,130,246,0.6); left: calc(18px + 20px - 5px); top: calc(18px + 40px - 5px); }
+  .sg-plano .m3:hover { box-shadow: 0 0 14px rgba(59,130,246,0.5); }
+  .sg-plano .m3 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+
+  /* === REPORT PERFORMANCE — Orbit 3, angle 0deg === */
+  .sg-report {
+    left: calc(50vw + 300px - 18px);
+    top: calc(50vh - 18px);
+  }
+  .sg-report .skill-planet { background: var(--midia); box-shadow: 0 0 14px rgba(59,130,246,0.2); }
+  .sg-report .skill-name { left: calc(100% + 50px); top: 50%; transform: translateY(-50%); color: var(--midia); }
+  .sg-report .moon-orbit { width: 88px; height: 88px; }
+  .sg-report .m1 { width: 12px; height: 12px; background: rgba(59,130,246,0.7); left: calc(18px + 38px - 6px); top: calc(18px - 20px - 6px); }
+  .sg-report .m1:hover { box-shadow: 0 0 14px rgba(59,130,246,0.5); }
+  .sg-report .m1 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-report .m2 { width: 11px; height: 11px; background: rgba(59,130,246,0.6); left: calc(18px + 38px - 5px); top: calc(18px + 20px - 5px); }
+  .sg-report .m2:hover { box-shadow: 0 0 14px rgba(59,130,246,0.5); }
+  .sg-report .m2 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+
+  /* === PERSONA SINTETICA — Orbit 3, angle 210deg === */
+  .sg-persona {
+    left: calc(50vw - 260px - 18px);
+    top: calc(50vh + 150px - 18px);
+  }
+  .sg-persona .skill-planet { background: var(--planejamento); box-shadow: 0 0 14px rgba(16,185,129,0.2); }
+  .sg-persona .skill-name { right: calc(100% + 50px); top: 50%; transform: translateY(-50%); color: var(--planejamento); }
+  .sg-persona .moon-orbit { width: 96px; height: 96px; }
+  .sg-persona .m1 { width: 12px; height: 12px; background: rgba(16,185,129,0.7); left: calc(18px - 42px - 6px); top: calc(18px - 15px - 6px); }
+  .sg-persona .m1:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-persona .m1 .moon-label { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+  .sg-persona .m2 { width: 11px; height: 11px; background: rgba(16,185,129,0.6); left: calc(18px - 5px); top: calc(18px + 42px - 5px); }
+  .sg-persona .m2:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-persona .m2 .moon-label { bottom: -16px; left: 50%; transform: translateX(-50%); }
+  .sg-persona .m3 { width: 11px; height: 11px; background: rgba(16,185,129,0.6); left: calc(18px + 35px - 5px); top: calc(18px + 25px - 5px); }
+  .sg-persona .m3:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-persona .m3 .moon-label { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+
+  /* === BRIEF BUILDER — Orbit 1, angle 330deg === */
+  .sg-brief {
+    left: calc(50vw + 87px - 18px);
+    top: calc(50vh + 50px - 18px);
+  }
+  .sg-brief .skill-planet { background: var(--planejamento); box-shadow: 0 0 14px rgba(16,185,129,0.2); width: 32px; height: 32px; }
+  .sg-brief .skill-name { left: calc(100% + 40px); top: 50%; transform: translateY(-50%); color: var(--planejamento); font-size: 0.55rem; }
+  .sg-brief .moon-orbit { width: 80px; height: 80px; }
+  .sg-brief .m1 { width: 10px; height: 10px; background: rgba(16,185,129,0.7); left: calc(16px + 35px - 5px); top: calc(16px - 5px); }
+  .sg-brief .m1:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-brief .m1 .moon-label { left: calc(100% + 5px); top: 50%; transform: translateY(-50%); }
+  .sg-brief .m2 { width: 10px; height: 10px; background: rgba(16,185,129,0.6); left: calc(16px - 5px); top: calc(16px + 35px - 5px); }
+  .sg-brief .m2:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-brief .m2 .moon-label { bottom: -16px; left: 50%; transform: translateX(-50%); }
+
+  /* === ANALISE MERCADO — Orbit 1, angle 160deg === */
+  .sg-analise {
+    left: calc(50vw - 94px - 18px);
+    top: calc(50vh + 34px - 18px);
+  }
+  .sg-analise .skill-planet { background: var(--planejamento); box-shadow: 0 0 14px rgba(16,185,129,0.2); width: 32px; height: 32px; }
+  .sg-analise .skill-name { right: calc(100% + 40px); top: 50%; transform: translateY(-50%); color: var(--planejamento); font-size: 0.55rem; }
+  .sg-analise .moon-orbit { width: 80px; height: 80px; }
+  .sg-analise .m1 { width: 10px; height: 10px; background: rgba(16,185,129,0.7); left: calc(16px - 35px - 5px); top: calc(16px - 5px); }
+  .sg-analise .m1:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-analise .m1 .moon-label { right: calc(100% + 5px); top: 50%; transform: translateY(-50%); }
+  .sg-analise .m2 { width: 10px; height: 10px; background: rgba(16,185,129,0.6); left: calc(16px - 5px); top: calc(16px - 35px - 5px); }
+  .sg-analise .m2:hover { box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+  .sg-analise .m2 .moon-label { top: -16px; left: 50%; transform: translateX(-50%); }
+
+  /* Filter pills */
+  .filter-bar {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+  }
+  .filter-pill {
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03); color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-pill:hover { border-color: rgba(255,255,255,0.2); color: var(--text-secondary); }
+  .filter-pill.active { border-color: var(--sun); color: var(--sun); background: rgba(255,200,1,0.08); }
+
+  /* Legend */
+  .legend {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .legend-moon {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+  <div class="breadcrumb">
+    <span>Home</span>
+    <span class="sep">/</span>
+    <span class="active">Santander</span>
+  </div>
+  <div class="header-right">
+    <span class="level-indicator">7 skills &middot; 18 areas</span>
+    <div class="avatar"></div>
+  </div>
+</div>
+
+<div class="canvas">
+  <!-- Main orbits -->
+  <div class="orbit orbit-1"></div>
+  <div class="orbit orbit-2"></div>
+  <div class="orbit orbit-3"></div>
+
+  <!-- Client center -->
+  <div class="client-center"><span>Santander</span></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--criacao);"></div>
+      <div class="legend-dot" style="width:5px;height:5px;background:rgba(255,200,1,0.6);"></div>
+      Criacao (planeta + luas)
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--midia);"></div>
+      <div class="legend-dot" style="width:5px;height:5px;background:rgba(59,130,246,0.6);"></div>
+      Midia
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--planejamento);"></div>
+      <div class="legend-dot" style="width:5px;height:5px;background:rgba(16,185,129,0.6);"></div>
+      Planejamento
+    </div>
+    <div class="legend-item" style="margin-top:0.5rem; opacity: 0.6;">
+      <div style="width:36px;height:1px;background:var(--text-muted);"></div>
+      Clique na lua → chat
+    </div>
+  </div>
+
+  <!-- === TEXTO DE RADIO === -->
+  <div class="skill-group sg-texto">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Texto de Radio</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Spot 30"</div></div>
+    <div class="moon m2"><div class="moon-label">Jingle</div></div>
+    <div class="moon m3"><div class="moon-label">Institucional</div></div>
+  </div>
+
+  <!-- === COPY SOCIAL === -->
+  <div class="skill-group sg-copy">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Copy Social</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Feed/Carrossel</div></div>
+    <div class="moon m2"><div class="moon-label">Stories/Reels</div></div>
+    <div class="moon m3"><div class="moon-label">X/Twitter</div></div>
+  </div>
+
+  <!-- === ROTEIRO DE VIDEO === -->
+  <div class="skill-group sg-roteiro">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Roteiro de Video</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">TVC 30"</div></div>
+    <div class="moon m2"><div class="moon-label">Digital Pre-roll</div></div>
+  </div>
+
+  <!-- === PLANO DE MIDIA === -->
+  <div class="skill-group sg-plano">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Plano de Midia</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Digital</div></div>
+    <div class="moon m2"><div class="moon-label">OOH</div></div>
+    <div class="moon m3"><div class="moon-label">TV/Radio</div></div>
+  </div>
+
+  <!-- === REPORT PERFORMANCE === -->
+  <div class="skill-group sg-report">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Report Perf.</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Semanal</div></div>
+    <div class="moon m2"><div class="moon-label">Mensal</div></div>
+  </div>
+
+  <!-- === PERSONA SINTETICA === -->
+  <div class="skill-group sg-persona">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Persona Sintetica</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Jovem 18-25</div></div>
+    <div class="moon m2"><div class="moon-label">Premium 35+</div></div>
+    <div class="moon m3"><div class="moon-label">MEI/PJ</div></div>
+  </div>
+
+  <!-- === BRIEF BUILDER === -->
+  <div class="skill-group sg-brief">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Brief Builder</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Campanha</div></div>
+    <div class="moon m2"><div class="moon-label">Always-on</div></div>
+  </div>
+
+  <!-- === ANALISE DE MERCADO === -->
+  <div class="skill-group sg-analise">
+    <div class="skill-planet"></div>
+    <div class="skill-name">Analise Mercado</div>
+    <div class="moon-orbit"></div>
+    <div class="moon m1"><div class="moon-label">Concorrencia</div></div>
+    <div class="moon m2"><div class="moon-label">Tendencias</div></div>
+  </div>
+
+  <!-- Filter pills -->
+  <div class="filter-bar">
+    <div class="filter-pill active">Todos</div>
+    <div class="filter-pill">Criacao</div>
+    <div class="filter-pill">Midia</div>
+    <div class="filter-pill">Planejamento</div>
+  </div>
+</div>
+
+</body>
+</html>

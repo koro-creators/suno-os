@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sunOS — 4 Niveis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --void: #080d14;
+    --deep: #0f1923;
+    --nebula: #1b2b3a;
+    --twilight: #263a4d;
+    --sun: #FFC801;
+    --criacao: #FFC801;
+    --midia: #3B82F6;
+    --planejamento: #10B981;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #475569;
+    --orbit-line: rgba(255,255,255,0.07);
+  }
+  body {
+    font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--void);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .page-header h1 { font-size: 1.5rem; font-weight: 300; margin-bottom: 0.25rem; }
+  .page-header h1 span { font-weight: 600; }
+  .page-header h1 .dot { color: var(--sun); }
+  .page-header p { color: var(--text-muted); font-size: 0.8rem; }
+
+  /* Flow diagram */
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .flow-step {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 0.3rem 0.75rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+  }
+  .flow-step.active { border-color: var(--sun); color: var(--sun); background: rgba(255,200,1,0.06); }
+  .flow-arrow { color: var(--text-muted); font-size: 0.7rem; opacity: 0.3; }
+
+  .screens {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .screen-section {
+    background: var(--deep);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .screen-label {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .screen-label .level {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em;
+    color: var(--sun); background: rgba(255,200,1,0.1);
+    padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;
+  }
+  .screen-label .route {
+    font-family: monospace; font-size: 0.75rem; color: var(--text-muted);
+  }
+  .screen-label .name { font-size: 0.875rem; font-weight: 500; }
+  .screen-label .click-hint {
+    margin-left: auto;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .screen-mockup {
+    position: relative;
+    min-height: 480px;
+    background: var(--void);
+    overflow: hidden;
+  }
+
+  /* App header */
+  .app-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(8,13,20,0.8);
+    backdrop-filter: blur(12px);
+    position: relative; z-index: 10;
+  }
+  .logo { font-size: 1.1rem; font-weight: 300; letter-spacing: -0.01em; }
+  .logo strong { font-weight: 600; }
+  .logo .dot { color: var(--sun); }
+  .breadcrumb {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.75rem; color: var(--text-muted);
+  }
+  .breadcrumb .active { color: var(--text-primary); }
+  .breadcrumb .sep { opacity: 0.3; }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .level-indicator {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-muted); padding: 0.25rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+  }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--nebula); border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Shared solar */
+  .solar {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .orbit {
+    position: absolute; border-radius: 50%;
+    border: 1px solid var(--orbit-line);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .center-node {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .center-node span {
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .planet {
+    position: absolute; border-radius: 50%;
+    cursor: pointer; z-index: 5;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .planet:hover { transform: scale(1.15); }
+  .planet-label {
+    position: absolute; white-space: nowrap;
+    font-size: 0.6rem; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+    transition: color 0.15s;
+  }
+  .planet:hover .planet-label { color: var(--text-secondary); }
+
+  /* ============ LEVEL 1: HOME ============ */
+  .home-solar { width: 420px; height: 420px; }
+  .home-solar .o1 { width: 160px; height: 160px; }
+  .home-solar .o2 { width: 280px; height: 280px; }
+  .home-solar .o3 { width: 390px; height: 390px; }
+  .home-solar .center-node {
+    width: 52px; height: 52px;
+    background: var(--sun);
+    box-shadow: 0 0 30px rgba(255,200,1,0.4), 0 0 80px rgba(255,200,1,0.15);
+  }
+  .home-solar .center-node span { font-size: 0.5rem; color: var(--void); }
+
+  /* Planets on orbits */
+  .hp { width: 34px; height: 34px; }
+  /* o3 r=195: Santander 30deg, Americanas 210deg */
+  .hp-san { background:#EF4444; left:calc(210px + 169px - 17px); top:calc(210px - 97px - 17px); }
+  .hp-san:hover { box-shadow:0 0 24px rgba(239,68,68,0.45),0 0 60px rgba(239,68,68,0.15); }
+  .hp-san .planet-label { top:-20px; left:50%; transform:translateX(-50%); }
+  .hp-ame { background:#F97316; left:calc(210px - 169px - 17px); top:calc(210px + 97px - 17px); width:30px;height:30px; }
+  .hp-ame:hover { box-shadow:0 0 24px rgba(249,115,22,0.45),0 0 60px rgba(249,115,22,0.15); }
+  .hp-ame .planet-label { right:calc(100% + 10px); top:50%; transform:translateY(-50%); }
+  /* o2 r=140: Vivo 80deg, MRV 200deg, Sicredi 320deg */
+  .hp-viv { background:#8B5CF6; left:calc(210px + 24px - 17px); top:calc(210px - 138px - 17px); }
+  .hp-viv:hover { box-shadow:0 0 24px rgba(139,92,246,0.45),0 0 60px rgba(139,92,246,0.15); }
+  .hp-viv .planet-label { top:-20px; left:50%; transform:translateX(-50%); }
+  .hp-mrv { background:#06B6D4; left:calc(210px - 132px - 15px); top:calc(210px + 48px - 15px); width:30px;height:30px; }
+  .hp-mrv:hover { box-shadow:0 0 24px rgba(6,182,212,0.45),0 0 60px rgba(6,182,212,0.15); }
+  .hp-mrv .planet-label { right:calc(100% + 10px); top:50%; transform:translateY(-50%); }
+  .hp-sic { background:#22C55E; left:calc(210px + 107px - 17px); top:calc(210px + 90px - 17px); }
+  .hp-sic:hover { box-shadow:0 0 24px rgba(34,197,94,0.45),0 0 60px rgba(34,197,94,0.15); }
+  .hp-sic .planet-label { left:calc(100% + 10px); top:50%; transform:translateY(-50%); }
+  /* o1 r=80: BMG 150deg, Stone 340deg */
+  .hp-bmg { background:#F472B6; left:calc(210px - 69px - 14px); top:calc(210px - 40px - 14px); width:28px;height:28px; }
+  .hp-bmg:hover { box-shadow:0 0 24px rgba(244,114,182,0.45),0 0 60px rgba(244,114,182,0.15); }
+  .hp-bmg .planet-label { right:calc(100% + 10px); top:50%; transform:translateY(-50%); }
+  .hp-sto { background:#A3E635; left:calc(210px + 79px - 14px); top:calc(210px + 14px - 14px); width:28px;height:28px; }
+  .hp-sto:hover { box-shadow:0 0 24px rgba(163,230,53,0.45),0 0 60px rgba(163,230,53,0.15); }
+  .hp-sto .planet-label { left:calc(100% + 10px); top:50%; transform:translateY(-50%); }
+
+  /* ============ LEVEL 2: CLIENT (skills + tiny moons, NO labels on moons) ============ */
+  .client-solar { width: 460px; height: 460px; }
+  .client-solar .o1 { width: 180px; height: 180px; }
+  .client-solar .o2 { width: 320px; height: 320px; }
+  .client-solar .o3 { width: 440px; height: 440px; }
+  .client-solar .center-node {
+    width: 60px; height: 60px;
+    background: #EF4444;
+    box-shadow: 0 0 30px rgba(239,68,68,0.3), 0 0 80px rgba(239,68,68,0.1);
+  }
+  .client-solar .center-node span { font-size: 0.4rem; color: white; }
+
+  .skill-group { position: absolute; z-index: 5; }
+  .skill-dot {
+    border-radius: 50%; position: relative; z-index: 3;
+  }
+  .skill-name {
+    position: absolute; white-space: nowrap;
+    font-size: 0.6rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  /* Tiny moon (no label) */
+  .moon-orbit-ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.03);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .tiny-moon {
+    position: absolute; border-radius: 50%;
+    z-index: 4;
+  }
+
+  /* Skill positions — center at 230,230 */
+  /* o2 r=160: Texto 50deg, Copy 170deg, Roteiro 290deg */
+  .sg2-texto { left: calc(230px + 103px - 18px); top: calc(230px - 123px - 18px); }
+  .sg2-copy  { left: calc(230px - 158px - 18px); top: calc(230px - 28px - 18px); }
+  .sg2-rot   { left: calc(230px + 55px - 18px); top: calc(230px + 150px - 18px); }
+  /* o3 r=220: Plano 100deg, Report 350deg */
+  .sg2-plano  { left: calc(230px - 38px - 18px); top: calc(230px - 217px - 18px); }
+  .sg2-report { left: calc(230px + 217px - 18px); top: calc(230px + 38px - 18px); }
+  /* o3: Persona 200deg, Brief 260deg */
+  .sg2-pers   { left: calc(230px - 207px - 18px); top: calc(230px + 75px - 18px); }
+  .sg2-brief  { left: calc(230px + 38px - 16px); top: calc(230px + 217px - 16px); }
+  /* o1 r=90: Analise 160deg */
+  .sg2-anal   { left: calc(230px - 85px - 16px); top: calc(230px + 31px - 16px); }
+
+  /* Each group has a skill-dot + tiny moons around it */
+  .sg2-texto .skill-dot { width: 36px; height: 36px; background: var(--criacao); box-shadow: 0 0 14px rgba(255,200,1,0.2); }
+  .sg2-texto .skill-name { bottom: calc(100% + 34px); left: 50%; transform: translateX(-50%); color: var(--criacao); }
+  .sg2-texto .moon-orbit-ring { width: 80px; height: 80px; }
+  .sg2-texto .tm1 { width: 9px; height: 9px; background: rgba(255,200,1,0.5); left: calc(18px + 35px); top: calc(18px - 10px); }
+  .sg2-texto .tm2 { width: 8px; height: 8px; background: rgba(255,200,1,0.4); left: calc(18px - 30px); top: calc(18px + 25px); }
+  .sg2-texto .tm3 { width: 8px; height: 8px; background: rgba(255,200,1,0.4); left: calc(18px - 10px); top: calc(18px - 35px); }
+
+  .sg2-copy .skill-dot { width: 34px; height: 34px; background: var(--criacao); box-shadow: 0 0 14px rgba(255,200,1,0.2); }
+  .sg2-copy .skill-name { right: calc(100% + 34px); top: 50%; transform: translateY(-50%); color: var(--criacao); }
+  .sg2-copy .moon-orbit-ring { width: 76px; height: 76px; }
+  .sg2-copy .tm1 { width: 9px; height: 9px; background: rgba(255,200,1,0.5); left: calc(17px); top: calc(17px - 34px); }
+  .sg2-copy .tm2 { width: 8px; height: 8px; background: rgba(255,200,1,0.4); left: calc(17px + 30px); top: calc(17px + 18px); }
+  .sg2-copy .tm3 { width: 8px; height: 8px; background: rgba(255,200,1,0.4); left: calc(17px - 30px); top: calc(17px + 18px); }
+
+  .sg2-rot .skill-dot { width: 34px; height: 34px; background: var(--criacao); box-shadow: 0 0 14px rgba(255,200,1,0.2); }
+  .sg2-rot .skill-name { left: calc(100% + 34px); top: 50%; transform: translateY(-50%); color: var(--criacao); }
+  .sg2-rot .moon-orbit-ring { width: 68px; height: 68px; }
+  .sg2-rot .tm1 { width: 8px; height: 8px; background: rgba(255,200,1,0.4); left: calc(17px + 30px); top: calc(17px); }
+  .sg2-rot .tm2 { width: 8px; height: 8px; background: rgba(255,200,1,0.4); left: calc(17px - 10px); top: calc(17px + 28px); }
+
+  .sg2-plano .skill-dot { width: 36px; height: 36px; background: var(--midia); box-shadow: 0 0 14px rgba(59,130,246,0.2); }
+  .sg2-plano .skill-name { bottom: calc(100% + 34px); left: 50%; transform: translateX(-50%); color: var(--midia); }
+  .sg2-plano .moon-orbit-ring { width: 80px; height: 80px; }
+  .sg2-plano .tm1 { width: 9px; height: 9px; background: rgba(59,130,246,0.5); left: calc(18px + 35px); top: calc(18px - 12px); }
+  .sg2-plano .tm2 { width: 8px; height: 8px; background: rgba(59,130,246,0.4); left: calc(18px - 32px); top: calc(18px); }
+  .sg2-plano .tm3 { width: 8px; height: 8px; background: rgba(59,130,246,0.4); left: calc(18px + 10px); top: calc(18px + 32px); }
+
+  .sg2-report .skill-dot { width: 32px; height: 32px; background: var(--midia); box-shadow: 0 0 14px rgba(59,130,246,0.2); }
+  .sg2-report .skill-name { left: calc(100% + 34px); top: 50%; transform: translateY(-50%); color: var(--midia); }
+  .sg2-report .moon-orbit-ring { width: 68px; height: 68px; }
+  .sg2-report .tm1 { width: 8px; height: 8px; background: rgba(59,130,246,0.4); left: calc(16px + 28px); top: calc(16px - 12px); }
+  .sg2-report .tm2 { width: 8px; height: 8px; background: rgba(59,130,246,0.4); left: calc(16px + 28px); top: calc(16px + 16px); }
+
+  .sg2-pers .skill-dot { width: 34px; height: 34px; background: var(--planejamento); box-shadow: 0 0 14px rgba(16,185,129,0.2); }
+  .sg2-pers .skill-name { right: calc(100% + 34px); top: 50%; transform: translateY(-50%); color: var(--planejamento); }
+  .sg2-pers .moon-orbit-ring { width: 78px; height: 78px; }
+  .sg2-pers .tm1 { width: 9px; height: 9px; background: rgba(16,185,129,0.5); left: calc(17px - 34px); top: calc(17px - 10px); }
+  .sg2-pers .tm2 { width: 8px; height: 8px; background: rgba(16,185,129,0.4); left: calc(17px); top: calc(17px + 32px); }
+  .sg2-pers .tm3 { width: 8px; height: 8px; background: rgba(16,185,129,0.4); left: calc(17px + 30px); top: calc(17px + 15px); }
+
+  .sg2-brief .skill-dot { width: 32px; height: 32px; background: var(--planejamento); box-shadow: 0 0 14px rgba(16,185,129,0.2); }
+  .sg2-brief .skill-name { bottom: -22px; left: 50%; transform: translateX(-50%); color: var(--planejamento); font-size: 0.55rem; }
+  .sg2-brief .moon-orbit-ring { width: 66px; height: 66px; }
+  .sg2-brief .tm1 { width: 8px; height: 8px; background: rgba(16,185,129,0.4); left: calc(16px + 28px); top: calc(16px); }
+  .sg2-brief .tm2 { width: 7px; height: 7px; background: rgba(16,185,129,0.35); left: calc(16px - 10px); top: calc(16px + 26px); }
+
+  .sg2-anal .skill-dot { width: 32px; height: 32px; background: var(--planejamento); box-shadow: 0 0 14px rgba(16,185,129,0.2); }
+  .sg2-anal .skill-name { right: calc(100% + 28px); top: 50%; transform: translateY(-50%); color: var(--planejamento); font-size: 0.55rem; }
+  .sg2-anal .moon-orbit-ring { width: 66px; height: 66px; }
+  .sg2-anal .tm1 { width: 8px; height: 8px; background: rgba(16,185,129,0.4); left: calc(16px - 28px); top: calc(16px); }
+  .sg2-anal .tm2 { width: 7px; height: 7px; background: rgba(16,185,129,0.35); left: calc(16px); top: calc(16px - 28px); }
+
+  /* Filter pills */
+  .filter-bar {
+    position: absolute; bottom: 1.25rem; left: 50%;
+    transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 10;
+  }
+  .filter-pill {
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03); color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-pill:hover { border-color: rgba(255,255,255,0.2); color: var(--text-secondary); }
+  .filter-pill.active { border-color: var(--sun); color: var(--sun); background: rgba(255,200,1,0.08); }
+
+  /* ============ LEVEL 3: SKILL EXPANDED (moons with labels) ============ */
+  .skill-expanded-solar { width: 360px; height: 360px; }
+  .skill-expanded-solar .o1 { width: 160px; height: 160px; }
+  .skill-expanded-solar .o2 { width: 280px; height: 280px; }
+  .skill-expanded-solar .center-node {
+    width: 56px; height: 56px;
+    background: var(--criacao);
+    box-shadow: 0 0 30px rgba(255,200,1,0.35), 0 0 80px rgba(255,200,1,0.12);
+  }
+  .skill-expanded-solar .center-node span { font-size: 0.4rem; color: var(--void); }
+
+  .moon-planet {
+    position: absolute; border-radius: 50%;
+    cursor: pointer; z-index: 5;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .moon-planet:hover { transform: scale(1.2); }
+  .moon-planet-label {
+    position: absolute; white-space: nowrap;
+    font-size: 0.65rem; letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    transition: color 0.15s;
+  }
+  .moon-planet:hover .moon-planet-label { color: var(--text-primary); }
+
+  /* Moons on orbits — center 180,180 */
+  /* o1 r=80: Spot 60deg, Jingle 180deg, Institucional 300deg */
+  .mp-spot { width: 26px; height: 26px; background: rgba(255,200,1,0.75);
+    left: calc(180px + 40px - 13px); top: calc(180px - 69px - 13px);
+    box-shadow: 0 0 10px rgba(255,200,1,0.2);
+  }
+  .mp-spot:hover { box-shadow: 0 0 20px rgba(255,200,1,0.45), 0 0 50px rgba(255,200,1,0.15); }
+  .mp-spot .moon-planet-label { top: -22px; left: 50%; transform: translateX(-50%); }
+
+  .mp-jingle { width: 24px; height: 24px; background: rgba(255,200,1,0.65);
+    left: calc(180px - 80px - 12px); top: calc(180px - 12px);
+    box-shadow: 0 0 10px rgba(255,200,1,0.15);
+  }
+  .mp-jingle:hover { box-shadow: 0 0 20px rgba(255,200,1,0.45), 0 0 50px rgba(255,200,1,0.15); }
+  .mp-jingle .moon-planet-label { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+
+  .mp-inst { width: 24px; height: 24px; background: rgba(255,200,1,0.65);
+    left: calc(180px + 40px - 12px); top: calc(180px + 69px - 12px);
+    box-shadow: 0 0 10px rgba(255,200,1,0.15);
+  }
+  .mp-inst:hover { box-shadow: 0 0 20px rgba(255,200,1,0.45), 0 0 50px rgba(255,200,1,0.15); }
+  .mp-inst .moon-planet-label { left: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+
+  /* Back hint */
+  .back-hint {
+    position: absolute; top: 60px; left: 1.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.7rem; color: var(--text-muted);
+    cursor: pointer; z-index: 10;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    transition: border-color 0.15s;
+  }
+  .back-hint:hover { border-color: rgba(255,255,255,0.15); color: var(--text-secondary); }
+  .back-hint svg { width: 12px; height: 12px; fill: currentColor; opacity: 0.5; }
+
+  /* Skill type indicator under center */
+  .skill-type-badge {
+    position: absolute; top: calc(50% + 40px); left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-muted); z-index: 10;
+  }
+
+  /* ============ LEVEL 4: CHAT ============ */
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    height: calc(480px - 45px);
+  }
+  .chat-main {
+    display: flex; flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .chat-messages {
+    flex: 1; padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1rem;
+    overflow-y: auto;
+  }
+  .msg {
+    max-width: 75%; padding: 0.75rem 1rem;
+    border-radius: 12px; font-size: 0.875rem; line-height: 1.6;
+  }
+  .msg-user {
+    background: var(--nebula); align-self: flex-end;
+    border-bottom-right-radius: 4px; color: var(--text-primary);
+  }
+  .msg-assistant {
+    background: rgba(255,255,255,0.03); align-self: flex-start;
+    border-bottom-left-radius: 4px; color: var(--text-secondary);
+  }
+  .typing { display: inline-flex; gap: 4px; }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text-muted); animation: blink 1.4s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,60%,100% { opacity:0.3; } 30% { opacity:1; } }
+
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .chat-input {
+    display: flex; align-items: center;
+    background: var(--deep); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px; padding: 0.6rem 0.6rem 0.6rem 1.25rem; gap: 0.5rem;
+  }
+  .chat-input input {
+    flex: 1; background: none; border: none;
+    color: var(--text-primary); font-size: 0.875rem;
+    font-family: inherit; outline: none;
+  }
+  .chat-input input::placeholder { color: var(--text-muted); }
+  .send-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--sun); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .send-btn svg { width: 14px; height: 14px; fill: var(--void); }
+
+  .context-sidebar { padding: 1.25rem; overflow-y: auto; }
+  .ctx-section { margin-bottom: 1.25rem; }
+  .ctx-section-title {
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--text-muted); margin-bottom: 0.6rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .ctx-section-title .dot-sm { width: 5px; height: 5px; border-radius: 50%; }
+  .ctx-item {
+    font-size: 0.75rem; color: var(--text-secondary);
+    padding: 0.4rem 0.6rem; background: rgba(255,255,255,0.02);
+    border-radius: 6px; margin-bottom: 0.35rem;
+    border-left: 2px solid rgba(255,255,255,0.06);
+  }
+  .ctx-item.active { border-left-color: var(--sun); background: rgba(255,200,1,0.03); }
+  .hitl-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.65rem; color: var(--planejamento);
+    background: rgba(16,185,129,0.08); padding: 0.3rem 0.6rem;
+    border-radius: 20px; border: 1px solid rgba(16,185,129,0.15);
+  }
+  .hitl-badge .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--planejamento); animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>sun<span>OS</span><span class="dot">.</span> 4 Niveis</h1>
+  <p>Navegacao completa com luas como sub-especialidades</p>
+</div>
+
+<div class="flow">
+  <div class="flow-step">1. Home</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">2. Cliente</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">3. Skill</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step active">4. Chat</div>
+</div>
+
+<div class="screens">
+
+  <!-- ========== LEVEL 1 ========== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 1</span>
+      <span class="name">Home</span>
+      <span class="route">/</span>
+      <span class="click-hint">click cliente → nivel 2</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb"><span class="active">Home</span></div>
+        <div class="header-right">
+          <span class="level-indicator">7 biomas</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+      <div class="solar home-solar">
+        <div class="orbit o1"></div>
+        <div class="orbit o2"></div>
+        <div class="orbit o3"></div>
+        <div class="center-node"><span>Suno</span></div>
+        <div class="planet hp hp-san"><div class="planet-label">Santander</div></div>
+        <div class="planet hp hp-ame"><div class="planet-label">Americanas</div></div>
+        <div class="planet hp hp-viv"><div class="planet-label">Vivo</div></div>
+        <div class="planet hp hp-mrv"><div class="planet-label">MRV</div></div>
+        <div class="planet hp hp-sic"><div class="planet-label">Sicredi</div></div>
+        <div class="planet hp hp-bmg"><div class="planet-label">BMG</div></div>
+        <div class="planet hp hp-sto"><div class="planet-label">Stone</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LEVEL 2 ========== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 2</span>
+      <span class="name">Cliente — Skills + Luas (sem labels)</span>
+      <span class="route">/santander</span>
+      <span class="click-hint">click skill → nivel 3</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span><span class="sep">/</span>
+          <span class="active">Santander</span>
+        </div>
+        <div class="header-right">
+          <span class="level-indicator">8 skills</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+      <div class="solar client-solar">
+        <div class="orbit o1"></div>
+        <div class="orbit o2"></div>
+        <div class="orbit o3"></div>
+        <div class="center-node"><span>Santander</span></div>
+
+        <div class="skill-group sg2-texto">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Texto de Radio</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+          <div class="tiny-moon tm3"></div>
+        </div>
+        <div class="skill-group sg2-copy">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Copy Social</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+          <div class="tiny-moon tm3"></div>
+        </div>
+        <div class="skill-group sg2-rot">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Roteiro Video</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+        </div>
+        <div class="skill-group sg2-plano">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Plano de Midia</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+          <div class="tiny-moon tm3"></div>
+        </div>
+        <div class="skill-group sg2-report">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Report Perf.</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+        </div>
+        <div class="skill-group sg2-pers">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Persona Sintetica</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+          <div class="tiny-moon tm3"></div>
+        </div>
+        <div class="skill-group sg2-brief">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Brief Builder</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+        </div>
+        <div class="skill-group sg2-anal">
+          <div class="skill-dot"></div>
+          <div class="skill-name">Analise Mercado</div>
+          <div class="moon-orbit-ring"></div>
+          <div class="tiny-moon tm1"></div>
+          <div class="tiny-moon tm2"></div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-pill active">Todos</div>
+        <div class="filter-pill">Criacao</div>
+        <div class="filter-pill">Midia</div>
+        <div class="filter-pill">Planejamento</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LEVEL 3: SKILL EXPANDED ========== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 3</span>
+      <span class="name">Skill — Texto de Radio (luas com labels)</span>
+      <span class="route">/santander/texto-de-radio</span>
+      <span class="click-hint">click lua → chat</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span><span class="sep">/</span>
+          <span>Santander</span><span class="sep">/</span>
+          <span class="active">Texto de Radio</span>
+        </div>
+        <div class="header-right">
+          <div style="display:flex;align-items:center;gap:0.4rem;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--criacao);box-shadow:0 0 8px rgba(255,200,1,0.3);"></div>
+            <span class="level-indicator">Criacao</span>
+          </div>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="back-hint">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Santander
+      </div>
+
+      <div class="solar skill-expanded-solar">
+        <div class="orbit o1"></div>
+        <div class="orbit o2"></div>
+        <div class="center-node"><span>Texto de<br>Radio</span></div>
+        <div class="skill-type-badge">Criacao &middot; 3 areas</div>
+
+        <div class="moon-planet mp-spot">
+          <div class="moon-planet-label">Spot 30"</div>
+        </div>
+        <div class="moon-planet mp-jingle">
+          <div class="moon-planet-label">Jingle</div>
+        </div>
+        <div class="moon-planet mp-inst">
+          <div class="moon-planet-label">Institucional</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== LEVEL 4: CHAT ========== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 4</span>
+      <span class="name">Chat — Spot 30"</span>
+      <span class="route">/santander/texto-de-radio/spot-30</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span><span class="sep">/</span>
+          <span>Santander</span><span class="sep">/</span>
+          <span>Texto de Radio</span><span class="sep">/</span>
+          <span class="active">Spot 30"</span>
+        </div>
+        <div class="header-right">
+          <div style="display:flex;align-items:center;gap:0.4rem;">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--criacao);box-shadow:0 0 8px rgba(255,200,1,0.3);"></div>
+            <span class="level-indicator">Criacao</span>
+          </div>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="chat-layout">
+        <div class="chat-main">
+          <div class="chat-messages">
+            <div class="msg msg-user">Preciso de um spot de 30 segundos pro Santander Van. Tom descontraido, publico jovem.</div>
+            <div class="msg msg-assistant">
+              Aqui vai uma opcao de roteiro para o Santander Van, 30 segundos, tom descontraido:
+              <div style="margin-top:0.75rem;padding:0.75rem;background:rgba(255,200,1,0.04);border-left:2px solid var(--sun);border-radius:0 6px 6px 0;font-size:0.8rem;">
+                <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--sun);margin-bottom:0.4rem;">Roteiro — Spot Radio 30"</div>
+                LOC: Imagina um banco que cabe no seu bolso e entende o seu corre...
+              </div>
+            </div>
+            <div class="msg msg-user">Bom! Versao mais formal pro publico 35+.</div>
+            <div class="msg msg-assistant">
+              <div class="typing"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <div class="chat-input">
+              <input type="text" placeholder="Como posso ajudar?" disabled>
+              <button class="send-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="context-sidebar">
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--sun);"></div>
+              Biblioteca
+            </div>
+            <div class="ctx-item active">Tom de voz Santander</div>
+            <div class="ctx-item">Restricoes legais banking</div>
+            <div class="ctx-item">Dados demograficos SP</div>
+            <div class="ctx-item">Historico campanhas Q4</div>
+          </div>
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--midia);"></div>
+              Agentes
+            </div>
+            <div class="ctx-item">Copywriter</div>
+            <div class="ctx-item">Revisor</div>
+          </div>
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--planejamento);"></div>
+              Validacao
+            </div>
+            <div class="hitl-badge">
+              <div class="pulse"></div>
+              Human-in-the-Loop ativo
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

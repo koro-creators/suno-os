@@ -17,9 +17,9 @@ const typeLabels: Record<string, string> = {
 export default function SkillPage({
   params,
 }: {
-  params: Promise<{ clientSlug: string; skillSlug: string }>;
+  params: { clientSlug: string; skillSlug: string };
 }) {
-  const { clientSlug, skillSlug } = React.use(params);
+  const { clientSlug, skillSlug } = params;
   const router = useRouter();
   const client = getClientBySlug(clientSlug);
   const skill = getSkillBySlug(clientSlug, skillSlug);

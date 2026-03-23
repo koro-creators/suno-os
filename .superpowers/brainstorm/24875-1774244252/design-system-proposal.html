@@ -1,0 +1,250 @@
+<h2>sunOS Design System — Proposta</h2>
+<p class="subtitle">Paleta, tipografia, spacing, e tokens visuais</p>
+
+<div class="section">
+  <h3>Paleta de Cores</h3>
+  <p style="margin-bottom: 1.5rem; color: #94a3b8;">Baseada na metáfora espacial com amarelo Suno como accent inegociável</p>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+
+    <!-- Background tiers -->
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="width: 48px; height: 48px; border-radius: 8px; background: #080d14; border: 1px solid rgba(255,255,255,0.15);"></div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem;">Space Void</div>
+          <div style="color: #64748b; font-size: 0.75rem; font-family: monospace;">#080D14</div>
+        </div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">Background principal. Deep navy quase preto, mas com tom azulado que evoca espaço profundo.</div>
+    </div>
+
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="width: 48px; height: 48px; border-radius: 8px; background: #0f1923;"></div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem;">Deep Space</div>
+          <div style="color: #64748b; font-size: 0.75rem; font-family: monospace;">#0F1923</div>
+        </div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">Surface level 1. Cards, panels, sidebar. Camada elevada sobre o void.</div>
+    </div>
+
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="width: 48px; height: 48px; border-radius: 8px; background: #1b2b3a;"></div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem;">Nebula</div>
+          <div style="color: #64748b; font-size: 0.75rem; font-family: monospace;">#1B2B3A</div>
+        </div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">Surface level 2. Hover states, input backgrounds, elementos interativos.</div>
+    </div>
+
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="width: 48px; height: 48px; border-radius: 8px; background: #263a4d;"></div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem;">Twilight</div>
+          <div style="color: #64748b; font-size: 0.75rem; font-family: monospace;">#263A4D</div>
+        </div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">Borders, separadores, linhas de orbita. Visivel mas discreto.</div>
+    </div>
+
+    <!-- Accent -->
+    <div style="background: #080d14; border: 1px solid rgba(255,200,1,0.2); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #FFC801; box-shadow: 0 0 20px rgba(255,200,1,0.4), 0 0 60px rgba(255,200,1,0.15);"></div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem; color: #FFC801;">Sun (Accent)</div>
+          <div style="color: #64748b; font-size: 0.75rem; font-family: monospace;">#FFC801</div>
+        </div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">Amarelo Suno. Centro do sistema solar, CTAs, indicadores ativos, logo dot. Inegociavel.</div>
+    </div>
+
+    <!-- Skill type colors -->
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="display: flex; gap: 0.5rem;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #FFC801; box-shadow: 0 0 12px rgba(255,200,1,0.3);" title="Criacao"></div>
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #3B82F6; box-shadow: 0 0 12px rgba(59,130,246,0.3);" title="Midia"></div>
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #10B981; box-shadow: 0 0 12px rgba(16,185,129,0.3);" title="Planejamento"></div>
+        </div>
+      </div>
+      <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Skill Types</div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">
+        <span style="color: #FFC801;">Criacao #FFC801</span> &middot;
+        <span style="color: #3B82F6;">Midia #3B82F6</span> &middot;
+        <span style="color: #10B981;">Planejamento #10B981</span>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="margin-bottom: 0.75rem;">
+        <div style="font-size: 1.25rem; font-weight: 600; color: #F1F5F9; margin-bottom: 0.25rem;">Starlight</div>
+        <div style="font-size: 0.875rem; color: #94A3B8;">Moonlight</div>
+        <div style="font-size: 0.75rem; color: #475569;">Dust</div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">
+        Text primary <span style="font-family: monospace; font-size: 0.7rem;">#F1F5F9</span> &middot;
+        Secondary <span style="font-family: monospace; font-size: 0.7rem;">#94A3B8</span> &middot;
+        Muted <span style="font-family: monospace; font-size: 0.7rem;">#475569</span>
+      </div>
+    </div>
+
+    <!-- Orbit line -->
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.08); position: relative;">
+          <div style="position: absolute; top: -2px; left: 20px; width: 8px; height: 8px; border-radius: 50%; background: #FFC801; box-shadow: 0 0 8px rgba(255,200,1,0.4);"></div>
+        </div>
+        <div>
+          <div style="font-weight: 600; font-size: 0.875rem;">Orbit Lines</div>
+          <div style="color: #64748b; font-size: 0.75rem;">rgba(255,255,255, 0.06 → 0.12)</div>
+        </div>
+      </div>
+      <div style="color: #94a3b8; font-size: 0.8rem;">Linhas de orbita quase invisiveis em repouso, ganham opacidade no hover do planeta correspondente.</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Tipografia</h3>
+  <p style="margin-bottom: 1.5rem; color: #94a3b8;">Helvetica Neue como primaria, Inter como fallback web (metricas quase identicas)</p>
+
+  <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem;">
+    <div style="margin-bottom: 2rem;">
+      <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: #475569; margin-bottom: 0.5rem;">Display / Logo</div>
+      <div style="font-size: 2.5rem; font-weight: 300; letter-spacing: -0.02em; color: #F1F5F9;">
+        sun<span style="font-weight: 600;">OS</span><span style="color: #FFC801;">.</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: #475569; margin-bottom: 0.5rem;">H1 — Page Title (32px / 300)</div>
+      <div style="font-size: 2rem; font-weight: 300; letter-spacing: -0.01em; color: #F1F5F9;">Sistema Solar de Clientes</div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: #475569; margin-bottom: 0.5rem;">H2 — Section (20px / 500)</div>
+      <div style="font-size: 1.25rem; font-weight: 500; color: #F1F5F9;">Skills do Bioma</div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: #475569; margin-bottom: 0.5rem;">Label — Orbit / Planet (11px / 500 / Uppercase / Tracked)</div>
+      <div style="font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: #94A3B8;">SANTANDER &middot; 6 SKILLS</div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: #475569; margin-bottom: 0.5rem;">Body (14px / 400)</div>
+      <div style="font-size: 0.875rem; font-weight: 400; color: #94A3B8; line-height: 1.6;">Cada skill carrega automaticamente a Biblioteca do cliente. O usuario nao precisa dar contexto manualmente.</div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; color: #475569; margin-bottom: 0.5rem;">Chat Message (15px / 400)</div>
+      <div style="font-size: 0.9375rem; font-weight: 400; color: #F1F5F9; line-height: 1.65;">Como posso ajudar?</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Spacing & Radius</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem;">
+      <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 1rem;">Scale (4px base)</div>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem; color: #94a3b8;">
+        <div><span style="font-family: monospace; color: #F1F5F9;">xs:</span> 4px — inner padding</div>
+        <div><span style="font-family: monospace; color: #F1F5F9;">sm:</span> 8px — gap entre elementos</div>
+        <div><span style="font-family: monospace; color: #F1F5F9;">md:</span> 16px — padding de cards</div>
+        <div><span style="font-family: monospace; color: #F1F5F9;">lg:</span> 24px — gap entre secoes</div>
+        <div><span style="font-family: monospace; color: #F1F5F9;">xl:</span> 32px — margin de pagina</div>
+        <div><span style="font-family: monospace; color: #F1F5F9;">2xl:</span> 48px — hero spacing</div>
+        <div><span style="font-family: monospace; color: #F1F5F9;">3xl:</span> 64px — section breaks</div>
+      </div>
+    </div>
+    <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem;">
+      <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 1rem;">Border Radius</div>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 40px; background: #1b2b3a; border-radius: 50%;"></div>
+          <span style="font-size: 0.8rem; color: #94a3b8;"><span style="font-family: monospace; color: #F1F5F9;">full</span> — planetas, avatars</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 30px; background: #1b2b3a; border-radius: 12px;"></div>
+          <span style="font-size: 0.8rem; color: #94a3b8;"><span style="font-family: monospace; color: #F1F5F9;">12px</span> — cards, panels</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 30px; background: #1b2b3a; border-radius: 8px;"></div>
+          <span style="font-size: 0.8rem; color: #94a3b8;"><span style="font-family: monospace; color: #F1F5F9;">8px</span> — inputs, buttons</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 24px; background: #1b2b3a; border-radius: 20px;"></div>
+          <span style="font-size: 0.8rem; color: #94a3b8;"><span style="font-family: monospace; color: #F1F5F9;">pill</span> — filter pills, badges</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Glow & Shadows</h3>
+  <p style="margin-bottom: 1.5rem; color: #94a3b8;">Glow colorido como feedback visual principal — substitui bordas e sombras tradicionais</p>
+
+  <div style="display: flex; gap: 2rem; justify-content: center; padding: 3rem 0; background: #080d14; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+    <!-- Resting -->
+    <div style="text-align: center;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #FFC801; margin: 0 auto 0.75rem;"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569;">Repouso</div>
+    </div>
+    <!-- Hover -->
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: #FFC801; margin: 0 auto 0.75rem; box-shadow: 0 0 20px rgba(255,200,1,0.4), 0 0 60px rgba(255,200,1,0.15); transform: scale(1);"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8;">Hover</div>
+    </div>
+    <!-- Active -->
+    <div style="text-align: center;">
+      <div style="width: 72px; height: 72px; border-radius: 50%; background: #FFC801; margin: 0 auto 0.75rem; box-shadow: 0 0 30px rgba(255,200,1,0.5), 0 0 80px rgba(255,200,1,0.2), 0 0 120px rgba(255,200,1,0.08);"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #F1F5F9;">Active / Centro</div>
+    </div>
+
+    <div style="width: 1px; background: rgba(255,255,255,0.08);"></div>
+
+    <!-- Blue example -->
+    <div style="text-align: center;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #3B82F6; margin: 0 auto 0.75rem;"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569;">Midia</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: #3B82F6; margin: 0 auto 0.75rem; box-shadow: 0 0 20px rgba(59,130,246,0.4), 0 0 60px rgba(59,130,246,0.15);"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8;">Hover</div>
+    </div>
+
+    <!-- Green example -->
+    <div style="text-align: center;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #10B981; margin: 0 auto 0.75rem;"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569;">Plan.</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: #10B981; margin: 0 auto 0.75rem; box-shadow: 0 0 20px rgba(16,185,129,0.4), 0 0 60px rgba(16,185,129,0.15);"></div>
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8;">Hover</div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <h3>Animacao</h3>
+  <div style="background: #080d14; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.8rem; color: #94a3b8;">
+      <div><span style="color: #F1F5F9; font-family: monospace;">hover:</span> 200ms ease-out — scale(1.08) + glow</div>
+      <div><span style="color: #F1F5F9; font-family: monospace;">morph:</span> 500ms cubic-bezier(0.4, 0, 0.2, 1) — transicao entre niveis</div>
+      <div><span style="color: #F1F5F9; font-family: monospace;">orbit-appear:</span> 300ms ease-out staggered — planetas surgindo nas orbitas</div>
+      <div><span style="color: #F1F5F9; font-family: monospace;">label-fade:</span> 150ms ease — labels aparecendo no hover</div>
+      <div><span style="color: #F1F5F9; font-family: monospace;">orbit-pulse:</span> 4s ease-in-out infinite — brilho sutil nas orbitas (muito discreto)</div>
+      <div><span style="color: #F1F5F9; font-family: monospace;">reduced-motion:</span> todas animacoes desabilitadas via prefers-reduced-motion</div>
+    </div>
+  </div>
+</div>

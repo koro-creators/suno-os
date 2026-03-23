@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sunOS — Telas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --void: #080d14;
+    --deep: #0f1923;
+    --nebula: #1b2b3a;
+    --twilight: #263a4d;
+    --sun: #FFC801;
+    --criacao: #FFC801;
+    --midia: #3B82F6;
+    --planejamento: #10B981;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #475569;
+    --orbit-line: rgba(255,255,255,0.07);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--void);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    padding: 1.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .page-header h1 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 0.25rem;
+  }
+  .page-header h1 span { font-weight: 600; }
+  .page-header h1 .dot { color: var(--sun); }
+  .page-header p { color: var(--text-muted); font-size: 0.8rem; }
+
+  .screens {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .screen-section {
+    background: var(--deep);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .screen-label {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .screen-label .level {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--sun);
+    background: rgba(255,200,1,0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .screen-label .route {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .screen-label .name {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .screen-mockup {
+    position: relative;
+    min-height: 500px;
+    background: var(--void);
+    overflow: hidden;
+  }
+
+  /* ======== SHARED HEADER ======== */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(8,13,20,0.8);
+    backdrop-filter: blur(12px);
+    position: relative;
+    z-index: 10;
+  }
+  .logo {
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
+  .logo strong { font-weight: 600; }
+  .logo .dot { color: var(--sun); }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .breadcrumb .active { color: var(--text-primary); }
+  .breadcrumb .sep { opacity: 0.3; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .level-indicator {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    padding: 0.25rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--nebula);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* ======== LEVEL 1: HOME ======== */
+  .solar-system {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    height: 420px;
+  }
+
+  .orbit {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--orbit-line);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .orbit-1 { width: 160px; height: 160px; }
+  .orbit-2 { width: 260px; height: 260px; }
+  .orbit-3 { width: 360px; height: 360px; }
+
+  .sun-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--sun);
+    box-shadow: 0 0 30px rgba(255,200,1,0.4), 0 0 80px rgba(255,200,1,0.15);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sun-center span {
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: var(--void);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .planet {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .planet:hover {
+    transform: scale(1.15);
+  }
+  .planet-label {
+    position: absolute;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    transition: color 0.2s, opacity 0.2s;
+  }
+  .planet:hover .planet-label {
+    color: var(--text-secondary);
+  }
+
+  /* Client planets - warm colors */
+  .p-santander {
+    width: 28px; height: 28px; background: #EF4444;
+    top: 8%; left: 55%;
+    box-shadow: 0 0 0 rgba(239,68,68,0);
+  }
+  .p-santander:hover { box-shadow: 0 0 20px rgba(239,68,68,0.4), 0 0 50px rgba(239,68,68,0.15); }
+  .p-santander .planet-label { top: -18px; left: 50%; transform: translateX(-50%); }
+
+  .p-vivo {
+    width: 24px; height: 24px; background: #8B5CF6;
+    top: 20%; right: 5%;
+    box-shadow: 0 0 0 rgba(139,92,246,0);
+  }
+  .p-vivo:hover { box-shadow: 0 0 20px rgba(139,92,246,0.4), 0 0 50px rgba(139,92,246,0.15); }
+  .p-vivo .planet-label { top: -18px; left: 50%; transform: translateX(-50%); }
+
+  .p-americanas {
+    width: 22px; height: 22px; background: #F97316;
+    bottom: 30%; right: 0%;
+    box-shadow: 0 0 0 rgba(249,115,22,0);
+  }
+  .p-americanas:hover { box-shadow: 0 0 20px rgba(249,115,22,0.4), 0 0 50px rgba(249,115,22,0.15); }
+  .p-americanas .planet-label { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+
+  .p-mrv {
+    width: 20px; height: 20px; background: #06B6D4;
+    bottom: 8%; left: 55%;
+    box-shadow: 0 0 0 rgba(6,182,212,0);
+  }
+  .p-mrv:hover { box-shadow: 0 0 20px rgba(6,182,212,0.4), 0 0 50px rgba(6,182,212,0.15); }
+  .p-mrv .planet-label { bottom: -18px; left: 50%; transform: translateX(-50%); }
+
+  .p-sicredi {
+    width: 26px; height: 26px; background: #22C55E;
+    bottom: 22%; left: 2%;
+    box-shadow: 0 0 0 rgba(34,197,94,0);
+  }
+  .p-sicredi:hover { box-shadow: 0 0 20px rgba(34,197,94,0.4), 0 0 50px rgba(34,197,94,0.15); }
+  .p-sicredi .planet-label { right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+
+  .p-bmg {
+    width: 18px; height: 18px; background: #F472B6;
+    top: 28%; left: 5%;
+    box-shadow: 0 0 0 rgba(244,114,182,0);
+  }
+  .p-bmg:hover { box-shadow: 0 0 20px rgba(244,114,182,0.4), 0 0 50px rgba(244,114,182,0.15); }
+  .p-bmg .planet-label { right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+
+  .p-stone {
+    width: 21px; height: 21px; background: #A3E635;
+    top: 5%; left: 35%;
+    box-shadow: 0 0 0 rgba(163,230,53,0);
+  }
+  .p-stone:hover { box-shadow: 0 0 20px rgba(163,230,53,0.4), 0 0 50px rgba(163,230,53,0.15); }
+  .p-stone .planet-label { top: -18px; left: 50%; transform: translateX(-50%); }
+
+  /* Connector lines */
+  .connector {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 1px;
+    transform-origin: left center;
+    z-index: 1;
+  }
+  .connector-line {
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 4px, transparent 4px, transparent 8px);
+  }
+
+  /* ======== LEVEL 2: CLIENT ======== */
+  .skill-solar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    height: 380px;
+  }
+
+  .client-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #EF4444;
+    box-shadow: 0 0 30px rgba(239,68,68,0.3), 0 0 80px rgba(239,68,68,0.1);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .client-center span {
+    font-size: 0.4rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .skill-planet {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .skill-planet:hover { transform: scale(1.15); }
+  .skill-label {
+    position: absolute;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .skill-type-tag {
+    font-size: 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 1px 4px;
+    border-radius: 3px;
+    position: absolute;
+  }
+
+  /* Filter pills */
+  .filter-bar {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+  }
+  .filter-pill {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-pill:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text-secondary);
+  }
+  .filter-pill.active {
+    border-color: var(--sun);
+    color: var(--sun);
+    background: rgba(255,200,1,0.08);
+  }
+
+  /* ======== LEVEL 3: CHAT ======== */
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    height: calc(500px - 45px);
+  }
+
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+  }
+
+  .msg {
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .msg-user {
+    background: var(--nebula);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    color: var(--text-primary);
+  }
+  .msg-assistant {
+    background: rgba(255,255,255,0.03);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    color: var(--text-secondary);
+  }
+  .msg-assistant .typing {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .msg-assistant .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: blink 1.4s infinite;
+  }
+  .msg-assistant .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .msg-assistant .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 60%, 100% { opacity: 0.3; }
+    30% { opacity: 1; }
+  }
+
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .chat-input {
+    display: flex;
+    align-items: center;
+    background: var(--deep);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 0.6rem 0.6rem 0.6rem 1.25rem;
+    gap: 0.5rem;
+  }
+  .chat-input input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+  }
+  .chat-input input::placeholder { color: var(--text-muted); }
+  .send-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--sun);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .send-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: var(--void);
+  }
+
+  /* Context sidebar */
+  .context-sidebar {
+    padding: 1.25rem;
+    overflow-y: auto;
+  }
+  .ctx-section {
+    margin-bottom: 1.25rem;
+  }
+  .ctx-section-title {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .ctx-section-title .dot-sm {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  .ctx-item {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 0.4rem 0.6rem;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    margin-bottom: 0.35rem;
+    border-left: 2px solid rgba(255,255,255,0.06);
+  }
+  .ctx-item.active {
+    border-left-color: var(--sun);
+    background: rgba(255,200,1,0.03);
+  }
+
+  .hitl-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    color: var(--planejamento);
+    background: rgba(16,185,129,0.08);
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    border: 1px solid rgba(16,185,129,0.15);
+  }
+  .hitl-badge .pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--planejamento);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+  }
+
+  /* Description panel below mockup */
+  .screen-desc {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: var(--deep);
+  }
+  .screen-desc h4 {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  .screen-desc ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .screen-desc li {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>sun<span>OS</span><span class="dot">.</span> Telas</h1>
+  <p>Mockup das 3 telas navegaveis — Home, Client, Skill/Chat</p>
+</div>
+
+<div class="screens">
+
+  <!-- ==================== LEVEL 1: HOME ==================== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 1</span>
+      <span class="name">Home — Sistema Solar de Clientes</span>
+      <span class="route">/</span>
+    </div>
+    <div class="screen-mockup">
+      <!-- App Header -->
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span class="active">Home</span>
+        </div>
+        <div class="header-right">
+          <span class="level-indicator">7 biomas</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <!-- Solar System -->
+      <div class="solar-system">
+        <div class="orbit orbit-1"></div>
+        <div class="orbit orbit-2"></div>
+        <div class="orbit orbit-3"></div>
+
+        <div class="sun-center"><span>Suno</span></div>
+
+        <div class="planet p-santander"><div class="planet-label">Santander</div></div>
+        <div class="planet p-vivo"><div class="planet-label">Vivo</div></div>
+        <div class="planet p-americanas"><div class="planet-label">Americanas</div></div>
+        <div class="planet p-mrv"><div class="planet-label">MRV</div></div>
+        <div class="planet p-sicredi"><div class="planet-label">Sicredi</div></div>
+        <div class="planet p-bmg"><div class="planet-label">BMG</div></div>
+        <div class="planet p-stone"><div class="planet-label">Stone</div></div>
+      </div>
+    </div>
+    <div class="screen-desc">
+      <h4>Componentes nesta tela</h4>
+      <ul>
+        <li>OrbitalSystem</li>
+        <li>PlanetNode (x7 clientes)</li>
+        <li>OrbitRing (x3 aneis)</li>
+        <li>ConnectorLine (tracejadas)</li>
+        <li>AppHeader + Breadcrumb</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== LEVEL 2: CLIENT ==================== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 2</span>
+      <span class="name">Bioma do Cliente — Skills</span>
+      <span class="route">/santander</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span>
+          <span class="sep">/</span>
+          <span class="active">Santander</span>
+        </div>
+        <div class="header-right">
+          <span class="level-indicator">6 skills</span>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="skill-solar">
+        <div class="orbit orbit-1"></div>
+        <div class="orbit orbit-2"></div>
+        <div class="orbit orbit-3"></div>
+
+        <div class="client-center"><span>Santander</span></div>
+
+        <!-- Criacao skills -->
+        <div class="skill-planet" style="width:24px;height:24px;background:var(--criacao);top:5%;left:52%;box-shadow:0 0 12px rgba(255,200,1,0.25);">
+          <div class="skill-label" style="top:-20px;left:50%;transform:translateX(-50%);color:var(--criacao);">Texto de Radio</div>
+        </div>
+        <div class="skill-planet" style="width:22px;height:22px;background:var(--criacao);top:25%;right:5%;box-shadow:0 0 12px rgba(255,200,1,0.25);">
+          <div class="skill-label" style="left:calc(100% + 8px);top:50%;transform:translateY(-50%);color:var(--criacao);">Copy Social</div>
+        </div>
+
+        <!-- Midia skills -->
+        <div class="skill-planet" style="width:26px;height:26px;background:var(--midia);bottom:25%;right:8%;box-shadow:0 0 12px rgba(59,130,246,0.25);">
+          <div class="skill-label" style="left:calc(100% + 8px);top:50%;transform:translateY(-50%);color:var(--midia);">Plano de Midia</div>
+        </div>
+        <div class="skill-planet" style="width:20px;height:20px;background:var(--midia);bottom:5%;left:45%;box-shadow:0 0 12px rgba(59,130,246,0.25);">
+          <div class="skill-label" style="bottom:-20px;left:50%;transform:translateX(-50%);color:var(--midia);">Report Perf.</div>
+        </div>
+
+        <!-- Planejamento skills -->
+        <div class="skill-planet" style="width:24px;height:24px;background:var(--planejamento);bottom:20%;left:2%;box-shadow:0 0 12px rgba(16,185,129,0.25);">
+          <div class="skill-label" style="right:calc(100% + 8px);top:50%;transform:translateY(-50%);color:var(--planejamento);">Persona Sintetica</div>
+        </div>
+        <div class="skill-planet" style="width:22px;height:22px;background:var(--planejamento);top:15%;left:8%;box-shadow:0 0 12px rgba(16,185,129,0.25);">
+          <div class="skill-label" style="right:calc(100% + 8px);top:50%;transform:translateY(-50%);color:var(--planejamento);">Brief Builder</div>
+        </div>
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="filter-bar">
+        <div class="filter-pill active">Todos</div>
+        <div class="filter-pill" style="--c:var(--criacao);">Criacao</div>
+        <div class="filter-pill" style="--c:var(--midia);">Midia</div>
+        <div class="filter-pill" style="--c:var(--planejamento);">Planejamento</div>
+      </div>
+    </div>
+    <div class="screen-desc">
+      <h4>Componentes nesta tela</h4>
+      <ul>
+        <li>OrbitalSystem (reuso)</li>
+        <li>PlanetNode (skills por tipo)</li>
+        <li>FilterPills (criacao/midia/planejamento)</li>
+        <li>ClientCenter (planeta expandido)</li>
+        <li>Breadcrumb (Home / Cliente)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== LEVEL 3: CHAT ==================== -->
+  <div class="screen-section">
+    <div class="screen-label">
+      <span class="level">Nivel 3</span>
+      <span class="name">Skill Chat — Texto de Radio</span>
+      <span class="route">/santander/texto-de-radio</span>
+    </div>
+    <div class="screen-mockup">
+      <div class="app-header">
+        <div class="logo">sun<strong>OS</strong><span class="dot">.</span></div>
+        <div class="breadcrumb">
+          <span>Home</span>
+          <span class="sep">/</span>
+          <span>Santander</span>
+          <span class="sep">/</span>
+          <span class="active">Texto de Radio</span>
+        </div>
+        <div class="header-right">
+          <div style="display:flex;align-items:center;gap:0.4rem;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--criacao);box-shadow:0 0 8px rgba(255,200,1,0.3);"></div>
+            <span class="level-indicator">Criacao</span>
+          </div>
+          <div class="avatar"></div>
+        </div>
+      </div>
+
+      <div class="chat-layout">
+        <div class="chat-main">
+          <div class="chat-messages">
+            <div class="msg msg-user">Preciso de um spot de 30 segundos pro Santander Van. Tom descontraido, publico jovem.</div>
+            <div class="msg msg-assistant">
+              Aqui vai uma opcao de roteiro para o Santander Van, 30 segundos, tom descontraido:
+
+              <div style="margin-top:0.75rem;padding:0.75rem;background:rgba(255,200,1,0.04);border-left:2px solid var(--sun);border-radius:0 6px 6px 0;font-size:0.8rem;">
+                <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--sun);margin-bottom:0.4rem;">Roteiro — Spot Radio 30"</div>
+                LOC: Imagina um banco que cabe no seu bolso e entende o seu corre...
+              </div>
+            </div>
+            <div class="msg msg-user">Bom! Agora faz uma versao mais formal pro publico 35+.</div>
+            <div class="msg msg-assistant">
+              <div class="typing">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <div class="chat-input">
+              <input type="text" placeholder="Como posso ajudar?" disabled>
+              <button class="send-btn">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Context Sidebar -->
+        <div class="context-sidebar">
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--sun);"></div>
+              Biblioteca
+            </div>
+            <div class="ctx-item active">Tom de voz Santander</div>
+            <div class="ctx-item">Restricoes legais banking</div>
+            <div class="ctx-item">Dados demograficos SP</div>
+            <div class="ctx-item">Historico campanhas Q4</div>
+          </div>
+
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--midia);"></div>
+              Agentes
+            </div>
+            <div class="ctx-item">Copywriter</div>
+            <div class="ctx-item">Revisor</div>
+          </div>
+
+          <div class="ctx-section">
+            <div class="ctx-section-title">
+              <div class="dot-sm" style="background:var(--planejamento);"></div>
+              Validacao
+            </div>
+            <div class="hitl-badge">
+              <div class="pulse"></div>
+              Human-in-the-Loop ativo
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-desc">
+      <h4>Componentes nesta tela</h4>
+      <ul>
+        <li>ChatInterface</li>
+        <li>MessageBubble (user/assistant)</li>
+        <li>StreamingIndicator</li>
+        <li>ChatInput (pill shape)</li>
+        <li>ContextSidebar</li>
+        <li>BibliotecaList</li>
+        <li>HumanInTheLoop badge</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
