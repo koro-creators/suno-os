@@ -1,18 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutDashboard, Users, Sparkles, BookOpen, type LucideIcon } from 'lucide-react';
 
-const NAV_ITEMS = ['Dashboard', 'Clientes', 'Skills', 'Biblioteca'];
+interface NavItemDef {
+  label: string;
+  icon: LucideIcon;
+}
 
-const RECENT_ITEMS = [
-  'Santander · Copy Social',
-  'Vivo · Plano de Mídia',
-  'BMG · Brief Builder',
+interface RecentItemDef {
+  label: string;
+  color: string;
+}
+
+const NAV_ITEMS: NavItemDef[] = [
+  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'Clientes', icon: Users },
+  { label: 'Skills', icon: Sparkles },
+  { label: 'Biblioteca', icon: BookOpen },
+];
+
+const RECENT_ITEMS: RecentItemDef[] = [
+  { label: 'Santander · Copy Social', color: '#EF4444' },
+  { label: 'Vivo · Plano de Mídia', color: '#8B5CF6' },
+  { label: 'BMG · Brief Builder', color: '#F472B6' },
 ];
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState('Dashboard');
 
   return (
     <aside
@@ -31,45 +47,112 @@ export default function Sidebar() {
         position: 'relative',
       }}
     >
-      {/* Toggle button — always visible, vertically centered */}
-      <button
-        aria-label={isOpen ? 'Fechar menu lateral' : 'Abrir menu lateral'}
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((v) => !v)}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          right: 0,
-          transform: 'translateY(-50%)',
-          width: 40,
-          height: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-muted)',
-          flexShrink: 0,
-          zIndex: 10,
-          borderRadius: 0,
-          transition: 'color 150ms ease, background-color 150ms ease',
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
-          (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--deep)';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
-          (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
-        }}
-      >
-        {isOpen ? (
+      {/* Collapsed icon strip — shown only when sidebar is closed */}
+      {!isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: 40,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            cursor: 'pointer',
+          }}
+          onClick={() => setIsOpen(true)}
+        >
+          {NAV_ITEMS.map(({ label, icon: Icon }) => {
+            const isActive = activeItem === label;
+            return (
+              <div
+                key={label}
+                title={label}
+                role="button"
+                tabIndex={0}
+                aria-label={label}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveItem(label);
+                  setIsOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveItem(label);
+                    setIsOpen(true);
+                  }
+                }}
+                style={{
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: isActive ? 'var(--sun)' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  flexShrink: 0,
+                  transition: 'color 150ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLDivElement).style.color = 'var(--text-secondary)';
+                  }
+                  (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255,255,255,0.03)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.color = isActive ? 'var(--sun)' : 'var(--text-muted)';
+                  (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
+                }}
+              >
+                <Icon size={14} strokeWidth={1.5} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Toggle button — shown only when open, vertically centered */}
+      {isOpen && (
+        <button
+          aria-label="Fechar menu lateral"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            right: 0,
+            transform: 'translateY(-50%)',
+            width: 40,
+            height: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-muted)',
+            flexShrink: 0,
+            zIndex: 10,
+            borderRadius: 0,
+            transition: 'color 150ms ease, background-color 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--deep)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+          }}
+        >
           <ChevronLeft size={14} strokeWidth={1.5} />
-        ) : (
-          <ChevronRight size={14} strokeWidth={1.5} />
-        )}
-      </button>
+        </button>
+      )}
 
       {/* Content — only rendered/visible when open */}
       <div
@@ -97,8 +180,14 @@ export default function Sidebar() {
           >
             Navegação
           </div>
-          {NAV_ITEMS.map((item) => (
-            <NavItem key={item} label={item} />
+          {NAV_ITEMS.map(({ label, icon }) => (
+            <NavItem
+              key={label}
+              label={label}
+              icon={icon}
+              isActive={activeItem === label}
+              onClick={() => setActiveItem(label)}
+            />
           ))}
         </div>
 
@@ -115,8 +204,8 @@ export default function Sidebar() {
           >
             Recentes
           </div>
-          {RECENT_ITEMS.map((item) => (
-            <NavItem key={item} label={item} />
+          {RECENT_ITEMS.map(({ label, color }) => (
+            <RecentItem key={label} label={label} color={color} />
           ))}
         </div>
       </div>
@@ -124,7 +213,73 @@ export default function Sidebar() {
   );
 }
 
-function NavItem({ label }: { label: string }) {
+function NavItem({
+  label,
+  icon: Icon,
+  isActive,
+  onClick,
+}: {
+  label: string;
+  icon: LucideIcon;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      style={{
+        fontSize: '0.75rem',
+        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+        padding: '10px 16px',
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        transition: 'color 150ms ease, background-color 150ms ease',
+        userSelect: 'none',
+        outline: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        borderLeft: isActive ? '2px solid var(--sun)' : '2px solid transparent',
+        backgroundColor: isActive ? 'rgba(255,200,1,0.04)' : 'transparent',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = isActive
+          ? 'rgba(255,200,1,0.06)'
+          : 'rgba(255,255,255,0.03)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = isActive
+          ? 'rgba(255,200,1,0.04)'
+          : 'transparent';
+      }}
+      onFocus={(e) => {
+        (e.currentTarget as HTMLDivElement).style.color = 'var(--text-primary)';
+      }}
+      onBlur={(e) => {
+        (e.currentTarget as HTMLDivElement).style.color = isActive
+          ? 'var(--text-primary)'
+          : 'var(--text-secondary)';
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <Icon
+        size={14}
+        strokeWidth={1.5}
+        style={{ color: isActive ? 'var(--sun)' : 'inherit', flexShrink: 0 }}
+      />
+      {label}
+    </div>
+  );
+}
+
+function RecentItem({ label, color }: { label: string; color: string }) {
   return (
     <div
       role="button"
@@ -132,18 +287,23 @@ function NavItem({ label }: { label: string }) {
       style={{
         fontSize: '0.75rem',
         color: 'var(--text-secondary)',
-        padding: '8px 16px',
+        padding: '10px 16px',
         cursor: 'pointer',
         whiteSpace: 'nowrap',
-        transition: 'color 150ms ease',
+        transition: 'color 150ms ease, background-color 150ms ease',
         userSelect: 'none',
         outline: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.color = 'var(--text-primary)';
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(255,255,255,0.03)';
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.color = 'var(--text-secondary)';
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
       }}
       onFocus={(e) => {
         (e.currentTarget as HTMLDivElement).style.color = 'var(--text-primary)';
@@ -157,6 +317,16 @@ function NavItem({ label }: { label: string }) {
         }
       }}
     >
+      <span
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: '50%',
+          backgroundColor: color,
+          flexShrink: 0,
+          display: 'inline-block',
+        }}
+      />
       {label}
     </div>
   );
