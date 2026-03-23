@@ -31,9 +31,9 @@ export default function SkillPage({
   const skillColor = getSkillTypeColor(skill.type);
   const moons = skill.moons;
 
-  // 1 moon per orbit
-  const MOON_ORBIT_START = 110;
-  const MOON_ORBIT_STEP = 45;
+  // 1 moon per orbit — proportional sizes
+  const MOON_ORBIT_START = 130;
+  const MOON_ORBIT_STEP = 50;
   const moonOrbitRadii = moons.map((_, i) => MOON_ORBIT_START + i * MOON_ORBIT_STEP);
   const moonAngles = [40, 170, 300, 100, 230];
 
@@ -43,7 +43,7 @@ export default function SkillPage({
       id: moon.slug,
       label: moon.name,
       color: skillColor,
-      size: 28 + (idx % 2) * 6,
+      size: 40 + (idx % 2) * 15,
       orbitIndex: idx,
       angle,
       labelPosition: (angle > 90 && angle < 270 ? 'left' : 'right') as 'left' | 'right',

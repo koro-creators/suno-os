@@ -50,8 +50,8 @@ export default function OrbitalSystem({
   const positions = useOrbitalLayout(orbitalItems, orbitRadii);
 
   const largestRadius = Math.max(...orbitRadii, 0);
-  // Extra padding for larger planets + labels (was 80, bumped to 120)
-  const containerSize = largestRadius * 2 + 120;
+  // Extra padding for large planets + labels
+  const containerSize = largestRadius * 2 + 200;
 
   const posMap = new Map(positions.map((p) => [p.id, p]));
 

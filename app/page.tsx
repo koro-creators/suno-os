@@ -9,13 +9,13 @@ import OrbitalSystem from '@/components/solar/OrbitalSystem';
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
 
 // 1 planet per orbit — 7 orbits for 7 clients
-// Sun is 320px (radius 160), orbits start at 210 and increase
-const ORBIT_START = 210;
-const ORBIT_STEP = 36;
+// Sun is 320px. Orbits spaced to accommodate large planets.
+const ORBIT_START = 230;
+const ORBIT_STEP = 50;
 const orbitRadii = sorted.map((_, i) => ORBIT_START + i * ORBIT_STEP);
 
-// Each planet gets a unique angle — spread them organically
-const planetAngles = [25, 155, 290, 70, 200, 340, 110];
+// Each planet gets a unique angle — spread organically like the reference
+const planetAngles = [25, 155, 285, 65, 195, 330, 115];
 
 function getLabelPosition(angle: number): 'top' | 'bottom' | 'left' | 'right' {
   const a = ((angle % 360) + 360) % 360;
@@ -25,10 +25,12 @@ function getLabelPosition(angle: number): 'top' | 'bottom' | 'left' | 'right' {
   return 'right';
 }
 
+// Like Solar Series: big variation — Mercury(small) to Jupiter(huge)
+// Map skill count 3-6 to planet size 50-110px
 function planetSize(skillCount: number): number {
   const min = 3, max = 6;
   const clamped = Math.max(min, Math.min(max, skillCount));
-  return 32 + ((clamped - min) / (max - min)) * 12;
+  return 50 + ((clamped - min) / (max - min)) * 60;
 }
 
 export default function Home() {

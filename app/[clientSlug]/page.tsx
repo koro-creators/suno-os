@@ -28,22 +28,23 @@ export default function ClientPage({
     ? client.skills.filter((s) => s.type === activeFilter)
     : client.skills;
 
-  // 1 skill per orbit — each skill gets its own ring
-  const SKILL_ORBIT_START = 140;
-  const SKILL_ORBIT_STEP = 40;
+  // 1 skill per orbit — proportional sizes like Solar Series
+  const SKILL_ORBIT_START = 170;
+  const SKILL_ORBIT_STEP = 45;
   const skillOrbitRadii = filteredSkills.map((_, i) => SKILL_ORBIT_START + i * SKILL_ORBIT_STEP);
   const skillAngles = [30, 160, 280, 75, 210, 330, 120, 250];
 
   const items = filteredSkills.map((skill, idx) => {
     const skillColor = getSkillTypeColor(skill.type);
     const angle = skillAngles[idx] ?? idx * 51;
-    const size = 34 + (skill.moons.length / 3) * 6;
+    // Bigger planets: 45-85px based on moon count
+    const size = 45 + (skill.moons.length / 3) * 40;
 
     return {
       id: skill.slug,
       label: skill.name,
       color: skillColor,
-      size: Math.min(44, Math.max(34, size)),
+      size: Math.min(85, Math.max(45, size)),
       orbitIndex: idx,
       angle,
       children: skill.moons.map((moon) => ({
