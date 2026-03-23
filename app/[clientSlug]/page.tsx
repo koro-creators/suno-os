@@ -64,7 +64,7 @@ export default function ClientPage({
             width: 500,
             height: 500,
             borderRadius: '50%',
-            background: `radial-gradient(circle at 50% 50%, color-mix(in srgb, ${client.color} 85%, white) 0%, ${client.color} 60%, color-mix(in srgb, ${client.color} 60%, black) 100%)`,
+            backgroundColor: client.color,
             boxShadow: 'none',
             zIndex: 5,
             display: 'flex',
