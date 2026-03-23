@@ -40,7 +40,8 @@ export default function SkillPage({
       return oi === orbitIndex;
     });
     const positionInOrbit = moonsInOrbit.indexOf(moon);
-    const angle = (360 / moonsInOrbit.length) * positionInOrbit;
+    const orbitOffset = orbitIndex === 0 ? 45 : 20;
+    const angle = orbitOffset + (360 / moonsInOrbit.length) * positionInOrbit;
 
     return {
       id: moon.slug,

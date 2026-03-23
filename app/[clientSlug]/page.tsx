@@ -28,12 +28,14 @@ export default function ClientPage({
     ? client.skills.filter((s) => s.type === activeFilter)
     : client.skills;
 
-  // Distribute skills evenly across 3 orbits
+  // Distribute skills evenly across 3 orbits with angular offsets
+  const orbitOffsets = [40, 85, 10];
   const items = filteredSkills.map((skill, idx) => {
     const orbitIndex = idx % 3;
     const skillsInOrbit = filteredSkills.filter((_, i) => i % 3 === orbitIndex);
     const positionInOrbit = skillsInOrbit.indexOf(skill);
-    const angle = (360 / skillsInOrbit.length) * positionInOrbit;
+    const offset = orbitOffsets[orbitIndex] ?? 0;
+    const angle = offset + (360 / skillsInOrbit.length) * positionInOrbit;
     const skillColor = getSkillTypeColor(skill.type);
     const size = 32 + (skill.moons.length / 3) * 4; // 32-36px based on moons
 
