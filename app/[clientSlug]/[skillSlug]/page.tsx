@@ -70,7 +70,7 @@ export default function SkillPage({
             height: 400,
             borderRadius: '50%',
             background: `radial-gradient(circle at 50% 50%, color-mix(in srgb, ${skillColor} 85%, white) 0%, ${skillColor} 60%, color-mix(in srgb, ${skillColor} 60%, black) 100%)`,
-            boxShadow: `0 0 60px color-mix(in srgb, ${skillColor} 15%, transparent), 0 0 150px color-mix(in srgb, ${skillColor} 6%, transparent)`,
+            boxShadow: 'none',
             zIndex: 5,
             display: 'flex',
             alignItems: 'center',

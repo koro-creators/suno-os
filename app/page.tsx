@@ -36,7 +36,7 @@ export default function Home() {
             height: 620,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--sun) 85%, white) 0%, var(--sun) 60%, color-mix(in srgb, var(--sun) 60%, black) 100%)',
-            boxShadow: '0 0 60px color-mix(in srgb, var(--sun) 15%, transparent), 0 0 150px color-mix(in srgb, var(--sun) 6%, transparent)',
+            boxShadow: 'none',
             zIndex: 5,
             display: 'flex',
             alignItems: 'center',
