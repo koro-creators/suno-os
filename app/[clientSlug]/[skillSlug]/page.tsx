@@ -1,18 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { redirect } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
 import BackButton from '@/components/layout/BackButton';
-import OrbitalSystem from '@/components/solar/OrbitalSystem';
 import { getClientBySlug, getSkillBySlug, getSkillTypeColor } from '@/lib/utils';
+import type { Moon } from '@/lib/types';
 
 const typeLabels: Record<string, string> = {
-  criacao: 'Criacao',
-  midia: 'Midia',
+  criacao: 'Criação',
+  midia: 'Mídia',
   planejamento: 'Planejamento',
 };
+
+// Moon size: 40-55px
+function moonSize(idx: number): number {
+  return 40 + (idx % 2) * 15;
+}
 
 export default function SkillPage({
   params,
@@ -31,24 +36,12 @@ export default function SkillPage({
   const skillColor = getSkillTypeColor(skill.type);
   const moons = skill.moons;
 
-  // 1 moon per orbit — proportional sizes
-  const MOON_ORBIT_START = 130;
-  const MOON_ORBIT_STEP = 50;
-  const moonOrbitRadii = moons.map((_, i) => MOON_ORBIT_START + i * MOON_ORBIT_STEP);
-  const moonAngles = [40, 170, 300, 100, 230];
-
-  const items = moons.map((moon, idx) => {
-    const angle = moonAngles[idx] ?? idx * 72;
-    return {
-      id: moon.slug,
-      label: moon.name,
-      color: skillColor,
-      size: 40 + (idx % 2) * 15,
-      orbitIndex: idx,
-      angle,
-      labelPosition: (angle > 90 && angle < 270 ? 'left' : 'right') as 'left' | 'right',
-    };
-  });
+  // Sun center X = left(-180) + 400/2 = 20px from left edge
+  const sunCenterX = 20;
+  const ORBIT_START = 280;
+  const ORBIT_STEP = 160;
+  const orbitRadii = moons.map((_, i) => ORBIT_START + i * ORBIT_STEP);
+  const yOffsets = [14, -20, 18, -12, 22];
 
   return (
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
@@ -66,52 +59,102 @@ export default function SkillPage({
       </div>
 
       <div id="main-content" className="flex-1 relative min-h-0">
-        <OrbitalSystem
-          center={{ label: skill.name, color: skillColor, size: 140 }}
-          orbitRadii={moonOrbitRadii}
-          items={items}
-          showChildLabels={true}
-          onItemClick={(id) => router.push(`/${clientSlug}/${skillSlug}/${id}`)}
-        />
-
-        {/* Skill type badge below center */}
+        {/* Skill center — anchored to left edge */}
         <div
           style={{
             position: 'absolute',
-            top: 'calc(50% + 50px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            left: -180,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 400,
+            height: 400,
+            borderRadius: '50%',
+            background: `radial-gradient(circle at 55% 45%, color-mix(in srgb, ${skillColor} 60%, white) 0%, ${skillColor} 40%, color-mix(in srgb, ${skillColor} 70%, black) 100%)`,
+            boxShadow: `0 0 100px color-mix(in srgb, ${skillColor} 25%, transparent), 0 0 250px color-mix(in srgb, ${skillColor} 10%, transparent)`,
+            zIndex: 5,
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            zIndex: 10,
+            justifyContent: 'center',
           }}
         >
-          <span
+          <div
             style={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              backgroundColor: skillColor,
-              boxShadow: `0 0 10px color-mix(in srgb, ${skillColor} 60%, transparent)`,
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: '0.6rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--text-muted)',
-              whiteSpace: 'nowrap',
+              marginLeft: 160,
+              textAlign: 'center',
               userSelect: 'none',
             }}
           >
-            {typeLabels[skill.type] || skill.type} &middot; {moons.length} areas
-          </span>
+            <div
+              style={{
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                color: 'var(--void)',
+                lineHeight: 1.2,
+              }}
+            >
+              {skill.name}
+            </div>
+            <div
+              style={{
+                fontSize: '0.55rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'color-mix(in srgb, var(--void) 70%, transparent)',
+                marginTop: 4,
+              }}
+            >
+              {typeLabels[skill.type]} · {moons.length} áreas
+            </div>
+          </div>
         </div>
 
-        {/* Improvement 6: Editorial typography block */}
+        {/* Orbit semicircles */}
+        {orbitRadii.map((radius, idx) => {
+          const diameter = radius * 2;
+          return (
+            <div
+              key={`orbit-${idx}`}
+              className="orbit-ring-pulse"
+              style={{
+                position: 'absolute',
+                left: sunCenterX - radius,
+                top: `calc(50% - ${radius}px)`,
+                width: diameter,
+                height: diameter,
+                borderRadius: '50%',
+                border: `1px solid color-mix(in srgb, ${skillColor} 12%, transparent)`,
+                boxShadow: `0 0 8px color-mix(in srgb, ${skillColor} 3%, transparent)`,
+                pointerEvents: 'none',
+                zIndex: 1,
+              }}
+            />
+          );
+        })}
+
+        {/* Moon planets */}
+        {moons.map((moon, idx) => {
+          const size = moonSize(idx);
+          const radius = orbitRadii[idx];
+          const planetX = sunCenterX + radius;
+          const yOffset = yOffsets[idx] ?? 0;
+
+          return (
+            <MoonPlanet
+              key={moon.slug}
+              moon={moon}
+              size={size}
+              color={skillColor}
+              planetX={planetX}
+              yOffset={yOffset}
+              delay={idx * 80}
+              onClick={() => router.push(`/${clientSlug}/${skillSlug}/${moon.slug}`)}
+            />
+          );
+        })}
+
+        {/* Editorial typography */}
         <div
           style={{
             position: 'absolute',
@@ -122,40 +165,136 @@ export default function SkillPage({
             userSelect: 'none',
           }}
         >
-          <div
-            style={{
-              fontSize: '3rem',
-              fontWeight: 200,
-              color: 'rgba(255,255,255,0.05)',
-              lineHeight: 1,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            03
-          </div>
-          <div
-            style={{
-              fontSize: '0.6rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.14em',
-              color: 'rgba(255,255,255,0.18)',
-              marginTop: 4,
-            }}
-          >
-            Skill
-          </div>
-          <div
-            style={{
-              fontSize: '0.45rem',
-              letterSpacing: '0.08em',
-              color: 'rgba(255,255,255,0.1)',
-              marginTop: 3,
-            }}
-          >
-            {typeLabels[skill.type] || skill.type} &middot; {moons.length} áreas
+          <div style={{ fontSize: '3rem', fontWeight: 200, color: 'rgba(255,255,255,0.05)', lineHeight: 1, letterSpacing: '-0.02em' }}>03</div>
+          <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(255,255,255,0.18)', marginTop: 4 }}>Skill</div>
+          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.1)', marginTop: 3 }}>
+            {typeLabels[skill.type]} · {moons.length} áreas
           </div>
         </div>
       </div>
     </main>
+  );
+}
+
+function MoonPlanet({
+  moon,
+  size,
+  color,
+  planetX,
+  yOffset,
+  delay,
+  onClick,
+}: {
+  moon: Moon;
+  size: number;
+  color: string;
+  planetX: number;
+  yOffset: number;
+  delay: number;
+  onClick: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
+  const [navigating, setNavigating] = useState(false);
+  const [focusVisible, setFocusVisible] = useState(false);
+  const ambientGlow = `0 0 8px color-mix(in srgb, ${color} 20%, transparent)`;
+
+  const handleClick = useCallback(() => {
+    setNavigating(true);
+    onClick();
+  }, [onClick]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
+  return (
+    <div
+      className="orbit-appear"
+      role="button"
+      tabIndex={0}
+      aria-label={`${moon.name} — ${moon.description}`}
+      style={{
+        position: 'absolute',
+        left: planetX - size / 2,
+        top: '50%',
+        transform: `translateY(calc(-50% + ${yOffset}px))`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        cursor: navigating ? 'wait' : 'pointer',
+        animationDelay: `${delay}ms`,
+        zIndex: 10,
+        opacity: navigating ? 0.5 : 1,
+        outline: 'none',
+        boxShadow: focusVisible ? '0 0 0 3px rgba(255,200,1,0.5)' : undefined,
+        borderRadius: '50%',
+        transition: 'opacity 200ms ease',
+        pointerEvents: navigating ? 'none' : 'auto',
+      }}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onFocus={() => setFocusVisible(true)}
+      onBlur={() => setFocusVisible(false)}
+      onMouseEnter={() => {
+        if (ref.current) {
+          ref.current.style.transform = 'scale(1.08)';
+          ref.current.style.boxShadow = `0 0 24px color-mix(in srgb, ${color} 45%, transparent), 0 0 60px color-mix(in srgb, ${color} 18%, transparent)`;
+        }
+        if (labelRef.current) labelRef.current.style.color = 'var(--text-primary)';
+      }}
+      onMouseLeave={() => {
+        if (ref.current) {
+          ref.current.style.transform = 'scale(1)';
+          ref.current.style.boxShadow = ambientGlow;
+        }
+        if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
+      }}
+    >
+      {/* Label */}
+      <span
+        ref={labelRef}
+        className="solar-label"
+        style={{
+          fontSize: '0.6rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'var(--text-secondary)',
+          transition: 'color 200ms ease',
+          whiteSpace: 'nowrap',
+          userSelect: 'none',
+          marginBottom: 4,
+        }}
+      >
+        {moon.name}
+      </span>
+
+      {/* Connector line */}
+      <div
+        style={{
+          width: 1,
+          height: 20,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 100%)',
+          marginBottom: 6,
+        }}
+      />
+
+      {/* Moon circle */}
+      <div
+        ref={ref}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          background: `radial-gradient(circle at 35% 35%, color-mix(in srgb, ${color} 60%, white) 0%, ${color} 50%, color-mix(in srgb, ${color} 70%, black) 100%)`,
+          boxShadow: ambientGlow,
+          transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
+          flexShrink: 0,
+        }}
+      />
+    </div>
   );
 }
