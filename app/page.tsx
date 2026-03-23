@@ -32,14 +32,14 @@ export default function Home() {
         <div
           style={{
             position: 'absolute',
-            left: -160,
+            left: -280,
             top: '50%',
             transform: 'translateY(-50%)',
-            width: 420,
-            height: 420,
+            width: 620,
+            height: 620,
             borderRadius: '50%',
             background: 'radial-gradient(circle at 55% 45%, color-mix(in srgb, var(--sun) 60%, white) 0%, var(--sun) 40%, color-mix(in srgb, var(--sun) 70%, black) 100%)',
-            boxShadow: '0 0 120px color-mix(in srgb, var(--sun) 30%, transparent), 0 0 300px color-mix(in srgb, var(--sun) 12%, transparent)',
+            boxShadow: '0 0 150px color-mix(in srgb, var(--sun) 35%, transparent), 0 0 400px color-mix(in srgb, var(--sun) 15%, transparent)',
             zIndex: 5,
             display: 'flex',
             alignItems: 'center',
@@ -52,7 +52,7 @@ export default function Home() {
               letterSpacing: '-0.02em',
               color: 'var(--void)',
               userSelect: 'none',
-              marginLeft: 140,
+              marginLeft: 240,
             }}
           >
             <span style={{ fontWeight: 300 }}>sun</span>
@@ -61,19 +61,23 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Orbit lines — horizontal, fanning from sun */}
+        {/* Orbit semicircles — centered on sun position, right half visible */}
         {sorted.map((_, idx) => {
-          const yOffset = (idx - 3) * 12; // slight vertical spread
+          // Sun center is at x=30 (620/2 - 280), semicircles radiate from there
+          const radius = 350 + idx * 130;
+          const diameter = radius * 2;
           return (
             <div
-              key={`orbit-line-${idx}`}
+              key={`orbit-semi-${idx}`}
               style={{
                 position: 'absolute',
-                left: 200,
-                right: 40,
-                top: `calc(50% + ${yOffset}px)`,
-                height: 1,
-                background: 'linear-gradient(90deg, rgba(255,200,1,0.12) 0%, rgba(255,200,1,0.04) 100%)',
+                left: 30 - radius,
+                top: `calc(50% - ${radius}px)`,
+                width: diameter,
+                height: diameter,
+                borderRadius: '50%',
+                border: '1px solid rgba(255,200,1,0.1)',
+                boxShadow: '0 0 8px rgba(255,200,1,0.02), inset 0 0 8px rgba(255,200,1,0.01)',
                 pointerEvents: 'none',
                 zIndex: 1,
               }}
@@ -87,7 +91,7 @@ export default function Home() {
             display: 'flex',
             alignItems: 'center',
             gap: 0,
-            marginLeft: 280,
+            marginLeft: 360,
             marginRight: 40,
             flex: 1,
             justifyContent: 'space-between',
