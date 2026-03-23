@@ -2,9 +2,14 @@ interface CenterNodeProps {
   label: string;
   color: string;
   size: number;
+  /** Render as sunOS logo instead of plain text */
+  showLogo?: boolean;
 }
 
-export default function CenterNode({ label, color, size }: CenterNodeProps) {
+export default function CenterNode({ label, color, size, showLogo }: CenterNodeProps) {
+  const fontSize = size >= 200 ? '1.2rem' : size >= 100 ? '0.8rem' : '0.5rem';
+  const logoSize = size >= 200 ? '2rem' : '1.2rem';
+
   return (
     <div
       style={{
@@ -23,21 +28,37 @@ export default function CenterNode({ label, color, size }: CenterNodeProps) {
         zIndex: 10,
       }}
     >
-      <span
-        style={{
-          fontSize: size >= 200 ? '1.2rem' : size >= 100 ? '0.8rem' : '0.5rem',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--void)',
-          lineHeight: 1.1,
-          textAlign: 'center',
-          padding: '0 4px',
-          userSelect: 'none',
-        }}
-      >
-        {label}
-      </span>
+      {showLogo ? (
+        <span
+          style={{
+            fontSize: logoSize,
+            letterSpacing: '-0.02em',
+            color: 'var(--void)',
+            userSelect: 'none',
+            lineHeight: 1,
+          }}
+        >
+          <span style={{ fontWeight: 300 }}>sun</span>
+          <span style={{ fontWeight: 700 }}>OS</span>
+          <span style={{ color: 'var(--void)', opacity: 0.5 }}>.</span>
+        </span>
+      ) : (
+        <span
+          style={{
+            fontSize,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--void)',
+            lineHeight: 1.1,
+            textAlign: 'center',
+            padding: '0 4px',
+            userSelect: 'none',
+          }}
+        >
+          {label}
+        </span>
+      )}
     </div>
   );
 }

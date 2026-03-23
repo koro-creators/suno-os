@@ -25,11 +25,13 @@ interface OrbitalItemConfig {
 }
 
 interface OrbitalSystemProps {
-  center: { label: string; color: string; size: number };
+  center: { label: string; color: string; size: number; showLogo?: boolean };
   orbitRadii: number[];
   items: OrbitalItemConfig[];
   onItemClick: (id: string) => void;
   showChildLabels?: boolean;
+  /** Position the center of the system. Default: { top: '50%', left: '50%' } */
+  anchorPosition?: { top: string; left: string };
   className?: string;
 }
 
@@ -39,6 +41,7 @@ export default function OrbitalSystem({
   items,
   onItemClick,
   showChildLabels = false,
+  anchorPosition,
   className,
 }: OrbitalSystemProps) {
   const orbitalItems = items.map((item) => ({
@@ -60,8 +63,8 @@ export default function OrbitalSystem({
       className={cn(className)}
       style={{
         position: 'absolute',
-        top: '50%',
-        left: '50%',
+        top: anchorPosition?.top ?? '50%',
+        left: anchorPosition?.left ?? '50%',
         transform: 'translate(-50%, -50%)',
         width: containerSize,
         height: containerSize,
@@ -101,7 +104,7 @@ export default function OrbitalSystem({
       })}
 
       {/* Center */}
-      <CenterNode label={center.label} color={center.color} size={center.size} />
+      <CenterNode label={center.label} color={center.color} size={center.size} showLogo={center.showLogo} />
 
       {/* Items */}
       {items.map((item, idx) => {

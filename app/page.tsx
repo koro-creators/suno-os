@@ -8,20 +8,22 @@ import OrbitalSystem from '@/components/solar/OrbitalSystem';
 // Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
 
-// 1 planet per orbit — 7 orbits for 7 clients
-// Sun is 320px. Orbits spaced to accommodate large planets.
-const ORBIT_START = 230;
-const ORBIT_STEP = 50;
+// 1 planet per orbit — sun on left, planets extend right
+// Orbits spaced generously for large planets
+const ORBIT_START = 220;
+const ORBIT_STEP = 48;
 const orbitRadii = sorted.map((_, i) => ORBIT_START + i * ORBIT_STEP);
 
-// Each planet gets a unique angle — spread organically like the reference
-const planetAngles = [25, 155, 285, 65, 195, 330, 115];
+// Angles clustered to the right (roughly -45° to +45°) with slight vertical spread
+// This creates the horizontal blueprint look with sun on the left
+const planetAngles = [-25, 15, -40, 30, -10, 42, -35];
 
 function getLabelPosition(angle: number): 'top' | 'bottom' | 'left' | 'right' {
   const a = ((angle % 360) + 360) % 360;
-  if (a >= 45 && a < 135) return 'bottom';
-  if (a >= 135 && a < 225) return 'left';
-  if (a >= 225 && a < 315) return 'top';
+  // Since planets are mostly to the right, labels go right or top/bottom
+  if (a >= 350 || a < 10) return 'right';
+  if (a >= 10 && a < 60) return 'bottom';
+  if (a >= 300 && a < 350) return 'top';
   return 'right';
 }
 
@@ -62,10 +64,11 @@ export default function Home() {
 
       <div className="flex-1 relative min-h-0">
         <OrbitalSystem
-          center={{ label: 'Suno', color: 'var(--sun)', size: 320 }}
+          center={{ label: 'Suno', color: 'var(--sun)', size: 320, showLogo: true }}
           orbitRadii={orbitRadii}
           items={items}
           onItemClick={(id) => router.push(`/${id}`)}
+          anchorPosition={{ top: '50%', left: '18%' }}
         />
 
         {/* Improvement 6: Editorial typography block */}
