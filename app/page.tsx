@@ -66,7 +66,7 @@ export default function Home() {
           // Sun center = left(-280) + 620/2 = 30px from left edge
           const sunCenterX = 30;
           // Planet orbit radii — each planet sits at this distance from sun center
-          const orbitRadii = sorted.map((_, idx) => 340 + idx * 150);
+          const orbitRadii = sorted.map((_, idx) => 440 + idx * 130);
           // Slight vertical offsets for organic feel
           const yOffsets = [15, -20, 10, -28, 18, -14, 22];
 
