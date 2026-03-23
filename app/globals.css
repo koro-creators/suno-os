@@ -26,8 +26,8 @@
   --text-muted: #475569;
 
   /* Orbit */
-  --orbit-line: rgba(255, 255, 255, 0.07);
-  --orbit-hover: rgba(255, 255, 255, 0.12);
+  --orbit-line: rgba(255, 255, 255, 0.12);
+  --orbit-hover: rgba(255, 255, 255, 0.2);
 }
 
 body {

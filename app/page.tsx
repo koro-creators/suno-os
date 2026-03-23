@@ -43,10 +43,14 @@ export default function Home() {
     perOrbit.set(entry.orbitIndex, list);
   }
 
+  // Offset per orbit so planets don't align horizontally
+  const orbitOffsets = [30, 70, 15];
+
   const items = Array.from(perOrbit.entries()).flatMap(([orbitIndex, entries]) => {
     const count = entries.length;
+    const offset = orbitOffsets[orbitIndex] ?? 0;
     return entries.map((entry, i) => {
-      const angle = (360 / count) * i;
+      const angle = offset + (360 / count) * i;
       return {
         id: entry.client.slug,
         label: entry.client.name,

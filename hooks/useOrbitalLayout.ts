@@ -20,8 +20,8 @@ export function calculatePosition(
 ): { x: number; y: number } {
   const rad = (angleDeg * Math.PI) / 180;
   return {
-    x: radius * Math.cos(rad),
-    y: -radius * Math.sin(rad),
+    x: Math.round(radius * Math.cos(rad) * 100) / 100,
+    y: Math.round(-radius * Math.sin(rad) * 100) / 100,
   };
 }
 
