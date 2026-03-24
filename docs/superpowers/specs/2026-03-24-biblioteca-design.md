@@ -18,7 +18,7 @@ interface BibliotecaDocument {
   links: { label: string; url: string }[];
   files: { name: string; type: string; size: string }[];
   createdBy: string;
-  updatedAt: string;
+  updatedAt: string;            // ISO 8601
 }
 ```
 
@@ -32,7 +32,7 @@ interface BibliotecaDocument {
 ```typescript
 interface BibliotecaContextValue {
   documents: BibliotecaDocument[];
-  createDocument: (data: Omit<BibliotecaDocument, 'id'>) => BibliotecaDocument;
+  createDocument: (data: Omit<BibliotecaDocument, 'id' | 'updatedAt' | 'createdBy'>) => BibliotecaDocument;
   updateDocument: (id: string, data: Partial<BibliotecaDocument>) => void;
   deleteDocument: (id: string) => void;
   allTags: string[];            // computed: unique tags across all docs
@@ -57,11 +57,12 @@ Initialized with ~30 mocked documents. Mutations persist during session only.
 ### Filter Bar
 - **Scope pills** (multi-select): `Suno · Santander · Vivo · Americanas · MRV · Sicredi · BMG · Stone`. Toggle on/off. Suno always first. Each pill shows client color dot (8px). Suno uses sun color dot.
 - **Search input** (pill, Search icon): filters by title and content
-- **Tag cloud**: below scope+search. Shows most frequent tags as small pills. Click to toggle filter. Only shows tags present in currently filtered results.
+- **Tag cloud**: below scope+search. Shows most frequent tags as small pills. Click to toggle filter. Only shows tags present in currently filtered results. Multiple selected tags use OR logic within tags. Across filter groups (scope AND tags AND search) use AND logic.
 
 ### Card Grid
 - 2 columns desktop, 1 mobile. Gap 12px. Padding 24px.
 - Cards are expandable inline (click to expand/collapse).
+- Empty state: "Nenhum item encontrado" centered, text-muted, 0.85rem.
 
 ### BibliotecaCard
 **Collapsed state:**
@@ -75,14 +76,15 @@ Initialized with ~30 mocked documents. Mutations persist during session only.
 - Click: expands inline
 
 **Expanded state:**
-- Card grows to show full content (preserving position in grid — spans full row)
+- Card grows to show full content. Uses `grid-column: 1 / -1` to span full row — cards below reflow downward.
 - Full content text (0.8rem, text-primary, white-space pre-wrap)
 - Links section: list of links, each with label + URL (clickable, text-secondary, 0.75rem)
 - Files section: list of files, each with icon (FileText/Image/File) + name + type + size (0.75rem, text-secondary)
 - Scope: full names listed (not just dots)
 - All tags visible
-- "Editar" button (ghost) + "Fechar" button (ghost, X icon) at top-right of expanded area
+- "Editar" button (ghost) + "Excluir" button (ghost, red on hover) + "Fechar" button (ghost, X icon) at top-right of expanded area
 - Click "Editar": opens modal
+- Click "Excluir": confirmation toast "Excluir item?" with "Confirmar" action button. On confirm: calls `deleteDocument()`, shows toast "Item excluído".
 
 ### BibliotecaModal (Create/Edit)
 - Overlay centered, max-width 600px, max-height 80vh, overflow auto
@@ -148,6 +150,11 @@ Add `href: '/biblioteca'` to existing "Biblioteca" nav item (BookOpen icon). Cur
 
 ### Removed Files (1)
 - `data/biblioteca.ts` — Replaced by `data/biblioteca-docs.ts`
+
+### Cleanup
+- Remove `BibliotecaItem` interface from `lib/types.ts` (dead code after migration)
+- Update imports in `components/chat/ChatInterface.tsx` and `app/[clientSlug]/[skillSlug]/[moonSlug]/page.tsx` to use new types
+- Reuse existing `components/ui/Toast.tsx` for all toast notifications (do not create a new one)
 
 ## Mock Data (~30 items)
 
