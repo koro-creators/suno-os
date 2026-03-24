@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { BibliotecaItem } from '@/lib/types';
+import { BibliotecaDocument } from '@/lib/biblioteca-types';
+import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useStreamingText } from '@/hooks/useStreamingText';
 import MessageBubble from './MessageBubble';
@@ -22,7 +23,8 @@ interface ChatInterfaceProps {
   moonSlug: string;
   skillSlug: string;
   clientSlug: string;
-  biblioteca: BibliotecaItem[];
+  documents: BibliotecaDocument[];
+  initialActiveDocIds: string[];
 }
 
 const DEFAULT_AGENTES = ['Copywriter', 'Revisor'];
@@ -32,8 +34,9 @@ const GENERIC_FALLBACK: { content: string; highlight?: { label: string; body: st
     'Entendido. Estou analisando o contexto e preparando uma resposta personalizada com base na biblioteca do cliente e nas melhores praticas do setor.',
 };
 
-export default function ChatInterface({ moonSlug, skillSlug, clientSlug, biblioteca }: ChatInterfaceProps) {
+export default function ChatInterface({ moonSlug, skillSlug, clientSlug, documents, initialActiveDocIds }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [activeDocIds, setActiveDocIds] = useState<string[]>(initialActiveDocIds);
   const [pendingHighlight, setPendingHighlight] = useState<{ label: string; body: string } | undefined>();
   const [savedMessages, setSavedMessages] = useState<Set<number>>(new Set());
   const [variations, setVariations] = useState<Record<number, {
@@ -41,6 +44,8 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, bibliot
     selectedIndex: number;
     originalHighlight?: { label: string; body: string };
   }>>({});
+  const [feedbacks, setFeedbacks] = useState<Record<number, MessageFeedback>>({});
+  const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
 
   const templates = getTemplatesForChat(skillSlug, moonSlug);
   const { text: streamingText, isStreaming, startStreaming } = useStreamingText();
@@ -147,6 +152,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, bibliot
           {messages.map((msg, i) => {
             const isAssistant = msg.role === 'assistant';
             const isLastAndStreaming = false; // completed messages are never streaming
+            const hasFollowingUserMsg = messages.slice(i + 1).some((m) => m.role === 'user');
             return (
               <React.Fragment key={i}>
                 <MessageBubble
@@ -157,6 +163,10 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, bibliot
                   onGenerateVariation={() => handleGenerateVariation(i)}
                   onSave={() => toggleSave(i)}
                   isSaved={savedMessages.has(i)}
+                  msgIndex={i}
+                  feedback={feedbacks[i] || { rating: null, comment: '' }}
+                  onFeedbackChange={(f) => setFeedbacks((prev) => ({ ...prev, [i]: f }))}
+                  hasFollowingUserMessage={hasFollowingUserMsg}
                 />
                 {isAssistant && variations[i] && (
                   <VariationCards
@@ -190,7 +200,17 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, bibliot
       </div>
 
       {/* Right: Context sidebar */}
-      <ContextSidebar biblioteca={biblioteca} agentes={DEFAULT_AGENTES} />
+      <ContextSidebar
+        documents={documents}
+        activeDocIds={activeDocIds}
+        onToggleDoc={(id) => setActiveDocIds((prev) => prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id])}
+        onAddDoc={(id) => setActiveDocIds((prev) => prev.includes(id) ? prev : [...prev, id])}
+        agentes={DEFAULT_AGENTES}
+        messages={messages}
+        feedbacks={feedbacks}
+        sessionFeedback={sessionFeedback}
+        onSessionFeedback={setSessionFeedback}
+      />
     </div>
   );
 }

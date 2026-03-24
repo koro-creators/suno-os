@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils';
+import { MessageFeedback } from '@/lib/feedback-types';
 import ResultActions from './ResultActions';
+import FeedbackInline from './FeedbackInline';
 
 interface MessageBubbleProps {
   role: 'user' | 'assistant';
@@ -9,13 +11,32 @@ interface MessageBubbleProps {
   onGenerateVariation?: () => void;
   onSave?: () => void;
   isSaved?: boolean;
+  msgIndex?: number;
+  feedback?: MessageFeedback;
+  onFeedbackChange?: (f: MessageFeedback) => void;
+  hasFollowingUserMessage?: boolean;
 }
 
-export default function MessageBubble({ role, content, highlight, showActions, onGenerateVariation, onSave, isSaved }: MessageBubbleProps) {
+export default function MessageBubble({
+  role,
+  content,
+  highlight,
+  showActions,
+  onGenerateVariation,
+  onSave,
+  isSaved,
+  msgIndex,
+  feedback,
+  onFeedbackChange,
+  hasFollowingUserMessage,
+}: MessageBubbleProps) {
   const isUser = role === 'user';
 
   return (
-    <div className={cn('max-w-[75%] px-md py-sm', isUser ? 'self-end' : 'self-start')}>
+    <div
+      id={role === 'assistant' && msgIndex !== undefined ? `msg-${msgIndex}` : undefined}
+      className={cn('max-w-[75%] px-md py-sm', isUser ? 'self-end' : 'self-start')}
+    >
       <div
         className={cn('px-md py-sm', isUser ? 'text-text-primary' : 'text-text-secondary')}
         style={{
@@ -47,13 +68,24 @@ export default function MessageBubble({ role, content, highlight, showActions, o
       </div>
 
       {showActions && role === 'assistant' && (
-        <ResultActions
-          content={content}
-          highlightBody={highlight?.body}
-          onGenerateVariation={onGenerateVariation!}
-          onSave={onSave!}
-          isSaved={isSaved ?? false}
-        />
+        <>
+          <ResultActions
+            content={content}
+            highlightBody={highlight?.body}
+            onGenerateVariation={onGenerateVariation!}
+            onSave={onSave!}
+            isSaved={isSaved ?? false}
+            feedback={feedback}
+            onFeedbackChange={onFeedbackChange}
+          />
+          {feedback && onFeedbackChange && (
+            <FeedbackInline
+              feedback={feedback}
+              onChange={onFeedbackChange}
+              collapsed={!!hasFollowingUserMessage && !feedback.comment}
+            />
+          )}
+        </>
       )}
     </div>
   );

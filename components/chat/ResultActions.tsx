@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, Shuffle, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Copy, Check, Shuffle, Bookmark, BookmarkCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { MessageFeedback } from '@/lib/feedback-types';
 
 interface ResultActionsProps {
   content: string;
@@ -9,6 +10,8 @@ interface ResultActionsProps {
   onGenerateVariation: () => void;
   onSave: () => void;
   isSaved: boolean;
+  feedback?: MessageFeedback;
+  onFeedbackChange?: (f: MessageFeedback) => void;
 }
 
 const buttonStyle: React.CSSProperties = {
@@ -30,6 +33,8 @@ export default function ResultActions({
   onGenerateVariation,
   onSave,
   isSaved,
+  feedback,
+  onFeedbackChange,
 }: ResultActionsProps) {
   const [copied, setCopied] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
@@ -109,6 +114,60 @@ export default function ResultActions({
         >
           {isSaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
           {isSaved ? 'Salvo' : 'Salvar'}
+        </button>
+
+        <button
+          style={{
+            ...buttonStyle,
+            color: feedback?.rating === 'up' ? 'var(--planejamento)' : buttonStyle.color,
+          }}
+          aria-pressed={feedback?.rating === 'up'}
+          aria-label="Aprovar"
+          onClick={() => {
+            if (onFeedbackChange && feedback) {
+              onFeedbackChange({
+                ...feedback,
+                rating: feedback.rating === 'up' ? null : 'up',
+              });
+            }
+          }}
+          onMouseEnter={(e) => {
+            if (feedback?.rating !== 'up') handleHover(e, true);
+          }}
+          onMouseLeave={(e) => {
+            if (feedback?.rating !== 'up') handleHover(e, false);
+          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+        >
+          <ThumbsUp size={14} strokeWidth={1.5} />
+        </button>
+
+        <button
+          style={{
+            ...buttonStyle,
+            color: feedback?.rating === 'down' ? '#EF4444' : buttonStyle.color,
+          }}
+          aria-pressed={feedback?.rating === 'down'}
+          aria-label="Rejeitar"
+          onClick={() => {
+            if (onFeedbackChange && feedback) {
+              onFeedbackChange({
+                ...feedback,
+                rating: feedback.rating === 'down' ? null : 'down',
+              });
+            }
+          }}
+          onMouseEnter={(e) => {
+            if (feedback?.rating !== 'down') handleHover(e, true);
+          }}
+          onMouseLeave={(e) => {
+            if (feedback?.rating !== 'down') handleHover(e, false);
+          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+        >
+          <ThumbsDown size={14} strokeWidth={1.5} />
         </button>
       </div>
 
