@@ -34,6 +34,16 @@ interface ClientMetrics {
 - `assignedSkills` references skill IDs from SkillsContext
 - `metrics` are static mocked data, not computed
 - Coexists with `data/clients.ts` — no impact on solar system pages
+- Scope matching convention: `BibliotecaDocument.scope` uses client `slug` (e.g. "santander"), same as `ClientAdmin.slug`
+- Slug auto-generated from name. On collision, append numeric suffix (e.g. "test-2")
+- Types live in `lib/client-types.ts` (new file)
+
+### Sync Strategy
+
+`ClientAdmin.assignedSkills` and `SkillAdmin.assignedClients` are **independent** in this prototype. They may diverge. This is acceptable because:
+- No backend to enforce consistency
+- Each admin view is self-contained
+- Real sync would happen via API in production
 
 ### ClientsContext
 
@@ -88,7 +98,7 @@ Initialized with 7 mocked clients. Mutations persist during session only.
 ### Header
 - Breadcrumb: Clientes / {client name}
 - Color dot (10px) + inline-editable name (1.5rem, weight 300)
-- Right: "Descartar" (ghost) + "Salvar" (sun)
+- Right: "Excluir" (ghost, red on hover, confirmation: shows "Confirmar?" on first click, deletes + redirects to `/clientes` on second click) + "Descartar" (ghost) + "Salvar" (sun)
 
 ### Tab Navigation
 4 tabs: Identidade, Skills, Biblioteca, Métricas. Active tab has sun underline. Same component pattern as SkillEditorTabs.
@@ -137,10 +147,11 @@ Initialized with 7 mocked clients. Mutations persist during session only.
 Same editor layout but:
 - Empty fields, random default color
 - Breadcrumb: Clientes / Novo Cliente
-- Button: "Criar Cliente" instead of "Salvar"
-- On create: generates UUID, calls `createClient()`, redirects to `/clientes/[newId]`
-- Validation: name required, color required. Inline errors.
+- Button: "Criar Cliente" instead of "Salvar". No "Descartar" or "Excluir" buttons (same pattern as Skills new page).
+- On create: generates UUID, calls `createClient()`, uses returned object's ID for redirect to `/clientes/[newId]`
+- Validation: name required, color required. Inline errors on save attempt, switches to Identidade tab.
 - Metrics tab shows "Sem dados" for all fields
+- Editor page handles case where client not yet in context (brief guard)
 
 ## Navigation
 
@@ -149,19 +160,21 @@ Add `href: '/clientes'` to existing "Clientes" nav item (Users icon).
 
 ## File Structure
 
-### New Files (8)
+### New Files (9)
+- `lib/client-types.ts` — ClientAdmin, ClientMetrics interfaces
 - `app/clientes/page.tsx` — Client catalog page
 - `app/clientes/new/page.tsx` — Create client
 - `app/clientes/[clientId]/page.tsx` — Edit client
 - `components/clientes/ClientCard.tsx` — Card for catalog grid
-- `components/clientes/ClientEditor.tsx` — Tab-based editor with save/discard
+- `components/clientes/ClientEditor.tsx` — Tab-based editor with save/discard/delete
 - `components/clientes/ClientEditorTabs.tsx` — Tab navigation
 - `contexts/ClientsContext.tsx` — ClientsProvider + useClients hook
 - `data/clients-admin.ts` — 7 mocked ClientAdmin items with metrics
 
-### Modified Files (2)
+### Modified Files (3)
 - `components/layout/Sidebar.tsx` — Add href to Clientes nav item
 - `components/layout/Providers.tsx` — Add ClientsProvider
+- `components/admin/ClientsTab.tsx` — Read clients from ClientsContext instead of hardcoded ALL_CLIENTS
 
 ### Unchanged Files
 - `data/clients.ts` — Solar system data remains untouched
@@ -204,4 +217,6 @@ Follow existing design system:
 - Coexists with `data/clients.ts` — no integration with solar system pages
 - Metrics are static mocked, not computed from actual usage
 - Document count in ClientCard requires reading BibliotecaContext
-- Delete has no confirmation in this spec (can add if needed)
+- Delete uses double-click confirmation (first click shows "Confirmar?", second click deletes)
+- Reuse existing `timeAgo()` pattern from SkillCard for relative dates
+- Reuse existing `components/ui/Toast.tsx` for notifications
