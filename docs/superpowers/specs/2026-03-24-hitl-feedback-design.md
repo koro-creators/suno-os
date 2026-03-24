@@ -49,7 +49,7 @@ The existing ResultActions component (Copy, Variação, Salvar) gets two new but
 - **Thumbs Up** — `ThumbsUp` icon from Lucide. Default: text-muted. Active: `var(--planejamento)` (#10B981) fill.
 - **Thumbs Down** — `ThumbsDown` icon from Lucide. Default: text-muted. Active: #EF4444 fill.
 - Mutually exclusive toggle: selecting one deselects the other. Clicking active thumb deselects it (back to null).
-- Same icon size and style as existing action buttons (12px, strokeWidth 1.5).
+- Same icon size and style as existing action buttons (14px, strokeWidth 1.5).
 
 ### FeedbackInline Component
 
@@ -60,8 +60,13 @@ Appears below the ResultActions row when a thumb is clicked:
 - Style: bg transparent, border `var(--border-subtle)`, radius 8px, padding 6px 10px, fontSize 0.7rem
 - Focus ring sun color
 - Enter key or blur: saves comment to state
-- Stays visible until next user message or until manually collapsed
+- Auto-collapses when a user message exists at index > current assistant message index (preserves saved feedback data and thumb state)
+- Remains stable during AI streaming — only associated with completed assistant messages
 - If comment exists: shows as subtle text below thumbs (0.65rem, text-muted, italic) when input is not focused
+
+### FeedbackInline Placement
+
+`ResultActions` renders the thumb buttons. `FeedbackInline` is rendered by `MessageBubble` as a sibling below `ResultActions`, receiving the current `MessageFeedback` object. `MessageBubble` owns the expand/collapse state for the inline feedback.
 
 ### ChatInterface State
 
@@ -87,7 +92,7 @@ The existing decorative "Validação" section evolves into a functional mini-das
 - "Human in the Loop" badge with pulsing green dot (unchanged visual)
 
 **2. Session Score Bar**
-- Text: `X de Y mensagens avaliadas` (0.7rem, text-secondary)
+- Text: `X de Y mensagens avaliadas` (0.7rem, text-secondary). Y = total assistant messages in session (excluding user messages).
 - Visual bar: thin progress bar (4px height, radius 2px). Fill = percentage of evaluated messages. Color: `var(--planejamento)` for evaluated portion, `var(--border-subtle)` for remaining.
 - Counters below bar: `N aprovadas` (green dot + text) · `N rejeitadas` (red dot + text) · `N sem avaliação` (muted dot + text). All 0.6rem.
 - Session status badge:
@@ -102,7 +107,7 @@ The existing decorative "Validação" section evolves into a functional mini-das
   - Thumb icon (ThumbsUp or ThumbsDown, 10px, colored green/red)
   - Output preview: first 30 chars of message content, truncated with "..." (0.65rem, text-secondary)
   - Comment if exists: below preview, 0.6rem, text-muted, italic
-- Click item: smooth scroll to that message in the chat (`element.scrollIntoView({ behavior: 'smooth' })`)
+- Click item: smooth scroll to that message in the chat. Each assistant `MessageBubble` gets `id={`msg-${index}`}`. Sidebar uses `document.getElementById(`msg-${index}`)?.scrollIntoView({ behavior: 'smooth' })`.
 - Max 5 visible, overflow-y auto with scroll if more
 - Empty state: "Nenhuma avaliação ainda" (0.65rem, text-muted)
 
@@ -114,6 +119,7 @@ The existing decorative "Validação" section evolves into a functional mini-das
   - Comment: textarea (2 rows, same input style, placeholder "Como foi essa sessão?")
   - "Salvar" button (sun, small) + "Cancelar" (ghost, small)
 - On save: toast "Sessão avaliada" (2s). Button changes to "Sessão avaliada ★ X" (non-interactive, green text)
+- Session feedback is write-once per session. No edit flow.
 - Session feedback persists in ChatInterface state only
 
 ## Feature 3: Score on SkillCards
@@ -172,8 +178,9 @@ const NAV_ITEMS: NavItemDef[] = [
 - `lib/feedback-types.ts` — MessageFeedback, SessionFeedback interfaces
 - `components/chat/FeedbackInline.tsx` — thumbs + comment input, appears below ResultActions
 
-### Modified Files (6)
+### Modified Files (8)
 - `components/chat/ResultActions.tsx` — add ThumbsUp/ThumbsDown buttons with toggle logic
+- `components/chat/MessageBubble.tsx` — pass feedback/onFeedbackChange props through to ResultActions, render FeedbackInline below actions, add `id={`msg-${index}`}` for scroll targeting
 - `components/chat/ChatInterface.tsx` — manage feedbacks state, pass to sidebar and ResultActions
 - `components/chat/ContextSidebar.tsx` — evolve Validação section into functional panel
 - `components/admin/SkillCard.tsx` — add score line
