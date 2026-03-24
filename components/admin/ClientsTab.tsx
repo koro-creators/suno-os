@@ -1,16 +1,7 @@
 'use client';
 
 import { SkillAdmin } from '@/lib/admin-types';
-
-const ALL_CLIENTS = [
-  { slug: 'santander', name: 'Santander', color: '#EF4444' },
-  { slug: 'vivo', name: 'Vivo', color: '#8B5CF6' },
-  { slug: 'americanas', name: 'Americanas', color: '#F97316' },
-  { slug: 'mrv', name: 'MRV', color: '#06B6D4' },
-  { slug: 'sicredi', name: 'Sicredi', color: '#22C55E' },
-  { slug: 'bmg', name: 'BMG', color: '#F472B6' },
-  { slug: 'stone', name: 'Stone', color: '#A3E635' },
-];
+import { useClients } from '@/contexts/ClientsContext';
 
 interface ClientsTabProps {
   data: SkillAdmin;
@@ -18,6 +9,7 @@ interface ClientsTabProps {
 }
 
 export default function ClientsTab({ data, onChange }: ClientsTabProps) {
+  const { clients: allClients } = useClients();
   const count = data.assignedClients.length;
 
   const toggleClient = (slug: string) => {
@@ -30,11 +22,11 @@ export default function ClientsTab({ data, onChange }: ClientsTabProps) {
   return (
     <div style={{ maxWidth: 480 }}>
       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-        Atribuído a {count} de {ALL_CLIENTS.length} clientes
+        Atribuído a {count} de {allClients.length} clientes
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {ALL_CLIENTS.map((client) => {
+        {allClients.map((client) => {
           const isOn = data.assignedClients.includes(client.slug);
           return (
             <div

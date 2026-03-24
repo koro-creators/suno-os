@@ -17,7 +17,7 @@ interface RecentItemDef {
 
 const NAV_ITEMS: NavItemDef[] = [
   { label: 'Home', icon: Globe, href: '/' },
-  { label: 'Clientes', icon: Users },
+  { label: 'Clientes', icon: Users, href: '/clientes' },
   { label: 'Skills', icon: Sparkles, href: '/skills' },
   { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca' },
 ];
