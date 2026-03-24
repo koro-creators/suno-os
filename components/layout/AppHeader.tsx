@@ -1,7 +1,8 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Sun, Moon, Settings } from 'lucide-react';
 import Logo from './Logo';
 import Breadcrumb from './Breadcrumb';
 import { useTheme } from './ThemeProvider';
@@ -14,6 +15,7 @@ interface AppHeaderProps {
 
 export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
 
   return (
     <header
@@ -45,6 +47,35 @@ export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: App
             {rightLabel}
           </span>
         )}
+
+        {/* Skills */}
+        <button
+          aria-label="Skills"
+          title="Skills"
+          onClick={() => router.push('/skills')}
+          style={{
+            width: 28,
+            height: 28,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '9999px',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'color 200ms ease, border-color 200ms ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
+          }}
+        >
+          <Settings size={12} strokeWidth={1.5} />
+        </button>
 
         {/* Theme toggle */}
         <button

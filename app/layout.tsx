@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import ChatPanel from "@/components/layout/ChatPanel";
-import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import Providers from "@/components/layout/Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={inter.variable} data-theme="dark" suppressHydrationWarning>
       <body className="antialiased bg-void text-text-primary">
-        <ThemeProvider>
+        <Providers>
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded"
@@ -39,7 +39,7 @@ export default function RootLayout({
             </div>
             <ChatPanel />
           </div>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

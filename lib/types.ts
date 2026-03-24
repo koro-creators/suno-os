@@ -23,13 +23,6 @@ export interface Moon {
   description: string;
 }
 
-export interface BibliotecaItem {
-  id: string;
-  label: string;
-  category: string;
-  active: boolean;
-}
-
 export interface MockChatResponse {
   content: string;
   highlight?: { label: string; body: string };

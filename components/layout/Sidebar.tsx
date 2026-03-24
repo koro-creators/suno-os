@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, LayoutDashboard, Users, Sparkles, BookOpen, type LucideIcon } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, type LucideIcon } from 'lucide-react';
 
 interface NavItemDef {
   label: string;
   icon: LucideIcon;
+  href?: string;
 }
 
 interface RecentItemDef {
@@ -14,10 +16,10 @@ interface RecentItemDef {
 }
 
 const NAV_ITEMS: NavItemDef[] = [
-  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'Home', icon: Globe, href: '/' },
   { label: 'Clientes', icon: Users },
-  { label: 'Skills', icon: Sparkles },
-  { label: 'Biblioteca', icon: BookOpen },
+  { label: 'Skills', icon: Sparkles, href: '/skills' },
+  { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca' },
 ];
 
 const RECENT_ITEMS: RecentItemDef[] = [
@@ -28,7 +30,16 @@ const RECENT_ITEMS: RecentItemDef[] = [
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState('Dashboard');
+  const [activeItem, setActiveItem] = useState('Home');
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleNavClick = (item: NavItemDef) => {
+    setActiveItem(item.label);
+    if (item.href) {
+      router.push(item.href);
+    }
+  };
 
   return (
     <aside
@@ -65,8 +76,9 @@ export default function Sidebar() {
           }}
           onClick={() => setIsOpen(true)}
         >
-          {NAV_ITEMS.map(({ label, icon: Icon }) => {
-            const isActive = activeItem === label;
+          {NAV_ITEMS.map((item) => {
+            const { label, icon: Icon } = item;
+            const isActive = activeItem === label || (item.href && pathname.startsWith(item.href));
             return (
               <div
                 key={label}
@@ -76,13 +88,13 @@ export default function Sidebar() {
                 aria-label={label}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveItem(label);
+                  handleNavClick(item);
                   setIsOpen(true);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setActiveItem(label);
+                    handleNavClick(item);
                     setIsOpen(true);
                   }
                 }}
@@ -180,13 +192,13 @@ export default function Sidebar() {
           >
             Navegação
           </div>
-          {NAV_ITEMS.map(({ label, icon }) => (
+          {NAV_ITEMS.map((item) => (
             <NavItem
-              key={label}
-              label={label}
-              icon={icon}
-              isActive={activeItem === label}
-              onClick={() => setActiveItem(label)}
+              key={item.label}
+              label={item.label}
+              icon={item.icon}
+              isActive={activeItem === item.label || !!(item.href && pathname.startsWith(item.href))}
+              onClick={() => handleNavClick(item)}
             />
           ))}
         </div>

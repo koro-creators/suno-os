@@ -4,8 +4,8 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
 import ChatInterface from '@/components/chat/ChatInterface';
-import { bibliotecaByClient } from '@/data/biblioteca';
 import { getClientBySlug, getSkillBySlug, getMoonBySlug, getSkillTypeColor } from '@/lib/utils';
+import { useBiblioteca } from '@/contexts/BibliotecaContext';
 
 const typeLabels: Record<string, string> = {
   criacao: 'Criacao',
@@ -19,6 +19,7 @@ export default function MoonPage({
   params: { clientSlug: string; skillSlug: string; moonSlug: string };
 }) {
   const { clientSlug, skillSlug, moonSlug } = params;
+  const { documents } = useBiblioteca();
 
   const client = getClientBySlug(clientSlug);
   if (!client) {
@@ -36,6 +37,18 @@ export default function MoonPage({
   }
 
   const skillColor = getSkillTypeColor(skill.type);
+
+  // Auto-select documents based on scope and tags
+  const candidateDocs = documents.filter(
+    (d) => d.scope.includes(clientSlug) || d.scope.includes('suno')
+  );
+  const autoActiveIds = candidateDocs
+    .filter(
+      (d) =>
+        d.tags.includes(skill.type) ||
+        d.tags.includes('tom-de-voz')
+    )
+    .map((d) => d.id);
 
   return (
     <main className="page-enter flex flex-col h-screen bg-space">
@@ -77,7 +90,8 @@ export default function MoonPage({
           moonSlug={moonSlug}
           skillSlug={skillSlug}
           clientSlug={clientSlug}
-          biblioteca={bibliotecaByClient[clientSlug] || []}
+          documents={candidateDocs}
+          initialActiveDocIds={autoActiveIds}
         />
       </div>
     </main>
