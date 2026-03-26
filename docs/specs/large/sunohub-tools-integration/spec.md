@@ -7,270 +7,305 @@ tamanho: large
 status: rascunho
 criada: 2026-03-26
 atualizada: 2026-03-26
-versao: 1.0
+versao: 2.0
 escopo:
   projeto: sunos
-  stack: Next.js 14 + TypeScript + Supabase
+  stack: "Frontend: Next.js 14 | Backend: FastAPI + LangGraph"
   autor: Heitor Miranda
   papel: Tech Lead
   branch: master
-  contexto: Substituir mock streaming por IA real, integrar tools do sunohub
+  contexto: Substituir mock streaming por IA real via backend LangGraph (padrão Meridian)
 ---
 
-# Spec — sunohub Tools Integration
+# Spec — sunohub Tools Integration (v2)
 
 ## Resumo
 
-Integrar 4 ferramentas de IA do sunohub (Chat, TextGen, ImageGen, Prompt Assistant) como tools consumíveis pelos skills do sunOS. Substituir o mock streaming atual no chat por respostas reais via Supabase Edge Functions. Cada tool é uma função TypeScript isolada com interface clara que skills podem orquestrar.
+Criar backend **sunos-api** (FastAPI + LangGraph) que expõe as ferramentas de IA do sunohub como agents com skills, seguindo o padrão estabelecido no Meridian Chat V2. O frontend sunOS consome via API REST + SSE streaming. Cada skill do sunOS (Copy Social, Plano de Mídia, etc.) mapeia para uma combinação de agent + tools + skill references no backend.
 
-**O quê**: Layer de tools entre frontend e APIs de IA
-**Por quê**: Transformar o protótipo em produto funcional, permitindo que o time de criação use skills com IA real
+**O quê**: Backend multi-agent com LangGraph que orquestra tools de IA
+**Por quê**: Transformar o protótipo em produto funcional com IA real, padrão Koro
 **Para quem**: Time de criação da Suno (P2: criativo, P3: estrategista)
 
 ## Comportamento Especificado
 
-### Tool 1: Chat (P0)
+### API Endpoints
 
-**Input:**
-```typescript
-interface ChatToolInput {
-  message: string;
-  model: string;                    // 'gemini-flash' | 'gemini-pro' | 'gpt-4o' | 'claude'
-  systemPrompt?: string;           // do SkillAdmin.systemPrompt
-  temperature?: number;            // do SkillAdmin.temperature
-  maxTokens?: number;              // do SkillAdmin.maxTokens
-  context?: string[];              // conteúdo dos BibliotecaDocuments ativos
-  conversationHistory?: Message[]; // mensagens anteriores da sessão
-  webSearch?: boolean;             // habilitar busca web
-}
+```
+POST /api/chat/stream          # Chat streaming (SSE)
+POST /api/chat/generate-text   # Geração de texto (batch)
+POST /api/chat/generate-image  # Geração de imagem (async)
+POST /api/chat/enhance-prompt  # Aprimorar prompt
+GET  /api/chat/conversations   # Listar conversas
+GET  /api/health               # Health check
 ```
 
-**Output (streaming):**
-```typescript
-interface ChatToolOutput {
-  type: 'text' | 'sources' | 'done' | 'error';
-  content?: string;               // chunk de texto (streaming)
-  sources?: { title: string; url: string }[];  // se web search
-  error?: string;
-}
-```
-
-**Fluxo:**
-1. Frontend monta input com systemPrompt do skill + context da Biblioteca ativa
-2. Chama Supabase Edge Function `chat-stream` via fetch com streaming
-3. Processa SSE events, atualiza UI em tempo real
-4. Ao receber `done`, salva mensagem completa no state
-5. Se erro, mostra toast + volta ao fallback mock
-
-**Mapeamento de modelos:**
-| sunOS (SkillAdmin.model) | Supabase model_id |
-|--------------------------|-------------------|
-| `gemini-pro` | `gemini-3-pro` |
-| `gemini-flash` | `gemini-3-flash` |
-| `gpt-4o` | `gpt-4o` |
-| `claude` | `claude-sonnet-4` |
-
-### Tool 2: TextGen (P0)
+### Endpoint 1: Chat Stream (P0)
 
 **Input:**
-```typescript
-interface TextGenToolInput {
-  prompt: string;
-  contentType: 'social_post' | 'article' | 'caption' | 'email' | 'script' | 'custom';
-  tone: 'formal' | 'casual' | 'professional' | 'creative' | 'friendly';
-  length: 'short' | 'medium' | 'long';
-  variations?: number;            // quantas versões gerar (1-4)
-  model?: string;
-  context?: string[];             // contexto da Biblioteca
-}
+```python
+class ChatRequest(BaseModel):
+    message: str
+    conversation_id: str | None = None
+    skill_slug: str                    # "copy-social", "plano-de-midia", etc.
+    model: str = "gemini-flash"        # "gemini-flash" | "gemini-pro" | "gpt-4o" | "claude"
+    temperature: float = 0.7
+    max_tokens: int = 4096
+    system_prompt: str | None = None   # override do skill default
+    context_documents: list[str] = []  # conteúdo dos BibliotecaDocuments ativos
+    web_search: bool = False
+```
+
+**Output (SSE stream):**
+```
+event: text
+data: {"content": "chunk de texto"}
+
+event: sources
+data: {"sources": [{"title": "...", "url": "..."}]}
+
+event: tool_call
+data: {"tool": "generate_image", "status": "started"}
+
+event: tool_result
+data: {"tool": "generate_image", "result": {"url": "..."}}
+
+event: done
+data: {"conversation_id": "...", "tokens_used": 150}
+
+event: error
+data: {"message": "Rate limit exceeded", "retry_after": 30}
+```
+
+**Fluxo interno (LangGraph):**
+```
+ChatRequest → TopSupervisor
+  → detecta intenção (criacao | midia | planejamento | conversation)
+  → seleciona skill baseado em skill_slug
+  → roteia para Orchestrator
+    → Orchestrator carrega skill references
+    → Agent executa com ReAct (tools disponíveis)
+    → Streaming via SSE
+```
+
+### Endpoint 2: Generate Text (P0)
+
+**Input:**
+```python
+class TextGenRequest(BaseModel):
+    prompt: str
+    content_type: str              # "social_post" | "article" | "caption" | "email" | "script"
+    tone: str                      # "formal" | "casual" | "professional" | "creative" | "friendly"
+    length: str                    # "short" | "medium" | "long"
+    variations: int = 1            # 1-4
+    skill_slug: str | None = None  # contexto do skill
+    model: str = "gemini-flash"
+    context_documents: list[str] = []
 ```
 
 **Output:**
-```typescript
-interface TextGenToolOutput {
-  texts: string[];                // array de variações
-  model: string;
-  tokensUsed: number;
-}
+```python
+class TextGenResponse(BaseModel):
+    texts: list[str]
+    model: str
+    tokens_used: int
 ```
 
-**Fluxo:**
-1. Monta prompt com contentType + tone + length como instruções
-2. Se variations > 1, gera N versões em sequência (ou paralelo se API suportar)
-3. Retorna array de textos
-
-### Tool 3: ImageGen (P1)
+### Endpoint 3: Generate Image (P1)
 
 **Input:**
-```typescript
-interface ImageGenToolInput {
-  prompt: string;
-  model: string;                  // 'imagen-4-standard' | 'imagen-4-fast' | 'dall-e-3'
-  aspectRatio?: string;           // '1:1' | '16:9' | '9:16' | '4:3'
-  resolution?: string;            // '1024' | '2048'
-  quantity?: number;              // 1-4
-  style?: string;                 // nome do estilo (cinematic, minimalist, etc.)
-  referenceImages?: string[];     // URLs de imagens de referência
-}
+```python
+class ImageGenRequest(BaseModel):
+    prompt: str
+    model: str = "imagen-4-standard"  # "imagen-4-standard" | "imagen-4-fast" | "dall-e-3"
+    aspect_ratio: str = "1:1"         # "1:1" | "16:9" | "9:16" | "4:3"
+    quantity: int = 1                  # 1-4
+    style: str | None = None          # "cinematic" | "minimalist" | etc.
+    enhance_prompt: bool = True
 ```
 
 **Output:**
-```typescript
-interface ImageGenToolOutput {
-  images: { url: string; width: number; height: number }[];
-  model: string;
-  enhancedPrompt?: string;        // prompt melhorado pelo modelo
-}
+```python
+class ImageGenResponse(BaseModel):
+    images: list[ImageResult]       # url, width, height
+    model: str
+    enhanced_prompt: str | None
 ```
 
-### Tool 4: Prompt Assistant (P1)
+### Endpoint 4: Enhance Prompt (P1)
 
 **Input:**
-```typescript
-interface PromptAssistantInput {
-  prompt: string;
-  targetTool: 'chat' | 'image' | 'video' | 'text';
-  context?: string;               // contexto adicional (tom de voz, briefing)
-}
+```python
+class EnhancePromptRequest(BaseModel):
+    prompt: str
+    target_tool: str               # "chat" | "image" | "video" | "text"
+    context: str | None = None     # tom de voz, briefing, etc.
 ```
 
 **Output:**
-```typescript
-interface PromptAssistantOutput {
-  enhancedPrompt: string;
-  suggestions: string[];          // alternativas
-  reasoning: string;              // por que melhorou assim
-}
+```python
+class EnhancePromptResponse(BaseModel):
+    enhanced_prompt: str
+    suggestions: list[str]
+    reasoning: str
 ```
 
-## Interface & Contratos
+## Skills System (Backend)
 
-### Supabase Client
+### Estrutura de um Skill
 
-```typescript
-// lib/supabase.ts
-import { createClient } from '@supabase/supabase-js';
-
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+```
+sunos-api/chat/skills/
+├── copy-social/
+│   ├── SKILL.md                    # Overview, quando usar, tools que registra
+│   └── references/
+│       ├── tone_guides.md          # Guias de tom por plataforma
+│       └── platform_specs.md       # Specs por rede social (chars, formatos)
+├── plano-de-midia/
+│   ├── SKILL.md
+│   └── references/
+│       ├── benchmark_cpm.md        # Dados de CPM por plataforma
+│       └── channel_specs.md        # Specs de canais
+├── roteiro-de-video/
+│   ├── SKILL.md
+│   └── references/
+│       └── video_formats.md
+├── texto-de-radio/
+│   ├── SKILL.md
+│   └── references/
+│       └── radio_formats.md
+├── persona-sintetica/
+│   ├── SKILL.md
+│   └── references/
+│       └── persona_framework.md
+├── brief-builder/
+│   ├── SKILL.md
+│   └── references/
+│       └── brief_template.md
+├── analise-de-mercado/
+│   ├── SKILL.md
+│   └── references/
+│       └── analysis_frameworks.md
+└── report-performance/
+    ├── SKILL.md
+    └── references/
+        └── metrics_guide.md
 ```
 
-### Tool Registry
+### Mapeamento Skill → Agent → Tools
 
-```typescript
-// lib/tools/registry.ts
-interface Tool<TInput, TOutput> {
-  name: string;
-  description: string;
-  execute: (input: TInput) => Promise<TOutput>;
-  stream?: (input: TInput) => AsyncGenerator<TOutput>;
-}
+| Skill sunOS | Agent Backend | Tools Disponíveis |
+|-------------|--------------|-------------------|
+| copy-social | ContentCreator | chat, text_gen, image_gen |
+| plano-de-midia | ContentCreator | chat, text_gen, web_search |
+| roteiro-de-video | ContentCreator + VisualCreator | chat, text_gen, video_gen |
+| texto-de-radio | ContentCreator | chat, text_gen |
+| persona-sintetica | ContentCreator + VisualCreator | chat, text_gen, image_gen |
+| brief-builder | ContentCreator | chat, text_gen |
+| analise-de-mercado | ContentCreator | chat, text_gen, web_search |
+| report-performance | ContentCreator | chat, text_gen |
 
-const toolRegistry: Record<string, Tool<unknown, unknown>>;
+### Progressive Disclosure
 
-function getTool(name: string): Tool;
-function listTools(): string[];
+O agent NÃO carrega todas as skills. O TopSupervisor detecta o `skill_slug` e carrega apenas o necessário:
+
+```python
+# TopSupervisor routing
+if skill_slug in ["copy-social", "texto-de-radio", "roteiro-de-video"]:
+    intent = "criacao"
+elif skill_slug in ["plano-de-midia", "report-performance"]:
+    intent = "midia"
+elif skill_slug in ["persona-sintetica", "brief-builder", "analise-de-mercado"]:
+    intent = "planejamento"
+else:
+    intent = "conversation"
 ```
 
-### Skill → Tool Connection
+## Frontend Integration
 
-Cada `SkillAdmin` no sunOS já tem `model`, `temperature`, `maxTokens`, `systemPrompt`. Ao abrir um chat:
+### Mudanças no sunOS (mínimas)
 
-1. Busca o skill do SkillsContext
-2. Busca documentos ativos do BibliotecaContext
-3. Monta `ChatToolInput` com systemPrompt + context
-4. Chama `chatTool.stream(input)`
-5. Renderiza resposta em tempo real
+O frontend muda apenas o `ChatInterface` e hooks:
 
-### Fallback para Mock
+1. **`lib/api.ts`** (novo) — cliente HTTP para o backend
+2. **`hooks/useToolStream.ts`** (refactor de useStreamingText) — consome SSE real
+3. **`ChatInterface.tsx`** — usa API em vez de mock
+4. **Fallback**: se `NEXT_PUBLIC_API_URL` não configurada, usa mock existente
 
-```typescript
-// lib/tools/chat-tool.ts
-async function* chatStream(input: ChatToolInput) {
-  if (!supabaseAvailable()) {
-    // Fallback: usa mock streaming existente
-    yield* mockStream(input.message);
-    return;
-  }
-  // Real: chama Supabase Edge Function
-  yield* supabaseStream(input);
-}
+### Config Frontend
+
 ```
+# .env.local
+NEXT_PUBLIC_API_URL=http://localhost:8080  # sunos-api local
+```
+
+## Evaluation (Padrão Meridian)
+
+### 3 Camadas
+
+| Camada | O que mede | Quando | Ferramenta |
+|--------|-----------|--------|------------|
+| **Tracing** | Latência, tokens, routing, tools usadas | Cada request | MLflow GenAI |
+| **Trajectory** | Agent seguiu fluxo correto? | Pós-sessão + CI | AgentEvals |
+| **Quality** | Output é bom para o skill? | CI em eval datasets | OpenEvals LLM-as-Judge |
+
+### Scorers Customizados
+
+- **Tone scorer**: Output segue tom do skill? (formal para mídia, criativo para criação)
+- **Format scorer**: Output segue formato esperado? (social post ≠ artigo)
+- **Routing scorer**: Supervisor roteou para agent certo?
+- **Context scorer**: Agent usou documentos da Biblioteca no output?
 
 ## Restrições Técnicas
 
-1. **Stack**: Next.js 14 + TypeScript. Edge Functions em Deno (já existem no sunohub)
-2. **Única dependência nova**: `@supabase/supabase-js`
-3. **Env vars**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. **Sem autenticação nesta fase** — acesso anônimo via anon key (protótipo interno)
-5. **Edge Functions**: reutilizar as do sunohub sem modificação (apenas apontar para o mesmo projeto Supabase)
-6. **Streaming**: usar `fetch` com `ReadableStream` para SSE (não WebSocket)
-7. **Porta**: dev server continua na 3003
-8. **Não quebrar**: mock streaming deve continuar funcionando se Supabase não configurado
+1. **Backend**: FastAPI + LangGraph (Python 3.11+), deploy em Cloud Run
+2. **LLM default**: Gemini 2.5 Flash (custo-benefício)
+3. **DB**: PostgreSQL shared (Cloud SQL, mesmo do Toolbox/Meridian)
+4. **Frontend**: ZERO dependências novas — só fetch nativo
+5. **Auth**: Firebase JWT (mesmo do Toolbox) — fase 2, não fase 1
+6. **Streaming**: SSE via FastAPI StreamingResponse
+7. **Fallback**: Frontend funciona sem backend (mock existente)
+8. **Porta**: Backend dev na 8080, frontend na 3003
 
 ## Critérios de Aceite
 
 ### Chat Real
-- [ ] DADO um skill com systemPrompt configurado, QUANDO o usuário envia mensagem no chat, ENTÃO a resposta vem do modelo de IA real (não mock)
-- [ ] DADO streaming ativo, QUANDO chunks chegam via SSE, ENTÃO o texto aparece progressivamente na tela
-- [ ] DADO context da Biblioteca ativo, QUANDO o usuário pergunta, ENTÃO a IA usa o contexto dos documentos ativos
-- [ ] DADO Supabase indisponível, QUANDO o usuário envia mensagem, ENTÃO o sistema usa fallback mock com toast informativo
-- [ ] DADO web search habilitado, QUANDO a IA busca na web, ENTÃO sources aparecem na resposta
+- [ ] DADO um skill com systemPrompt, QUANDO usuário envia mensagem, ENTÃO resposta vem do LLM real via SSE
+- [ ] DADO context da Biblioteca ativo, QUANDO usuário pergunta, ENTÃO IA usa contexto no output
+- [ ] DADO backend indisponível, QUANDO usuário envia mensagem, ENTÃO fallback mock funciona
+- [ ] DADO web_search=true, QUANDO IA busca, ENTÃO sources aparecem na resposta
 
 ### TextGen
-- [ ] DADO contentType "social_post" e tone "creative", QUANDO gera texto, ENTÃO o output segue tom e formato corretos
-- [ ] DADO variations=3, QUANDO gera, ENTÃO retorna exatamente 3 variações diferentes
-- [ ] DADO model do skill, QUANDO gera texto, ENTÃO usa o modelo configurado
+- [ ] DADO content_type "social_post" e tone "creative", QUANDO gera, ENTÃO output segue formato
+- [ ] DADO variations=3, QUANDO gera, ENTÃO retorna 3 textos diferentes
 
 ### ImageGen
-- [ ] DADO um prompt, QUANDO gera imagem, ENTÃO retorna URL da imagem gerada
-- [ ] DADO aspectRatio "16:9", QUANDO gera, ENTÃO imagem tem proporção correta
-- [ ] DADO quantity=2, QUANDO gera, ENTÃO retorna 2 imagens
+- [ ] DADO prompt, QUANDO gera imagem, ENTÃO retorna URL válida
+- [ ] DADO aspect_ratio "16:9", QUANDO gera, ENTÃO imagem tem proporção correta
 
-### Prompt Assistant
-- [ ] DADO um prompt curto, QUANDO aprimora, ENTÃO retorna versão expandida com detalhes
-- [ ] DADO targetTool "image", QUANDO aprimora, ENTÃO adiciona descritores visuais ao prompt
+### Skills
+- [ ] DADO skill "copy-social", QUANDO carregado, ENTÃO agent tem references de tom e plataforma
+- [ ] DADO novo skill dir criado, QUANDO usado, ENTÃO funciona sem mudança de código
 
-### Integração com Chat UI
-- [ ] DADO o chat existente, QUANDO integrado com chat tool, ENTÃO a UI não muda (mesma aparência, streaming real)
-- [ ] DADO o ContextSidebar, QUANDO documentos ativos mudam, ENTÃO o próximo chat usa novo contexto
-- [ ] DADO o HITL feedback, QUANDO o usuário avalia resposta real, ENTÃO funciona igual ao mock
+### Eval
+- [ ] DADO request processado, QUANDO logado, ENTÃO trace aparece no MLflow
+- [ ] DADO eval dataset, QUANDO roda scorer, ENTÃO score é calculado
 
 ## Notas de Implementação
 
-1. **Reutilizar `useStreamingText` hook** — adaptar para aceitar stream real além de mock
-2. **ChatInterface precisa de refactor mínimo** — trocar chamada mock por chamada à tool
-3. **Edge Functions do sunohub** já lidam com multi-model routing — não reinventar
-4. **Créditos**: nesta fase, ignorar sistema de créditos. Toda chamada é livre.
-5. **Rate limits**: Gemini tem 15 RPM free tier, GPT-4o tem 3 RPM. Implementar backoff simples.
-6. **Imagens geradas**: armazenar URL temporária (Supabase Storage). Sem CDN nesta fase.
+1. **sunos-api é um novo repo** — `koro-creators/sunos-api`, mesmo padrão do meridian-api
+2. **BaseAgent ABC** — copiar padrão do Meridian (`chat/agents/base.py`)
+3. **Skills references** — conteúdo vem da Biblioteca do sunOS + knowledge estático por skill
+4. **Gemini Flash** como default — barato, rápido, suficiente para criação
+5. **Sem créditos na fase 1** — toda chamada é livre
+6. **Conversations** — armazenadas em PostgreSQL (mesmo schema pattern do Meridian)
 
 <!-- REVIEW -->
-**Checkpoint de revisão**: A especificação captura o que você realmente quer construir?
+**Checkpoint**: A especificação captura o que você realmente quer construir?
 
-## Prompt para Agente
+## Changelog
 
-Integre ferramentas de IA do sunohub no sunOS conforme esta especificação:
-
-**Contexto**: sunOS é um protótipo Next.js 14 com skills de IA por cliente. Hoje usa mock streaming. Precisa virar IA real via Supabase Edge Functions.
-
-**O que implementar**:
-- Layer de tools em `lib/tools/` com ChatTool, TextGenTool, ImageGenTool, PromptAssistantTool
-- Supabase client em `lib/supabase.ts`
-- Adaptar `ChatInterface` para usar ChatTool em vez de mock
-- Fallback para mock quando Supabase indisponível
-- Manter toda a UI existente (design system, HITL, Biblioteca)
-
-**Restrições**:
-- Única dependência nova: `@supabase/supabase-js`
-- Não quebrar sistema solar nem áreas admin
-- Streaming via fetch + ReadableStream, não WebSocket
-- Sem autenticação (anon key), sem créditos nesta fase
-
-**Testes esperados**:
-- Chat com Gemini Flash retorna resposta real em streaming
-- TextGen com variações retorna N textos diferentes
-- ImageGen retorna URL de imagem válida
-- Fallback mock funciona quando Supabase não configurado
+| Versão | Data | Mudança |
+|--------|------|---------|
+| 2.0 | 2026-03-26 | Pivot de Supabase Edge Functions para FastAPI + LangGraph (padrão Meridian) |
+| 1.0 | 2026-03-26 | Versão inicial com Supabase |
