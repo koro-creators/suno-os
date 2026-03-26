@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
-import ChatPanel from "@/components/layout/ChatPanel";
 import Providers from "@/components/layout/Providers";
+import AppShell from "@/components/layout/AppShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,20 +24,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={inter.variable} data-theme="dark" suppressHydrationWarning>
       <body className="antialiased bg-void text-text-primary">
         <Providers>
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:rounded"
-            style={{ backgroundColor: 'var(--sun)', color: 'var(--void)' }}
-          >
-            Pular para conteúdo
-          </a>
-          <div className="flex h-screen">
-            <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0">
-              {children}
-            </div>
-            <ChatPanel />
-          </div>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

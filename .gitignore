@@ -43,3 +43,4 @@ api/.pytest_cache/
 api/uv.lock
 api/.env
 api/mlruns/
+firebase-debug.log
