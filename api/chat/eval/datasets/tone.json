@@ -1,0 +1,7 @@
+[
+    {"input": "Crie um post formal para LinkedIn", "output_tone": "formal", "skill_slug": "copy-social"},
+    {"input": "Post casual para Instagram Stories", "output_tone": "casual", "skill_slug": "copy-social"},
+    {"input": "Copy criativo para campanha de verão", "output_tone": "creative", "skill_slug": "copy-social"},
+    {"input": "Relatório de performance mensal", "output_tone": "professional", "skill_slug": "report-performance"},
+    {"input": "Brief estratégico para cliente premium", "output_tone": "formal", "skill_slug": "brief-builder"}
+]

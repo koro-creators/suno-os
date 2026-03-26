@@ -1,0 +1,7 @@
+[
+    {"input": "Post para feed do Instagram", "expected_format": "social_post", "skill_slug": "copy-social"},
+    {"input": "Artigo para blog corporativo", "expected_format": "article", "skill_slug": "copy-social"},
+    {"input": "Roteiro para TVC 30 segundos", "expected_format": "script", "skill_slug": "roteiro-de-video"},
+    {"input": "Spot de rádio 30 segundos", "expected_format": "radio", "skill_slug": "texto-de-radio"},
+    {"input": "Plano de mídia digital Q2", "expected_format": "media_plan", "skill_slug": "plano-de-midia"}
+]

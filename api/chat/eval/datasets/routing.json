@@ -1,0 +1,12 @@
+[
+    {"input": "Cria um post para Instagram do Santander", "skill_slug": "copy-social", "expected_intent": "criacao"},
+    {"input": "Monte um plano de mídia digital", "skill_slug": "plano-de-midia", "expected_intent": "midia"},
+    {"input": "Crie uma persona para jovens 18-25", "skill_slug": "persona-sintetica", "expected_intent": "planejamento"},
+    {"input": "O que é o sunOS?", "skill_slug": "conversation", "expected_intent": "conversation"},
+    {"input": "Escreva um roteiro de 30 segundos", "skill_slug": "roteiro-de-video", "expected_intent": "criacao"},
+    {"input": "Gere um report semanal", "skill_slug": "report-performance", "expected_intent": "midia"},
+    {"input": "Preciso de um brief para campanha", "skill_slug": "brief-builder", "expected_intent": "planejamento"},
+    {"input": "Faça uma análise de mercado de telecom", "skill_slug": "analise-de-mercado", "expected_intent": "planejamento"},
+    {"input": "Crie um spot de rádio de 30 segundos", "skill_slug": "texto-de-radio", "expected_intent": "criacao"},
+    {"input": "Olá, como funciona essa plataforma?", "skill_slug": "conversation", "expected_intent": "conversation"}
+]
