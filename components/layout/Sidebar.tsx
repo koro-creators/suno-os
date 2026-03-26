@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, type LucideIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, LogOut, type LucideIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItemDef {
   label: string;
@@ -33,6 +34,7 @@ export default function Sidebar() {
   const [activeItem, setActiveItem] = useState('Home');
   const router = useRouter();
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   const handleNavClick = (item: NavItemDef) => {
     setActiveItem(item.label);
@@ -221,6 +223,87 @@ export default function Sidebar() {
           ))}
         </div>
       </div>
+
+      {/* User profile — bottom of sidebar, only when open */}
+      {isOpen && user && (
+        <div
+          style={{
+            marginTop: 'auto',
+            padding: '12px 16px',
+            borderTop: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            width: 260,
+            flexShrink: 0,
+          }}
+        >
+          {user.photoURL ? (
+            <img
+              src={user.photoURL}
+              alt=""
+              referrerPolicy="no-referrer"
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                backgroundColor: 'var(--sun)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                color: 'var(--void)',
+                flexShrink: 0,
+              }}
+            >
+              {(user.displayName || user.email || '?')[0].toUpperCase()}
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <div
+              style={{
+                fontSize: '0.7rem',
+                color: 'var(--text-primary)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {user.displayName || user.email}
+            </div>
+          </div>
+          <button
+            onClick={signOut}
+            title="Sair"
+            aria-label="Sair"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              padding: 4,
+              borderRadius: 4,
+              display: 'flex',
+              alignItems: 'center',
+              transition: 'color 150ms ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+          >
+            <LogOut size={14} strokeWidth={1.5} />
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

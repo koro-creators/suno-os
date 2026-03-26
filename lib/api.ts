@@ -15,6 +15,29 @@ export function getApiUrl(path: string): string {
   return `${API_URL}${path}`;
 }
 
+/** Get the Firebase JWT token for authenticated API requests. */
+export async function getAuthToken(): Promise<string | null> {
+  try {
+    const { getFirebase } = await import('@/lib/firebase');
+    const { auth } = getFirebase();
+    const user = auth.currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
+}
+
+/** Build headers with optional auth token. */
+async function getHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const token = await getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 /** SSE event parsed from the backend stream. */
 export interface SSEEvent {
   event: string; // "text" | "sources" | "tool_call" | "tool_result" | "done" | "error"
@@ -52,9 +75,10 @@ export async function* consumeSSE(
   body: Record<string, unknown>,
 ): AsyncGenerator<SSEEvent> {
   const url = getApiUrl(path);
+  const headers = await getHeaders();
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
   });
 
