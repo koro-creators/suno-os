@@ -5,13 +5,19 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const PUBLIC_PATHS = ['/login'];
+const ADMIN_PATHS = ['/skills', '/biblioteca', '/clientes'];
+
+function isAdminPath(pathname: string): boolean {
+  return ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
+}
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   const isPublic = PUBLIC_PATHS.includes(pathname);
+  const needsAdmin = isAdminPath(pathname);
 
   useEffect(() => {
     if (loading) return;
@@ -21,7 +27,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (user && isPublic) {
       router.replace('/');
     }
-  }, [user, loading, isPublic, router]);
+    if (user && needsAdmin && !isAdmin) {
+      router.replace('/');
+    }
+  }, [user, loading, isPublic, needsAdmin, isAdmin, router]);
 
   if (loading) {
     return (
@@ -43,6 +52,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!user && !isPublic) return null;
   if (user && isPublic) return null;
+  if (user && needsAdmin && !isAdmin) return null;
 
   return <>{children}</>;
 }

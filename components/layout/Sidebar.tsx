@@ -9,6 +9,7 @@ interface NavItemDef {
   label: string;
   icon: LucideIcon;
   href?: string;
+  adminOnly?: boolean;
 }
 
 interface RecentItemDef {
@@ -18,9 +19,9 @@ interface RecentItemDef {
 
 const NAV_ITEMS: NavItemDef[] = [
   { label: 'Home', icon: Globe, href: '/' },
-  { label: 'Clientes', icon: Users, href: '/clientes' },
-  { label: 'Skills', icon: Sparkles, href: '/skills' },
-  { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca' },
+  { label: 'Clientes', icon: Users, href: '/clientes', adminOnly: true },
+  { label: 'Skills', icon: Sparkles, href: '/skills', adminOnly: true },
+  { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca', adminOnly: true },
 ];
 
 const RECENT_ITEMS: RecentItemDef[] = [
@@ -34,7 +35,9 @@ export default function Sidebar() {
   const [activeItem, setActiveItem] = useState('Home');
   const router = useRouter();
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, role, signOut } = useAuth();
+
+  const visibleNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
   const handleNavClick = (item: NavItemDef) => {
     setActiveItem(item.label);
@@ -78,7 +81,7 @@ export default function Sidebar() {
           }}
           onClick={() => setIsOpen(true)}
         >
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const { label, icon: Icon } = item;
             const isActive = activeItem === label || (item.href && pathname.startsWith(item.href));
             return (
@@ -194,7 +197,7 @@ export default function Sidebar() {
           >
             Navegação
           </div>
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavItem
               key={item.label}
               label={item.label}
@@ -280,6 +283,16 @@ export default function Sidebar() {
               }}
             >
               {user.displayName || user.email}
+            </div>
+            <div
+              style={{
+                fontSize: '0.55rem',
+                color: isAdmin ? 'var(--sun)' : 'var(--text-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              {role}
             </div>
           </div>
           <button
