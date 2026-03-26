@@ -4,7 +4,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import { chatResponsesByMoon } from '@/data/chat-responses';
-import { useStreamingText } from '@/hooks/useStreamingText';
+import { useToolStream } from '@/hooks/useToolStream';
+import { apiAvailable } from '@/lib/api';
+import { useSkills } from '@/contexts/SkillsContext';
 import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
 import ChatInput from './ChatInput';
@@ -48,9 +50,13 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, documen
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
 
   const templates = getTemplatesForChat(skillSlug, moonSlug);
-  const { text: streamingText, isStreaming, startStreaming } = useStreamingText();
+  const { text: streamingText, isStreaming, startStream, startMockStream } = useToolStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const responseIndexRef = useRef<Record<string, number>>({});
+
+  // Get skill admin config (systemPrompt, model, temperature) if available
+  const { skills: skillsAdmin } = useSkills();
+  const skillConfig = skillsAdmin.find((s) => s.slug === skillSlug);
 
   // Auto-scroll to bottom when messages change or while streaming
   useEffect(() => {
@@ -77,31 +83,45 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, documen
       // Add user message
       setMessages((prev) => [...prev, { role: 'user', content: text }]);
 
-      // Look up mock response
-      // Try client-specific key first, then generic moon key
-      const clientKey = `${clientSlug}-${moonSlug}`;
-      const responses = chatResponsesByMoon[clientKey] ?? chatResponsesByMoon[moonSlug];
+      // Build context from active documents
+      const activeDocContents = documents
+        .filter((d) => activeDocIds.includes(d.id))
+        .map((d) => d.content)
+        .filter(Boolean);
 
-      let response;
-      if (responses && responses.length > 0) {
-        // Cycle through responses
-        const key = clientKey in chatResponsesByMoon ? clientKey : moonSlug;
-        const idx = responseIndexRef.current[key] ?? 0;
-        response = responses[idx % responses.length];
-        responseIndexRef.current[key] = idx + 1;
+      // Try real API first, fallback to mock
+      if (apiAvailable()) {
+        startStream({
+          message: text,
+          skillSlug,
+          model: skillConfig?.model || 'gemini-flash',
+          temperature: skillConfig?.temperature ?? 0.7,
+          maxTokens: skillConfig?.maxTokens ?? 4096,
+          systemPrompt: skillConfig?.systemPrompt || undefined,
+          contextDocuments: activeDocContents,
+        });
       } else {
-        response = GENERIC_FALLBACK;
+        // Mock fallback — same logic as before
+        const clientKey = `${clientSlug}-${moonSlug}`;
+        const responses = chatResponsesByMoon[clientKey] ?? chatResponsesByMoon[moonSlug];
+
+        let response;
+        if (responses && responses.length > 0) {
+          const key = clientKey in chatResponsesByMoon ? clientKey : moonSlug;
+          const idx = responseIndexRef.current[key] ?? 0;
+          response = responses[idx % responses.length];
+          responseIndexRef.current[key] = idx + 1;
+        } else {
+          response = GENERIC_FALLBACK;
+        }
+
+        setPendingHighlight(response.highlight);
+        setTimeout(() => {
+          startMockStream(response.content, 40);
+        }, 500);
       }
-
-      // Store highlight for when streaming completes
-      setPendingHighlight(response.highlight);
-
-      // Start streaming after 500ms delay
-      setTimeout(() => {
-        startStreaming(response.content, 40);
-      }, 500);
     },
-    [isStreaming, clientSlug, moonSlug, startStreaming],
+    [isStreaming, clientSlug, moonSlug, skillSlug, documents, activeDocIds, skillConfig, startStream, startMockStream],
   );
 
   function handleGenerateVariation(msgIndex: number) {
