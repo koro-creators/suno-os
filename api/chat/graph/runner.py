@@ -180,31 +180,50 @@ async def run_chat_stream(
 
     graph = build_chat_graph(llm, agents)
 
+    seen_message_ids: set[str] = set()
+
     try:
         async for chunk in graph.astream(state, config={"recursion_limit": 20}):
             # chunk is a dict of node_name -> state update
             for node_name, node_state in chunk.items():
                 messages = node_state.get("messages", [])
                 for msg in messages:
-                    if isinstance(msg, AIMessage):
-                        # Check for tool calls
-                        tool_calls = getattr(msg, "tool_calls", None) or []
-                        if tool_calls:
-                            for tc in tool_calls:
-                                yield SSEEvent(
-                                    event="tool_call",
-                                    data={
-                                        "tool": tc.get("name", ""),
-                                        "args": tc.get("args", {}),
-                                        "id": tc.get("id", ""),
-                                    },
-                                )
-                        # Yield text content
-                        if msg.content:
+                    if not isinstance(msg, AIMessage):
+                        continue
+                    # Deduplicate by message id
+                    msg_id = getattr(msg, "id", None) or id(msg)
+                    if msg_id in seen_message_ids:
+                        continue
+                    seen_message_ids.add(msg_id)
+
+                    # Check for tool calls
+                    tool_calls = getattr(msg, "tool_calls", None) or []
+                    if tool_calls:
+                        for tc in tool_calls:
                             yield SSEEvent(
-                                event="text",
-                                data={"content": msg.content},
+                                event="tool_call",
+                                data={
+                                    "tool": tc.get("name", ""),
+                                    "args": tc.get("args", {}),
+                                    "id": tc.get("id", ""),
+                                },
                             )
+                    # Yield text content
+                    if msg.content:
+                        content = msg.content
+                        # Handle content that may be a list of dicts (Gemini format)
+                        if isinstance(content, list):
+                            text_parts = []
+                            for part in content:
+                                if isinstance(part, dict) and "text" in part:
+                                    text_parts.append(part["text"])
+                                elif isinstance(part, str):
+                                    text_parts.append(part)
+                            content = "".join(text_parts)
+                        yield SSEEvent(
+                            event="text",
+                            data={"content": content},
+                        )
 
         yield SSEEvent(
             event="done",
