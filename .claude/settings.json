@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "filepath=\"$CLAUDE_FILE_PATH\"; if [[ \"$filepath\" == *.tsx || \"$filepath\" == *.ts ]]; then cd /Users/heitormiranda/projects/koro/sunos && npx next lint --fix --file \"$filepath\" 2>/dev/null; fi",
+        "description": "Auto-lint TypeScript files after edit"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "filepath=\"$CLAUDE_FILE_PATH\"; if [[ \"$filepath\" == *\"data/clients.ts\" ]]; then echo 'BLOCKED: data/clients.ts é o source do sistema solar. Não modifique.' >&2; exit 1; fi; if [[ \"$filepath\" == *.env* ]]; then echo 'BLOCKED: Arquivos .env não devem ser editados pelo Claude.' >&2; exit 1; fi",
+        "description": "Protect solar system data and env files"
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx next lint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
