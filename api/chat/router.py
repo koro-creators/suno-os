@@ -12,6 +12,9 @@ from chat.schemas.chat import (
     ChatRequest,
     EnhancePromptRequest,
     EnhancePromptResponse,
+    ImageGenRequest,
+    ImageGenResponse,
+    ImageResult,
     TextGenRequest,
     TextGenResponse,
 )
@@ -48,19 +51,75 @@ async def chat_stream(request: ChatRequest):
 
 
 @router.post("/chat/generate-text")
-async def generate_text(request: TextGenRequest) -> TextGenResponse:
-    """Text generation endpoint. Placeholder — implemented in Phase E."""
-    return TextGenResponse(texts=["placeholder"], model=request.model, tokens_used=0)
+async def generate_text_endpoint(request: TextGenRequest) -> TextGenResponse:
+    """Generate text with variations."""
+    from chat.tools.text_tools import generate_text
+
+    texts = []
+    for _ in range(request.variations):
+        result = generate_text.invoke(
+            {
+                "prompt": request.prompt,
+                "content_type": request.content_type,
+                "tone": request.tone,
+                "length": request.length,
+                "model": request.model,
+            }
+        )
+        texts.append(result)
+
+    return TextGenResponse(texts=texts, model=request.model, tokens_used=0)
 
 
 @router.post("/chat/enhance-prompt")
-async def enhance_prompt(request: EnhancePromptRequest) -> EnhancePromptResponse:
-    """Prompt enhancement endpoint. Placeholder — implemented in Phase E."""
-    return EnhancePromptResponse(
-        enhanced_prompt=request.prompt,
-        suggestions=[],
-        reasoning="Placeholder — will be implemented in Phase E",
+async def enhance_prompt_endpoint(request: EnhancePromptRequest) -> EnhancePromptResponse:
+    """Enhance a prompt for better AI results."""
+    from chat.tools.prompt_tools import enhance_prompt
+
+    result = enhance_prompt.invoke(
+        {
+            "prompt": request.prompt,
+            "target_tool": request.target_tool,
+            "context": request.context or "",
+        }
     )
+
+    try:
+        parsed = json.loads(result)
+        return EnhancePromptResponse(
+            enhanced_prompt=parsed.get("enhanced_prompt", request.prompt),
+            suggestions=parsed.get("suggestions", []),
+            reasoning=parsed.get("reasoning", ""),
+        )
+    except (json.JSONDecodeError, TypeError):
+        return EnhancePromptResponse(
+            enhanced_prompt=result if isinstance(result, str) else request.prompt,
+            suggestions=[],
+            reasoning="Could not parse enhancement result",
+        )
+
+
+@router.post("/chat/generate-image")
+async def generate_image_endpoint(request: ImageGenRequest) -> ImageGenResponse:
+    """Generate images."""
+    from chat.tools.image_tools import generate_image
+
+    images = []
+    for _ in range(request.quantity):
+        result_str = generate_image.invoke(
+            {
+                "prompt": request.prompt,
+                "model": request.model,
+                "aspect_ratio": request.aspect_ratio,
+                "style": request.style,
+            }
+        )
+        result = json.loads(result_str)
+        images.append(
+            ImageResult(url=result["url"], width=result["width"], height=result["height"])
+        )
+
+    return ImageGenResponse(images=images, model=request.model, enhanced_prompt=None)
 
 
 @router.get("/chat/conversations")
