@@ -4,7 +4,16 @@
 
 Protótipo navegável do sunOS, plataforma interna de IA da Suno United Creators. Organiza skills de IA por cliente usando metáfora de sistema solar.
 
-## Stack
+## Monorepo Structure
+
+Frontend e backend no mesmo repo, deploy como serviços separados no Cloud Run.
+
+| Serviço | Path | Stack | Porta |
+|---------|------|-------|-------|
+| Frontend | raiz (`app/`, `components/`, etc.) | Next.js 14 + TypeScript | 3003 |
+| Backend | `api/` | FastAPI + LangGraph + Python 3.11 | 8080 |
+
+## Stack (Frontend)
 
 - Next.js 14 (App Router)
 - TypeScript (strict)
@@ -12,6 +21,15 @@ Protótipo navegável do sunOS, plataforma interna de IA da Suno United Creators
 - Lucide React (icons)
 - React Context (state management)
 - Porta: **3003** (3000 está ocupada)
+
+## Stack (Backend — `api/`)
+
+- Python 3.11+ / FastAPI / uv
+- LangGraph StateGraph (agent orchestration)
+- LangChain (Gemini Flash default, GPT-4o, Claude como alternativas)
+- PostgreSQL (Cloud SQL shared) / MLflow (tracing)
+- Cloud Run (deploy) / Porta: **8080**
+- Veja `api/CLAUDE.md` para conventions do backend
 
 ## Design System
 
@@ -62,6 +80,14 @@ contexts/               # React Context providers
 data/                   # Mock data
 lib/                    # Types + utils
 hooks/                  # Custom hooks
+api/                    # Backend (FastAPI + LangGraph) — deploy separado
+  main.py               # FastAPI entry point
+  config.py             # Pydantic Settings
+  chat/                 # Chat module (agents, graph, tools, skills, schemas)
+  models/               # SQLAlchemy models
+  core/                 # Firebase, shared utils
+  Dockerfile            # Container para Cloud Run
+  cloudbuild.yaml       # CI/CD
 ```
 
 ## Restrictions
@@ -69,7 +95,8 @@ hooks/                  # Custom hooks
 - **NÃO modifique `data/clients.ts`** — é o source do sistema solar e deve permanecer intacto
 - **NÃO instale novas dependências** sem necessidade (Tailwind + Lucide já estão)
 - **NÃO mude o visual** das páginas existentes do sistema solar (Home, Client, Skill, Moon)
-- **NÃO use `.env` files** — tudo é mocado, sem backend
+- **NÃO use `.env` files no frontend** — tudo é mocado (exceto `NEXT_PUBLIC_API_URL` para backend)
+- **Backend** usa `.env` em `api/` (ver `api/.env.example`)
 - Sempre verifique com `npx tsc --noEmit` após mudanças
 
 ## Admin CRUD Pattern

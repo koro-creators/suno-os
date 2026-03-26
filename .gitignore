@@ -32,3 +32,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python (api/ backend)
+__pycache__/
+*.py[cod]
+*.egg-info/
+api/.venv/
+api/.ruff_cache/
+api/.pytest_cache/
+api/uv.lock
+api/.env
+api/mlruns/
