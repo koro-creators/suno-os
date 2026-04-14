@@ -286,29 +286,38 @@ export default function SocialPreview({ content, format, clientName, clientColor
   const containerWidth = isStories ? 220 : 260;
 
   if (isCarousel) {
-    // Show ALL slides expanded vertically
+    // Show ALL slides horizontally with scroll
+    const slideSize = 200;
     return (
       <div style={{
-        width: containerWidth + 20,
         backgroundColor: 'var(--deep)',
         border: '1px solid var(--border-subtle)',
         borderRadius: 8,
         overflow: 'hidden',
         flexShrink: 0,
+        maxWidth: 700,
       }}>
         <PostHeader clientName={clientName} clientColor={clientColor} />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 4,
+          overflowX: 'auto',
+          padding: '0 4px',
+          scrollSnapType: 'x mandatory',
+        }}>
           {slides.map((slide, i) => (
-            <ImagePlaceholder
-              key={i}
-              color={clientColor}
-              title={slide.title}
-              subtitle={slide.text}
-              slideNumber={i + 1}
-              totalSlides={slides.length}
-              onGenerate={i === 0 ? onGenerateImage : undefined}
-            />
+            <div key={i} style={{ flexShrink: 0, width: slideSize, scrollSnapAlign: 'start' }}>
+              <ImagePlaceholder
+                color={clientColor}
+                title={slide.title}
+                subtitle={slide.text}
+                slideNumber={i + 1}
+                totalSlides={slides.length}
+                onGenerate={i === 0 ? onGenerateImage : undefined}
+              />
+            </div>
           ))}
         </div>
 
