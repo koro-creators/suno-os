@@ -5,6 +5,7 @@ import { Plus, Search, X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import Toast from '@/components/ui/Toast';
+import FileTypeIcon from '@/components/biblioteca/FileTypeIcon';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -156,7 +157,9 @@ export default function ContextSidebar({
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
                 >
-                  + {doc.title}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <FileTypeIcon fileType={doc.fileType} size={10} /> {doc.title}
+                  </span>
                 </button>
               ))}
               {searchResults.length === 0 && (
@@ -172,9 +175,12 @@ export default function ContextSidebar({
               key={doc.id}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '2px solid var(--sun)', backgroundColor: 'rgba(255,200,1,0.06)', borderRadius: '0 8px 8px 0', padding: '6px 8px' }}
             >
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {doc.title}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, overflow: 'hidden' }}>
+                <FileTypeIcon fileType={doc.fileType} size={12} />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {doc.title}
+                </span>
+              </div>
               <button
                 role="switch"
                 aria-checked={true}

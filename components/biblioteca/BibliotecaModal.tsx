@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
+import FileTypeIcon from './FileTypeIcon';
 
 interface BibliotecaModalProps {
   document: BibliotecaDocument | null;
@@ -67,6 +68,12 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
   const [links, setLinks] = useState<{ label: string; url: string }[]>(document?.links ?? []);
   const [files, setFiles] = useState<{ name: string; type: string; size: string }[]>(document?.files ?? []);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ACCEPTED_FILE_TYPES = '.pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.mp3,.wav,.mp4,.mov';
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
@@ -199,6 +206,91 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
         </h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* 0. File Upload Zone */}
+          <div>
+            <label style={labelStyle}>Arquivo</label>
+            <div
+              onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+                const droppedFile = e.dataTransfer.files?.[0];
+                if (droppedFile) setUploadFile(droppedFile);
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: `2px dashed ${isDragging ? 'var(--sun)' : 'var(--border-subtle)'}`,
+                borderRadius: 8,
+                padding: uploadFile ? '10px 12px' : '20px 12px',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'border-color 150ms ease, background-color 150ms ease',
+                backgroundColor: isDragging ? 'rgba(255,200,1,0.06)' : 'transparent',
+              }}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_FILE_TYPES}
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setUploadFile(f);
+                }}
+              />
+              {uploadFile ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FileTypeIcon fileType={uploadFile.name.split('.').pop()} size={18} />
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>{uploadFile.name}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                      {(uploadFile.size / 1024).toFixed(0)} KB
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setUploadFile(null); setUploadProgress(null); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex' }}
+                  >
+                    <X size={14} strokeWidth={1.5} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <Upload size={20} strokeWidth={1.5} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    Arraste um arquivo ou clique para selecionar
+                  </div>
+                  <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    PDF, Imagem, Audio, Video, Texto (max 50MB)
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Upload progress bar */}
+            {uploadProgress !== null && (
+              <div style={{ marginTop: 6 }}>
+                <div style={{ width: '100%', height: 4, borderRadius: 2, backgroundColor: 'var(--border-subtle)' }}>
+                  <div
+                    style={{
+                      width: `${uploadProgress}%`,
+                      height: '100%',
+                      borderRadius: 2,
+                      backgroundColor: uploadProgress === 100 ? '#10B981' : 'var(--sun)',
+                      transition: 'width 200ms ease',
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  {uploadProgress === 100 ? 'Upload concluido' : `${uploadProgress}%`}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* 1. Título */}
           <div>
             <label style={labelStyle}>Título *</label>

@@ -3,6 +3,15 @@
 import { Search } from 'lucide-react';
 import ScopePills from './ScopePills';
 
+const FILE_TYPE_FILTERS = [
+  { key: 'all', label: 'Todos' },
+  { key: 'pdf', label: 'PDF' },
+  { key: 'image', label: 'Imagem', types: ['png', 'jpg', 'webp'] },
+  { key: 'audio', label: 'Audio', types: ['mp3', 'wav'] },
+  { key: 'video', label: 'Video', types: ['mp4', 'mov'] },
+  { key: 'text', label: 'Texto', types: ['txt', 'md', 'docx'] },
+];
+
 interface BibliotecaFiltersProps {
   search: string;
   onSearchChange: (v: string) => void;
@@ -11,6 +20,8 @@ interface BibliotecaFiltersProps {
   selectedTags: string[];
   onTagsChange: (v: string[]) => void;
   availableTags: string[];
+  selectedFileType?: string;
+  onFileTypeChange?: (v: string) => void;
 }
 
 export default function BibliotecaFilters({
@@ -21,6 +32,8 @@ export default function BibliotecaFilters({
   selectedTags,
   onTagsChange,
   availableTags,
+  selectedFileType = 'all',
+  onFileTypeChange,
 }: BibliotecaFiltersProps) {
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -79,7 +92,35 @@ export default function BibliotecaFilters({
         </div>
       </div>
 
-      {/* Row 2: Tag cloud */}
+      {/* Row 2: File type pills */}
+      {onFileTypeChange && (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {FILE_TYPE_FILTERS.map((ft) => {
+            const active = selectedFileType === ft.key;
+            return (
+              <button
+                key={ft.key}
+                onClick={() => onFileTypeChange(ft.key)}
+                style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 500,
+                  padding: '3px 10px',
+                  borderRadius: 9999,
+                  border: `1px solid ${active ? 'var(--sun)' : 'var(--border-subtle)'}`,
+                  backgroundColor: active ? 'rgba(255,200,1,0.1)' : 'transparent',
+                  color: active ? 'var(--sun)' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  transition: 'all 150ms ease',
+                }}
+              >
+                {ft.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Row 3: Tag cloud */}
       {visibleTags.length > 0 && (
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {visibleTags.map((tag) => {

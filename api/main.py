@@ -145,6 +145,11 @@ from chat.router import router as chat_router
 
 app.include_router(chat_router, prefix=settings.API_PREFIX)
 
+# Mount knowledge router
+from chat.knowledge.router import router as knowledge_router
+
+app.include_router(knowledge_router, prefix=settings.API_PREFIX)
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():

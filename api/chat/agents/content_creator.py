@@ -45,7 +45,10 @@ class ContentCreatorAgent(BaseAgent):
             "- **chat_completion**: para raciocínio profundo, análise complexa ou brainstorming interno\n"
             "- **generate_text**: para gerar conteúdo formatado e estruturado\n"
             "- **enhance_prompt**: para melhorar prompts antes de gerar conteúdo\n"
-            "- **web_search**: para pesquisar tendências, referências e dados atualizados\n\n"
+            "- **web_search**: para pesquisar tendências, referências e dados atualizados\n"
+            "- **search_knowledge**: para buscar documentos relevantes na base de conhecimento (Biblioteca)\n"
+            "- **read_full_document**: para ler o conteúdo completo de um documento da Biblioteca\n"
+            "- **find_related_documents**: para encontrar documentos relacionados por similaridade\n\n"
             "## Diretrizes\n\n"
             "- Sempre responda em Português (Brasil)\n"
             "- Siga as diretrizes e referências da skill ativa\n"
@@ -58,8 +61,9 @@ class ContentCreatorAgent(BaseAgent):
 
     def get_tools(self) -> list:
         from chat.tools import ALL_TOOLS
+        from chat.knowledge.document_search import KNOWLEDGE_TOOLS
 
-        return ALL_TOOLS
+        return ALL_TOOLS + KNOWLEDGE_TOOLS
 
     async def invoke(self, state: SunosChatState) -> SunosChatState:
         llm = self._llm
