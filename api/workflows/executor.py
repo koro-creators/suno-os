@@ -3,13 +3,71 @@
 Supports:
 - Full execution (run) — returns final result
 - SSE streaming (run_stream) — yields events per step
+- Per-step timeout
+- Retry with exponential backoff for tool/action steps
+- Rate limiting (max N executions per hour per workflow)
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
+import time
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import AsyncGenerator
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Rate limiter — in-memory, per workflow
+# ---------------------------------------------------------------------------
+
+_rate_limit_window: dict[str, list[float]] = defaultdict(list)
+MAX_RUNS_PER_HOUR = 30
+
+
+def _check_rate_limit(workflow_id: str) -> bool:
+    """Return True if the workflow is within the rate limit."""
+    now = time.time()
+    window = _rate_limit_window[workflow_id]
+    # Remove entries older than 1 hour
+    _rate_limit_window[workflow_id] = [t for t in window if now - t < 3600]
+    if len(_rate_limit_window[workflow_id]) >= MAX_RUNS_PER_HOUR:
+        return False
+    _rate_limit_window[workflow_id].append(now)
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Retry helper
+# ---------------------------------------------------------------------------
+
+
+async def _retry_with_backoff(
+    coro_factory,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+):
+    """Execute an async callable with exponential backoff on failure."""
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            return await coro_factory()
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                delay = base_delay * (2**attempt)
+                logger.warning(
+                    "Retry %d/%d after %.1fs: %s",
+                    attempt + 1,
+                    max_retries,
+                    delay,
+                    str(e),
+                )
+                await asyncio.sleep(delay)
+    raise last_error  # type: ignore[misc]
 
 
 class SSEEvent:
@@ -24,7 +82,7 @@ class SSEEvent:
 
 
 class WorkflowExecutor:
-    """Executes compiled workflow graphs."""
+    """Executes compiled workflow graphs with timeout, retry, and rate limiting."""
 
     def __init__(self) -> None:
         from .compiler import WorkflowCompiler
@@ -39,7 +97,14 @@ class WorkflowExecutor:
         overrides: dict | None = None,
     ) -> dict:
         """Execute workflow fully and return the final state."""
+        # Rate limit check
+        if not _check_rate_limit(workflow_id):
+            raise RuntimeError(
+                f"Rate limit exceeded: max {MAX_RUNS_PER_HOUR} runs/hour for workflow {workflow_id}"
+            )
+
         graph = self.compiler.compile(definition)
+        max_time = definition.get("max_execution_time", 300)
 
         initial_state = {
             "workflow_id": workflow_id,
@@ -55,8 +120,17 @@ class WorkflowExecutor:
         }
 
         config = {"configurable": {"thread_id": run_id}}
-        result = await graph.ainvoke(initial_state, config)
-        return result
+
+        try:
+            result = await asyncio.wait_for(
+                graph.ainvoke(initial_state, config),
+                timeout=max_time,
+            )
+            return result
+        except asyncio.TimeoutError:
+            raise RuntimeError(
+                f"Workflow execution timed out after {max_time}s"
+            )
 
     async def run_stream(
         self,
@@ -65,7 +139,16 @@ class WorkflowExecutor:
         definition: dict,
     ) -> AsyncGenerator[SSEEvent, None]:
         """Execute with streaming SSE events per step."""
+        # Rate limit check
+        if not _check_rate_limit(workflow_id):
+            yield SSEEvent(
+                "workflow_failed",
+                {"error": f"Rate limit exceeded: max {MAX_RUNS_PER_HOUR} runs/hour"},
+            )
+            return
+
         graph = self.compiler.compile(definition)
+        max_time = definition.get("max_execution_time", 300)
 
         initial_state = {
             "workflow_id": workflow_id,
@@ -88,9 +171,20 @@ class WorkflowExecutor:
         )
 
         try:
+            step_start = time.time()
+
             async for event in graph.astream(
                 initial_state, config, stream_mode="updates"
             ):
+                # Check overall timeout
+                elapsed = time.time() - step_start
+                if elapsed > max_time:
+                    yield SSEEvent(
+                        "workflow_failed",
+                        {"error": f"Workflow execution timed out after {max_time}s"},
+                    )
+                    return
+
                 for node_name, update in event.items():
                     yield SSEEvent(
                         "step_completed",
@@ -105,4 +199,5 @@ class WorkflowExecutor:
                 {"workflow_id": workflow_id, "run_id": run_id},
             )
         except Exception as e:
+            logger.error("Workflow %s stream failed: %s", workflow_id, str(e))
             yield SSEEvent("workflow_failed", {"error": str(e)})

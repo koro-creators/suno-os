@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Plus, Search } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowCard from '@/components/workflows/WorkflowCard';
+import WorkflowTemplates from '@/components/workflows/WorkflowTemplates';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
+import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
 
 export default function WorkflowsPage() {
   const router = useRouter();
@@ -127,6 +129,11 @@ export default function WorkflowsPage() {
             ))}
           </div>
         </div>
+
+        {/* Templates */}
+        {WORKFLOW_TEMPLATES.length > 0 && (
+          <WorkflowTemplates templates={WORKFLOW_TEMPLATES} />
+        )}
 
         {/* Grid */}
         <div
