@@ -1,9 +1,11 @@
 export interface WorkflowStep {
   id: string;
   name: string;
-  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl';
+  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow';
   tool_name?: string;
   prompt?: string;
+  workflow_id?: string;
+  input_mapping?: Record<string, string>;
   config: Record<string, unknown>;
   next_step?: string;
   condition?: {

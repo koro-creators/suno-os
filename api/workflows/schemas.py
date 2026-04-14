@@ -16,9 +16,11 @@ from pydantic import BaseModel, Field
 class WorkflowStep(BaseModel):
     id: str
     name: str
-    type: str  # "tool" | "llm" | "condition" | "action" | "hitl"
+    type: str  # "tool" | "llm" | "condition" | "action" | "hitl" | "workflow"
     tool_name: str | None = None
     prompt: str | None = None
+    workflow_id: str | None = None  # For type="workflow": ID of sub-workflow to execute
+    input_mapping: dict[str, str] | None = None  # For type="workflow": map parent output → child input
     config: dict[str, Any] = {}
     next_step: str | None = None
     condition: dict[str, Any] | None = None
