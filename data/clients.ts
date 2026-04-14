@@ -63,13 +63,11 @@ const skillDefs: Record<string, { name: string; type: 'criacao' | 'midia' | 'pla
 
 // Client skill assignments
 const clientSkillMap: Record<string, string[]> = {
-  santander: ['texto-de-radio', 'copy-social', 'roteiro-de-video', 'plano-de-midia', 'report-performance', 'persona-sintetica'],
+  suno: ['copy-social', 'roteiro-de-video', 'plano-de-midia', 'report-performance', 'brief-builder', 'analise-de-mercado', 'persona-sintetica'],
   vivo: ['texto-de-radio', 'copy-social', 'plano-de-midia', 'brief-builder', 'analise-de-mercado'],
   americanas: ['copy-social', 'roteiro-de-video', 'report-performance', 'persona-sintetica'],
-  mrv: ['copy-social', 'plano-de-midia', 'brief-builder'],
   sicredi: ['texto-de-radio', 'copy-social', 'plano-de-midia', 'persona-sintetica', 'analise-de-mercado'],
-  bmg: ['copy-social', 'report-performance', 'brief-builder', 'analise-de-mercado'],
-  stone: ['copy-social', 'roteiro-de-video', 'plano-de-midia', 'persona-sintetica'],
+  samsung: ['copy-social', 'roteiro-de-video', 'plano-de-midia', 'report-performance', 'persona-sintetica', 'texto-de-radio'],
 };
 
 function buildClient(name: string, clientSlug: string, color: string): Client {
@@ -102,11 +100,9 @@ function buildClient(name: string, clientSlug: string, color: string): Client {
 }
 
 export const clients: Client[] = [
-  buildClient('Santander', 'santander', '#EF4444'),
+  buildClient('Suno', 'suno', '#FFC801'),
   buildClient('Vivo', 'vivo', '#8B5CF6'),
   buildClient('Americanas', 'americanas', '#F97316'),
-  buildClient('MRV', 'mrv', '#06B6D4'),
   buildClient('Sicredi', 'sicredi', '#22C55E'),
-  buildClient('BMG', 'bmg', '#F472B6'),
-  buildClient('Stone', 'stone', '#A3E635'),
+  buildClient('Samsung', 'samsung', '#1428A0'),
 ];

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, Trash2, GripVertical, Settings } from 'lucide-react';
 import { Workflow, WorkflowStep } from '@/lib/workflow-types';
 import WorkflowStepEditor from './WorkflowStepEditor';
+import { clients } from '@/data/clients';
 
 const STEP_TYPE_COLORS: Record<string, string> = {
   tool: '#3B82F6',
@@ -31,6 +32,7 @@ interface WorkflowBuilderProps {
 export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: WorkflowBuilderProps) {
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
+  const [clientId, setClientId] = useState(initial.client_id || '');
   const [steps, setSteps] = useState<WorkflowStep[]>(initial.steps);
   const [scheduleEnabled, setScheduleEnabled] = useState(initial.schedule?.enabled || false);
   const [scheduleCron, setScheduleCron] = useState(initial.schedule?.cron || '');
@@ -45,6 +47,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
       ...initial,
       name,
       description,
+      client_id: clientId,
       steps,
       steps_count: steps.length,
       schedule: scheduleEnabled ? { cron: scheduleCron, timezone: 'America/Sao_Paulo', enabled: true } : undefined,
@@ -140,7 +143,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
           )}
           <button
             onClick={handleSave}
-            disabled={!name.trim()}
+            disabled={!name.trim() || !clientId}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -211,6 +214,27 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
+          </div>
+          <div>
+            <label style={labelStyle}>Cliente</label>
+            <select
+              style={{ ...inputStyle, cursor: 'pointer' }}
+              value={clientId}
+              onChange={(e) => { setClientId(e.target.value); markDirty(); }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'var(--sun)';
+                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255,200,1,0.15)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <option value="">Selecione um cliente</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

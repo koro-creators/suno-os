@@ -6,6 +6,7 @@ export const initialWorkflows: Workflow[] = [
     name: 'Relatório Mensal',
     description: 'Gera report de performance mensal e envia resumo para Slack',
     status: 'active',
+    client_id: 'vivo',
     steps: [
       { id: 's1', name: 'Buscar dados', type: 'tool', tool_name: 'query_data', config: { query: 'métricas do mês' } },
       { id: 's2', name: 'Gerar análise', type: 'llm', prompt: 'Analise os dados: {{previous}}', config: {} },
@@ -24,6 +25,7 @@ export const initialWorkflows: Workflow[] = [
     name: 'Briefing Criativo',
     description: 'Coleta dados do cliente, pesquisa referências e gera briefing criativo completo',
     status: 'draft',
+    client_id: 'americanas',
     steps: [
       { id: 's1', name: 'Coletar dados do cliente', type: 'tool', tool_name: 'search_knowledge', config: { query: 'dados do cliente' } },
       { id: 's2', name: 'Pesquisar referências', type: 'tool', tool_name: 'search_knowledge', config: { query: 'referências criativas' } },
@@ -39,6 +41,7 @@ export const initialWorkflows: Workflow[] = [
     name: 'Monitor de Redes Sociais',
     description: 'Monitora menções, analisa sentimento e dispara alerta se negativo',
     status: 'active',
+    client_id: 'samsung',
     steps: [
       { id: 's1', name: 'Coletar menções', type: 'tool', tool_name: 'search_knowledge', config: { query: 'menções recentes' } },
       { id: 's2', name: 'Analisar sentimento', type: 'llm', prompt: 'Analise o sentimento das menções: {{previous}}', config: {} },

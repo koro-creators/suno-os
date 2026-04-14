@@ -13,6 +13,7 @@ const EMPTY_WORKFLOW: Workflow = {
   name: '',
   description: '',
   status: 'draft',
+  client_id: '',
   steps: [],
   steps_count: 0,
   created_by: 'admin',
@@ -46,6 +47,7 @@ function CreateWorkflowContent() {
     createWorkflow({
       name: data.name,
       description: data.description,
+      client_id: data.client_id,
       steps: data.steps,
       schedule: data.schedule,
     });

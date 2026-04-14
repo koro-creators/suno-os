@@ -7,6 +7,7 @@ import { initialWorkflows } from '@/data/workflows-admin';
 interface WorkflowCreateData {
   name: string;
   description: string;
+  client_id: string;
   steps: WorkflowStep[];
   schedule?: { cron: string; timezone: string; enabled: boolean };
   client_scope?: string[];
@@ -39,6 +40,7 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
       name: data.name,
       description: data.description,
       status: 'draft',
+      client_id: data.client_id,
       steps: data.steps,
       schedule: data.schedule,
       steps_count: data.steps.length,

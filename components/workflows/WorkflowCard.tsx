@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Clock, Play, Layers } from 'lucide-react';
 import { Workflow } from '@/lib/workflow-types';
+import { clients } from '@/data/clients';
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'var(--text-muted)',
@@ -19,6 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function WorkflowCard({ workflow }: { workflow: Workflow }) {
   const router = useRouter();
   const statusColor = STATUS_COLORS[workflow.status] || 'var(--text-muted)';
+  const client = clients.find((c) => c.id === workflow.client_id);
 
   return (
     <div
@@ -73,6 +75,30 @@ export default function WorkflowCard({ workflow }: { workflow: Workflow }) {
           {STATUS_LABELS[workflow.status] || workflow.status}
         </span>
       </div>
+
+      {/* Client badge */}
+      {client && (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            fontSize: '0.65rem',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              backgroundColor: client.color,
+              flexShrink: 0,
+            }}
+          />
+          {client.name}
+        </span>
+      )}
 
       {/* Description */}
       <span

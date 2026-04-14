@@ -39,6 +39,7 @@ export interface Workflow {
   created_by: string;
   created_at: string;
   updated_at: string;
+  client_id: string;
   client_scope?: string[];
   default_model?: string;
   max_execution_time?: number;

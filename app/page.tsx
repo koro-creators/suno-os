@@ -21,7 +21,7 @@ export default function Home() {
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[{ label: 'Home', href: '/' }]}
-        rightLabel="7 biomas"
+        rightLabel={`${clients.length} biomas`}
       />
 
       <div id="main-content" className="flex-1 relative min-h-0">
