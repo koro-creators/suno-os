@@ -145,6 +145,11 @@ from chat.router import router as chat_router
 
 app.include_router(chat_router, prefix=settings.API_PREFIX)
 
+# Mount workflows router
+from workflows.router import router as workflows_router
+
+app.include_router(workflows_router, prefix=f"{settings.API_PREFIX}/workflows")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
