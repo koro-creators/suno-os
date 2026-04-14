@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, Image, Sparkles } from 'lucide-react';
+import { Heart, MessageCircle, Send, Bookmark, Sparkles, MoreHorizontal } from 'lucide-react';
 
 type PreviewFormat = 'feed' | 'carousel' | 'stories' | 'post';
 
-/** Strip markdown formatting characters for clean preview display. */
 function stripMarkdown(text: string): string {
   return text
     .replace(/\*\*(.+?)\*\*/g, '$1')
@@ -26,11 +25,8 @@ interface SlideContent {
   cta?: string;
 }
 
-/** Parse AI output into clean slide content, extracting only título and texto. */
 function parseSlides(content: string): SlideContent[] {
   const cleaned = stripMarkdown(content);
-
-  // Try to split by SLIDE N/N or Slide N patterns
   const slideRegex = /(?:^|\n)\s*(?:SLIDE|Slide|slide)\s*(\d+)(?:\/\d+)?[\s:•\-]*/g;
   const parts = cleaned.split(slideRegex).filter(Boolean);
 
@@ -38,7 +34,6 @@ function parseSlides(content: string): SlideContent[] {
     const slides: SlideContent[] = [];
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
-      // Skip the number captures
       if (/^\d+$/.test(part.trim())) continue;
       const slide = extractSlideFields(part);
       if (slide.title || slide.text) slides.push(slide);
@@ -46,71 +41,43 @@ function parseSlides(content: string): SlideContent[] {
     if (slides.length > 0) return slides;
   }
 
-  // Try splitting by --- separators
   if (/\n---\s*\n/.test(cleaned)) {
     const sections = cleaned.split(/\n---\s*\n/).filter((s) => s.trim());
-    if (sections.length > 1) {
-      return sections.map((s) => extractSlideFields(s));
-    }
+    if (sections.length > 1) return sections.map((s) => extractSlideFields(s));
   }
 
-  // Fallback: single slide
-  const single = extractSlideFields(cleaned);
-  return [single];
+  return [extractSlideFields(cleaned)];
 }
 
-/** Extract title and text from a slide section, removing art direction metadata. */
 function extractSlideFields(raw: string): SlideContent {
   const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
-
   let title = '';
   let text = '';
   let cta = '';
 
   for (const line of lines) {
     const lower = line.toLowerCase();
-
-    // Skip art direction lines
     if (lower.startsWith('elemento visual:') || lower.startsWith('• elemento visual')) continue;
     if (lower.startsWith('tom:') || lower.startsWith('• tom:') || lower.startsWith('• tom ')) continue;
     if (lower.startsWith('visual:')) continue;
 
-    // Extract título
     const titleMatch = line.match(/^(?:•\s*)?(?:Título(?:\s*Principal)?|TÍTULO(?:\s*PRINCIPAL)?)\s*[:：]\s*(.+)/i);
-    if (titleMatch) {
-      title = titleMatch[1].trim();
-      continue;
-    }
+    if (titleMatch) { title = titleMatch[1].trim(); continue; }
 
-    // Extract subtítulo or texto no slide
     const textMatch = line.match(/^(?:•\s*)?(?:Sub[tT]ítulo|Texto(?:\s*no\s*slide)?|TEXTO)\s*[:：]\s*(.+)/i);
-    if (textMatch) {
-      text = text ? `${text}\n${textMatch[1].trim()}` : textMatch[1].trim();
-      continue;
-    }
+    if (textMatch) { text = text ? `${text}\n${textMatch[1].trim()}` : textMatch[1].trim(); continue; }
 
-    // Extract CTA
     const ctaMatch = line.match(/^(?:•\s*)?CTA\s*(?:\(.*?\))?\s*[:：]\s*(.+)/i);
-    if (ctaMatch) {
-      cta = ctaMatch[1].trim();
-      continue;
-    }
+    if (ctaMatch) { cta = ctaMatch[1].trim(); continue; }
 
-    // If no pattern matched and we don't have a title yet, use as title
-    if (!title && !line.startsWith('•') && line.length < 60) {
-      title = line;
-      continue;
-    }
+    if (!title && !line.startsWith('•') && line.length < 60) { title = line; continue; }
 
-    // Otherwise add to text (skip bullet metadata)
     if (!line.startsWith('•') || lower.includes('texto') || lower.includes('subtítulo')) {
-      // Skip if it looks like metadata
       if (lower.includes('elemento') || lower.includes('tom:') || lower.includes('visual:')) continue;
       text = text ? `${text}\n${line}` : line;
     }
   }
 
-  // If no structured fields found, use first line as title, rest as text
   if (!title && !text) {
     const allLines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
     title = allLines[0] || '';
@@ -120,7 +87,6 @@ function extractSlideFields(raw: string): SlideContent {
   return { title, text, cta };
 }
 
-/** Extract hashtags and caption from content. */
 function extractHashtags(content: string): { caption: string; hashtags: string } {
   const lines = stripMarkdown(content).split('\n');
   const hashtagLines: string[] = [];
@@ -136,11 +102,10 @@ function extractHashtags(content: string): { caption: string; hashtags: string }
     }
   }
 
-  return {
-    caption: captionLines.join('\n').trim(),
-    hashtags: hashtagLines.join(' '),
-  };
+  return { caption: captionLines.join('\n').trim(), hashtags: hashtagLines.join(' ') };
 }
+
+// ─── Sub-components ────────────────────────────────────────────────
 
 interface SocialPreviewProps {
   content: string;
@@ -150,85 +115,139 @@ interface SocialPreviewProps {
   onGenerateImage?: () => void;
 }
 
-function ImagePlaceholder({
+function SlideCard({
   color,
   title,
   subtitle,
   slideNumber,
   totalSlides,
+  cta,
   onGenerate,
+  isFirst,
 }: {
   color: string;
   title?: string;
   subtitle?: string;
   slideNumber?: number;
   totalSlides?: number;
+  cta?: string;
   onGenerate?: () => void;
+  isFirst?: boolean;
 }) {
   return (
     <div
       style={{
         width: '100%',
         aspectRatio: '1/1',
-        backgroundColor: `${color}15`,
-        border: `1px solid ${color}25`,
+        background: `linear-gradient(145deg, ${color}20 0%, ${color}08 50%, var(--void) 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
         justifyContent: 'center',
-        padding: 16,
+        alignItems: 'center',
+        padding: '20px 16px',
         position: 'relative',
-        gap: 6,
+        overflow: 'hidden',
       }}
     >
+      {/* Subtle accent line */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+        background: `linear-gradient(90deg, ${color}60, transparent 70%)`,
+      }} />
+
+      {/* Slide counter */}
       {slideNumber && totalSlides && (
         <span style={{
-          position: 'absolute', top: 8, right: 8,
-          fontSize: '0.55rem', color: '#fff',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          borderRadius: 9999, padding: '2px 6px',
+          position: 'absolute', top: 10, right: 10,
+          fontSize: '0.5rem', fontWeight: 600, letterSpacing: '0.05em',
+          color: 'var(--text-muted)',
+          backgroundColor: 'var(--deep)',
+          borderRadius: 6, padding: '2px 6px',
+          border: '1px solid var(--border-subtle)',
         }}>
           {slideNumber}/{totalSlides}
         </span>
       )}
 
+      {/* Title */}
       {title && (
         <p style={{
-          fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)',
-          textAlign: 'center', lineHeight: 1.3, maxWidth: '90%',
+          fontSize: isFirst ? '1rem' : '0.85rem',
+          fontWeight: 700,
+          color: 'var(--text-primary)',
+          textAlign: 'center',
+          lineHeight: 1.25,
+          maxWidth: '92%',
+          letterSpacing: '-0.01em',
         }}>
           {title}
         </p>
       )}
+
+      {/* Divider dot */}
+      {title && subtitle && (
+        <div style={{
+          width: 4, height: 4, borderRadius: '50%',
+          backgroundColor: color, margin: '10px 0', opacity: 0.6,
+        }} />
+      )}
+
+      {/* Subtitle / body text */}
       {subtitle && (
         <p style={{
-          fontSize: '0.65rem', color: 'var(--text-secondary)',
-          textAlign: 'center', lineHeight: 1.4, maxWidth: '85%',
+          fontSize: '0.65rem',
+          color: 'var(--text-secondary)',
+          textAlign: 'center',
+          lineHeight: 1.5,
+          maxWidth: '88%',
+          display: '-webkit-box',
+          WebkitLineClamp: 4,
+          WebkitBoxOrient: 'vertical' as const,
+          overflow: 'hidden',
         }}>
           {subtitle}
         </p>
       )}
 
-      {!title && (
-        <Image size={24} strokeWidth={1} style={{ color: `${color}50` }} />
+      {/* CTA */}
+      {cta && (
+        <span style={{
+          marginTop: 10,
+          fontSize: '0.6rem',
+          fontWeight: 600,
+          color: color,
+          backgroundColor: `${color}15`,
+          border: `1px solid ${color}30`,
+          borderRadius: 9999,
+          padding: '3px 10px',
+        }}>
+          {cta}
+        </span>
       )}
 
+      {/* Generate visual button */}
       {onGenerate && (
         <button
           onClick={onGenerate}
           style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            fontSize: '0.6rem', color: 'var(--sun)',
-            backgroundColor: 'rgba(255,200,1,0.1)',
-            border: '1px solid rgba(255,200,1,0.2)',
-            borderRadius: 9999, padding: '3px 8px',
-            cursor: 'pointer', transition: 'all 150ms ease',
-            marginTop: 4,
+            position: 'absolute', bottom: 10, right: 10,
+            display: 'flex', alignItems: 'center', gap: 3,
+            fontSize: '0.55rem', color: 'var(--sun)',
+            backgroundColor: 'rgba(255,200,1,0.08)',
+            border: '1px solid rgba(255,200,1,0.15)',
+            borderRadius: 6, padding: '3px 7px',
+            cursor: 'pointer', transition: 'all 200ms ease',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,200,1,0.2)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,200,1,0.1)'; }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,200,1,0.18)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,200,1,0.3)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,200,1,0.08)';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,200,1,0.15)';
+          }}
         >
-          <Sparkles size={9} strokeWidth={1.5} />
+          <Sparkles size={8} strokeWidth={1.5} />
           Gerar visual
         </button>
       )}
@@ -241,16 +260,31 @@ function PostActions() {
   const [saved, setSaved] = useState(false);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px' }}>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button onClick={() => setLiked(!liked)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <Heart size={18} strokeWidth={1.5} fill={liked ? '#EF4444' : 'none'} style={{ color: liked ? '#EF4444' : 'var(--text-primary)' }} />
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '8px 12px',
+    }}>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <button
+          onClick={() => setLiked(!liked)}
+          aria-label={liked ? 'Descurtir' : 'Curtir'}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', transition: 'transform 200ms ease' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+        >
+          <Heart size={18} strokeWidth={1.5} fill={liked ? '#EF4444' : 'none'} style={{ color: liked ? '#EF4444' : 'var(--text-primary)', transition: 'color 200ms ease' }} />
         </button>
-        <MessageCircle size={18} strokeWidth={1.5} style={{ color: 'var(--text-primary)' }} />
-        <Send size={18} strokeWidth={1.5} style={{ color: 'var(--text-primary)' }} />
+        <MessageCircle size={18} strokeWidth={1.5} style={{ color: 'var(--text-primary)', cursor: 'pointer' }} />
+        <Send size={18} strokeWidth={1.5} style={{ color: 'var(--text-primary)', cursor: 'pointer' }} />
       </div>
-      <button onClick={() => setSaved(!saved)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-        <Bookmark size={18} strokeWidth={1.5} fill={saved ? 'var(--text-primary)' : 'none'} style={{ color: 'var(--text-primary)' }} />
+      <button
+        onClick={() => setSaved(!saved)}
+        aria-label={saved ? 'Remover dos salvos' : 'Salvar'}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', transition: 'transform 200ms ease' }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+      >
+        <Bookmark size={18} strokeWidth={1.5} fill={saved ? 'var(--text-primary)' : 'none'} style={{ color: 'var(--text-primary)', transition: 'color 200ms ease' }} />
       </button>
     </div>
   );
@@ -258,20 +292,36 @@ function PostActions() {
 
 function PostHeader({ clientName, clientColor }: { clientName: string; clientColor: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px' }}>
-      <div style={{
-        width: 24, height: 24, borderRadius: '50%', backgroundColor: clientColor,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '0.6rem', fontWeight: 700, color: '#fff',
-      }}>
-        {clientName.charAt(0)}
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '10px 12px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Avatar ring */}
+        <div style={{
+          width: 28, height: 28, borderRadius: '50%',
+          background: `linear-gradient(135deg, ${clientColor}, ${clientColor}90)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.6rem', fontWeight: 700, color: '#fff',
+          boxShadow: `0 0 0 2px var(--deep), 0 0 0 3px ${clientColor}40`,
+        }}>
+          {clientName.charAt(0)}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+            {clientName.toLowerCase().replace(/\s/g, '')}
+          </span>
+          <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)', letterSpacing: '0.03em' }}>
+            Patrocinado
+          </span>
+        </div>
       </div>
-      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-        {clientName.toLowerCase().replace(/\s/g, '')}
-      </span>
+      <MoreHorizontal size={16} strokeWidth={1.5} style={{ color: 'var(--text-muted)', cursor: 'pointer' }} />
     </div>
   );
 }
+
+// ─── Main component ────────────────────────────────────────────────
 
 export default function SocialPreview({ content, format, clientName, clientColor, onGenerateImage }: SocialPreviewProps) {
   const slides = parseSlides(content);
@@ -280,58 +330,87 @@ export default function SocialPreview({ content, format, clientName, clientColor
   const isCarousel = format === 'carousel' && slides.length > 1;
   const isStories = format === 'stories';
 
-  // Caption for feed/post: use first slide text or full content
   const feedCaption = slides[0]?.text || stripMarkdown(content).substring(0, 120);
 
-  const containerWidth = isStories ? 220 : 260;
-
   if (isCarousel) {
-    // Show ALL slides horizontally with scroll
-    const slideSize = 200;
+    const slideSize = 220;
     return (
       <div style={{
         backgroundColor: 'var(--deep)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: 8,
+        borderRadius: 12,
         overflow: 'hidden',
         flexShrink: 0,
-        maxWidth: 700,
+        maxWidth: 740,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
       }}>
         <PostHeader clientName={clientName} clientColor={clientColor} />
 
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          gap: 4,
-          overflowX: 'auto',
-          padding: '0 4px',
-          scrollSnapType: 'x mandatory',
-        }}>
+        {/* Horizontal carousel with smooth scroll snap */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 3,
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
+        >
           {slides.map((slide, i) => (
-            <div key={i} style={{ flexShrink: 0, width: slideSize, scrollSnapAlign: 'start' }}>
-              <ImagePlaceholder
+            <div
+              key={i}
+              style={{
+                flexShrink: 0,
+                width: slideSize,
+                scrollSnapAlign: 'start',
+              }}
+            >
+              <SlideCard
                 color={clientColor}
                 title={slide.title}
                 subtitle={slide.text}
                 slideNumber={i + 1}
                 totalSlides={slides.length}
+                cta={slide.cta}
                 onGenerate={i === 0 ? onGenerateImage : undefined}
+                isFirst={i === 0}
               />
             </div>
           ))}
         </div>
 
+        {/* Dots indicator */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '6px 0 2px' }}>
+          {slides.map((_, i) => (
+            <span
+              key={i}
+              style={{
+                width: i === 0 ? 16 : 4,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: i === 0 ? clientColor : 'var(--text-muted)',
+                opacity: i === 0 ? 1 : 0.3,
+                transition: 'all 200ms ease',
+              }}
+            />
+          ))}
+        </div>
+
         <PostActions />
 
-        <div style={{ padding: '0 10px 8px' }}>
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
-            <span style={{ fontWeight: 600, marginRight: 4 }}>
+        {/* Caption area */}
+        <div style={{ padding: '0 12px 10px' }}>
+          <p style={{ fontSize: '0.7rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+            <span style={{ fontWeight: 700, marginRight: 4 }}>
               {clientName.toLowerCase().replace(/\s/g, '')}
             </span>
-            {slides[0]?.cta || feedCaption.substring(0, 80)}
+            {slides[0]?.cta || feedCaption.substring(0, 100)}
           </p>
           {hashtags && (
-            <p style={{ fontSize: '0.6rem', color: 'var(--midia)', marginTop: 3, lineHeight: 1.3 }}>
+            <p style={{ fontSize: '0.6rem', color: 'var(--midia)', marginTop: 4, lineHeight: 1.4, opacity: 0.8 }}>
               {hashtags}
             </p>
           )}
@@ -340,38 +419,43 @@ export default function SocialPreview({ content, format, clientName, clientColor
     );
   }
 
-  // Feed / Post / Stories — single image
+  // ─── Feed / Post / Stories ───
+  const containerWidth = isStories ? 240 : 280;
+
   return (
     <div style={{
       width: containerWidth,
       backgroundColor: 'var(--deep)',
       border: '1px solid var(--border-subtle)',
-      borderRadius: 8,
+      borderRadius: 12,
       overflow: 'hidden',
       flexShrink: 0,
+      boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
     }}>
       <PostHeader clientName={clientName} clientColor={clientColor} />
 
-      <ImagePlaceholder
+      <SlideCard
         color={clientColor}
         title={slides[0]?.title}
-        subtitle={isStories ? slides[0]?.text?.substring(0, 60) : undefined}
+        subtitle={isStories ? slides[0]?.text?.substring(0, 80) : undefined}
+        cta={slides[0]?.cta}
         onGenerate={onGenerateImage}
+        isFirst
       />
 
       {!isStories && <PostActions />}
 
       {!isStories && (
-        <div style={{ padding: '0 10px 8px' }}>
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
-            <span style={{ fontWeight: 600, marginRight: 4 }}>
+        <div style={{ padding: '0 12px 10px' }}>
+          <p style={{ fontSize: '0.7rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+            <span style={{ fontWeight: 700, marginRight: 4 }}>
               {clientName.toLowerCase().replace(/\s/g, '')}
             </span>
-            {feedCaption.substring(0, 100)}
-            {feedCaption.length > 100 && <span style={{ color: 'var(--text-muted)' }}>...mais</span>}
+            {feedCaption.substring(0, 120)}
+            {feedCaption.length > 120 && <span style={{ color: 'var(--text-muted)' }}> ...mais</span>}
           </p>
           {hashtags && (
-            <p style={{ fontSize: '0.6rem', color: 'var(--midia)', marginTop: 3, lineHeight: 1.3 }}>
+            <p style={{ fontSize: '0.6rem', color: 'var(--midia)', marginTop: 4, lineHeight: 1.4, opacity: 0.8 }}>
               {hashtags}
             </p>
           )}
@@ -379,9 +463,9 @@ export default function SocialPreview({ content, format, clientName, clientColor
       )}
 
       {isStories && (
-        <div style={{ padding: '6px 10px 8px' }}>
-          <p style={{ fontSize: '0.6rem', color: 'var(--text-primary)', lineHeight: 1.3 }}>
-            {feedCaption.substring(0, 60)}
+        <div style={{ padding: '8px 12px 10px' }}>
+          <p style={{ fontSize: '0.65rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+            {feedCaption.substring(0, 80)}
           </p>
         </div>
       )}
@@ -389,18 +473,12 @@ export default function SocialPreview({ content, format, clientName, clientColor
   );
 }
 
-/**
- * Determine the preview format from the moon slug.
- * Returns null if not a social media moon.
- */
 export function getSocialFormat(skillSlug: string, moonSlug: string): PreviewFormat | null {
   if (skillSlug !== 'copy-social') return null;
-
   const formatMap: Record<string, PreviewFormat> = {
     'feed-carrossel': 'carousel',
     'stories-reels': 'stories',
     'x-twitter': 'post',
   };
-
   return formatMap[moonSlug] || 'feed';
 }
