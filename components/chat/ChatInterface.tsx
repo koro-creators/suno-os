@@ -25,6 +25,8 @@ interface ChatInterfaceProps {
   moonSlug: string;
   skillSlug: string;
   clientSlug: string;
+  clientName?: string;
+  clientColor?: string;
   documents: BibliotecaDocument[];
   initialActiveDocIds: string[];
 }
@@ -36,7 +38,7 @@ const GENERIC_FALLBACK: { content: string; highlight?: { label: string; body: st
     'Entendido. Estou analisando o contexto e preparando uma resposta personalizada com base na biblioteca do cliente e nas melhores praticas do setor.',
 };
 
-export default function ChatInterface({ moonSlug, skillSlug, clientSlug, documents, initialActiveDocIds }: ChatInterfaceProps) {
+export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientName, clientColor, documents, initialActiveDocIds }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeDocIds, setActiveDocIds] = useState<string[]>(initialActiveDocIds);
   const [pendingHighlight, setPendingHighlight] = useState<{ label: string; body: string } | undefined>();
@@ -227,6 +229,10 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, documen
                   feedback={feedbacks[i] || { rating: null, comment: '' }}
                   onFeedbackChange={(f) => setFeedbacks((prev) => ({ ...prev, [i]: f }))}
                   hasFollowingUserMessage={hasFollowingUserMsg}
+                  skillSlug={skillSlug}
+                  moonSlug={moonSlug}
+                  clientName={clientName}
+                  clientColor={clientColor}
                 />
                 {isAssistant && variations[i] && (
                   <VariationCards

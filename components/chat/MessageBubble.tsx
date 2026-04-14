@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { MessageFeedback } from '@/lib/feedback-types';
 import ResultActions from './ResultActions';
 import FeedbackInline from './FeedbackInline';
+import SocialPreview, { getSocialFormat } from './SocialPreview';
 
 function renderMarkdown(text: string): string {
   return text
@@ -32,6 +33,10 @@ interface MessageBubbleProps {
   feedback?: MessageFeedback;
   onFeedbackChange?: (f: MessageFeedback) => void;
   hasFollowingUserMessage?: boolean;
+  skillSlug?: string;
+  moonSlug?: string;
+  clientName?: string;
+  clientColor?: string;
 }
 
 export default function MessageBubble({
@@ -46,8 +51,13 @@ export default function MessageBubble({
   feedback,
   onFeedbackChange,
   hasFollowingUserMessage,
+  skillSlug,
+  moonSlug,
+  clientName,
+  clientColor,
 }: MessageBubbleProps) {
   const isUser = role === 'user';
+  const socialFormat = skillSlug && moonSlug ? getSocialFormat(skillSlug, moonSlug) : null;
 
   return (
     <div
@@ -86,6 +96,18 @@ export default function MessageBubble({
           </div>
         )}
       </div>
+
+      {/* Social preview for copy-social skill */}
+      {role === 'assistant' && socialFormat && content.length > 20 && (
+        <div style={{ marginTop: 8 }}>
+          <SocialPreview
+            content={content}
+            format={socialFormat}
+            clientName={clientName || 'Marca'}
+            clientColor={clientColor || '#8B5CF6'}
+          />
+        </div>
+      )}
 
       {showActions && role === 'assistant' && (
         <>

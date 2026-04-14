@@ -90,6 +90,8 @@ export default function MoonPage({
           moonSlug={moonSlug}
           skillSlug={skillSlug}
           clientSlug={clientSlug}
+          clientName={client.name}
+          clientColor={client.color}
           documents={candidateDocs}
           initialActiveDocIds={autoActiveIds}
         />
