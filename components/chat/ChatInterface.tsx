@@ -76,9 +76,36 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
       ]);
       setPendingHighlight(undefined);
 
-      // Auto-generate variations for copy-social
+      // Auto-generate variations for copy-social using the completed text directly
       if (skillSlug === 'copy-social' && apiAvailable()) {
-        setTimeout(() => handleGenerateVariation(newMsgIndex), 500);
+        const completedText = streamingText;
+        setTimeout(async () => {
+          try {
+            const response = await fetch(getApiUrl('/api/chat/generate-text'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                prompt: `Crie 2 variações alternativas do seguinte texto, mantendo o mesmo objetivo e tom mas com abordagens criativas diferentes:\n\n${completedText}`,
+                content_type: 'custom',
+                tone: 'creative',
+                length: 'medium',
+                variations: 2,
+                skill_slug: skillSlug,
+                model: skillConfig?.model || 'gemini-flash',
+              }),
+            });
+            const data = await response.json();
+            setVariations(prev => ({
+              ...prev,
+              [newMsgIndex]: {
+                variants: data.texts || [],
+                selectedIndex: 0,
+              },
+            }));
+          } catch {
+            // Silently skip auto-variations on error
+          }
+        }, 500);
       }
     }
     prevIsStreamingRef.current = isStreaming;
