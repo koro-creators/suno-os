@@ -46,57 +46,91 @@
 - [x] Sidebar: Dashboard → Home, todos os itens com navegação
 - [x] CLAUDE.md com convenções do projeto
 - [x] Hooks: auto-lint, proteção de arquivos
-- [x] Skills: `/new-component`, `/new-admin-page`
+- [x] Skills: `/new-component`, `/new-admin-page`, `/sdd-koro`
 - [x] Subagent: code-reviewer
 - [x] MCP: context7
+
+### Phase 8: Backend — FastAPI + LangGraph (2026-03-26)
+- [x] Monorepo: backend em `api/` (padrão Meridian Chat V2)
+- [x] FastAPI + LangGraph StateGraph + BaseAgent ABC
+- [x] 8 skill dirs com SKILL.md + references/ (copy-social, plano-de-midia, etc.)
+- [x] 4 tools: chat (Gemini streaming), text_gen, image_gen (mock), prompt_enhance
+- [x] TopSupervisor → Orchestrator (routing 2 níveis)
+- [x] ContentCreator + VisualCreator + Conversational agents (ReAct)
+- [x] SSE streaming via FastAPI StreamingResponse
+- [x] Eval: MLflow tracing + scorers + trajectory + 20 eval datasets
+- [x] SPEC-001 v2 completa (constitution, spec, design, plan, tasks)
+
+### Phase 9: Frontend ↔ Backend Integration (2026-03-26)
+- [x] `lib/api.ts` — HTTP client com `apiAvailable()` + `consumeSSE()`
+- [x] `hooks/useToolStream.ts` — consome SSE real + fallback mock
+- [x] ChatInterface usa API quando disponível, mock quando não
+- [x] HITL feedback funciona com respostas reais
+- [x] Fix SSE dedup + normalize Gemini content format
+
+### Phase 10: Auth + RBAC (2026-03-26)
+- [x] Firebase Google Auth com login page
+- [x] Auth JWT em requests à API
+- [x] User profile no sidebar
+- [x] RBAC com Firebase Custom Claims (admin/creator roles)
+- [x] AuthGuard + AuthProvider + AppShell components
+
+---
+
+## Em Progresso
+
+### Phase 11: Polish + Deploy
+- [ ] Error handling robusto no backend (timeout, rate limit, backoff)
+- [ ] CI/CD: GitHub Actions (lint, pytest, type-check, build)
+- [ ] Deploy staging em Cloud Run
+- [ ] Smoke test staging
+- [ ] Frontend: endpoints batch (TextGen, ImageGen panels)
+- [ ] Testes de integração com API keys reais
 
 ---
 
 ## Próximas Phases
 
-### Phase 8: Sidebar Recentes Dinâmico
+### Phase 12: Sidebar Recentes Dinâmico
 - [ ] Rastrear navegação real do usuário
 - [ ] Mostrar últimos clientes/skills visitados
 - [ ] Persistir em sessionStorage
 
-### Phase 9: Busca Global
+### Phase 13: Busca Global
 - [ ] Barra de busca unificada (Cmd+K)
 - [ ] Busca cross-feature: skills, documentos, clientes
 - [ ] Resultados agrupados por tipo
 - [ ] Navegação direta do resultado
 
-### Phase 10: Onboarding / Empty States
+### Phase 14: Onboarding / Empty States
 - [ ] Welcome screen para primeiro uso
 - [ ] Empty states ricos em todas as páginas admin
 - [ ] Guia de getting started
 
-### Phase 11: Chat Real / API Integration
-- [ ] Substituir mock streaming por API real
-- [ ] Integração com Gemini Pro / GPT-4o / Claude
-- [ ] Configuração de modelo por skill (já modelado no admin)
-- [ ] System prompt do skill como contexto real
-
-### Phase 12: Deploy
-- [ ] GitHub Actions: lint + type-check + build
-- [ ] Deploy no Cloud Run
-- [ ] Pipeline CI/CD automatizado
-
-### Phase 13: Integração Solar ↔ Admin
+### Phase 15: Integração Solar ↔ Admin
 - [ ] Unificar `data/clients.ts` com ClientsContext
 - [ ] Skills reais derivados do SkillsContext
 - [ ] Sistema solar reflete mudanças do admin
+
+### Phase 16: VideoGen + Editor
+- [ ] Integrar Vertex AI Veo 3.1 para geração de vídeo
+- [ ] Image editor com inpainting/outpainting
+- [ ] Image enhance (upscale x2/x4)
 
 ---
 
 ## Specs
 
-Todas as design specs estão em `docs/superpowers/specs/`:
+| Spec | Tipo | Data |
+|------|------|------|
+| `2026-03-23-sunos-prototype-design.md` | Design | Protótipo base |
+| `2026-03-23-phase2-ai-ux-patterns-design.md` | Design | AI UX Patterns |
+| `2026-03-23-bioma-zero-design.md` | Design | Skills admin (original) |
+| `2026-03-24-biblioteca-design.md` | Design | Biblioteca |
+| `2026-03-24-hitl-feedback-design.md` | Design | Human in the Loop |
+| `2026-03-24-clientes-admin-design.md` | Design | Clientes admin |
+| `large/sunohub-tools-integration/` | SDD Large (5 artefatos) | Backend + Tools (SPEC-001 v2) |
 
-| Spec | Data |
-|------|------|
-| `2026-03-23-sunos-prototype-design.md` | Protótipo base |
-| `2026-03-23-phase2-ai-ux-patterns-design.md` | AI UX Patterns |
-| `2026-03-23-bioma-zero-design.md` | Skills admin (original) |
-| `2026-03-24-biblioteca-design.md` | Biblioteca |
-| `2026-03-24-hitl-feedback-design.md` | Human in the Loop |
-| `2026-03-24-clientes-admin-design.md` | Clientes admin |
+## SDD Usage Log
+
+Ver `docs/specs/_log/usage-log.md` para histórico de specs geradas e scores.
