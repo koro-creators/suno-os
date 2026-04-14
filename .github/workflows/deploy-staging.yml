@@ -1,0 +1,60 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'api/**'
+
+jobs:
+  deploy:
+    name: Deploy API to Cloud Run (staging)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build and push
+        working-directory: api
+        run: |
+          IMAGE=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sunos/sunos-api
+          docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy sunos-api-staging \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sunos/sunos-api:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --memory 2Gi \
+            --cpu 2 \
+            --timeout 300 \
+            --min-instances 0 \
+            --max-instances 5 \
+            --set-secrets "DATABASE_URL=sunos-database-url:latest,GOOGLE_API_KEY=sunos-google-api-key:latest" \
+            --set-env-vars "ENVIRONMENT=staging,FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }},GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},GCP_REGION=us-central1" \
+            --no-allow-unauthenticated
+
+      - name: Smoke test
+        run: |
+          URL=$(gcloud run services describe sunos-api-staging --region us-central1 --format 'value(status.url)')
+          TOKEN=$(gcloud auth print-identity-token)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$URL/health")
+          if [ "$STATUS" != "200" ]; then echo "Smoke test failed: $STATUS"; exit 1; fi
+          echo "Smoke test passed: $URL/health → $STATUS"
