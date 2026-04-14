@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, GripVertical, Settings } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Settings, GitBranch } from 'lucide-react';
 import { Workflow, WorkflowStep } from '@/lib/workflow-types';
 import WorkflowStepEditor from './WorkflowStepEditor';
+import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { clients } from '@/data/clients';
 
 const STEP_TYPE_COLORS: Record<string, string> = {
@@ -12,6 +13,7 @@ const STEP_TYPE_COLORS: Record<string, string> = {
   condition: '#F59E0B',
   action: '#22C55E',
   hitl: 'var(--sun)',
+  workflow: '#EC4899',
 };
 
 const STEP_TYPE_LABELS: Record<string, string> = {
@@ -20,6 +22,7 @@ const STEP_TYPE_LABELS: Record<string, string> = {
   condition: 'Condition',
   action: 'Action',
   hitl: 'Human Review',
+  workflow: 'Workflow',
 };
 
 interface WorkflowBuilderProps {
@@ -30,6 +33,7 @@ interface WorkflowBuilderProps {
 }
 
 export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: WorkflowBuilderProps) {
+  const { workflows } = useWorkflows();
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
   const [clientId, setClientId] = useState(initial.client_id || '');
@@ -375,11 +379,16 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {step.name}
                 </span>
-                {step.tool_name && (
+                {step.type === 'workflow' && step.workflow_id ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    <GitBranch size={12} strokeWidth={1.5} style={{ color: '#EC4899' }} />
+                    {workflows.find((w) => w.id === step.workflow_id)?.name || step.workflow_id}
+                  </span>
+                ) : step.tool_name ? (
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     {step.tool_name}
                   </span>
-                )}
+                ) : null}
                 <button
                   onClick={() => handleEditStep(step)}
                   title="Editar step"
@@ -434,6 +443,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
           step={editingStep}
           onSave={handleSaveStep}
           onClose={() => { setShowStepEditor(false); setEditingStep(null); }}
+          currentWorkflowId={initial.id}
         />
       )}
     </main>
