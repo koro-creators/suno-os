@@ -7,6 +7,7 @@ compiled LangGraph graph that can be invoked or streamed by the executor.
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from typing import Annotated, Any, Callable, TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -31,6 +32,8 @@ class WorkflowState(TypedDict):
     started_at: str
     model: str
     error: str | None
+    _depth: int
+    config_overrides: dict
 
 
 # ---------------------------------------------------------------------------
@@ -183,6 +186,64 @@ class WorkflowCompiler:
                         "status": "mock",
                         "message": f"Action '{tool_name}' not yet implemented",
                     }
+
+            elif step_type == "workflow":
+                target_wf_id = step.get("workflow_id")
+                input_mapping = step.get("input_mapping", {})
+
+                # 1. Buscar definition do sub-workflow
+                from workflows.router import _workflows
+
+                sub_def = _workflows.get(target_wf_id) if target_wf_id else None
+                if not target_wf_id or not sub_def:
+                    result = {"error": f"Workflow '{target_wf_id}' not found"}
+                else:
+                    # 2. Verificar depth ANTES de compilar
+                    current_depth = state.get("_depth", 0)
+                    if current_depth >= 3:
+                        result = {
+                            "error": "max_depth_exceeded: maximum nesting depth is 3"
+                        }
+                    else:
+                        # 3. Resolver input_mapping templates
+                        resolved_mapping = self._resolve_templates(
+                            input_mapping, state.get("steps_output", {})
+                        )
+
+                        # 4. Compilar sub-workflow
+                        sub_compiler = WorkflowCompiler()
+                        sub_definition = sub_def["definition"]
+                        sub_graph = sub_compiler.compile(sub_definition)
+
+                        # 5. Criar state inicial do sub-workflow e executar
+                        sub_state = {
+                            "workflow_id": target_wf_id,
+                            "run_id": state.get("run_id", "")
+                            + f"_sub_{step_id}",
+                            "steps_output": {},
+                            "current_step": "",
+                            "status": "running",
+                            "messages": [],
+                            "human_input": None,
+                            "started_at": datetime.now(
+                                timezone.utc
+                            ).isoformat(),
+                            "model": sub_definition.get(
+                                "default_model",
+                                state.get("model", "gemini-flash"),
+                            ),
+                            "error": None,
+                            "_depth": current_depth + 1,
+                            "config_overrides": resolved_mapping,
+                        }
+                        sub_result = await sub_graph.ainvoke(sub_state)
+                        # Pegar o final output (ultimo valor em steps_output)
+                        sub_outputs = sub_result.get("steps_output", {})
+                        result = (
+                            list(sub_outputs.values())[-1]
+                            if sub_outputs
+                            else sub_result
+                        )
 
             else:
                 result = {"error": f"Unknown step type: {step_type}"}

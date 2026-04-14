@@ -35,6 +35,30 @@ _step_logs: dict[str, list] = {}
 
 
 # ---------------------------------------------------------------------------
+# Validation helpers
+# ---------------------------------------------------------------------------
+
+
+def _validate_workflow_steps(workflow_id: str, steps: list[dict]) -> list[str]:
+    """Validate workflow steps. Returns list of error messages."""
+    errors = []
+    for step in steps:
+        if step.get("type") == "workflow":
+            ref_id = step.get("workflow_id")
+            if not ref_id:
+                errors.append(
+                    f"Step '{step.get('name', step.get('id', '?'))}': "
+                    "workflow_id is required for type 'workflow'"
+                )
+            elif ref_id == workflow_id:
+                errors.append(
+                    f"Step '{step.get('name', step.get('id', '?'))}': "
+                    "circular reference \u2014 cannot reference self"
+                )
+    return errors
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -131,6 +155,12 @@ async def create_workflow(req: WorkflowCreate) -> WorkflowDetailResponse:
     now = _now()
     wf_id = str(uuid.uuid4())
 
+    # Validate workflow step references (circular, missing workflow_id)
+    step_dicts = [s.model_dump() for s in req.steps]
+    step_errors = _validate_workflow_steps(wf_id, step_dicts)
+    if step_errors:
+        raise HTTPException(status_code=422, detail=step_errors)
+
     definition = {
         "steps": [s.model_dump() for s in req.steps],
         "default_model": req.default_model,
@@ -181,7 +211,11 @@ async def update_workflow(workflow_id: str, req: WorkflowUpdate) -> WorkflowDeta
     if req.steps is not None:
         if len(req.steps) > 20:
             raise HTTPException(status_code=400, detail="Maximum 20 steps per workflow")
-        wf["definition"]["steps"] = [s.model_dump() for s in req.steps]
+        step_dicts = [s.model_dump() for s in req.steps]
+        step_errors = _validate_workflow_steps(workflow_id, step_dicts)
+        if step_errors:
+            raise HTTPException(status_code=422, detail=step_errors)
+        wf["definition"]["steps"] = step_dicts
     if req.schedule is not None:
         wf["schedule_cron"] = req.schedule.cron
         wf["schedule_timezone"] = req.schedule.timezone

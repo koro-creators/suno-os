@@ -95,6 +95,7 @@ class WorkflowExecutor:
         run_id: str,
         definition: dict,
         overrides: dict | None = None,
+        depth: int = 0,
     ) -> dict:
         """Execute workflow fully and return the final state."""
         # Rate limit check
@@ -117,6 +118,8 @@ class WorkflowExecutor:
             "started_at": datetime.now(timezone.utc).isoformat(),
             "model": definition.get("default_model", "gemini-flash"),
             "error": None,
+            "_depth": depth,
+            "config_overrides": {},
         }
 
         config = {"configurable": {"thread_id": run_id}}
@@ -137,6 +140,7 @@ class WorkflowExecutor:
         workflow_id: str,
         run_id: str,
         definition: dict,
+        depth: int = 0,
     ) -> AsyncGenerator[SSEEvent, None]:
         """Execute with streaming SSE events per step."""
         # Rate limit check
@@ -161,6 +165,8 @@ class WorkflowExecutor:
             "started_at": datetime.now(timezone.utc).isoformat(),
             "model": definition.get("default_model", "gemini-flash"),
             "error": None,
+            "_depth": depth,
+            "config_overrides": {},
         }
 
         config = {"configurable": {"thread_id": run_id}}
