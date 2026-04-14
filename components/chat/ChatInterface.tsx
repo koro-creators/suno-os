@@ -249,6 +249,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
             const isAssistant = msg.role === 'assistant';
             const isLastAndStreaming = false; // completed messages are never streaming
             const hasFollowingUserMsg = messages.slice(i + 1).some((m) => m.role === 'user');
+            const hasVars = !!(variations[i] && variations[i].variants.length > 0);
             return (
               <React.Fragment key={i}>
                 <MessageBubble
@@ -267,6 +268,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
                   moonSlug={moonSlug}
                   clientName={clientName}
                   clientColor={clientColor}
+                  hasVariations={hasVars}
                 />
                 {isAssistant && variations[i] && (
                   <VariationCards

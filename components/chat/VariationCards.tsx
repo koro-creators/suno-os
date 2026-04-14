@@ -42,14 +42,22 @@ export default function VariationCards({
     ...variants.map((v, i) => ({ label: `V${i + 2}`, text: v })),
   ];
 
-  // Social preview mode: show SocialPreviews side by side
+  // Social preview mode
+  // Carousel/feed: stack vertically | Stories/post: side by side horizontally
   if (socialFormat) {
+    const isVerticalLayout = socialFormat === 'carousel' || socialFormat === 'feed';
+
     return (
       <div style={{ width: '100%', marginTop: 12 }}>
-        <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-          Variações
-        </div>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isVerticalLayout ? 'column' : 'row',
+          gap: isVerticalLayout ? 16 : 10,
+          overflowX: isVerticalLayout ? undefined : 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          paddingBottom: 4,
+        }}>
           {cards.map((card, index) => {
             const selected = index === selectedIndex;
             return (
@@ -58,28 +66,40 @@ export default function VariationCards({
                 onClick={() => onSelect(index)}
                 style={{
                   cursor: 'pointer',
-                  border: `2px solid ${selected ? 'var(--sun)' : 'transparent'}`,
-                  borderRadius: 10,
                   position: 'relative',
-                  flexShrink: 0,
+                  flexShrink: isVerticalLayout ? undefined : 0,
+                  borderLeft: isVerticalLayout ? `2px solid ${selected ? 'var(--sun)' : 'var(--border-subtle)'}` : undefined,
+                  border: !isVerticalLayout ? `2px solid ${selected ? 'var(--sun)' : 'transparent'}` : undefined,
+                  borderRadius: !isVerticalLayout ? 8 : undefined,
+                  paddingLeft: isVerticalLayout ? 10 : undefined,
+                  transition: 'border-color 150ms ease',
                 }}
               >
-                {selected && (
-                  <span style={{
-                    position: 'absolute', top: -8, right: 8, zIndex: 1,
-                    background: 'var(--sun)', color: 'var(--void)',
-                    fontSize: '0.5rem', borderRadius: 4, padding: '2px 6px', fontWeight: 600,
-                  }}>
-                    Selecionada
-                  </span>
-                )}
-                <span style={{
-                  position: 'absolute', top: 8, left: 8, zIndex: 1,
-                  background: 'rgba(0,0,0,0.6)', color: '#fff',
-                  fontSize: '0.55rem', borderRadius: 4, padding: '2px 6px', fontWeight: 500,
+                {/* Label */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  marginBottom: 6,
+                  ...(isVerticalLayout ? {} : { position: 'absolute' as const, top: 6, left: 6, zIndex: 1 }),
                 }}>
-                  {card.label}
-                </span>
+                  <span style={{
+                    fontSize: '0.55rem', fontWeight: 600,
+                    color: selected ? 'var(--sun)' : 'var(--text-muted)',
+                    textTransform: 'uppercase', letterSpacing: '0.06em',
+                    ...(isVerticalLayout ? {} : { backgroundColor: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 3, padding: '1px 5px' }),
+                  }}>
+                    {card.label}
+                  </span>
+                  {selected && (
+                    <span style={{
+                      fontSize: '0.45rem', fontWeight: 600,
+                      backgroundColor: 'var(--sun)', color: 'var(--void)',
+                      borderRadius: 3, padding: '1px 5px',
+                    }}>
+                      Selecionada
+                    </span>
+                  )}
+                </div>
+
                 <SocialPreview
                   content={card.text}
                   format={socialFormat}

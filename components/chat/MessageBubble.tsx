@@ -37,6 +37,7 @@ interface MessageBubbleProps {
   moonSlug?: string;
   clientName?: string;
   clientColor?: string;
+  hasVariations?: boolean;
 }
 
 export default function MessageBubble({
@@ -55,10 +56,12 @@ export default function MessageBubble({
   moonSlug,
   clientName,
   clientColor,
+  hasVariations,
 }: MessageBubbleProps) {
   const isUser = role === 'user';
   const socialFormat = skillSlug && moonSlug ? getSocialFormat(skillSlug, moonSlug) : null;
-  const showSocialPreview = role === 'assistant' && socialFormat && content.length > 20;
+  // Hide social preview when variations exist (V1 original is shown in VariationCards)
+  const showSocialPreview = role === 'assistant' && socialFormat && content.length > 20 && !hasVariations;
 
   return (
     <div

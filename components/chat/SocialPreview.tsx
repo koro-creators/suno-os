@@ -1,279 +1,119 @@
 'use client';
 
-import { useState } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, Sparkles, MoreHorizontal } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 type PreviewFormat = 'feed' | 'carousel' | 'stories' | 'post';
 
 function stripMarkdown(text: string): string {
   return text
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/^[-*]\s+/gm, '• ')
-    .replace(/^>\s+/gm, '')
-    .replace(/`(.+?)`/g, '$1')
-    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
-    .replace(/^---+$/gm, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '').replace(/^[-*]\s+/gm, '• ')
+    .replace(/^>\s+/gm, '').replace(/`(.+?)`/g, '$1')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1').replace(/^---+$/gm, '')
+    .replace(/\n{3,}/g, '\n\n').trim();
 }
 
 interface SlideContent { title: string; text: string; cta?: string; }
 
 function parseSlides(content: string): SlideContent[] {
   const cleaned = stripMarkdown(content);
-  const slideRegex = /(?:^|\n)\s*(?:SLIDE|Slide|slide)\s*(\d+)(?:\/\d+)?[\s:•\-]*/g;
-  const parts = cleaned.split(slideRegex).filter(Boolean);
-  if (parts.length >= 2) {
-    const slides: SlideContent[] = [];
-    for (const part of parts) {
-      if (/^\d+$/.test(part.trim())) continue;
-      const slide = extractSlideFields(part);
-      if (slide.title || slide.text) slides.push(slide);
-    }
+  const parts = cleaned.split(/(?:^|\n)\s*(?:SLIDE|Slide|slide)\s*\d+(?:\/\d+)?[\s:•\-]*/g).filter(Boolean);
+  if (parts.length > 1) {
+    const slides = parts.map(p => extractSlideFields(p)).filter(s => s.title || s.text);
     if (slides.length > 0) return slides;
   }
   if (/\n---\s*\n/.test(cleaned)) {
-    const sections = cleaned.split(/\n---\s*\n/).filter((s) => s.trim());
-    if (sections.length > 1) return sections.map((s) => extractSlideFields(s));
+    const sections = cleaned.split(/\n---\s*\n/).filter(s => s.trim());
+    if (sections.length > 1) return sections.map(s => extractSlideFields(s));
   }
   return [extractSlideFields(cleaned)];
 }
 
 function extractSlideFields(raw: string): SlideContent {
-  const lines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
   let title = '', text = '', cta = '';
   for (const line of lines) {
     const lower = line.toLowerCase();
-    if (lower.startsWith('elemento visual:') || lower.startsWith('• elemento visual')) continue;
-    if (lower.startsWith('tom:') || lower.startsWith('• tom:') || lower.startsWith('• tom ')) continue;
-    if (lower.startsWith('visual:')) continue;
-    const titleMatch = line.match(/^(?:•\s*)?(?:Título(?:\s*Principal)?|TÍTULO(?:\s*PRINCIPAL)?)\s*[:：]\s*(.+)/i);
-    if (titleMatch) { title = titleMatch[1].trim(); continue; }
-    const textMatch = line.match(/^(?:•\s*)?(?:Sub[tT]ítulo|Texto(?:\s*no\s*slide)?|TEXTO)\s*[:：]\s*(.+)/i);
-    if (textMatch) { text = text ? `${text}\n${textMatch[1].trim()}` : textMatch[1].trim(); continue; }
-    const ctaMatch = line.match(/^(?:•\s*)?CTA\s*(?:\(.*?\))?\s*[:：]\s*(.+)/i);
-    if (ctaMatch) { cta = ctaMatch[1].trim(); continue; }
+    if (/^(?:•\s*)?(?:elemento visual|tom:|visual:)/i.test(line)) continue;
+    const tm = line.match(/^(?:•\s*)?(?:Título(?:\s*Principal)?|TÍTULO(?:\s*PRINCIPAL)?)\s*[:：]\s*(.+)/i);
+    if (tm) { title = tm[1].trim(); continue; }
+    const txm = line.match(/^(?:•\s*)?(?:Sub[tT]ítulo|Texto(?:\s*no\s*slide)?|TEXTO)\s*[:：]\s*(.+)/i);
+    if (txm) { text = text ? `${text}\n${txm[1].trim()}` : txm[1].trim(); continue; }
+    const cm = line.match(/^(?:•\s*)?CTA\s*(?:\(.*?\))?\s*[:：]\s*(.+)/i);
+    if (cm) { cta = cm[1].trim(); continue; }
     if (!title && !line.startsWith('•') && line.length < 60) { title = line; continue; }
-    if (!line.startsWith('•') || lower.includes('texto') || lower.includes('subtítulo')) {
-      if (lower.includes('elemento') || lower.includes('tom:') || lower.includes('visual:')) continue;
+    if (!line.startsWith('•') && !lower.includes('elemento') && !lower.includes('tom:') && !lower.includes('visual:')) {
       text = text ? `${text}\n${line}` : line;
     }
   }
-  if (!title && !text) {
-    const allLines = raw.split('\n').map((l) => l.trim()).filter(Boolean);
-    title = allLines[0] || '';
-    text = allLines.slice(1).join('\n');
-  }
+  if (!title && !text) { const a = raw.split('\n').map(l => l.trim()).filter(Boolean); title = a[0] || ''; text = a.slice(1).join('\n'); }
   return { title, text, cta };
 }
 
-function extractHashtags(content: string): { caption: string; hashtags: string } {
-  const lines = stripMarkdown(content).split('\n');
-  const hashtagLines: string[] = [], captionLines: string[] = [];
-  for (const line of lines) {
-    if ((/^#\w/.test(line.trim()) && line.trim().split('#').length > 2) || (line.trim().startsWith('#') && line.includes(' #'))) {
-      hashtagLines.push(line.trim());
-    } else { captionLines.push(line); }
-  }
-  return { caption: captionLines.join('\n').trim(), hashtags: hashtagLines.join(' ') };
-}
+// ─── Slide Cards ───────────────────────────────────────────────────
 
-// ─── Slide Components ──────────────────────────────────────────────
+const SLIDE_W = 180;
+const SLIDE_H = 180;
 
-const SLIDE_SIZE = 200;
-
-/** Cover slide — first slide with brand, large title, different layout */
 function CoverSlide({ title, subtitle, color, clientName, totalSlides, onGenerate }: {
   title: string; subtitle?: string; color: string; clientName: string; totalSlides?: number; onGenerate?: () => void;
 }) {
   return (
     <div style={{
-      width: SLIDE_SIZE, height: SLIDE_SIZE, flexShrink: 0,
-      background: `linear-gradient(160deg, ${color} 0%, ${color}CC 40%, var(--void) 100%)`,
-      borderRadius: 8, overflow: 'hidden', position: 'relative',
+      width: SLIDE_W, height: SLIDE_H, flexShrink: 0,
+      background: `linear-gradient(155deg, ${color} 0%, ${color}BB 45%, var(--void) 100%)`,
+      borderRadius: 6, position: 'relative',
       display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      padding: 16, gap: 6, scrollSnapAlign: 'start',
+      padding: 14, gap: 4, overflow: 'hidden',
     }}>
-      {/* Counter */}
       {totalSlides && totalSlides > 1 && (
-        <span style={{
-          position: 'absolute', top: 8, right: 8,
-          fontSize: '0.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)',
-          backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 4, padding: '1px 5px',
-        }}>1/{totalSlides}</span>
+        <span style={{ position: 'absolute', top: 6, right: 6, fontSize: '0.45rem', fontWeight: 600, color: 'rgba(255,255,255,0.6)', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 3, padding: '1px 4px' }}>
+          1/{totalSlides}
+        </span>
       )}
-
-      {/* Brand avatar */}
-      <div style={{
-        position: 'absolute', top: 10, left: 10,
-        display: 'flex', alignItems: 'center', gap: 5,
-      }}>
-        <div style={{
-          width: 20, height: 20, borderRadius: '50%',
-          backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.5rem', fontWeight: 700, color: '#fff',
-        }}>{clientName.charAt(0)}</div>
-        <span style={{ fontSize: '0.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>
+      <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', fontWeight: 700, color: '#fff' }}>
+          {clientName.charAt(0)}
+        </div>
+        <span style={{ fontSize: '0.45rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>
           {clientName.toLowerCase().replace(/\s/g, '')}
         </span>
       </div>
-
-      {/* Title */}
-      <p style={{
-        fontSize: '1.1rem', fontWeight: 800, color: '#fff',
-        lineHeight: 1.15, letterSpacing: '-0.02em',
-        textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-      }}>
+      <p style={{ fontSize: '0.9rem', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.02em', textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
         {title || 'Carrossel'}
       </p>
-
       {subtitle && (
-        <p style={{
-          fontSize: '0.55rem', color: 'rgba(255,255,255,0.75)',
-          lineHeight: 1.4, display: '-webkit-box',
-          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
-        }}>
+        <p style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
           {subtitle}
         </p>
       )}
-
       {onGenerate && (
-        <button
-          onClick={onGenerate}
-          style={{
-            position: 'absolute', bottom: 8, right: 8,
-            display: 'flex', alignItems: 'center', gap: 2,
-            fontSize: '0.5rem', color: '#fff',
-            backgroundColor: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: 4, padding: '2px 6px',
-            cursor: 'pointer', transition: 'all 200ms ease',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.25)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(255,255,255,0.15)'; }}
-        >
-          <Sparkles size={7} strokeWidth={1.5} />
-          Gerar
+        <button onClick={onGenerate} style={{ position: 'absolute', bottom: 6, right: 6, display: 'flex', alignItems: 'center', gap: 2, fontSize: '0.45rem', color: '#fff', backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, padding: '2px 5px', cursor: 'pointer' }}>
+          <Sparkles size={7} strokeWidth={1.5} />Gerar
         </button>
       )}
     </div>
   );
 }
 
-/** Content slide — numbered, dark background, title + text */
 function ContentSlide({ title, text, cta, slideNumber, totalSlides, color }: {
   title: string; text: string; cta?: string; slideNumber: number; totalSlides: number; color: string;
 }) {
   return (
     <div style={{
-      width: SLIDE_SIZE, height: SLIDE_SIZE, flexShrink: 0,
-      backgroundColor: 'var(--void)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: 8, overflow: 'hidden', position: 'relative',
-      display: 'flex', flexDirection: 'column',
-      padding: 16, scrollSnapAlign: 'start',
+      width: SLIDE_W, height: SLIDE_H, flexShrink: 0,
+      backgroundColor: 'var(--void)', border: '1px solid var(--border-subtle)',
+      borderRadius: 6, position: 'relative',
+      display: 'flex', flexDirection: 'column', padding: 14, overflow: 'hidden',
     }}>
-      {/* Accent stripe */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, width: 3, height: '40%',
-        background: `linear-gradient(180deg, ${color}, transparent)`,
-      }} />
-
-      {/* Counter */}
-      <span style={{
-        position: 'absolute', top: 8, right: 8,
-        fontSize: '0.5rem', fontWeight: 600, color: 'var(--text-muted)',
-      }}>{slideNumber}/{totalSlides}</span>
-
-      {/* Big number */}
-      <span style={{
-        fontSize: '2rem', fontWeight: 900, color: `${color}25`,
-        lineHeight: 1, marginBottom: 4,
-        fontFamily: 'var(--font-inter, system-ui)',
-      }}>
-        {slideNumber}
-      </span>
-
-      {/* Title */}
-      <p style={{
-        fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)',
-        lineHeight: 1.2, marginBottom: 6, letterSpacing: '-0.01em',
-      }}>
-        {title}
-      </p>
-
-      {/* Text */}
-      <p style={{
-        fontSize: '0.55rem', color: 'var(--text-secondary)',
-        lineHeight: 1.5, flex: 1,
-        display: '-webkit-box', WebkitLineClamp: 4,
-        WebkitBoxOrient: 'vertical' as const, overflow: 'hidden',
-      }}>
-        {text}
-      </p>
-
-      {/* CTA or brand footer */}
-      <div style={{
-        marginTop: 'auto', paddingTop: 6,
-        borderTop: '1px solid var(--border-subtle)',
-      }}>
-        {cta ? (
-          <span style={{ fontSize: '0.5rem', fontWeight: 600, color }}>
-            {cta}
-          </span>
-        ) : (
-          <span style={{ fontSize: '0.45rem', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-            Deslize para continuar →
-          </span>
-        )}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: 2, height: '35%', background: `linear-gradient(180deg, ${color}, transparent)` }} />
+      <span style={{ position: 'absolute', top: 6, right: 6, fontSize: '0.45rem', fontWeight: 600, color: 'var(--text-muted)' }}>{slideNumber}/{totalSlides}</span>
+      <span style={{ fontSize: '1.6rem', fontWeight: 900, color: `${color}20`, lineHeight: 1, marginBottom: 2 }}>{slideNumber}</span>
+      <p style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2, marginBottom: 4 }}>{title}</p>
+      <p style={{ fontSize: '0.5rem', color: 'var(--text-secondary)', lineHeight: 1.5, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>{text}</p>
+      <div style={{ marginTop: 'auto', paddingTop: 4, borderTop: '1px solid var(--border-subtle)' }}>
+        {cta ? <span style={{ fontSize: '0.45rem', fontWeight: 600, color }}>{cta}</span> : <span style={{ fontSize: '0.4rem', color: 'var(--text-muted)' }}>→</span>}
       </div>
-    </div>
-  );
-}
-
-// ─── Instagram frame (only for single post / stories) ──────────────
-
-function PostActions() {
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px' }}>
-      <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-        <button onClick={() => setLiked(!liked)} aria-label="Curtir" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
-          <Heart size={18} strokeWidth={1.5} fill={liked ? '#EF4444' : 'none'} style={{ color: liked ? '#EF4444' : 'var(--text-primary)' }} />
-        </button>
-        <MessageCircle size={18} strokeWidth={1.5} style={{ color: 'var(--text-primary)', cursor: 'pointer' }} />
-        <Send size={18} strokeWidth={1.5} style={{ color: 'var(--text-primary)', cursor: 'pointer' }} />
-      </div>
-      <button onClick={() => setSaved(!saved)} aria-label="Salvar" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
-        <Bookmark size={18} strokeWidth={1.5} fill={saved ? 'var(--text-primary)' : 'none'} style={{ color: 'var(--text-primary)' }} />
-      </button>
-    </div>
-  );
-}
-
-function PostHeader({ clientName, clientColor }: { clientName: string; clientColor: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: '50%',
-          background: `linear-gradient(135deg, ${clientColor}, ${clientColor}90)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.6rem', fontWeight: 700, color: '#fff',
-          boxShadow: `0 0 0 2px var(--deep), 0 0 0 3px ${clientColor}40`,
-        }}>{clientName.charAt(0)}</div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.2 }}>
-            {clientName.toLowerCase().replace(/\s/g, '')}
-          </span>
-          <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)' }}>Patrocinado</span>
-        </div>
-      </div>
-      <MoreHorizontal size={16} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
     </div>
   );
 }
@@ -290,64 +130,24 @@ interface SocialPreviewProps {
 
 export default function SocialPreview({ content, format, clientName, clientColor, onGenerateImage }: SocialPreviewProps) {
   const slides = parseSlides(content);
-  const { hashtags } = extractHashtags(content);
   const isCarousel = format === 'carousel' && slides.length > 1;
-  const isStories = format === 'stories';
-  const feedCaption = slides[0]?.text || stripMarkdown(content).substring(0, 120);
+  const total = slides.length;
 
   if (isCarousel) {
-    const total = slides.length;
     return (
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', paddingBottom: 4, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div style={{ display: 'flex', gap: 4, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 2 }}>
         {slides.map((slide, i) =>
-          i === 0 ? (
-            <CoverSlide
-              key={i}
-              title={slide.title}
-              subtitle={slide.text}
-              color={clientColor}
-              clientName={clientName}
-              totalSlides={total}
-              onGenerate={onGenerateImage}
-            />
-          ) : (
-            <ContentSlide
-              key={i}
-              title={slide.title}
-              text={slide.text}
-              cta={slide.cta}
-              slideNumber={i + 1}
-              totalSlides={total}
-              color={clientColor}
-            />
-          )
+          i === 0
+            ? <CoverSlide key={i} title={slide.title} subtitle={slide.text} color={clientColor} clientName={clientName} totalSlides={total} onGenerate={onGenerateImage} />
+            : <ContentSlide key={i} title={slide.title} text={slide.text} cta={slide.cta} slideNumber={i + 1} totalSlides={total} color={clientColor} />
         )}
       </div>
     );
   }
 
-  // Feed / Post / Stories — wrapped in Instagram chrome
-  const containerWidth = isStories ? 240 : 280;
+  // Single slide (feed, stories, post)
   return (
-    <div style={{
-      width: containerWidth, backgroundColor: 'var(--deep)',
-      border: '1px solid var(--border-subtle)', borderRadius: 12,
-      overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
-    }}>
-      <PostHeader clientName={clientName} clientColor={clientColor} />
-      <CoverSlide title={slides[0]?.title || ''} subtitle={isStories ? slides[0]?.text?.substring(0, 80) : undefined} color={clientColor} clientName={clientName} onGenerate={onGenerateImage} />
-      {!isStories && <PostActions />}
-      {!isStories && (
-        <div style={{ padding: '0 12px 10px' }}>
-          <p style={{ fontSize: '0.7rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-            <span style={{ fontWeight: 700, marginRight: 4 }}>{clientName.toLowerCase().replace(/\s/g, '')}</span>
-            {feedCaption.substring(0, 120)}{feedCaption.length > 120 && <span style={{ color: 'var(--text-muted)' }}> ...mais</span>}
-          </p>
-          {hashtags && <p style={{ fontSize: '0.6rem', color: 'var(--midia)', marginTop: 4, lineHeight: 1.4, opacity: 0.8 }}>{hashtags}</p>}
-        </div>
-      )}
-      {isStories && <div style={{ padding: '8px 12px 10px' }}><p style={{ fontSize: '0.65rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>{feedCaption.substring(0, 80)}</p></div>}
-    </div>
+    <CoverSlide title={slides[0]?.title || stripMarkdown(content).substring(0, 60)} subtitle={slides[0]?.text?.substring(0, 80)} color={clientColor} clientName={clientName} onGenerate={onGenerateImage} />
   );
 }
 
