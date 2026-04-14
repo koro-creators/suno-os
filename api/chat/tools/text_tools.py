@@ -3,6 +3,7 @@
 from langchain_core.tools import tool
 
 from chat.tools.chat_tools import _get_llm
+from chat.tools.retry import retry_on_error
 
 CONTENT_TYPES = {
     "social_post": "a social media post (concise, engaging, with hooks)",
@@ -64,7 +65,11 @@ def generate_text(
             HumanMessage(content=prompt),
         ]
 
-        response = llm.invoke(messages)
+        @retry_on_error(max_retries=3, base_delay=1.0)
+        def _invoke_llm(llm, msgs):
+            return llm.invoke(msgs)
+
+        response = _invoke_llm(llm, messages)
         return response.content
 
     except ValueError as exc:

@@ -3,6 +3,7 @@
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
 
+from chat.tools.retry import retry_on_error
 from config import settings
 
 MODEL_MAP = {
@@ -77,7 +78,11 @@ def chat_completion(
             messages.append(SystemMessage(content=system_prompt))
         messages.append(HumanMessage(content=message))
 
-        response = llm.invoke(messages)
+        @retry_on_error(max_retries=3, base_delay=1.0)
+        def _invoke_llm(llm, msgs):
+            return llm.invoke(msgs)
+
+        response = _invoke_llm(llm, messages)
         return response.content
 
     except ValueError as exc:
