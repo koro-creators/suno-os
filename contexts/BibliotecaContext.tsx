@@ -1,21 +1,64 @@
 'use client';
 
-import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { initialDocuments } from '@/data/biblioteca-docs';
+import { apiAvailable, getApiUrl } from '@/lib/api';
 
 interface BibliotecaContextValue {
   documents: BibliotecaDocument[];
   createDocument: (data: Omit<BibliotecaDocument, 'id' | 'updatedAt' | 'createdBy'>) => BibliotecaDocument;
   updateDocument: (id: string, data: Partial<BibliotecaDocument>) => void;
   deleteDocument: (id: string) => void;
+  uploadDocument: (file: File, title: string, tags: string[], scope: string[], description?: string) => Promise<BibliotecaDocument | null>;
   allTags: string[];
+  isLoading: boolean;
 }
 
 const BibliotecaContext = createContext<BibliotecaContextValue | null>(null);
 
 export function BibliotecaProvider({ children }: { children: ReactNode }) {
   const [documents, setDocuments] = useState<BibliotecaDocument[]>(initialDocuments);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch from API when available
+  useEffect(() => {
+    if (!apiAvailable()) return;
+
+    async function fetchDocuments() {
+      try {
+        setIsLoading(true);
+        const response = await fetch(getApiUrl('/api/knowledge/documents'));
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.documents && data.documents.length > 0) {
+          const apiDocs: BibliotecaDocument[] = data.documents.map((d: Record<string, unknown>) => ({
+            id: d.id as string,
+            title: d.title as string,
+            content: (d.description as string) || '',
+            tags: (d.tags as string[]) || [],
+            scope: (d.scope as string[]) || [],
+            links: [],
+            files: [],
+            createdBy: (d.created_by as string) || 'API',
+            updatedAt: (d.updated_at as string) || new Date().toISOString(),
+            fileType: d.file_type as BibliotecaDocument['fileType'],
+            fileUrl: d.file_url as string | undefined,
+            thumbnailUrl: d.thumbnail_url as string | undefined,
+            status: d.status as BibliotecaDocument['status'],
+            fileSize: d.file_size as number | undefined,
+          }));
+          setDocuments((prev) => [...apiDocs, ...prev]);
+        }
+      } catch {
+        // Fallback to mock data silently
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchDocuments();
+  }, []);
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -29,7 +72,7 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
       ...data,
       id,
       updatedAt: new Date().toISOString(),
-      createdBy: 'Você',
+      createdBy: 'Voce',
     };
     setDocuments((prev) => [newDoc, ...prev]);
     return newDoc;
@@ -45,8 +88,72 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
 
+  async function uploadDocument(
+    file: File,
+    title: string,
+    tags: string[],
+    scope: string[],
+    description?: string,
+  ): Promise<BibliotecaDocument | null> {
+    if (!apiAvailable()) {
+      // Mock upload — create local document
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'txt';
+      const newDoc = createDocument({
+        title,
+        content: description || '',
+        tags,
+        scope,
+        links: [],
+        files: [{ name: file.name, type: ext.toUpperCase(), size: `${(file.size / 1024).toFixed(0)} KB` }],
+        fileType: ext as BibliotecaDocument['fileType'],
+        status: 'ready',
+        fileSize: file.size,
+      });
+      return newDoc;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', title);
+      formData.append('tags', tags.join(','));
+      formData.append('scope', scope.join(','));
+      formData.append('description', description || '');
+
+      const response = await fetch(getApiUrl('/api/knowledge/upload'), {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      const ext = data.file_type || file.name.split('.').pop()?.toLowerCase() || 'txt';
+
+      const newDoc: BibliotecaDocument = {
+        id: data.id,
+        title: data.title,
+        content: description || '',
+        tags,
+        scope,
+        links: [],
+        files: [{ name: file.name, type: ext.toUpperCase(), size: `${(file.size / 1024).toFixed(0)} KB` }],
+        createdBy: 'Voce',
+        updatedAt: new Date().toISOString(),
+        fileType: ext as BibliotecaDocument['fileType'],
+        status: 'processing',
+        fileSize: file.size,
+      };
+
+      setDocuments((prev) => [newDoc, ...prev]);
+      return newDoc;
+    } catch {
+      return null;
+    }
+  }
+
   return (
-    <BibliotecaContext.Provider value={{ documents, createDocument, updateDocument, deleteDocument, allTags }}>
+    <BibliotecaContext.Provider value={{ documents, createDocument, updateDocument, deleteDocument, uploadDocument, allTags, isLoading }}>
       {children}
     </BibliotecaContext.Provider>
   );

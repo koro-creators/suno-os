@@ -1,6 +1,8 @@
 'use client';
 
+import Image from 'next/image';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
+import FileTypeIcon from './FileTypeIcon';
 
 const CLIENT_COLORS: Record<string, string> = {
   santander: '#EF4444',
@@ -256,6 +258,9 @@ export default function BibliotecaCard({
   }
 
   // ---------- Collapsed state ----------
+  const statusColor = doc.status === 'ready' ? '#10B981' : doc.status === 'error' ? '#EF4444' : '#F59E0B';
+  const statusLabel = doc.status === 'ready' ? 'Pronto' : doc.status === 'error' ? 'Erro' : 'Processando...';
+
   return (
     <div
       role="button"
@@ -271,8 +276,7 @@ export default function BibliotecaCard({
         transition: 'border-color 150ms ease',
         outline: 'none',
         display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
+        gap: 12,
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--twilight)';
@@ -287,91 +291,154 @@ export default function BibliotecaCard({
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Title */}
-      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-        {doc.title}
-      </span>
-
-      {/* Content preview — 2 lines max */}
+      {/* Thumbnail / FileTypeIcon */}
       <div
         style={{
-          fontSize: '0.75rem',
-          color: 'var(--text-secondary)',
+          width: 80,
+          height: 80,
+          borderRadius: 8,
+          backgroundColor: 'var(--nebula)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
           overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          lineHeight: 1.5,
         }}
       >
-        {doc.content}
+        {doc.thumbnailUrl ? (
+          <Image
+            src={doc.thumbnailUrl}
+            alt={doc.title}
+            width={80}
+            height={80}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
+          />
+        ) : (
+          <FileTypeIcon fileType={doc.fileType} size={28} />
+        )}
       </div>
 
-      {/* Scope dots */}
-      {doc.scope.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          {doc.scope.map((s) => (
+      {/* Content area */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 0 }}>
+        {/* Title + badges */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+            {doc.title}
+          </span>
+          {doc.fileType && (
             <span
-              key={s}
-              title={s}
               style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                backgroundColor: CLIENT_COLORS[s] ?? 'var(--text-muted)',
-                flexShrink: 0,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Tags */}
-      {doc.tags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {visibleTags.map((tag) => (
-            <span
-              key={tag}
-              style={{
-                fontSize: '0.6rem',
+                fontSize: '0.55rem',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                padding: '1px 6px',
+                borderRadius: 9999,
                 border: '1px solid var(--border-subtle)',
                 color: 'var(--text-muted)',
-                borderRadius: 9999,
-                padding: '1px 6px',
+                letterSpacing: '0.04em',
               }}
             >
-              {tag}
+              {doc.fileType}
             </span>
-          ))}
-          {extraTagsCount > 0 && (
+          )}
+          {doc.status && (
             <span
               style={{
-                fontSize: '0.6rem',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-muted)',
-                borderRadius: 9999,
+                fontSize: '0.55rem',
+                fontWeight: 500,
                 padding: '1px 6px',
+                borderRadius: 9999,
+                color: statusColor,
+                border: `1px solid ${statusColor}33`,
+                backgroundColor: `${statusColor}11`,
               }}
             >
-              +{extraTagsCount}
+              {statusLabel}
             </span>
           )}
         </div>
-      )}
 
-      {/* Footer */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: '0.65rem',
-          color: 'var(--text-muted)',
-        }}
-      >
-        <span>
-          {doc.links.length} links · {doc.files.length} arquivos
-        </span>
-        <span>Editado {timeAgo(doc.updatedAt)}</span>
+        {/* Content preview — 2 lines max */}
+        <div
+          style={{
+            fontSize: '0.75rem',
+            color: 'var(--text-secondary)',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            lineHeight: 1.5,
+          }}
+        >
+          {doc.content}
+        </div>
+
+        {/* Scope dots */}
+        {doc.scope.length > 0 && (
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            {doc.scope.map((s) => (
+              <span
+                key={s}
+                title={s}
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  backgroundColor: CLIENT_COLORS[s] ?? 'var(--text-muted)',
+                  flexShrink: 0,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Tags */}
+        {doc.tags.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {visibleTags.map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  fontSize: '0.6rem',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-muted)',
+                  borderRadius: 9999,
+                  padding: '1px 6px',
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+            {extraTagsCount > 0 && (
+              <span
+                style={{
+                  fontSize: '0.6rem',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-muted)',
+                  borderRadius: 9999,
+                  padding: '1px 6px',
+                }}
+              >
+                +{extraTagsCount}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '0.65rem',
+            color: 'var(--text-muted)',
+          }}
+        >
+          <span>
+            {doc.links.length} links · {doc.files.length} arquivos
+          </span>
+          <span>Editado {timeAgo(doc.updatedAt)}</span>
+        </div>
       </div>
     </div>
   );
