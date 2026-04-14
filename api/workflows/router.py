@@ -7,11 +7,19 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
+from fastapi.responses import StreamingResponse
+
 from .schemas import (
+    ResumeRunRequest,
+    RunWorkflowRequest,
+    RunWorkflowResponse,
+    StepLogResponse,
     WorkflowCreate,
     WorkflowDetailResponse,
     WorkflowListResponse,
     WorkflowResponse,
+    WorkflowRunListResponse,
+    WorkflowRunResponse,
     WorkflowRunSummary,
     WorkflowUpdate,
 )
@@ -210,3 +218,200 @@ async def delete_workflow(workflow_id: str):
         _runs.pop(run_id, None)
 
     del _workflows[workflow_id]
+
+
+# ---------------------------------------------------------------------------
+# Execution endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{workflow_id}/run")
+async def run_workflow(
+    workflow_id: str,
+    req: RunWorkflowRequest = RunWorkflowRequest(),
+) -> RunWorkflowResponse:
+    """Trigger a new workflow run."""
+    wf = _workflows.get(workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    now = _now()
+    run_id = str(uuid.uuid4())
+    run = {
+        "id": run_id,
+        "workflow_id": workflow_id,
+        "status": "running",
+        "trigger": "manual",
+        "started_at": now,
+        "completed_at": None,
+        "error": None,
+        "steps_output": {},
+        "checkpoint_data": None,
+        "created_at": now,
+    }
+    _runs[run_id] = run
+    _step_logs[run_id] = []
+
+    # Execute asynchronously via executor
+    try:
+        from .executor import WorkflowExecutor
+
+        executor = WorkflowExecutor()
+        result = await executor.run(
+            workflow_id=workflow_id,
+            run_id=run_id,
+            definition=wf["definition"],
+            overrides=req.input_overrides,
+        )
+        run["status"] = "completed"
+        run["completed_at"] = _now()
+        run["steps_output"] = result.get("steps_output", {})
+    except Exception as e:
+        run["status"] = "failed"
+        run["completed_at"] = _now()
+        run["error"] = str(e)
+
+    return RunWorkflowResponse(
+        run_id=run_id,
+        status=run["status"],
+        started_at=now,
+    )
+
+
+@router.get("/{workflow_id}/runs")
+async def list_runs(workflow_id: str) -> WorkflowRunListResponse:
+    """List all runs for a workflow."""
+    if workflow_id not in _workflows:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    wf_runs = [r for r in _runs.values() if r["workflow_id"] == workflow_id]
+    wf_runs.sort(key=lambda r: r["created_at"], reverse=True)
+
+    return WorkflowRunListResponse(
+        runs=[
+            WorkflowRunResponse(
+                id=r["id"],
+                workflow_id=r["workflow_id"],
+                status=r["status"],
+                trigger=r["trigger"],
+                started_at=r.get("started_at"),
+                completed_at=r.get("completed_at"),
+                error=r.get("error"),
+                steps_output=r.get("steps_output", {}),
+                step_logs=[
+                    StepLogResponse(
+                        id=sl.get("id", ""),
+                        step_id=sl.get("step_id", ""),
+                        step_name=sl.get("step_name"),
+                        status=sl.get("status", ""),
+                        input=sl.get("input"),
+                        output=sl.get("output"),
+                        error=sl.get("error"),
+                        duration_ms=sl.get("duration_ms"),
+                        started_at=sl.get("started_at"),
+                        completed_at=sl.get("completed_at"),
+                    )
+                    for sl in _step_logs.get(r["id"], [])
+                ],
+            )
+            for r in wf_runs
+        ],
+        total=len(wf_runs),
+    )
+
+
+@router.get("/{workflow_id}/runs/{run_id}")
+async def get_run(workflow_id: str, run_id: str) -> WorkflowRunResponse:
+    """Get details of a specific run."""
+    run = _runs.get(run_id)
+    if not run or run["workflow_id"] != workflow_id:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    return WorkflowRunResponse(
+        id=run["id"],
+        workflow_id=run["workflow_id"],
+        status=run["status"],
+        trigger=run["trigger"],
+        started_at=run.get("started_at"),
+        completed_at=run.get("completed_at"),
+        error=run.get("error"),
+        steps_output=run.get("steps_output", {}),
+        step_logs=[
+            StepLogResponse(
+                id=sl.get("id", ""),
+                step_id=sl.get("step_id", ""),
+                step_name=sl.get("step_name"),
+                status=sl.get("status", ""),
+                input=sl.get("input"),
+                output=sl.get("output"),
+                error=sl.get("error"),
+                duration_ms=sl.get("duration_ms"),
+                started_at=sl.get("started_at"),
+                completed_at=sl.get("completed_at"),
+            )
+            for sl in _step_logs.get(run_id, [])
+        ],
+    )
+
+
+@router.post("/{workflow_id}/runs/{run_id}/resume")
+async def resume_run(
+    workflow_id: str,
+    run_id: str,
+    req: ResumeRunRequest,
+) -> WorkflowRunResponse:
+    """Resume a paused run (HITL interrupt/resume)."""
+    run = _runs.get(run_id)
+    if not run or run["workflow_id"] != workflow_id:
+        raise HTTPException(status_code=404, detail="Run not found")
+    if run["status"] != "paused":
+        raise HTTPException(status_code=400, detail="Run is not paused")
+
+    # In a real implementation, we would resume the LangGraph checkpoint
+    # with Command(resume={...}). For now, update status.
+    run["status"] = "completed" if req.approved else "failed"
+    run["completed_at"] = _now()
+    if not req.approved:
+        run["error"] = req.feedback or "Rejected during human review"
+
+    return WorkflowRunResponse(
+        id=run["id"],
+        workflow_id=run["workflow_id"],
+        status=run["status"],
+        trigger=run["trigger"],
+        started_at=run.get("started_at"),
+        completed_at=run.get("completed_at"),
+        error=run.get("error"),
+        steps_output=run.get("steps_output", {}),
+        step_logs=[],
+    )
+
+
+@router.get("/{workflow_id}/runs/{run_id}/stream")
+async def stream_run(workflow_id: str, run_id: str):
+    """Stream workflow execution via SSE."""
+    wf = _workflows.get(workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    from .executor import WorkflowExecutor
+
+    executor = WorkflowExecutor()
+
+    async def event_generator():
+        async for event in executor.run_stream(
+            workflow_id=workflow_id,
+            run_id=run_id,
+            definition=wf["definition"],
+        ):
+            yield event.format()
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
