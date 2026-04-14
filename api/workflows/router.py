@@ -415,3 +415,62 @@ async def stream_run(workflow_id: str, run_id: str):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Schedule endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{workflow_id}/schedule")
+async def create_schedule(workflow_id: str) -> dict:
+    """Create or update a Cloud Scheduler job for this workflow."""
+    wf = _workflows.get(workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    if not wf.get("schedule_cron"):
+        raise HTTPException(
+            status_code=400,
+            detail="Workflow has no schedule configured",
+        )
+
+    from config import settings
+
+    from .scheduler import WorkflowScheduler
+
+    scheduler = WorkflowScheduler(
+        project_id=settings.GCP_PROJECT_ID or "",
+        location=settings.GCP_REGION,
+        api_base_url=f"http://localhost:{settings.API_PORT}",
+    )
+    result = await scheduler.create_or_update(
+        workflow_id=workflow_id,
+        cron=wf["schedule_cron"],
+        timezone=wf.get("schedule_timezone", "America/Sao_Paulo"),
+    )
+
+    wf["schedule_enabled"] = True
+    wf["updated_at"] = _now()
+    return result
+
+
+@router.delete("/{workflow_id}/schedule")
+async def delete_schedule(workflow_id: str) -> dict:
+    """Delete the Cloud Scheduler job for this workflow."""
+    wf = _workflows.get(workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    from config import settings
+
+    from .scheduler import WorkflowScheduler
+
+    scheduler = WorkflowScheduler(
+        project_id=settings.GCP_PROJECT_ID or "",
+        location=settings.GCP_REGION,
+    )
+    await scheduler.delete(workflow_id=workflow_id)
+
+    wf["schedule_enabled"] = False
+    wf["updated_at"] = _now()
+    return {"deleted": True, "workflow_id": workflow_id}
