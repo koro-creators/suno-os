@@ -72,8 +72,8 @@ versao: 2.0
 - [x] **F2**: Implementar `chat/eval/scorers.py` — tone, format, routing, context scorers
 - [x] **F3**: Implementar `chat/eval/trajectory.py` — AgentEvals para fluxo
 - [x] **F4**: Criar `chat/eval/datasets/` — 20 cases (routing: 10, tone: 5, format: 5)
-- [ ] **F5**: Error handling robusto (timeout 60s, rate limit backoff, API errors)
-- [ ] **F6**: CI/CD: GitHub Actions (lint, pytest, deploy staging)
+- [x] **F5**: Error handling robusto (global handlers, middleware, retry with backoff)
+- [x] **F6**: CI/CD: GitHub Actions (ci.yml + deploy-staging.yml)
 - [x] **F7**: README.md + CLAUDE.md do backend
 - [ ] **F8**: Deploy staging em Cloud Run
 - [ ] **F9**: Smoke test staging
