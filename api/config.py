@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
 
+    # Request
+    REQUEST_TIMEOUT: int = 60
+    ALLOWED_ORIGINS: str = "http://localhost:3003,http://localhost:3000"
+
     class Config:
         env_file = ".env"
         case_sensitive = True
