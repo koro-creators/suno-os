@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import SocialPreview, { getSocialFormat } from './SocialPreview';
+
+type PreviewFormat = 'feed' | 'carousel' | 'stories' | 'post';
 
 interface VariationCardsProps {
   original: string;
@@ -8,6 +11,10 @@ interface VariationCardsProps {
   variants: string[];
   selectedIndex: number;
   onSelect: (index: number) => void;
+  skillSlug?: string;
+  moonSlug?: string;
+  clientName?: string;
+  clientColor?: string;
 }
 
 interface CardData {
@@ -22,13 +29,70 @@ export default function VariationCards({
   variants,
   selectedIndex,
   onSelect,
+  skillSlug,
+  moonSlug,
+  clientName,
+  clientColor,
 }: VariationCardsProps) {
+  const socialFormat = skillSlug && moonSlug ? getSocialFormat(skillSlug, moonSlug) : null;
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const cards: CardData[] = [
     { label: 'V1 · Original', text: original, highlight: originalHighlight },
     ...variants.map((v, i) => ({ label: `V${i + 2}`, text: v })),
   ];
+
+  // Social preview mode: show SocialPreviews side by side
+  if (socialFormat) {
+    return (
+      <div style={{ width: '100%', marginTop: 12 }}>
+        <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          Variações
+        </div>
+        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
+          {cards.map((card, index) => {
+            const selected = index === selectedIndex;
+            return (
+              <div
+                key={index}
+                onClick={() => onSelect(index)}
+                style={{
+                  cursor: 'pointer',
+                  border: `2px solid ${selected ? 'var(--sun)' : 'transparent'}`,
+                  borderRadius: 10,
+                  position: 'relative',
+                  flexShrink: 0,
+                }}
+              >
+                {selected && (
+                  <span style={{
+                    position: 'absolute', top: -8, right: 8, zIndex: 1,
+                    background: 'var(--sun)', color: 'var(--void)',
+                    fontSize: '0.5rem', borderRadius: 4, padding: '2px 6px', fontWeight: 600,
+                  }}>
+                    Selecionada
+                  </span>
+                )}
+                <span style={{
+                  position: 'absolute', top: 8, left: 8, zIndex: 1,
+                  background: 'rgba(0,0,0,0.6)', color: '#fff',
+                  fontSize: '0.55rem', borderRadius: 4, padding: '2px 6px', fontWeight: 500,
+                }}>
+                  {card.label}
+                </span>
+                <SocialPreview
+                  content={card.text}
+                  format={socialFormat}
+                  clientName={clientName || 'Marca'}
+                  clientColor={clientColor || '#8B5CF6'}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

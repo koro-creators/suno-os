@@ -5,6 +5,21 @@ import { Heart, MessageCircle, Send, Bookmark, ChevronLeft, ChevronRight, Image,
 
 type PreviewFormat = 'feed' | 'carousel' | 'stories' | 'post';
 
+/** Strip markdown formatting characters for clean preview display. */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')   // **bold** → bold
+    .replace(/\*(.+?)\*/g, '$1')        // *italic* → italic
+    .replace(/^#{1,6}\s+/gm, '')        // # headings → text
+    .replace(/^[-*]\s+/gm, '• ')        // - list → bullet
+    .replace(/^>\s+/gm, '')             // > blockquote → text
+    .replace(/`(.+?)`/g, '$1')          // `code` → code
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1') // [link](url) → link
+    .replace(/^---+$/gm, '')            // --- → remove
+    .replace(/\n{3,}/g, '\n\n')         // collapse multiple newlines
+    .trim();
+}
+
 interface SocialPreviewProps {
   content: string;
   format: PreviewFormat;
@@ -205,7 +220,7 @@ export default function SocialPreview({ content, format, clientName, clientColor
   const aspectRatio = isStories ? '9/16' : '1/1';
 
   const currentContent = slides[currentSlide] || content;
-  const { caption, hashtags } = extractCaption(currentContent);
+  const { caption, hashtags } = extractCaption(stripMarkdown(currentContent));
 
   const containerWidth = isStories ? 260 : 320;
 

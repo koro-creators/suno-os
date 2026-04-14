@@ -69,13 +69,20 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
   const prevIsStreamingRef = useRef(false);
   useEffect(() => {
     if (prevIsStreamingRef.current && !isStreaming && streamingText) {
+      const newMsgIndex = messages.length;
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: streamingText, highlight: pendingHighlight },
       ]);
       setPendingHighlight(undefined);
+
+      // Auto-generate variations for copy-social
+      if (skillSlug === 'copy-social' && apiAvailable()) {
+        setTimeout(() => handleGenerateVariation(newMsgIndex), 500);
+      }
     }
     prevIsStreamingRef.current = isStreaming;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStreaming, streamingText, pendingHighlight]);
 
   const handleSend = useCallback(
@@ -244,6 +251,10 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
                       ...prev,
                       [i]: { ...prev[i], selectedIndex: idx },
                     }))}
+                    skillSlug={skillSlug}
+                    moonSlug={moonSlug}
+                    clientName={clientName}
+                    clientColor={clientColor}
                   />
                 )}
               </React.Fragment>

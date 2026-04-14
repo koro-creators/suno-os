@@ -58,55 +58,58 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = role === 'user';
   const socialFormat = skillSlug && moonSlug ? getSocialFormat(skillSlug, moonSlug) : null;
+  const showSocialPreview = role === 'assistant' && socialFormat && content.length > 20;
 
   return (
     <div
       id={role === 'assistant' && msgIndex !== undefined ? `msg-${msgIndex}` : undefined}
       className={cn('max-w-[75%] px-md py-sm', isUser ? 'self-end' : 'self-start')}
+      style={showSocialPreview ? { maxWidth: '90%' } : undefined}
     >
-      <div
-        className={cn('px-md py-sm', isUser ? 'text-text-primary' : 'text-text-secondary')}
-        style={{
-          backgroundColor: isUser ? 'var(--nebula)' : 'rgba(255,255,255,0.03)',
-          borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-        }}
-      >
+      {/* Show text bubble only if NOT showing social preview */}
+      {!showSocialPreview && (
         <div
-          className="whitespace-pre-wrap text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-        />
-
-        {highlight && (
+          className={cn('px-md py-sm', isUser ? 'text-text-primary' : 'text-text-secondary')}
+          style={{
+            backgroundColor: isUser ? 'var(--nebula)' : 'rgba(255,255,255,0.03)',
+            borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+          }}
+        >
           <div
-            className="mt-sm"
-            style={{
-              borderLeft: '2px solid var(--sun)',
-              background: 'rgba(255,200,1,0.04)',
-              borderRadius: '0 6px 6px 0',
-              padding: '8px 12px',
-            }}
-          >
-            <span
-              className="block font-semibold uppercase tracking-widest"
-              style={{ fontSize: '0.6rem', color: 'var(--sun)' }}
-            >
-              {highlight.label}
-            </span>
-            <span className="mt-1 block text-xs text-text-secondary">{highlight.body}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Social preview for copy-social skill */}
-      {role === 'assistant' && socialFormat && content.length > 20 && (
-        <div style={{ marginTop: 8 }}>
-          <SocialPreview
-            content={content}
-            format={socialFormat}
-            clientName={clientName || 'Marca'}
-            clientColor={clientColor || '#8B5CF6'}
+            className="whitespace-pre-wrap text-sm leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
           />
+
+          {highlight && (
+            <div
+              className="mt-sm"
+              style={{
+                borderLeft: '2px solid var(--sun)',
+                background: 'rgba(255,200,1,0.04)',
+                borderRadius: '0 6px 6px 0',
+                padding: '8px 12px',
+              }}
+            >
+              <span
+                className="block font-semibold uppercase tracking-widest"
+                style={{ fontSize: '0.6rem', color: 'var(--sun)' }}
+              >
+                {highlight.label}
+              </span>
+              <span className="mt-1 block text-xs text-text-secondary">{highlight.body}</span>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Social preview replaces text bubble for copy-social */}
+      {showSocialPreview && (
+        <SocialPreview
+          content={content}
+          format={socialFormat}
+          clientName={clientName || 'Marca'}
+          clientColor={clientColor || '#8B5CF6'}
+        />
       )}
 
       {showActions && role === 'assistant' && (
