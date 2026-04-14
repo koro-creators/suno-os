@@ -106,9 +106,9 @@ def build_chat_graph(llm: Any, agents: dict[str, Any] | None = None) -> Compiled
         },
     )
 
-    # orchestrator and conversation loop back to top_supervisor
-    graph.add_edge("orchestrator", "top_supervisor")
-    graph.add_edge("conversation", "top_supervisor")
+    # orchestrator and conversation go to respond → END
+    graph.add_edge("orchestrator", "respond")
+    graph.add_edge("conversation", "respond")
 
     # respond goes to END
     graph.add_edge("respond", END)

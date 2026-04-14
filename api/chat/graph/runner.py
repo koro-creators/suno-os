@@ -35,18 +35,13 @@ MODEL_MAP: dict[str, str] = {
 
 
 def _get_llm(model: str = "gemini-flash", temperature: float = 0.7) -> Any:
-    """Instantiate the appropriate LangChain LLM based on model name."""
+    """Instantiate the appropriate LangChain LLM based on model name.
+
+    Falls back to Gemini Flash if the requested model's API key is not configured.
+    """
     model_id = MODEL_MAP.get(model, "gemini-2.5-flash")
 
-    if model_id.startswith("gemini"):
-        from langchain_google_genai import ChatGoogleGenerativeAI
-
-        return ChatGoogleGenerativeAI(
-            model=model_id,
-            temperature=temperature,
-            google_api_key=settings.GOOGLE_API_KEY,
-        )
-    elif model_id.startswith("gpt"):
+    if model_id.startswith("gpt") and settings.OPENAI_API_KEY:
         from langchain_openai import ChatOpenAI
 
         return ChatOpenAI(
@@ -54,7 +49,7 @@ def _get_llm(model: str = "gemini-flash", temperature: float = 0.7) -> Any:
             temperature=temperature,
             api_key=settings.OPENAI_API_KEY,
         )
-    elif model_id.startswith("claude"):
+    elif model_id.startswith("claude") and settings.ANTHROPIC_API_KEY:
         from langchain_anthropic import ChatAnthropic
 
         return ChatAnthropic(
@@ -62,15 +57,28 @@ def _get_llm(model: str = "gemini-flash", temperature: float = 0.7) -> Any:
             temperature=temperature,
             api_key=settings.ANTHROPIC_API_KEY,
         )
+    elif model_id.startswith("gemini") and settings.GOOGLE_API_KEY:
+        from langchain_google_genai import ChatGoogleGenerativeAI
 
-    # Fallback
-    from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=model_id,
+            temperature=temperature,
+            google_api_key=settings.GOOGLE_API_KEY,
+        )
 
-    return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        temperature=temperature,
-        google_api_key=settings.GOOGLE_API_KEY,
-    )
+    # Fallback: always use Gemini Flash if available
+    if settings.GOOGLE_API_KEY:
+        if model != "gemini-flash":
+            logger.warning("API key for model '%s' not configured, falling back to Gemini Flash", model)
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            temperature=temperature,
+            google_api_key=settings.GOOGLE_API_KEY,
+        )
+
+    raise ValueError("No LLM API key configured. Set GOOGLE_API_KEY in .env")
 
 
 # ---------------------------------------------------------------------------

@@ -16,6 +16,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Dev bypass — skip auth in local development
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev && !user && !loading) {
+    return <>{children}</>;
+  }
+
   const isPublic = PUBLIC_PATHS.includes(pathname);
   const needsAdmin = isAdminPath(pathname);
 
