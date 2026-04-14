@@ -137,13 +137,19 @@ class WorkflowCompiler:
                 resolved_prompt = self._resolve_template_string(
                     prompt, state.get("steps_output", {})
                 )
-                # LLM call via langchain
+                # LLM call via langchain — resolve model alias
                 from langchain_google_genai import ChatGoogleGenerativeAI
+                from config import settings
 
-                model_name = default_model
-                if "models/" not in model_name:
-                    model_name = f"models/{model_name}"
-                llm = ChatGoogleGenerativeAI(model=model_name)
+                MODEL_MAP = {
+                    "gemini-flash": "gemini-2.5-flash",
+                    "gemini-pro": "gemini-2.5-pro",
+                }
+                model_name = MODEL_MAP.get(default_model, default_model)
+                llm = ChatGoogleGenerativeAI(
+                    model=model_name,
+                    google_api_key=settings.GOOGLE_API_KEY,
+                )
                 response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
                 result = response.content
 
