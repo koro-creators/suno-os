@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { SkillsProvider } from '@/contexts/SkillsContext';
 import { BibliotecaProvider } from '@/contexts/BibliotecaContext';
 import { ClientsProvider } from '@/contexts/ClientsContext';
+import { WorkflowsProvider } from '@/contexts/WorkflowsContext';
 import AuthGuard from './AuthGuard';
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -16,7 +17,9 @@ export default function Providers({ children }: { children: ReactNode }) {
           <SkillsProvider>
             <BibliotecaProvider>
               <ClientsProvider>
-                {children}
+                <WorkflowsProvider>
+                  {children}
+                </WorkflowsProvider>
               </ClientsProvider>
             </BibliotecaProvider>
           </SkillsProvider>

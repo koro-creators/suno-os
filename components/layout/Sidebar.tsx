@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, LogOut, type LucideIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, Zap, LogOut, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItemDef {
@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { label: 'Clientes', icon: Users, href: '/clientes', adminOnly: true },
   { label: 'Skills', icon: Sparkles, href: '/skills', adminOnly: true },
   { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca', adminOnly: true },
+  { label: 'Workflows', icon: Zap, href: '/workflows', adminOnly: true },
 ];
 
 const RECENT_ITEMS: RecentItemDef[] = [
