@@ -9,8 +9,8 @@ import AppHeader from '@/components/layout/AppHeader';
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
 
 // Planet sizes following real solar system proportions:
-// Mercury(35), Venus(55), Earth(55), Mars(42), Jupiter(110), Saturn(90), Uranus(65)
-const solarSizes = [35, 55, 55, 42, 110, 90, 65];
+// Mercury(40), Venus(55), Earth(65), Jupiter(110)
+const solarSizes = [40, 55, 65, 110];
 
 const totalSkills = clients.reduce((sum, c) => sum + c.skills.length, 0);
 
@@ -38,25 +38,8 @@ export default function Home() {
             backgroundColor: 'var(--sun)',
             boxShadow: 'none',
             zIndex: 5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
           }}
-        >
-          <span
-            style={{
-              fontSize: '2.2rem',
-              letterSpacing: '-0.02em',
-              color: 'var(--void)',
-              userSelect: 'none',
-              marginLeft: 240,
-            }}
-          >
-            <span style={{ fontWeight: 300 }}>sun</span>
-            <span style={{ fontWeight: 700 }}>OS</span>
-            <span style={{ opacity: 0.4 }}>.</span>
-          </span>
-        </div>
+        />
 
         {/* Sun center X coordinate */}
         {(() => {
@@ -65,7 +48,7 @@ export default function Home() {
           // Planet orbit radii — each planet sits at this distance from sun center
           const orbitRadii = sorted.map((_, idx) => 440 + idx * 130);
           // Slight vertical offsets for organic feel
-          const yOffsets = [0, 0, 0, 0, 0, 0, 0];
+          const yOffsets = [0, 0, 0, 0];
 
           return (
             <>

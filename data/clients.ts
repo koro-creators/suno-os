@@ -63,7 +63,6 @@ const skillDefs: Record<string, { name: string; type: 'criacao' | 'midia' | 'pla
 
 // Client skill assignments
 const clientSkillMap: Record<string, string[]> = {
-  suno: ['copy-social', 'roteiro-de-video', 'plano-de-midia', 'report-performance', 'brief-builder', 'analise-de-mercado', 'persona-sintetica'],
   vivo: ['texto-de-radio', 'copy-social', 'plano-de-midia', 'brief-builder', 'analise-de-mercado'],
   americanas: ['copy-social', 'roteiro-de-video', 'report-performance', 'persona-sintetica'],
   sicredi: ['texto-de-radio', 'copy-social', 'plano-de-midia', 'persona-sintetica', 'analise-de-mercado'],
@@ -100,7 +99,6 @@ function buildClient(name: string, clientSlug: string, color: string): Client {
 }
 
 export const clients: Client[] = [
-  buildClient('Suno', 'suno', '#FFC801'),
   buildClient('Vivo', 'vivo', '#8B5CF6'),
   buildClient('Americanas', 'americanas', '#F97316'),
   buildClient('Sicredi', 'sicredi', '#22C55E'),

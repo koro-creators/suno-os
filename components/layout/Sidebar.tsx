@@ -26,9 +26,9 @@ const NAV_ITEMS: NavItemDef[] = [
 ];
 
 const RECENT_ITEMS: RecentItemDef[] = [
-  { label: 'Suno · Copy Social', color: '#FFC801' },
   { label: 'Vivo · Plano de Mídia', color: '#8B5CF6' },
-  { label: 'Samsung · Report Performance', color: '#1428A0' },
+  { label: 'Samsung · Copy Social', color: '#1428A0' },
+  { label: 'Americanas · Report Performance', color: '#F97316' },
 ];
 
 export default function Sidebar() {
