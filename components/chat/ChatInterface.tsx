@@ -7,13 +7,18 @@ import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useToolStream } from '@/hooks/useToolStream';
 import { apiAvailable, getApiUrl } from '@/lib/api';
 import { useSkills } from '@/contexts/SkillsContext';
+import { MessageSquare, Type, ImageIcon } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
 import ChatInput from './ChatInput';
 import ContextSidebar from './ContextSidebar';
 import PromptTemplateBar from './PromptTemplateBar';
 import VariationCards from './VariationCards';
+import TextGenPanel from './TextGenPanel';
+import ImageGenPanel from './ImageGenPanel';
 import { getTemplatesForChat } from '@/data/prompt-templates';
+
+type ChatMode = 'chat' | 'text' | 'image';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -50,6 +55,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
   }>>({});
   const [feedbacks, setFeedbacks] = useState<Record<number, MessageFeedback>>({});
   const [sessionFeedback, setSessionFeedback] = useState<SessionFeedback | null>(null);
+  const [chatMode, setChatMode] = useState<ChatMode>('chat');
 
   const templates = getTemplatesForChat(skillSlug, moonSlug);
   const { text: streamingText, isStreaming, startStream, startMockStream } = useToolStream();
@@ -237,72 +243,134 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
     <div className="grid h-full" style={{ gridTemplateColumns: '1fr 280px' }}>
       {/* Left: Chat area */}
       <div className="flex flex-col overflow-hidden">
-        {/* Message list */}
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-lg">
-          {messages.length === 0 && !isStreaming && (
-            <div className="flex flex-1 items-center justify-center">
-              <PromptTemplateBar templates={templates} onSelect={(prompt) => handleSend(prompt)} />
+        {/* Mode tabs */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          padding: '8px 16px 0',
+          borderBottom: '1px solid var(--border-subtle)',
+        }}>
+          {([
+            { mode: 'chat' as ChatMode, label: 'Chat', icon: MessageSquare },
+            { mode: 'text' as ChatMode, label: 'Texto', icon: Type },
+            { mode: 'image' as ChatMode, label: 'Imagem', icon: ImageIcon },
+          ]).map(({ mode, label, icon: Icon }) => (
+            <button
+              key={mode}
+              onClick={() => setChatMode(mode)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 14px',
+                fontSize: 12,
+                fontWeight: chatMode === mode ? 600 : 400,
+                color: chatMode === mode ? 'var(--sun)' : 'var(--text-secondary)',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderBottom: chatMode === mode ? '2px solid var(--sun)' : '2px solid transparent',
+                marginBottom: -1,
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              <Icon size={14} strokeWidth={1.5} />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Chat mode: messages + input */}
+        {chatMode === 'chat' && (
+          <>
+            {/* Message list */}
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-lg">
+              {messages.length === 0 && !isStreaming && (
+                <div className="flex flex-1 items-center justify-center">
+                  <PromptTemplateBar templates={templates} onSelect={(prompt) => handleSend(prompt)} />
+                </div>
+              )}
+
+              {messages.map((msg, i) => {
+                const isAssistant = msg.role === 'assistant';
+                const isLastAndStreaming = false; // completed messages are never streaming
+                const hasFollowingUserMsg = messages.slice(i + 1).some((m) => m.role === 'user');
+                const hasVars = !!(variations[i] && variations[i].variants.length > 0);
+                return (
+                  <React.Fragment key={i}>
+                    <MessageBubble
+                      role={msg.role}
+                      content={msg.content}
+                      highlight={msg.highlight}
+                      showActions={isAssistant && !isLastAndStreaming}
+                      onGenerateVariation={() => handleGenerateVariation(i)}
+                      onSave={() => toggleSave(i)}
+                      isSaved={savedMessages.has(i)}
+                      msgIndex={i}
+                      feedback={feedbacks[i] || { rating: null, comment: '' }}
+                      onFeedbackChange={(f) => setFeedbacks((prev) => ({ ...prev, [i]: f }))}
+                      hasFollowingUserMessage={hasFollowingUserMsg}
+                      skillSlug={skillSlug}
+                      moonSlug={moonSlug}
+                      clientName={clientName}
+                      clientColor={clientColor}
+                      hasVariations={hasVars}
+                    />
+                    {isAssistant && variations[i] && (
+                      <VariationCards
+                        original={msg.content}
+                        originalHighlight={variations[i].originalHighlight}
+                        variants={variations[i].variants}
+                        selectedIndex={variations[i].selectedIndex}
+                        onSelect={(idx) => setVariations(prev => ({
+                          ...prev,
+                          [i]: { ...prev[i], selectedIndex: idx },
+                        }))}
+                        skillSlug={skillSlug}
+                        moonSlug={moonSlug}
+                        clientName={clientName}
+                        clientColor={clientColor}
+                      />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+
+              {/* Streaming message or indicator */}
+              {isStreaming && streamingText && (
+                <MessageBubble role="assistant" content={streamingText} />
+              )}
+              {isStreaming && !streamingText && <StreamingIndicator />}
+
+              <div ref={messagesEndRef} />
             </div>
-          )}
 
-          {messages.map((msg, i) => {
-            const isAssistant = msg.role === 'assistant';
-            const isLastAndStreaming = false; // completed messages are never streaming
-            const hasFollowingUserMsg = messages.slice(i + 1).some((m) => m.role === 'user');
-            const hasVars = !!(variations[i] && variations[i].variants.length > 0);
-            return (
-              <React.Fragment key={i}>
-                <MessageBubble
-                  role={msg.role}
-                  content={msg.content}
-                  highlight={msg.highlight}
-                  showActions={isAssistant && !isLastAndStreaming}
-                  onGenerateVariation={() => handleGenerateVariation(i)}
-                  onSave={() => toggleSave(i)}
-                  isSaved={savedMessages.has(i)}
-                  msgIndex={i}
-                  feedback={feedbacks[i] || { rating: null, comment: '' }}
-                  onFeedbackChange={(f) => setFeedbacks((prev) => ({ ...prev, [i]: f }))}
-                  hasFollowingUserMessage={hasFollowingUserMsg}
-                  skillSlug={skillSlug}
-                  moonSlug={moonSlug}
-                  clientName={clientName}
-                  clientColor={clientColor}
-                  hasVariations={hasVars}
-                />
-                {isAssistant && variations[i] && (
-                  <VariationCards
-                    original={msg.content}
-                    originalHighlight={variations[i].originalHighlight}
-                    variants={variations[i].variants}
-                    selectedIndex={variations[i].selectedIndex}
-                    onSelect={(idx) => setVariations(prev => ({
-                      ...prev,
-                      [i]: { ...prev[i], selectedIndex: idx },
-                    }))}
-                    skillSlug={skillSlug}
-                    moonSlug={moonSlug}
-                    clientName={clientName}
-                    clientColor={clientColor}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
+            {/* Input */}
+            <div className="shrink-0 px-lg pb-lg">
+              <ChatInput onSend={handleSend} disabled={isStreaming} />
+            </div>
+          </>
+        )}
 
-          {/* Streaming message or indicator */}
-          {isStreaming && streamingText && (
-            <MessageBubble role="assistant" content={streamingText} />
-          )}
-          {isStreaming && !streamingText && <StreamingIndicator />}
+        {/* Text generation mode */}
+        {chatMode === 'text' && (
+          <div className="flex-1 overflow-hidden">
+            <TextGenPanel
+              skillSlug={skillSlug}
+              model={skillConfig?.model}
+            />
+          </div>
+        )}
 
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div className="shrink-0 px-lg pb-lg">
-          <ChatInput onSend={handleSend} disabled={isStreaming} />
-        </div>
+        {/* Image generation mode */}
+        {chatMode === 'image' && (
+          <div className="flex-1 overflow-hidden">
+            <ImageGenPanel
+              model={skillConfig?.model}
+            />
+          </div>
+        )}
       </div>
 
       {/* Right: Context sidebar */}

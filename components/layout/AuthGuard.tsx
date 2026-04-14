@@ -18,9 +18,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // Dev bypass — skip auth in local development
   const isDev = process.env.NODE_ENV === 'development';
-  if (isDev && !user && !loading) {
-    return <>{children}</>;
-  }
 
   const isPublic = PUBLIC_PATHS.includes(pathname);
   const needsAdmin = isAdminPath(pathname);
@@ -37,6 +34,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace('/');
     }
   }, [user, loading, isPublic, needsAdmin, isAdmin, router]);
+
+  if (isDev && !user && !loading) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (

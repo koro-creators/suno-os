@@ -116,3 +116,132 @@ export async function* consumeSSE(
     if (event) yield event;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Batch endpoint types                                              */
+/* ------------------------------------------------------------------ */
+
+export interface TextGenParams {
+  prompt: string;
+  content_type?: string;
+  tone?: string;
+  length?: string;
+  variations?: number;
+  skill_slug?: string;
+  model?: string;
+  context_documents?: string[];
+}
+
+export interface TextGenResponse {
+  texts: string[];
+  model: string;
+  tokens_used: number;
+}
+
+export interface ImageGenParams {
+  prompt: string;
+  model?: string;
+  aspect_ratio?: string;
+  quantity?: number;
+  style?: string | null;
+  enhance_prompt?: boolean;
+}
+
+export interface ImageResult {
+  url: string;
+  width: number;
+  height: number;
+}
+
+export interface ImageGenResponse {
+  images: ImageResult[];
+  model: string;
+  enhanced_prompt: string | null;
+}
+
+export interface EnhancePromptParams {
+  prompt: string;
+  target_tool?: string;
+  context?: string | null;
+}
+
+export interface EnhancePromptResponse {
+  enhanced_prompt: string;
+  suggestions: string[];
+  reasoning: string;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Batch endpoint functions                                          */
+/* ------------------------------------------------------------------ */
+
+/** Generate text variations via the batch endpoint. */
+export async function generateText(params: TextGenParams): Promise<TextGenResponse> {
+  const url = getApiUrl('/api/chat/generate-text');
+  const headers = await getHeaders();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      prompt: params.prompt,
+      content_type: params.content_type ?? 'social_post',
+      tone: params.tone ?? 'creative',
+      length: params.length ?? 'medium',
+      variations: params.variations ?? 1,
+      skill_slug: params.skill_slug ?? null,
+      model: params.model ?? 'gemini-flash',
+      context_documents: params.context_documents ?? [],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/** Generate images via the batch endpoint. */
+export async function generateImage(params: ImageGenParams): Promise<ImageGenResponse> {
+  const url = getApiUrl('/api/chat/generate-image');
+  const headers = await getHeaders();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      prompt: params.prompt,
+      model: params.model ?? 'imagen-4-standard',
+      aspect_ratio: params.aspect_ratio ?? '1:1',
+      quantity: params.quantity ?? 1,
+      style: params.style ?? null,
+      enhance_prompt: params.enhance_prompt ?? true,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/** Enhance a prompt for better results. */
+export async function enhancePrompt(params: EnhancePromptParams): Promise<EnhancePromptResponse> {
+  const url = getApiUrl('/api/chat/enhance-prompt');
+  const headers = await getHeaders();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      prompt: params.prompt,
+      target_tool: params.target_tool ?? 'chat',
+      context: params.context ?? null,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
