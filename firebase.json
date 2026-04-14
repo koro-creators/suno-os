@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "sunOS",
+        "supportEmail": "heitorsm@gmail.com"
+      }
+    }
+  }
+}
