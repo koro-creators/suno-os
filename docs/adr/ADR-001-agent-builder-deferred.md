@@ -1,63 +1,163 @@
-# ADR-001: Agent Builder No-Code — Adiado
+# ADR-001: Agent Builder — Aceito (Revisado)
 
 **Data:** 2026-04-14
-**Status:** Rejeitado (para agora)
+**Status:** ~~Rejeitado~~ → **Aceito** (revisado em 2026-04-14)
 **Decisores:** Heitor Miranda, José Lucas, William (Carioca)
 
-## Contexto
+## Contexto Original (2026-04-14)
 
-Na reunião de arquitetura do sunOS (abril 2026), foi discutida a criação de um Agent Builder — interface no-code onde usuários "builders" poderiam criar seus próprios sub-agents com skills, knowledge bases e políticas. A visão era permitir que diretores de marketing ou gerentes de conta criassem agents especializados para seus times.
+Na primeira análise, o Agent Builder foi rejeitado por:
+- Falta de demanda validada
+- Escopo desproporcional ao time de 4 devs
+- Skill Editor já cobria 90% da necessidade
 
-## Decisão
+## Por Que Revisamos
 
-**Não implementar Agent Builder no-code neste momento.** O Skill Editor existente (edição de system prompts, configuração de modelo, atribuição de documentos da Biblioteca) é suficiente para a fase atual.
+1. **A lista de atividades não é exaustiva.** O levantamento inicial identificou 48 atividades não implementadas (de 136 mapeadas), mas entrevistas em andamento com os times de Mídia, BI, Financeiro, Planejamento e Growth estão revelando muito mais. O volume real de automações necessárias justifica um builder.
 
-## Justificativa
+2. **Time pequeno = mais motivo, não menos.** Com 4 devs, o time de engenharia será sempre gargalo se toda automação depender deles. Empoderar analistas de mídia, BI e financeiro a criar seus próprios workflows é a única forma de escalar.
 
-### 1. Não há demanda real validada
+3. **Os usuários são técnicos.** Não são diretores — são analistas sêniores, coordenadores, e plenos que já usam ferramentas como SmartSheet, BigQuery, Meta Ads Manager. Sabem encadear lógica.
 
-- O sunOS tem 7 clientes e 8 skills. Nenhum usuário pediu para criar um agent novo nos últimos 6 meses.
-- Os "builders" identificados (diretores de marketing) na prática pedem para o time de engenharia criar o que precisam. Não há evidência de que usariam uma interface no-code.
-- Construir a ferramenta antes de validar a necessidade é meta-engenharia.
+4. **LangGraph dá escalabilidade do momento zero.** Cada workflow criado no builder é um `StateGraph` compilado. Não estamos inventando orquestração — estamos usando a mesma infraestrutura do chat. Novo workflow = novo graph, mesmo engine, mesmo deploy.
 
-### 2. Escopo desproporcional ao time
+## Decisão Revisada
 
-- O time tem 4 desenvolvedores (Zé, Carioca, Fabinho, Yuri).
-- Um Agent Builder funcional (com composição de skills, versionamento, políticas, testes, rollback) é o que Langchain (200+ engenheiros), Crew AI, e AutoGen tentam resolver há anos.
-- O esforço consumiria meses de desenvolvimento que seriam melhor investidos em validar o produto com usuários reais.
+**Implementar Agent/Workflow Builder usando LangGraph como engine.** Cada workflow criado pelo usuário compila para um `StateGraph` que roda no mesmo backend.
 
-### 3. O Skill Editor já cobre 90% da necessidade
+## Arquitetura
 
-O sunOS já possui:
-- Edição de system prompts por skill (`/skills/[id]` → tab Configuração)
-- Configuração de modelo, temperatura, max tokens
-- Atribuição de documentos da Biblioteca por skill
-- Atribuição de clientes por skill
-- Versionamento de skills
+```
+Agent Builder (UI no sunOS)
+  │
+  │ User configura: steps, tools, schedule, inputs
+  │
+  ▼
+Workflow Definition (JSON/YAML no PostgreSQL)
+  │
+  │ Em runtime, compila para:
+  │
+  ▼
+LangGraph StateGraph (mesmo engine do chat)
+  │
+  ├── Node 1: Tool call (query_data, generate_text, etc.)
+  ├── Node 2: LLM processing (Gemini/GPT)
+  ├── Node 3: Action (send_slack, send_email, save_file)
+  └── Conditional edges, loops, HITL interrupts
+  │
+  ▼
+Execution (Cloud Run) + Scheduling (Cloud Scheduler)
+```
 
-Isso é, na prática, um "builder" — só que sem a complexidade de compor workflows de agentes. Para criar um novo skill, um admin edita o prompt e atribui knowledge. Não precisa de interface de workflow visual.
+### Por que LangGraph é a resposta certa
 
-### 4. Risco de over-engineering
+| Aspecto | Benefício |
+|---------|-----------|
+| **Já temos** | Backend sunOS já roda LangGraph. Mesmo deploy, mesmo monitoring. |
+| **StateGraph compilado** | Cada workflow vira um graph otimizado. Não interpreta YAML em runtime. |
+| **Tools reutilizáveis** | As tools do chat (chat_tools, text_tools, image_tools, search) são as mesmas do builder. |
+| **HITL nativo** | LangGraph tem `interrupt()` e `Command(resume=...)` built-in. |
+| **Streaming** | Resultados parciais via SSE, mesmo padrão do chat. |
+| **Persistence** | Checkpointer salva estado. Workflow pode pausar e retomar. |
+| **Eval** | Mesmo MLflow tracing. Cada execução é rastreável. |
 
-Construir plataforma-de-plataforma (ferramenta para construir ferramentas) antes de validar que as ferramentas base funcionam é a armadilha clássica de startups de AI.
+### Definição de Workflow (schema)
 
-## Caminho Alternativo
+```python
+class WorkflowDefinition(BaseModel):
+    id: str
+    name: str
+    description: str
+    created_by: str
+    
+    # Steps
+    steps: list[WorkflowStep]
+    
+    # Schedule (optional)
+    schedule: CronSchedule | None = None
+    
+    # Scope
+    client_scope: list[str] = []     # clientes que podem usar
+    
+    # Config
+    default_model: str = "gemini-flash"
+    max_execution_time: int = 300    # seconds
+
+class WorkflowStep(BaseModel):
+    id: str
+    name: str
+    type: str                        # "tool" | "llm" | "condition" | "action"
+    tool_name: str | None = None     # qual tool chamar
+    prompt: str | None = None        # para steps LLM
+    config: dict = {}                # parâmetros do step
+    next_step: str | None = None     # próximo step (linear)
+    condition: dict | None = None    # para branching
+
+class CronSchedule(BaseModel):
+    cron: str                        # "0 9 * * 1" = segunda 9h
+    timezone: str = "America/Sao_Paulo"
+    enabled: bool = True
+```
+
+### Tools Disponíveis no Builder
+
+| Tool | O que faz | Áreas que usam |
+|------|-----------|----------------|
+| `generate_text` | Gera texto com LLM | Todas |
+| `search_knowledge` | Busca na Biblioteca | Planejamento, Mídia |
+| `query_data` | Consulta BigQuery (futuro) | BI, Mídia, Financeiro |
+| `send_slack` | Notifica canal Slack | Todas |
+| `send_email` | Envia email | Financeiro, Operações |
+| `generate_image` | Gera imagem com IA | Planejamento, Growth |
+| `analyze_data` | Analisa dados com LLM | BI, Growth |
+| `export_ppt` | Gera apresentação (futuro) | Planejamento, Mídia |
+| `fetch_url` | Busca dados de API externa | Growth, BI |
+
+### Interface do Builder (Frontend)
+
+```
+/workflows              → Catálogo de workflows (grid)
+/workflows/new          → Builder visual (steps + config)
+/workflows/[id]         → Editar workflow
+/workflows/[id]/runs    → Histórico de execuções
+```
+
+## O que NÃO é
+
+- **Não é criação de agents from scratch.** É composição de tools existentes em sequências.
+- **Não é visual drag-and-drop de nodes.** É uma lista de steps configuráveis (similar ao GitHub Actions YAML, mas com UI).
+- **Não substitui o chat.** Workflows rodam em background. Chat é interativo.
+
+## Fases de Implementação
 
 | Fase | O que | Quando |
 |------|-------|--------|
-| **Agora** | Time de engenharia cria skills e agents. Hardcoded. Mede qualidade com eval. | Abril-Maio 2026 |
-| **Quando tiver 10+ skills validados** | Skill Editor evolui: mais campos, preview de comportamento, clone skill | Q3 2026 |
-| **Quando tiver demanda real de builders** | Agent Builder simplificado: templates + composição básica | Quando 3+ pessoas pedirem |
+| **1** | Backend: WorkflowDefinition model + executor que compila para StateGraph | Sprint 1 |
+| **2** | Backend: Cloud Scheduler integration para cron | Sprint 1 |
+| **3** | Frontend: `/workflows` catálogo + builder UI (steps + config) | Sprint 2 |
+| **4** | Frontend: histórico de execuções + logs | Sprint 2 |
+| **5** | Tools adicionais: send_slack, send_email, fetch_url | Sprint 3 |
+| **6** | Templates pré-configurados (Report Mensal, Plano de Mídia, etc.) | Sprint 3 |
 
-## Critérios para Revisitar
+## Riscos e Mitigações
 
-Revisitar esta decisão quando:
-- [ ] Mais de 3 usuários não-engenheiros pedirem para criar agents
-- [ ] Existirem 15+ skills validados com eval score > 4.0
-- [ ] O time de engenharia for gargalo para criação de novos skills (> 2 semanas de fila)
+| Risco | Mitigação |
+|-------|-----------|
+| Workflows mal construídos falham silenciosamente | Eval + logging em cada step. Toast/Slack de erro. |
+| Custo de LLM explode com schedules mal configurados | Rate limit por workflow. Budget máximo por execução. |
+| Usuários criam workflows duplicados | Templates como ponto de partida. Catálogo mostra existentes. |
+| Segurança: acesso a dados sensíveis via tools | RBAC por tool. Financeiro não acessa send_slack do marketing. |
 
-## Consequências
+## Critérios de Sucesso
 
-- **Positivo:** Time foca em validar o produto com usuários reais em vez de construir infraestrutura especulativa.
-- **Negativo:** Se um diretor quiser um agent novo, precisa pedir ao time de engenharia. Tempo de resposta: dias, não minutos.
-- **Mitigação:** Skill Editor é self-service para configurações simples (mudar prompt, trocar modelo, adicionar docs).
+- [ ] 5+ workflows criados por não-engenheiros em 30 dias
+- [ ] 10+ execuções automáticas semanais sem intervenção de eng
+- [ ] Tempo médio de criação de workflow < 15 minutos
+- [ ] Zero workflows falhando silenciosamente (todos logados)
+
+## Changelog
+
+| Data | Mudança |
+|------|---------|
+| 2026-04-14 (v2) | **Aceito.** Revisado com contexto de 48+ atividades pendentes, entrevistas em andamento, e LangGraph como engine. Reframed de "Agent Builder genérico" para "Workflow Builder com LangGraph". |
+| 2026-04-14 (v1) | Rejeitado. Sem demanda validada, escopo desproporcional. |
