@@ -5,7 +5,7 @@ import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useToolStream } from '@/hooks/useToolStream';
-import { apiAvailable } from '@/lib/api';
+import { apiAvailable, getApiUrl } from '@/lib/api';
 import { useSkills } from '@/contexts/SkillsContext';
 import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
@@ -124,28 +124,68 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, documen
     [isStreaming, clientSlug, moonSlug, skillSlug, documents, activeDocIds, skillConfig, startStream, startMockStream],
   );
 
-  function handleGenerateVariation(msgIndex: number) {
+  async function handleGenerateVariation(msgIndex: number) {
     const msg = messages[msgIndex];
-    // Find matching response from mock data
-    const clientKey = `${clientSlug}-${moonSlug}`;
-    const responses = chatResponsesByMoon[clientKey] ?? chatResponsesByMoon[moonSlug];
-    const matchedResponse = responses?.find(r =>
-      msg.content.includes(r.content.substring(0, 40))
-    );
 
-    const variantTexts = matchedResponse?.variants ?? [
-      `Versão alternativa: ${msg.content.substring(0, 80)}...`,
-      `Outra abordagem: ${msg.content.substring(0, 80)}...`,
-    ];
+    if (apiAvailable()) {
+      try {
+        const response = await fetch(getApiUrl('/api/chat/generate-text'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Crie 2 variações alternativas do seguinte texto, mantendo o mesmo objetivo e tom mas com abordagens criativas diferentes:\n\n${msg.content}`,
+            content_type: 'custom',
+            tone: 'creative',
+            length: 'medium',
+            variations: 2,
+            skill_slug: skillSlug,
+            model: skillConfig?.model || 'gemini-flash',
+          }),
+        });
+        const data = await response.json();
+        const variantTexts = data.texts || [];
 
-    setVariations(prev => ({
-      ...prev,
-      [msgIndex]: {
-        variants: variantTexts,
-        selectedIndex: 0,
-        originalHighlight: msg.highlight,
-      },
-    }));
+        setVariations(prev => ({
+          ...prev,
+          [msgIndex]: {
+            variants: variantTexts,
+            selectedIndex: 0,
+            originalHighlight: msg.highlight,
+          },
+        }));
+      } catch {
+        // Fallback to simple variations
+        setVariations(prev => ({
+          ...prev,
+          [msgIndex]: {
+            variants: [
+              `Versão alternativa: ${msg.content.substring(0, 200)}...`,
+              `Outra abordagem: ${msg.content.substring(0, 200)}...`,
+            ],
+            selectedIndex: 0,
+            originalHighlight: msg.highlight,
+          },
+        }));
+      }
+    } else {
+      // Mock fallback
+      const clientKey = `${clientSlug}-${moonSlug}`;
+      const responses = chatResponsesByMoon[clientKey] ?? chatResponsesByMoon[moonSlug];
+      const matchedResponse = responses?.find(r =>
+        msg.content.includes(r.content.substring(0, 40))
+      );
+      setVariations(prev => ({
+        ...prev,
+        [msgIndex]: {
+          variants: matchedResponse?.variants ?? [
+            `Versão alternativa: ${msg.content.substring(0, 200)}...`,
+            `Outra abordagem: ${msg.content.substring(0, 200)}...`,
+          ],
+          selectedIndex: 0,
+          originalHighlight: msg.highlight,
+        },
+      }));
+    }
   }
 
   function toggleSave(msgIndex: number) {

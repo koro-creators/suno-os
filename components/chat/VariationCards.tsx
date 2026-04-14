@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface VariationCardsProps {
   original: string;
   originalHighlight?: { label: string; body: string };
@@ -21,6 +23,8 @@ export default function VariationCards({
   selectedIndex,
   onSelect,
 }: VariationCardsProps) {
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
   const cards: CardData[] = [
     { label: 'V1 · Original', text: original, highlight: originalHighlight },
     ...variants.map((v, i) => ({ label: `V${i + 2}`, text: v })),
@@ -109,14 +113,36 @@ export default function VariationCards({
                   color: 'var(--text-secondary)',
                   lineHeight: 1.5,
                   marginTop: 6,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 5,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
+                  ...(expandedIndex === index ? {} : {
+                    display: '-webkit-box',
+                    WebkitLineClamp: 5,
+                    WebkitBoxOrient: 'vertical' as const,
+                    overflow: 'hidden',
+                  }),
                 }}
               >
                 {card.text}
               </p>
+
+              {card.text.length > 200 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedIndex(expandedIndex === index ? null : index);
+                  }}
+                  style={{
+                    fontSize: '0.6rem',
+                    color: 'var(--sun)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '2px 0',
+                    marginTop: 4,
+                  }}
+                >
+                  {expandedIndex === index ? 'Ver menos' : 'Ver mais'}
+                </button>
+              )}
 
               {/* Highlight for V1 */}
               {index === 0 && card.highlight && (

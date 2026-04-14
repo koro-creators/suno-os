@@ -3,6 +3,23 @@ import { MessageFeedback } from '@/lib/feedback-types';
 import ResultActions from './ResultActions';
 import FeedbackInline from './FeedbackInline';
 
+function renderMarkdown(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .split('\n')
+    .map((line) => {
+      if (line.trim() === '---') {
+        return '<hr style="border:none;border-top:1px solid var(--border-subtle);margin:8px 0">';
+      }
+      return line
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    })
+    .join('\n');
+}
+
 interface MessageBubbleProps {
   role: 'user' | 'assistant';
   content: string;
@@ -44,7 +61,10 @@ export default function MessageBubble({
           borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
         }}
       >
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{content}</p>
+        <div
+          className="whitespace-pre-wrap text-sm leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+        />
 
         {highlight && (
           <div
