@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { redirect } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
-import BackButton from '@/components/layout/BackButton';
+import ChatInterface from '@/components/chat/ChatInterface';
 import { getClientBySlug, getSkillBySlug, getSkillTypeColor } from '@/lib/utils';
+import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import type { Moon } from '@/lib/types';
 
 const typeLabels: Record<string, string> = {
@@ -14,10 +15,54 @@ const typeLabels: Record<string, string> = {
   planejamento: 'Planejamento',
 };
 
-// Moon size: 40-55px
-function moonSize(idx: number): number {
-  return 40 + (idx % 2) * 15;
+/* ─── Moon Chips ─────────────────────────────────── */
+
+function MoonChips({ moons, selected, onSelect }: {
+  moons: Moon[];
+  selected: string;
+  onSelect: (slug: string) => void;
+}) {
+  return (
+    <div style={{
+      display: 'flex', gap: 6, padding: '8px 24px',
+      borderBottom: '1px solid var(--border-subtle)',
+      overflowX: 'auto',
+    }}>
+      {moons.map((moon) => {
+        const isActive = moon.slug === selected;
+        return (
+          <button
+            key={moon.slug}
+            onClick={() => onSelect(moon.slug)}
+            title={moon.description}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '5px 12px', borderRadius: 9999,
+              fontSize: '0.7rem', fontWeight: 500,
+              border: `1px solid ${isActive ? 'var(--sun)' : 'var(--border-subtle)'}`,
+              backgroundColor: isActive ? 'rgba(255,200,1,0.1)' : 'transparent',
+              color: isActive ? 'var(--sun)' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            {isActive && (
+              <span style={{
+                width: 5, height: 5, borderRadius: '50%',
+                backgroundColor: 'var(--sun)',
+              }} />
+            )}
+            {moon.name}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
+
+/* ─── Skill Page (Level 3 — Chat with Moon Chips) ── */
 
 export default function SkillPage({
   params,
@@ -26,282 +71,103 @@ export default function SkillPage({
 }) {
   const { clientSlug, skillSlug } = params;
   const router = useRouter();
-  const client = getClientBySlug(clientSlug);
-  const skill = getSkillBySlug(clientSlug, skillSlug);
+  const searchParams = useSearchParams();
+  const { documents } = useBiblioteca();
 
-  if (!client || !skill) {
+  const client = getClientBySlug(clientSlug);
+  if (!client) {
+    redirect('/');
+  }
+
+  const skill = getSkillBySlug(clientSlug, skillSlug);
+  if (!skill) {
     redirect(`/${clientSlug}`);
   }
 
   const skillColor = getSkillTypeColor(skill.type);
   const moons = skill.moons;
 
-  // Sun center X = left(-180) + 400/2 = 20px from left edge
-  const sunCenterX = 20;
-  const ORBIT_START = 380;
-  const ORBIT_STEP = 150;
-  const orbitRadii = moons.map((_, i) => ORBIT_START + i * ORBIT_STEP);
-  const yOffsets = [0, 0, 0, 0, 0];
+  // Resolve initial moon from query param or default to first
+  const moonParam = searchParams.get('moon');
+  const initialMoon = moons.find((m) => m.slug === moonParam) ?? moons[0];
+
+  const [selectedMoonSlug, setSelectedMoonSlug] = useState(initialMoon?.slug ?? '');
+
+  const selectedMoon = moons.find((m) => m.slug === selectedMoonSlug) ?? moons[0];
+
+  // Auto-select documents based on scope and tags
+  const candidateDocs = documents.filter(
+    (d) => d.scope.includes(clientSlug) || d.scope.includes('suno')
+  );
+  const autoActiveIds = candidateDocs
+    .filter(
+      (d) =>
+        d.tags.includes(skill.type) ||
+        d.tags.includes('tom-de-voz')
+    )
+    .map((d) => d.id);
+
+  const handleMoonSelect = useCallback((slug: string) => {
+    setSelectedMoonSlug(slug);
+    // Update URL query param without full navigation
+    router.replace(`/${clientSlug}/${skillSlug}?moon=${slug}`, { scroll: false });
+  }, [clientSlug, skillSlug, router]);
 
   return (
-    <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
+    <main className="page-enter flex flex-col h-screen bg-space">
       <AppHeader
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: client.name, href: `/${clientSlug}` },
           { label: skill.name, href: `/${clientSlug}/${skillSlug}` },
         ]}
-        rightLabel={typeLabels[skill.type] || skill.type}
+        rightSection={
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                backgroundColor: skillColor,
+                boxShadow: `0 0 10px color-mix(in srgb, ${skillColor} 60%, transparent)`,
+                display: 'inline-block',
+                flexShrink: 0,
+              }}
+            />
+            <span
+              className="text-text-muted uppercase select-none"
+              style={{
+                fontSize: '0.6rem',
+                letterSpacing: '0.12em',
+              }}
+            >
+              {typeLabels[skill.type] || skill.type}
+            </span>
+          </div>
+        }
       />
 
-      <div className="px-lg pt-sm">
-        <BackButton href={`/${clientSlug}`} label={client.name} />
-      </div>
+      {/* Moon chips bar */}
+      {moons.length > 0 && (
+        <MoonChips
+          moons={moons}
+          selected={selectedMoonSlug}
+          onSelect={handleMoonSelect}
+        />
+      )}
 
-      <div id="main-content" className="flex-1 relative min-h-0">
-        {/* Skill center — anchored to left edge */}
-        <div
-          style={{
-            position: 'absolute',
-            left: -180,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 400,
-            height: 400,
-            borderRadius: '50%',
-            backgroundColor: skillColor,
-            boxShadow: 'none',
-            zIndex: 5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <div
-            style={{
-              marginLeft: 160,
-              textAlign: 'center',
-              userSelect: 'none',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                color: 'var(--void)',
-                lineHeight: 1.2,
-              }}
-            >
-              {skill.name}
-            </div>
-            <div
-              style={{
-                fontSize: '0.55rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: 'color-mix(in srgb, var(--void) 70%, transparent)',
-                marginTop: 4,
-              }}
-            >
-              {typeLabels[skill.type]} · {moons.length} áreas
-            </div>
-          </div>
-        </div>
-
-        {/* Orbit semicircles */}
-        {orbitRadii.map((radius, idx) => {
-          const diameter = radius * 2;
-          return (
-            <div
-              key={`orbit-${idx}`}
-              className="orbit-ring-pulse"
-              style={{
-                position: 'absolute',
-                left: sunCenterX - radius,
-                top: `calc(50% - ${radius}px)`,
-                width: diameter,
-                height: diameter,
-                borderRadius: '50%',
-                border: `1px solid color-mix(in srgb, ${skillColor} 12%, transparent)`,
-                boxShadow: `0 0 8px color-mix(in srgb, ${skillColor} 3%, transparent)`,
-                pointerEvents: 'none',
-                zIndex: 1,
-              }}
-            />
-          );
-        })}
-
-        {/* Moon planets */}
-        {moons.map((moon, idx) => {
-          const size = moonSize(idx);
-          const radius = orbitRadii[idx];
-          const planetX = sunCenterX + radius;
-          const yOffset = yOffsets[idx] ?? 0;
-
-          return (
-            <MoonPlanet
-              key={moon.slug}
-              moon={moon}
-              size={size}
-              color={skillColor}
-              planetX={planetX}
-              yOffset={yOffset}
-              delay={idx * 80}
-              onClick={() => router.push(`/${clientSlug}/${skillSlug}/${moon.slug}`)}
-            />
-          );
-        })}
-
-        {/* Editorial typography */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 24,
-            right: 28,
-            textAlign: 'right',
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        >
-          <div style={{ fontSize: '3rem', fontWeight: 200, color: 'var(--editorial-text)', lineHeight: 1, letterSpacing: '-0.02em' }}>03</div>
-          <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--editorial-label)', marginTop: 4 }}>Skill</div>
-          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>
-            {typeLabels[skill.type]} · {moons.length} áreas
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function MoonPlanet({
-  moon,
-  size,
-  color,
-  planetX,
-  yOffset,
-  delay,
-  onClick,
-}: {
-  moon: Moon;
-  size: number;
-  color: string;
-  planetX: number;
-  yOffset: number;
-  delay: number;
-  onClick: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLSpanElement>(null);
-  const [navigating, setNavigating] = useState(false);
-  const [focusVisible, setFocusVisible] = useState(false);
-  const ambientGlow = 'none';
-
-  const handleClick = useCallback(() => {
-    setNavigating(true);
-    onClick();
-  }, [onClick]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleClick();
-    }
-  };
-
-  return (
-    <div
-      className="orbit-appear"
-      role="button"
-      tabIndex={0}
-      aria-label={`${moon.name} — ${moon.description}`}
-      style={{
-        position: 'absolute',
-        left: planetX - size / 2,
-        top: `calc(50% - ${size / 2}px)`,
-        width: size,
-        height: size,
-        cursor: navigating ? 'wait' : 'pointer',
-        animationDelay: `${delay}ms`,
-        zIndex: 10,
-        opacity: navigating ? 0.5 : 1,
-        outline: 'none',
-        transition: 'opacity 200ms ease',
-        pointerEvents: navigating ? 'none' : 'auto',
-      }}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      onFocus={() => setFocusVisible(true)}
-      onBlur={() => setFocusVisible(false)}
-      onMouseEnter={() => {
-        if (ref.current) {
-          ref.current.style.transform = 'scale(1.08)';
-          ref.current.style.boxShadow = 'none';
-        }
-        if (labelRef.current) labelRef.current.style.color = 'var(--text-primary)';
-      }}
-      onMouseLeave={() => {
-        if (ref.current) {
-          ref.current.style.transform = 'scale(1)';
-          ref.current.style.boxShadow = 'none';
-        }
-        if (labelRef.current) labelRef.current.style.color = 'var(--text-secondary)';
-      }}
-    >
-      {/* Label + connector — above the circle */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '100%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginBottom: 6,
-          pointerEvents: 'none',
-        }}
-      >
-        <span
-          ref={labelRef}
-          className="solar-label"
-          style={{
-            fontSize: '0.6rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: 'var(--text-secondary)',
-            transition: 'color 200ms ease',
-            whiteSpace: 'nowrap',
-            userSelect: 'none',
-            marginBottom: 4,
-          }}
-        >
-          {moon.name}
-        </span>
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background: 'linear-gradient(180deg, var(--connector-color) 0%, var(--connector-fade) 100%)',
-          }}
+      <div id="main-content" className="flex-1 overflow-hidden">
+        <ChatInterface
+          key={selectedMoonSlug}
+          moonSlug={selectedMoonSlug}
+          skillSlug={skillSlug}
+          clientSlug={clientSlug}
+          clientName={client.name}
+          clientColor={client.color}
+          documents={candidateDocs}
+          initialActiveDocIds={autoActiveIds}
         />
       </div>
-
-      {/* Moon circle — aligned to orbit */}
-      <div
-        ref={ref}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          backgroundColor: color,
-          boxShadow: 'none',
-          transition: 'transform 200ms ease-out, box-shadow 200ms ease-out',
-          flexShrink: 0,
-        }}
-      />
-    </div>
+    </main>
   );
 }

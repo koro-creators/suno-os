@@ -9,6 +9,7 @@
 | 2026-04-14 | SPEC-002 | knowledge-biblioteca-v2 | large | spec-anchored | Heitor Miranda | rascunho | - | Knowledge multimodal + Biblioteca v2 com thumbnails |
 | 2026-04-14 | SPEC-003 | workflow-builder | large | spec-anchored | Heitor Miranda | rascunho | - | Workflow Builder com LangGraph — empoderar times não-eng |
 | 2026-04-16 | SPEC-006 | chat-attachments | medium | spec-anchored | Heitor Miranda | rascunho | - | Chat attachments (PDF/imagem/áudio/URL) + model selection per message |
+| 2026-04-16 | SPEC-007 | nav-simplification | medium | spec-first | Heitor Miranda | implementada | - | 4 níveis → 3: moons viram chips no chat |
 
 ## Insights
 
