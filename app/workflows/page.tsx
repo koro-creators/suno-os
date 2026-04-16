@@ -2,18 +2,25 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowCard from '@/components/workflows/WorkflowCard';
+import WorkflowTable from '@/components/workflows/WorkflowTable';
+import WorkflowDrawer from '@/components/workflows/WorkflowDrawer';
 import WorkflowTemplates from '@/components/workflows/WorkflowTemplates';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
+import { Workflow } from '@/lib/workflow-types';
+
+type ViewMode = 'table' | 'grid';
 
 export default function WorkflowsPage() {
   const router = useRouter();
-  const { workflows } = useWorkflows();
+  const { workflows, updateWorkflow, deleteWorkflow, runWorkflow } = useWorkflows();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
 
   const filtered = useMemo(() => {
     return workflows.filter((w) => {
@@ -22,6 +29,46 @@ export default function WorkflowsPage() {
       return true;
     });
   }, [workflows, search, statusFilter]);
+
+  const activeCount = workflows.filter((w) => w.status === 'active').length;
+
+  function handleSelect(wf: Workflow) {
+    setSelectedWorkflow(wf);
+  }
+
+  function handleEdit(wf: Workflow) {
+    router.push(`/workflows/${wf.id}`);
+  }
+
+  function handleDelete(wf: Workflow) {
+    deleteWorkflow(wf.id);
+    if (selectedWorkflow?.id === wf.id) setSelectedWorkflow(null);
+  }
+
+  function handleDrawerRun(id: string) {
+    console.log('[WorkflowDrawer] Executar agora:', id);
+    runWorkflow(id);
+    // Refresh selected workflow reference
+    setSelectedWorkflow((prev) => {
+      if (!prev || prev.id !== id) return prev;
+      return workflows.find((w) => w.id === id) ?? prev;
+    });
+  }
+
+  function handleDrawerToggleStatus(id: string) {
+    const wf = workflows.find((w) => w.id === id);
+    if (!wf) return;
+    const newStatus = wf.status === 'active' ? 'paused' : 'active';
+    updateWorkflow(id, { status: newStatus });
+    if (selectedWorkflow?.id === id) {
+      setSelectedWorkflow({ ...wf, status: newStatus });
+    }
+  }
+
+  function handleDrawerDelete(id: string) {
+    deleteWorkflow(id);
+    setSelectedWorkflow(null);
+  }
 
   return (
     <>
@@ -41,7 +88,7 @@ export default function WorkflowsPage() {
               Workflows
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-              Automacoes e pipelines de IA
+              {workflows.length} workflows &middot; {activeCount} ativos
             </p>
           </div>
           <button
@@ -68,9 +115,9 @@ export default function WorkflowsPage() {
           </button>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', maxWidth: 320 }}>
+        {/* Filters + View toggle */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ position: 'relative', maxWidth: 320, flex: '1 1 200px' }}>
             <Search
               size={14}
               strokeWidth={1.5}
@@ -108,6 +155,7 @@ export default function WorkflowsPage() {
               }}
             />
           </div>
+
           <div style={{ display: 'flex', gap: 4 }}>
             {['', 'draft', 'active', 'paused'].map((s) => (
               <button
@@ -128,6 +176,51 @@ export default function WorkflowsPage() {
               </button>
             ))}
           </div>
+
+          {/* View toggle */}
+          <div style={{ display: 'flex', gap: 2, marginLeft: 'auto' }}>
+            <button
+              onClick={() => setViewMode('table')}
+              aria-label="Visualizacao em tabela"
+              aria-pressed={viewMode === 'table'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 36,
+                height: 36,
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px 0 0 8px',
+                backgroundColor: viewMode === 'table' ? 'rgba(255,200,1,0.1)' : 'transparent',
+                color: viewMode === 'table' ? 'var(--sun)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              <List size={14} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              aria-label="Visualizacao em grid"
+              aria-pressed={viewMode === 'grid'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 36,
+                height: 36,
+                border: '1px solid var(--border-subtle)',
+                borderLeft: 'none',
+                borderRadius: '0 8px 8px 0',
+                backgroundColor: viewMode === 'grid' ? 'rgba(255,200,1,0.1)' : 'transparent',
+                color: viewMode === 'grid' ? 'var(--sun)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                transition: 'all 150ms ease',
+              }}
+            >
+              <LayoutGrid size={14} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
 
         {/* Templates */}
@@ -135,18 +228,27 @@ export default function WorkflowsPage() {
           <WorkflowTemplates templates={WORKFLOW_TEMPLATES} />
         )}
 
-        {/* Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {filtered.map((workflow) => (
-            <WorkflowCard key={workflow.id} workflow={workflow} />
-          ))}
-        </div>
+        {/* Content: Table or Grid */}
+        {viewMode === 'table' ? (
+          <WorkflowTable
+            workflows={filtered}
+            onSelect={handleSelect}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+              gap: 16,
+            }}
+          >
+            {filtered.map((workflow) => (
+              <WorkflowCard key={workflow.id} workflow={workflow} />
+            ))}
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 48 }}>
@@ -154,6 +256,15 @@ export default function WorkflowsPage() {
           </p>
         )}
       </main>
+
+      {/* Side drawer */}
+      <WorkflowDrawer
+        workflow={selectedWorkflow}
+        onClose={() => setSelectedWorkflow(null)}
+        onRun={handleDrawerRun}
+        onToggleStatus={handleDrawerToggleStatus}
+        onDelete={handleDrawerDelete}
+      />
     </>
   );
 }

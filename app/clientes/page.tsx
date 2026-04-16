@@ -5,14 +5,17 @@ import { useRouter } from 'next/navigation';
 import { Plus, Search } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import ClientCard from '@/components/clientes/ClientCard';
+import ClientDrawer from '@/components/clientes/ClientDrawer';
 import { useClients } from '@/contexts/ClientsContext';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
+import { ClientAdmin } from '@/lib/client-types';
 
 export default function ClientesPage() {
   const router = useRouter();
-  const { clients } = useClients();
+  const { clients, deleteClient } = useClients();
   const { documents } = useBiblioteca();
   const [search, setSearch] = useState('');
+  const [selectedClient, setSelectedClient] = useState<ClientAdmin | null>(null);
 
   const filtered = useMemo(() => {
     return clients.filter((c) => {
@@ -20,6 +23,11 @@ export default function ClientesPage() {
       return true;
     });
   }, [clients, search]);
+
+  function handleDelete(client: ClientAdmin) {
+    deleteClient(client.id);
+    setSelectedClient(null);
+  }
 
   return (
     <>
@@ -39,7 +47,7 @@ export default function ClientesPage() {
               Clientes
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-              Gestão de contas
+              {filtered.length} {filtered.length === 1 ? 'cliente' : 'clientes'}
             </p>
           </div>
           <button
@@ -117,7 +125,12 @@ export default function ClientesPage() {
           {filtered.map((client) => {
             const documentCount = documents.filter((doc) => doc.scope.includes(client.slug)).length;
             return (
-              <ClientCard key={client.id} client={client} documentCount={documentCount} />
+              <ClientCard
+                key={client.id}
+                client={client}
+                documentCount={documentCount}
+                onSelect={setSelectedClient}
+              />
             );
           })}
         </div>
@@ -128,6 +141,12 @@ export default function ClientesPage() {
           </p>
         )}
       </main>
+
+      <ClientDrawer
+        client={selectedClient}
+        onClose={() => setSelectedClient(null)}
+        onDelete={handleDelete}
+      />
     </>
   );
 }
