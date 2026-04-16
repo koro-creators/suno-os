@@ -1,6 +1,7 @@
 # sunOS — Product Handoff Document
 
-**Data:** 2026-04-16
+**Last Updated:** 2026-04-15
+**Data original:** 2026-04-16
 **De:** Heitor Miranda (Tech Lead)
 **Para:** Product Manager / Product Owner
 **Projeto:** sunOS — Sistema Operacional de IA da Suno United Creators
@@ -43,17 +44,21 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 | Feature | Status | Rota |
 |---------|--------|------|
 | **Sistema Solar** (Home) | Produção | `/` |
-| **Navegação 4 níveis** | Produção | `/ → /cliente → /skill → /chat` |
-| **Chat com IA real** (Gemini Flash) | Produção | `/cliente/skill/moon` |
+| **Navegação 3 níveis** | Produção | `/ → /cliente → /skill (chat com moon chips)` |
+| **Chat com IA real** (Gemini Flash) | Produção | `/cliente/skill?moon=moon` |
+| **ModelSelector** (troca modelo por mensagem) | Produção | Dropdown no chat (Gemini Flash, Pro, GPT-4o, Claude) |
 | **Social Preview** (Instagram/Meta) | Produção | Chat de Copy Social |
-| **Skills Admin** (CRUD) | Produção | `/skills` |
-| **Biblioteca** (knowledge base) | Produção (v2 com upload) | `/biblioteca` |
-| **Clientes Admin** (CRUD) | Produção | `/clientes` |
+| **Admin pages — Model Repo pattern** | Produção | Table + filter sidebar + side drawer |
+| **Skills Admin** (CRUD) | Produção | `/skills` (table view + sidebar + drawer) |
+| **Biblioteca** (knowledge base) | Produção (v2 com upload) | `/biblioteca` (table view + sidebar + drawer) |
+| **Clientes Admin** (CRUD) | Produção | `/clientes` (condensed cards + drawer) |
+| **Workflows Admin** | Produção | `/workflows` (table view + drawer) |
 | **HITL Feedback** | Produção | Sidebar do chat |
 | **Workflow Builder** | Produção | `/workflows` |
 | **Auth (Google Login)** | Produção | `/login` |
 | **RBAC** (admin/creator) | Produção | Firebase Custom Claims |
 | **Dark/Light theme** | Produção | Toggle no header |
+| **Design System page** | Produção | `/design-system` (component library) |
 
 ### Em desenvolvimento
 
@@ -69,13 +74,13 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 | Métrica | Valor |
 |---------|-------|
 | Commits | 50+ |
-| Arquivos frontend | ~70 (.tsx/.ts) |
+| Arquivos frontend | ~85 (.tsx/.ts) |
 | Arquivos backend | ~50 (.py) |
 | Skills de IA | 8 configurados |
 | Clientes | 5 (Suno, Vivo, Americanas, Sicredi, Samsung) |
 | Documentos na Biblioteca | 31+ mocados + upload real |
 | Workflow templates | 4 pré-configurados |
-| Specs (SDD) | 4 (SPEC-001 a SPEC-004) |
+| Specs (SDD) | 7 (SPEC-001 a SPEC-007) |
 | ADRs | 2 (ADR-001, ADR-002) |
 
 ---
@@ -84,7 +89,7 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 
 ### 3.1 Sistema Solar (Home)
 
-**O que faz:** Visualização orbital dos clientes como planetas. Cada cliente tem skills (órbitas) e moons (sub-áreas). Navegação horizontal em 4 níveis.
+**O que faz:** Visualização orbital dos clientes como planetas. Cada cliente tem skills (órbitas) e moons (sub-áreas). Navegação horizontal em 3 níveis (SPEC-007: moon page eliminada, moons agora são chips dentro da area de chat do skill). Inclui QuickStats bar e label "CLIENTES" (antes "BIOMAS").
 
 **Quem usa:** Todos os usuários — é o ponto de entrada.
 
@@ -97,24 +102,32 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 **Quem usa:** Criativos e estrategistas.
 
 **Features especiais:**
-- **Prompt Templates:** botões pré-definidos por moon (ex: "Carrossel educação financeira")
+- **ModelSelector:** dropdown para trocar modelo de IA por mensagem (Gemini Flash, Gemini Pro, GPT-4o, Claude)
+- **ChatInput melhorado:** textarea com auto-resize, Shift+Enter para nova linha, botao enviar dinamico, sr-only label
+- **Prompt Templates:** cards com icones + moon chips integrados (moons sao selecionaveis como chips no PromptTemplateBar)
 - **Social Preview:** no Copy Social, output renderizado como preview de Instagram (carousel, stories, post)
 - **Variações:** auto-gera 3 opções de conteúdo para comparação
+- **ResultActions:** icon-only com tooltips (copiar, variar, salvar, thumbs)
+- **MessageBubble:** avatar "S" + timestamp + code blocks com syntax highlighting
+- **StreamingIndicator:** skeleton bars + nome do modelo ativo
 - **HITL:** thumbs up/down + comentário em cada resposta, avaliação de sessão (1-5)
-- **Context Sidebar:** mostra documentos da Biblioteca ativos, agentes, painel de validação
+- **Context Sidebar:** seções colapsiveis (Biblioteca, Agentes, Validação HITL)
+- **Attachments (SPEC-006):** spec criada para file attachments no chat (paperclip + chips) — ainda nao implementado
 
 **Limitações:**
-- Modelo padrão é Gemini Flash (GPT-4o e Claude disponíveis se API keys configuradas)
+- Modelo padrão é Gemini Flash (GPT-4o e Claude disponíveis se API keys configuradas). Usuário pode trocar via ModelSelector.
 - ImageGen é mock (precisa Vertex AI key para Imagen 4)
 - Conversas não persistem entre sessões (state local)
 
 ### 3.3 Skills Admin
 
-**O que faz:** CRUD de skills de IA. Cada skill tem: identidade (nome, tipo, ícone), configuração (system prompt, modelo, temperatura), moons (sub-áreas), e clientes atribuídos.
+**O que faz:** CRUD de skills de IA. Cada skill tem: identidade (nome, tipo, ícone), configuração (system prompt, modelo, temperatura), moons (sub-áreas), e clientes atribuídos. Redesenhado com Model Repo pattern (SPEC-005): table view default + filter sidebar + side drawer para detalhes.
 
 **Quem usa:** Admins (P4).
 
 **Rota:** `/skills`
+
+**UI Pattern:** Table view com colunas (nome, tipo, status, score, clientes) + SkillsSidebar (filtros) + SkillDrawer (detalhes ao clicar na linha).
 
 **Skills existentes:**
 
@@ -131,11 +144,13 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 
 ### 3.4 Biblioteca (Knowledge Base)
 
-**O que faz:** Base de conhecimento multimodal. Documentos com tags e escopo (Suno global ou por cliente). Upload real de arquivos (PDF, áudio, vídeo, imagem) com processamento automático. Busca semântica via pgvector.
+**O que faz:** Base de conhecimento multimodal. Documentos com tags e escopo (Suno global ou por cliente). Upload real de arquivos (PDF, áudio, vídeo, imagem) com processamento automático. Busca semântica via pgvector. Redesenhado com Model Repo pattern (SPEC-005): table view default + filter sidebar + side drawer.
 
 **Quem usa:** Admins alimentam, todos consomem via chat.
 
 **Rota:** `/biblioteca`
+
+**UI Pattern:** Table view com colunas (titulo, tipo, scope, tags, status) + BibliotecaSidebar (filtros) + BibliotecaDrawer (detalhes ao clicar na linha).
 
 **Capacidades:**
 - Upload de arquivos (PDF, DOCX, TXT, imagens, áudio, vídeo)
@@ -148,11 +163,13 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 
 ### 3.5 Clientes Admin
 
-**O que faz:** CRUD de clientes com 4 tabs: Identidade (nome, cor, contato), Skills (toggle on/off), Biblioteca (docs atribuídos), Métricas (sessões, feedbacks, score).
+**O que faz:** CRUD de clientes com 4 tabs: Identidade (nome, cor, contato), Skills (toggle on/off), Biblioteca (docs atribuídos), Métricas (sessões, feedbacks, score). Redesenhado (SPEC-005): condensed cards + ClientDrawer (clicar card abre drawer lateral, sem navegação para outra pagina).
 
 **Quem usa:** Admins.
 
 **Rota:** `/clientes`
+
+**UI Pattern:** Condensed cards (compactos) + ClientDrawer com tabs (clicar no card abre drawer, nao navega para `/clientes/[id]`).
 
 **Clientes atuais:** Suno, Vivo, Americanas, Sicredi, Samsung.
 
@@ -171,6 +188,8 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 **Quem usa:** Admins e builders (analistas de mídia, BI, financeiro).
 
 **Rota:** `/workflows`
+
+**UI Pattern:** Table view com colunas (nome, status, schedule humanizado, last run) + WorkflowDrawer (detalhes ao clicar). Cron schedules exibidos de forma humanizada (ex: "Toda segunda as 9h").
 
 **Templates disponíveis:**
 1. Report Mensal — consulta dados → gera análise → notifica Slack
@@ -308,6 +327,9 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 | SPEC-002 | Knowledge + Biblioteca v2 (multimodal, pgvector) | 2026-04-15 |
 | SPEC-003 | Workflow Builder (compiler, executor, UI) | 2026-04-15 |
 | SPEC-004 | Workflow chaining (sub-workflows) | 2026-04-16 |
+| SPEC-005 | UX Redesign — Model Repo pattern (7 admin pages) | 2026-04-15 |
+| SPEC-006 | Chat Attachments (spec criada, nao implementada) | 2026-04-15 |
+| SPEC-007 | Navigation Simplification (4→3 niveis, moon eliminated) | 2026-04-15 |
 
 ### Em progresso
 
@@ -324,8 +346,9 @@ Times de criação, mídia, planejamento, BI e financeiro da Suno executam dezen
 | **P1** | **Testes com usuários reais** — 3-5 criativos usando Copy Social | Validação de produto |
 | **P2** | **Busca global (Cmd+K)** — buscar skills, docs, clientes | UX |
 | **P3** | **Sidebar recentes** — últimos clientes/skills visitados | UX |
-| **P4** | **Onboarding** — welcome screen, empty states | Adoção |
-| **P5** | **VideoGen** — integrar Veo 3.1 | Feature |
+| **P4** | **Chat Attachments (SPEC-006)** — implementar upload de arquivos no chat | Feature |
+| **P5** | **Onboarding** — welcome screen (empty states ja implementados via EmptyState component) | Adoção |
+| **P6** | **VideoGen** — integrar Veo 3.1 | Feature |
 
 ---
 
@@ -440,7 +463,7 @@ npx next dev -p 3003
 
 | # | Fluxo | Steps |
 |---|-------|-------|
-| 1 | **Chat básico** | Home → Santander → Copy Social → Feed → enviar mensagem → receber resposta Gemini |
+| 1 | **Chat básico** | Home → Santander → Copy Social → selecionar moon chip → enviar mensagem → receber resposta Gemini |
 | 2 | **Social Preview** | No chat Copy Social → gerar carrossel → ver slides lado a lado + variações |
 | 3 | **Skills Admin** | `/skills` → ver catálogo → clicar card → editar prompt → salvar |
 | 4 | **Biblioteca** | `/biblioteca` → ver docs → filtrar por scope/tags → upload arquivo |
@@ -491,6 +514,10 @@ npx next dev -p 3003
 | SPEC-001 | `docs/specs/large/sunohub-tools-integration/` | Backend + Chat real |
 | SPEC-002 | `docs/specs/large/knowledge-biblioteca-v2/` | Knowledge multimodal |
 | SPEC-003 | `docs/specs/large/workflow-builder/` | Workflow Builder |
-| SPEC-004 | `docs/specs/large/workflow-chaining/` | Encadeamento de workflows |
+| SPEC-004 | `docs/specs/medium/workflow-chaining.spec.md` | Encadeamento de workflows |
+| SPEC-005 | `docs/specs/large/ux-redesign/spec.md` | UX Redesign (Model Repo pattern) |
+| SPEC-006 | `docs/specs/medium/chat-attachments.spec.md` | Chat Attachments |
+| SPEC-007 | `docs/specs/medium/nav-simplification.spec.md` | Navigation Simplification (4→3 niveis) |
 | SDD Log | `docs/specs/_log/usage-log.md` | Histórico de specs |
+| Design System | `design-system/MASTER.md` | Source of truth do design system |
 | ROI Atividades | (externo) `roi_completo_suno.xlsx` | 136 atividades mapeadas |

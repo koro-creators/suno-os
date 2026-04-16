@@ -1,6 +1,7 @@
 # sunOS — AI Engineer & Harness Engineer Handoff
 
-**Data:** 2026-04-16
+**Last Updated:** 2026-04-15
+**Data original:** 2026-04-16
 **De:** Heitor Miranda (Tech Lead)
 **Para:** AI Engineer, Harness Engineer, ML Engineer
 **Repo:** https://github.com/koro-creators/suno-os (path: `api/`)
@@ -235,6 +236,7 @@ mkdir -p api/chat/skills/meu-skill/references
 
 **Arquivo:** `api/chat/graph/runner.py` → `_get_llm()`
 **Arquivo:** `api/chat/tools/chat_tools.py` → `_get_llm()`
+**Frontend:** `components/chat/ModelSelector.tsx` — dropdown que permite ao usuario trocar de modelo por mensagem
 
 ```python
 MODEL_MAP = {
@@ -245,8 +247,10 @@ MODEL_MAP = {
 }
 ```
 
+**ModelSelector (frontend):** O usuario pode trocar o modelo de IA a qualquer momento durante a conversa via dropdown no ChatInput. O modelo selecionado e enviado no campo `model` do request ao backend. O `StreamingIndicator` mostra o nome do modelo ativo durante streaming.
+
 **Lógica de fallback:**
-1. Tenta modelo solicitado
+1. Tenta modelo solicitado (pode vir do ModelSelector do frontend)
 2. Se API key ausente → fallback para Gemini Flash (com warning log)
 3. Se nenhuma key → ValueError
 
@@ -269,7 +273,15 @@ MODEL_MAP = {
 | `read_full_document` | `knowledge/document_search.py` | doc_id | string (doc completo) | Ativo |
 | `find_related_documents` | `knowledge/document_search.py` | doc_id, limit | string (docs similares) | Ativo |
 
-### 3.2 Como criar uma nova Tool
+### 3.2 Chat Attachments (SPEC-006 — spec only, nao implementado)
+
+**Spec:** `docs/specs/medium/chat-attachments.spec.md`
+
+SPEC-006 define suporte a file attachments no chat. O frontend (ChatInput) tera um botao paperclip para anexar arquivos, exibidos como chips. O backend precisara processar attachments inline durante o chat — possivelmente reutilizando a ingestion pipeline existente (audio transcription, image captioning, PDF extraction) para injetar conteudo do arquivo no contexto da mensagem.
+
+**Status:** Spec criada, implementacao pendente. Esta e a proxima feature relevante para o AI Engineer.
+
+### 3.3 Como criar uma nova Tool
 
 ```python
 # api/chat/tools/minha_tool.py
@@ -534,10 +546,11 @@ Verifica se o graph percorreu o caminho correto:
 | **ImageGen real** | `tools/image_tools.py` | Mock atualmente. Precisa Vertex AI Imagen 4. |
 | **Web Search real** | `tools/search_tools.py` | Mock. Integrar Tavily ou SerpAPI. |
 
-### Prioridade Média
+### Prioridade Media
 
 | Item | Onde | Por que |
 |------|------|---------|
+| **Chat Attachments (SPEC-006)** | `api/chat/`, frontend `ChatInput` | Spec pronta. Processar arquivos anexados inline no chat. |
 | **Streaming por token** (não por mensagem) | `graph/runner.py` | Hoje emite texto inteiro de uma vez. Streaming mais granular melhoraria UX. |
 | **Multi-turn memory** | `graph/state.py` | Context window é reset por request. Implementar window sliding ou summarization. |
 | **Tool call visualization** | Frontend | User não vê quando agent chama tools. Deveria mostrar "Buscando na Biblioteca..." |
@@ -638,5 +651,9 @@ print(r)
 | SPEC-001 (Backend + Chat) | `docs/specs/large/sunohub-tools-integration/` |
 | SPEC-002 (Knowledge + RAG) | `docs/specs/large/knowledge-biblioteca-v2/` |
 | SPEC-003 (Workflow Builder) | `docs/specs/large/workflow-builder/` |
-| SPEC-004 (Workflow Chaining) | `docs/specs/large/workflow-chaining/` |
+| SPEC-004 (Workflow Chaining) | `docs/specs/medium/workflow-chaining.spec.md` |
+| SPEC-005 (UX Redesign) | `docs/specs/large/ux-redesign/spec.md` |
+| SPEC-006 (Chat Attachments) | `docs/specs/medium/chat-attachments.spec.md` |
+| SPEC-007 (Nav Simplification) | `docs/specs/medium/nav-simplification.spec.md` |
+| Design System MASTER | `design-system/MASTER.md` |
 | Meridian reference | `/Users/heitormiranda/projects/koro/meridian-api/` |

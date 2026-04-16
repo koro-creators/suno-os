@@ -1,6 +1,7 @@
 # sunOS — UX Design Handoff
 
-**Data:** 2026-04-16
+**Last Updated:** 2026-04-15
+**Data original:** 2026-04-16
 **De:** Heitor Miranda (Tech Lead)
 **Para:** UX Designer, UI Designer, Product Designer
 **Repo:** https://github.com/koro-creators/suno-os
@@ -135,14 +136,14 @@ O sunOS usa a metáfora de **sistema solar** — cada cliente é um planeta, ski
 - **Quem:** Redatores, social media, designers
 - **Contexto:** Produzem dezenas de copies, roteiros, posts por semana. Cada cliente tem tom, restrições e formatos diferentes.
 - **Dor:** Começar do zero toda vez. Não lembrar do tom de voz. Retrabalho por briefing incompleto.
-- **Jornada principal:** Home → Cliente → Copy Social → Feed → digita prompt → recebe 3 variações de carrossel → escolhe → ajusta → entrega
+- **Jornada principal:** Home → Cliente → Copy Social (seleciona moon chip "Feed") → digita prompt → recebe 3 variações de carrossel → escolhe → ajusta → entrega (3 clicks ate o chat, nao 4 — SPEC-007)
 - **Expectativa UX:** Resposta rápida, visual do output (preview), comparação fácil entre variações.
 
 #### P3 — Estrategista
 - **Quem:** Planejadores, analistas de mídia, BI
 - **Contexto:** Produzem planos, análises, reports. Precisam de dados e contexto de mercado.
 - **Dor:** Garimpar dados em planilhas. Montar decks do zero. Reports repetitivos toda semana.
-- **Jornada principal:** Home → Cliente → Plano de Mídia → Digital → pede plano com benchmark → recebe estruturado → HITL valida → entrega
+- **Jornada principal:** Home → Cliente → Plano de Mídia (seleciona moon chip "Digital") → pede plano com benchmark → recebe estruturado → HITL valida → entrega (3 clicks — SPEC-007)
 - **Expectativa UX:** Contexto injetado automaticamente (Biblioteca), output estruturado, scheduling de reports.
 
 #### P4 — Admin / Builder
@@ -172,48 +173,51 @@ O sunOS usa a metáfora de **sistema solar** — cada cliente é um planeta, ski
 Login (/login)
   │
   ▼
-Home (/) ─── Sistema Solar
+Home (/) ─── Sistema Solar (QuickStats bar, label "CLIENTES")
   │
   ├── /[cliente] ─── Skills do cliente (órbitas)
-  │     └── /[skill] ─── Moons do skill
-  │           └── /[moon] ─── Chat contextualizado
+  │     └── /[skill]?moon=X ─── Chat contextualizado (moons como chips)
+  │           (moon page eliminada — SPEC-007: /[moon] redireciona para /[skill]?moon=X)
   │
-  ├── /skills ─── Catálogo de skills (admin)
+  ├── /skills ─── Skills admin (table + sidebar + drawer)
   │     ├── /skills/new
   │     └── /skills/[id] ─── Editor 4 tabs
   │
-  ├── /biblioteca ─── Knowledge base
+  ├── /biblioteca ─── Knowledge base (table + sidebar + drawer)
   │
-  ├── /clientes ─── Catálogo de clientes (admin)
+  ├── /clientes ─── Clientes admin (condensed cards + drawer)
   │     ├── /clientes/new
-  │     └── /clientes/[id] ─── Editor 4 tabs
+  │     └── /clientes/[id] ─── Editor 4 tabs (drawer preferred)
   │
-  └── /workflows ─── Catálogo de workflows
-        ├── /workflows/new ─── Builder
-        ├── /workflows/[id] ─── Editar
-        └── /workflows/[id]/runs ─── Histórico
+  ├── /workflows ─── Workflows (table + drawer)
+  │     ├── /workflows/new ─── Builder
+  │     ├── /workflows/[id] ─── Editar
+  │     └── /workflows/[id]/runs ─── Histórico
+  │
+  └── /design-system ─── Component library reference
 ```
 
-### 3.2 Inventário de Telas (16 páginas)
+### 3.2 Inventário de Telas (15 páginas + 1 redirect)
 
 | Tela | Rota | Tipo | Padrão UI |
 |------|------|------|-----------|
 | Login | `/login` | Auth | Centrado, botão Google |
-| Home | `/` | Visualização | Sistema solar orbital |
+| Home | `/` | Visualização | Sistema solar orbital + QuickStats bar |
 | Cliente | `/[clientSlug]` | Visualização | Skills em órbitas |
-| Skill | `/[clientSlug]/[skillSlug]` | Visualização | Moons com labels |
-| Chat | `/[clientSlug]/[skillSlug]/[moonSlug]` | Interação | Chat + sidebar |
-| Skills Catálogo | `/skills` | Admin grid | Cards + filtros + search |
+| Skill/Chat | `/[clientSlug]/[skillSlug]` | Interação | Chat + moon chips no PromptTemplateBar + sidebar |
+| ~~Moon~~ | `/[clientSlug]/[skillSlug]/[moonSlug]` | **Redirect** | Redireciona para `/[skill]?moon=[moon]` (SPEC-007) |
+| Skills Catálogo | `/skills` | Admin table | **Table + SkillsSidebar + SkillDrawer** (Model Repo pattern) |
 | Skills Editor | `/skills/[id]` | Admin editor | 4 tabs (Identidade, Config, Moons, Clientes) |
 | Skills Novo | `/skills/new` | Admin create | Mesmo editor, campos vazios |
-| Biblioteca | `/biblioteca` | Admin grid | Cards expandíveis + filtros + upload |
-| Clientes Catálogo | `/clientes` | Admin grid | Cards + search |
+| Biblioteca | `/biblioteca` | Admin table | **Table + BibliotecaSidebar + BibliotecaDrawer** (Model Repo pattern) |
+| Clientes Catálogo | `/clientes` | Admin cards | **Condensed cards + ClientDrawer** (click card abre drawer) |
 | Clientes Editor | `/clientes/[id]` | Admin editor | 4 tabs (Identidade, Skills, Biblioteca, Métricas) |
 | Clientes Novo | `/clientes/new` | Admin create | Mesmo editor |
-| Workflows Catálogo | `/workflows` | Admin grid | Cards + templates |
+| Workflows Catálogo | `/workflows` | Admin table | **WorkflowTable + WorkflowDrawer** (humanized cron) |
 | Workflows Builder | `/workflows/new` | Builder | Steps + config |
 | Workflows Editor | `/workflows/[id]` | Builder | Mesmo builder |
 | Workflows Runs | `/workflows/[id]/runs` | Timeline | Histórico de execuções |
+| Design System | `/design-system` | Reference | Component library |
 
 ### 3.3 Layout Base
 
@@ -260,16 +264,40 @@ Home (/) ─── Sistema Solar
 | `AuthGuard` | `components/layout/AuthGuard.tsx` | Proteção de rotas por role |
 | `ThemeProvider` | `components/layout/ThemeProvider.tsx` | Toggle dark/light via data-theme |
 
-### 4.2 Cards
+### 4.2 Tables (Model Repo pattern — SPEC-005)
+
+| Componente | Arquivo | Usado em | Colunas |
+|-----------|---------|----------|---------|
+| `SkillsTable` | `components/admin/SkillsTable.tsx` | `/skills` | Nome, tipo, status, score, clientes |
+| `BibliotecaTable` | `components/biblioteca/BibliotecaTable.tsx` | `/biblioteca` | Titulo, tipo, scope, tags, status |
+| `WorkflowTable` | `components/workflows/WorkflowTable.tsx` | `/workflows` | Nome, status, schedule (humanizado), last run |
+
+### 4.3 Filter Sidebars (Model Repo pattern — SPEC-005)
+
+| Componente | Arquivo | Usado em | Filtros |
+|-----------|---------|----------|---------|
+| `SkillsSidebar` | `components/admin/SkillsSidebar.tsx` | `/skills` | Tipo, status, search |
+| `BibliotecaSidebar` | `components/biblioteca/BibliotecaSidebar.tsx` | `/biblioteca` | Scope, tipo, tags, search |
+
+### 4.4 Side Drawers (Model Repo pattern — SPEC-005)
+
+| Componente | Arquivo | Usado em | Conteudo |
+|-----------|---------|----------|----------|
+| `SkillDrawer` | `components/admin/SkillDrawer.tsx` | `/skills` | Detalhes do skill (read/edit) |
+| `BibliotecaDrawer` | `components/biblioteca/BibliotecaDrawer.tsx` | `/biblioteca` | Detalhes do documento |
+| `ClientDrawer` | `components/clientes/ClientDrawer.tsx` | `/clientes` | Detalhes do cliente (click card abre drawer) |
+| `WorkflowDrawer` | `components/workflows/WorkflowDrawer.tsx` | `/workflows` | Detalhes do workflow |
+
+### 4.5 Cards
 
 | Componente | Arquivo | Usado em | Visual |
 |-----------|---------|----------|--------|
-| `SkillCard` | `components/admin/SkillCard.tsx` | `/skills` | Type dot + nome + status badge + counters + score + footer |
-| `BibliotecaCard` | `components/biblioteca/BibliotecaCard.tsx` | `/biblioteca` | Thumbnail 80x80 + type icon + badge + tags + expandível |
-| `ClientCard` | `components/clientes/ClientCard.tsx` | `/clientes` | Color dot 10px + nome + descrição + métricas + contato |
-| `WorkflowCard` | `components/workflows/WorkflowCard.tsx` | `/workflows` | Nome + status badge + schedule info + last run + step count |
+| `SkillCard` | `components/admin/SkillCard.tsx` | `/skills` (legacy) | Type dot + nome + status badge + counters + score + footer |
+| `BibliotecaCard` | `components/biblioteca/BibliotecaCard.tsx` | `/biblioteca` (legacy) | Thumbnail 80x80 + type icon + badge + tags + expandível |
+| `ClientCard` | `components/clientes/ClientCard.tsx` | `/clientes` | Condensed: color dot 10px + nome + descrição + métricas (click abre ClientDrawer) |
+| `WorkflowCard` | `components/workflows/WorkflowCard.tsx` | `/workflows` (legacy) | Nome + status badge + schedule info + last run + step count |
 
-### 4.3 Editors (padrão CRUD)
+### 4.6 Editors (padrão CRUD)
 
 | Componente | Arquivo | Tabs |
 |-----------|---------|------|
@@ -279,24 +307,25 @@ Home (/) ─── Sistema Solar
 
 **Padrão compartilhado:** Header com nome inline-editable + botões (Descartar, Salvar/Criar) + tabs com sun underline.
 
-### 4.4 Chat
+### 4.7 Chat
 
 | Componente | Arquivo | Descrição |
 |-----------|---------|-----------|
 | `ChatInterface` | `components/chat/ChatInterface.tsx` | Grid 2 colunas: chat + sidebar |
-| `ChatInput` | `components/chat/ChatInput.tsx` | Input com placeholder + botão enviar |
-| `MessageBubble` | `components/chat/MessageBubble.tsx` | Bolha user (direita) ou assistant (esquerda) |
+| `ChatInput` | `components/chat/ChatInput.tsx` | **Textarea** com auto-resize + Shift+Enter para nova linha + botao enviar dinamico + sr-only label |
+| `ModelSelector` | `components/chat/ModelSelector.tsx` | **Dropdown** para trocar modelo de IA por mensagem (Gemini Flash, Pro, GPT-4o, Claude) |
+| `MessageBubble` | `components/chat/MessageBubble.tsx` | Bolha user (direita) ou assistant (esquerda) + avatar "S" + timestamp + code blocks |
 | `SocialPreview` | `components/chat/SocialPreview.tsx` | Preview Instagram: cover slide + content slides |
 | `VariationCards` | `components/chat/VariationCards.tsx` | 3 opções lado a lado (social ou text) |
-| `ResultActions` | `components/chat/ResultActions.tsx` | Copiar, Gerar variação, Salvar, Thumbs |
+| `ResultActions` | `components/chat/ResultActions.tsx` | **Icon-only** com tooltips (copiar, variar, salvar, thumbs) |
 | `FeedbackInline` | `components/chat/FeedbackInline.tsx` | Comentário opcional após thumbs |
-| `ContextSidebar` | `components/chat/ContextSidebar.tsx` | Biblioteca + Agentes + Validação HITL |
-| `PromptTemplateBar` | `components/chat/PromptTemplateBar.tsx` | Buttons de template quando chat vazio |
-| `StreamingIndicator` | `components/chat/StreamingIndicator.tsx` | "..." animado durante streaming |
+| `ContextSidebar` | `components/chat/ContextSidebar.tsx` | **Collapsible sections**: Biblioteca + Agentes + Validação HITL |
+| `PromptTemplateBar` | `components/chat/PromptTemplateBar.tsx` | **Cards com icones** + moon chips integrados (moons selecionaveis como chips) |
+| `StreamingIndicator` | `components/chat/StreamingIndicator.tsx` | **Skeleton bars** + nome do modelo ativo |
 | `TextGenPanel` | `components/chat/TextGenPanel.tsx` | Painel de geração de texto batch |
 | `ImageGenPanel` | `components/chat/ImageGenPanel.tsx` | Painel de geração de imagem |
 
-### 4.5 Filtros & Inputs
+### 4.8 Filtros & Inputs
 
 | Componente | Arquivo | Padrão |
 |-----------|---------|--------|
@@ -306,13 +335,15 @@ Home (/) ─── Sistema Solar
 | `TagInput` | `components/biblioteca/TagInput.tsx` | Input com autocomplete + pills removíveis |
 | `FileTypeIcon` | `components/biblioteca/FileTypeIcon.tsx` | Ícone + cor por tipo de arquivo |
 
-### 4.6 Primitivas
+### 4.9 Primitivas
 
 | Componente | Arquivo | Padrão |
 |-----------|---------|--------|
 | `Toast` | `components/ui/Toast.tsx` | Fixed bottom-center, pill, auto-dismiss 2s |
+| `EmptyState` | `components/ui/EmptyState.tsx` | Ilustracao + mensagem + CTA (usado em todas as pages admin) |
+| `Skeleton` | `components/ui/Skeleton.tsx` | Shimmer loading placeholder (tabelas, cards, drawers) |
 
-### 4.7 Sistema Solar
+### 4.10 Sistema Solar
 
 | Componente | Arquivo | Descrição |
 |-----------|---------|-----------|
@@ -323,24 +354,38 @@ Home (/) ─── Sistema Solar
 | `OrbitRing` | `components/solar/OrbitRing.tsx` | Anel de órbita |
 | `SkillGroup` | `components/solar/SkillGroup.tsx` | Agrupamento de skills |
 | `FilterPills` | `components/solar/FilterPills.tsx` | Filtro por tipo de skill |
+| `QuickStats` | `components/solar/QuickStats.tsx` | Barra de metricas rapidas na Home (clientes, skills, docs, workflows) |
 
 ---
 
 ## 5. Padrões de UX Adotados
 
-### 5.1 Chat UX
+### 5.1 Model Repo Pattern (SPEC-005)
+
+Padrao adotado para todas as paginas admin. Inspirado em interfaces de repositorio de modelos (HuggingFace, Replicate):
+
+| Elemento | Descricao |
+|----------|-----------|
+| **Table view** | Default. Linhas com dados condensados. Clicavel para abrir drawer. |
+| **Filter sidebar** | Coluna esquerda com filtros (tipo, status, search, scope, tags). |
+| **Side drawer** | Painel lateral direito (320-400px). Abre ao clicar na linha da tabela. Mostra detalhes em read/edit mode. |
+| **Variacao Clientes** | Cards condensados em vez de tabela. Click no card abre drawer (sem navegacao para outra pagina). |
+| **Variacao Workflows** | Tabela com cron humanizado (ex: "Toda segunda as 9h"). |
+
+### 5.2 Chat UX
 
 | Padrão | Implementação |
 |--------|---------------|
-| **Streaming** | Texto aparece progressivamente (SSE), indicador "..." durante loading |
-| **Prompt Templates** | Botões pré-definidos quando chat vazio. Ex: "Carrossel educação financeira" |
+| **Model Selector** | Dropdown para trocar modelo por mensagem. 4 modelos: Gemini Flash (default), Gemini Pro, GPT-4o, Claude. |
+| **Streaming** | Texto aparece progressivamente (SSE), skeleton bars durante loading com nome do modelo |
+| **Prompt Templates** | Cards com icones + moon chips integrados (moons selecionaveis como chips) |
 | **Variações** | Auto-gera 3 opções no Copy Social. Cards lado a lado para comparar. |
 | **Social Preview** | No Copy Social: output renderizado como slides de Instagram (cover + content) |
 | **Feedback** | Thumbs up/down inline + comentário expandível + painel no sidebar |
 | **Context** | Sidebar mostra documentos da Biblioteca ativos com toggle on/off |
 | **Fallback** | Se backend indisponível, usa mock streaming (mesma UX) |
 
-### 5.2 Admin CRUD
+### 5.3 Admin CRUD
 
 | Padrão | Descrição |
 |--------|-----------|
@@ -351,7 +396,7 @@ Home (/) ─── Sistema Solar
 | **Toast** | Feedback de ação: "Skill atualizado", "Item criado", "Item excluído". Auto-dismiss 2s. |
 | **Validation** | Inline errors em vermelho. Switch para tab com erro. |
 
-### 5.3 Filtros
+### 5.4 Filtros
 
 | Padrão | Descrição |
 |--------|-----------|
@@ -360,7 +405,7 @@ Home (/) ─── Sistema Solar
 | **Scope pills** | Multi-select com dot colorido por cliente. Suno sempre primeiro. |
 | **Tag cloud** | Pills pequenas das tags mais frequentes. OR dentro de grupo, AND entre grupos. |
 
-### 5.4 Interação
+### 5.5 Interação
 
 | Padrão | Implementação |
 |--------|---------------|
@@ -393,12 +438,20 @@ Home (/) ─── Sistema Solar
 | Skip link "Pular para conteúdo" | ✅ |
 | `prefers-reduced-motion` | ✅ |
 
-### Não implementado / Gaps
+### WCAG Fixes Aplicados (SPEC-005)
+
+| Item | Correcao |
+|------|----------|
+| `--text-muted` contrast | Ajustado para atingir WCAG AA 4.5:1 ratio |
+| `--border-subtle` contrast | Ajustado para melhor visibilidade |
+| `sr-only` label no ChatInput | Label acessivel para screen readers |
+| Tooltips em ResultActions | Icon-only buttons agora tem tooltips descritivos |
+
+### Gaps Remanescentes
 
 | Item | Impacto |
 |------|---------|
 | Screen reader testing real | Não validado com NVDA/VoiceOver |
-| Color contrast audit formal | Alguns text-muted podem não atingir 4.5:1 |
 | Mobile responsivo | Não otimizado — sidebar colapsa mas grid não adapta |
 | Tab order auditado | Pode ter inconsistências em telas complexas |
 | Error announcements | Erros de formulário não são anunciados via aria-live |
@@ -407,16 +460,9 @@ Home (/) ─── Sistema Solar
 
 ## 7. Gaps & Oportunidades
 
-### 7.1 Sem Empty State
+### 7.1 ~~Sem Empty State~~ — RESOLVIDO
 
-| Tela | Situação | Oportunidade |
-|------|----------|-------------|
-| Chat (primeira vez) | Mostra templates, OK | — |
-| Skills (sem skills) | "Nenhum skill encontrado." | Ilustração + CTA "Criar primeiro skill" |
-| Biblioteca (sem docs) | "Nenhum item encontrado." | Ilustração + CTA "Upload primeiro documento" |
-| Clientes (sem clientes) | "Nenhum cliente encontrado." | Ilustração + CTA "Adicionar cliente" |
-| Workflows (sem workflows) | Depende da implementação | Templates como sugestão |
-| Chat histórico | Sem persistência | "Suas conversas anteriores aparecerão aqui" |
+Empty states implementados via componente `EmptyState` (`components/ui/EmptyState.tsx`). Todas as paginas admin agora mostram ilustracao + mensagem + CTA quando vazio. Chat historico continua sem persistencia (debito tecnico).
 
 ### 7.2 Sem Onboarding
 
@@ -451,7 +497,7 @@ Home (/) ─── Sistema Solar
 | **Cmd+K** | Barra de busca global | Média |
 | **Drag & Drop** | Reordenar moons, steps de workflow | Média |
 | **Undo** | Desfazer última ação (delete, edit) | Baixa |
-| **Skeleton loading** | Shimmer enquanto carrega | Baixa |
+| ~~**Skeleton loading**~~ | ~~Shimmer enquanto carrega~~ | ~~IMPLEMENTADO~~ (`components/ui/Skeleton.tsx`) |
 | **Keyboard shortcuts** | Atalhos para ações frequentes | Baixa |
 | **Histórico de chat** | Conversas anteriores acessíveis | Alta (precisa backend) |
 | **Notificações** | Workflow completou, feedback recebido | Média |
@@ -464,6 +510,8 @@ Home (/) ─── Sistema Solar
 
 | Recurso | Localização |
 |---------|-------------|
+| **Design System MASTER** | `design-system/MASTER.md` (source of truth) |
+| **Design System page** | `/design-system` (component library visual reference) |
 | **Tokens CSS** | `app/globals.css` (variáveis :root) |
 | **Tailwind config** | `tailwind.config.ts` (cores, spacing, radius) |
 | **Ícones** | Lucide React — https://lucide.dev/icons |

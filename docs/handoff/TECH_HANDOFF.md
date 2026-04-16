@@ -1,6 +1,7 @@
 # sunOS — Technical Handoff
 
-**Data:** 2026-04-16
+**Last Updated:** 2026-04-15
+**Data original:** 2026-04-16
 **De:** Heitor Miranda (Tech Lead)
 **Para:** Tech Lead, Arquiteto, Desenvolvedores
 **Repo:** https://github.com/koro-creators/suno-os
@@ -189,28 +190,30 @@ sunos/
 ├── app/                          # Next.js App Router pages
 │   ├── page.tsx                  # Home (sistema solar)
 │   ├── login/page.tsx            # Login Google
-│   ├── [clientSlug]/             # Navegação solar (3 níveis)
+│   ├── [clientSlug]/             # Navegação solar (3 níveis — SPEC-007)
 │   │   └── [skillSlug]/
-│   │       └── [moonSlug]/page.tsx  # Chat contextualizado
+│   │       ├── page.tsx          # Chat contextualizado (moons como chips)
+│   │       └── [moonSlug]/page.tsx  # Redirect → /[client]/[skill]?moon=[moon]
 │   ├── skills/                   # Admin de skills
 │   ├── biblioteca/               # Admin de biblioteca
 │   ├── clientes/                 # Admin de clientes
-│   └── workflows/                # Workflow builder
-│       ├── page.tsx              # Catálogo
-│       ├── new/page.tsx          # Criar workflow
-│       └── [workflowId]/
-│           ├── page.tsx          # Editar workflow
-│           └── runs/page.tsx     # Histórico de execuções
+│   ├── workflows/                # Workflow builder
+│   │   ├── page.tsx              # Catálogo
+│   │   ├── new/page.tsx          # Criar workflow
+│   │   └── [workflowId]/
+│   │       ├── page.tsx          # Editar workflow
+│   │       └── runs/page.tsx     # Histórico de execuções
+│   └── design-system/page.tsx    # Component library reference
 │
 ├── components/
-│   ├── admin/                    # Skills admin (SkillCard, SkillEditor, tabs)
-│   ├── biblioteca/               # Biblioteca (BibliotecaCard, Modal, Filters, FileTypeIcon)
-│   ├── chat/                     # Chat (ChatInterface, MessageBubble, SocialPreview, ContextSidebar)
-│   ├── clientes/                 # Clientes admin (ClientCard, ClientEditor)
+│   ├── admin/                    # Skills admin (SkillCard, SkillEditor, SkillsTable, SkillsSidebar, SkillDrawer, tabs)
+│   ├── biblioteca/               # Biblioteca (BibliotecaCard, BibliotecaTable, BibliotecaSidebar, BibliotecaDrawer, Modal, Filters, FileTypeIcon)
+│   ├── chat/                     # Chat (ChatInterface, MessageBubble, ModelSelector, SocialPreview, ContextSidebar, StreamingIndicator, PromptTemplateBar)
+│   ├── clientes/                 # Clientes admin (ClientCard, ClientEditor, ClientDrawer)
 │   ├── layout/                   # Layout (Sidebar, AppHeader, Providers, AuthGuard, AppShell)
-│   ├── solar/                    # Sistema solar (OrbitalSystem, PlanetNode, MoonNode)
-│   ├── ui/                       # Primitivas (Toast)
-│   └── workflows/                # Workflows (WorkflowCard, WorkflowBuilder, StepEditor, RunTimeline)
+│   ├── solar/                    # Sistema solar (OrbitalSystem, PlanetNode, MoonNode, QuickStats)
+│   ├── ui/                       # Primitivas (Toast, EmptyState, Skeleton)
+│   └── workflows/                # Workflows (WorkflowCard, WorkflowTable, WorkflowDrawer, WorkflowBuilder, StepEditor, RunTimeline)
 │
 ├── contexts/                     # React Context providers
 │   ├── AuthContext.tsx           # Firebase Auth + roles
@@ -428,6 +431,19 @@ from meu_modulo.router import router as meu_router
 app.include_router(meu_router, prefix=settings.API_PREFIX)
 ```
 
+### Model Repo Pattern (SPEC-005)
+
+Admin pages follow the "Model Repo" pattern: table view (default) + filter sidebar (left) + side drawer (right). Components:
+
+| Page | Table | Sidebar | Drawer |
+|------|-------|---------|--------|
+| `/skills` | `SkillsTable` | `SkillsSidebar` | `SkillDrawer` |
+| `/biblioteca` | `BibliotecaTable` | `BibliotecaSidebar` | `BibliotecaDrawer` |
+| `/clientes` | Condensed `ClientCard`s | — | `ClientDrawer` |
+| `/workflows` | `WorkflowTable` | — | `WorkflowDrawer` |
+
+**Side Drawer pattern:** Click on a table row opens a drawer from the right (320-400px wide). Drawer shows entity details in read/edit mode. Closing drawer returns focus to table. For Clientes, clicking the card opens the drawer (no navigation to `/clientes/[id]`).
+
 ### Design System (tokens)
 
 ```css
@@ -470,9 +486,12 @@ Focus ring: boxShadow '0 0 0 2px rgba(255,200,1,0.15)'
 | **SPEC-001** | Backend LangGraph + Chat real | Implementada | `docs/specs/large/sunohub-tools-integration/` |
 | **SPEC-002** | Knowledge + Biblioteca v2 (pgvector, multimodal) | Implementada | `docs/specs/large/knowledge-biblioteca-v2/` |
 | **SPEC-003** | Workflow Builder (compiler, executor, UI) | Implementada | `docs/specs/large/workflow-builder/` |
-| **SPEC-004** | Workflow Chaining (sub-workflows) | Implementada | `docs/specs/large/workflow-chaining/` |
+| **SPEC-004** | Workflow Chaining (sub-workflows) | Implementada | `docs/specs/medium/workflow-chaining.spec.md` |
+| **SPEC-005** | UX Redesign (Model Repo pattern, 7 admin pages) | Implementada | `docs/specs/large/ux-redesign/spec.md` |
+| **SPEC-006** | Chat Attachments (file upload no chat) | Spec only | `docs/specs/medium/chat-attachments.spec.md` |
+| **SPEC-007** | Navigation Simplification (4→3 niveis) | Implementada | `docs/specs/medium/nav-simplification.spec.md` |
 
-Cada spec Large tem 5 artefatos: `constitution.md`, `spec.md`, `design.md`, `plan.md`, `tasks.md`.
+Cada spec Large tem 5 artefatos: `constitution.md`, `spec.md`, `design.md`, `plan.md`, `tasks.md`. Specs Medium tem um unico `spec.md`.
 
 Para executar uma spec: ler `plan.md` (phases) e `tasks.md` (tasks atômicas por phase).
 
@@ -594,8 +613,7 @@ Frontend                Firebase              Backend
 | `data/clients.ts` estático | `data/clients.ts` vs `ClientsContext` | Solar ≠ Admin | Unificar (ADR-002 permite) |
 | ImageGen mock | `api/chat/tools/image_tools.py` | Sem imagem real | Configurar Vertex AI key |
 | 3 vulnerabilidades GitHub | `package.json` deps | Segurança | `npm audit fix` |
-| LLM fallback silencioso | `runner.py`, `chat_tools.py` | User não sabe que mudou modelo | Adicionar header/toast |
-| ROADMAP.md desatualizado | `docs/ROADMAP.md` | Docs inconsistentes | Atualizar com SPECs 002-004 |
+| LLM fallback silencioso | `runner.py`, `chat_tools.py` | User não sabe que mudou modelo | Parcialmente resolvido: ModelSelector mostra modelo ativo, StreamingIndicator mostra nome do modelo |
 
 ### Riscos
 
