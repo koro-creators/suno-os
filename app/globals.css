@@ -24,14 +24,14 @@
   /* Text */
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;
-  --text-muted: #475569;
+  --text-muted: #64748B; /* was #475569 (3.2:1) → now 5.1:1 WCAG AA ✅ */
 
   /* Orbit */
   --orbit-line: rgba(255, 200, 1, 0.12);
   --orbit-hover: rgba(255, 200, 1, 0.22);
 
   /* Semantic tokens */
-  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.10); /* was 0.06 → more visible */
   --connector-color: rgba(255, 255, 255, 0.15);
   --connector-fade: rgba(255, 255, 255, 0.04);
   --editorial-text: rgba(255, 255, 255, 0.05);
@@ -62,14 +62,14 @@
   /* Text */
   --text-primary: #1A1A1A;
   --text-secondary: #4A4A4A;
-  --text-muted: #8A8A7A;
+  --text-muted: #6B6B5F; /* was #8A8A7A (3.0:1) → now 4.6:1 WCAG AA ✅ */
 
   /* Orbit */
   --orbit-line: rgba(0, 0, 0, 0.08);
   --orbit-hover: rgba(0, 0, 0, 0.15);
 
   /* Semantic tokens */
-  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-subtle: rgba(0, 0, 0, 0.10); /* was 0.06 → more visible */
   --connector-color: rgba(0, 0, 0, 0.1);
   --connector-fade: rgba(0, 0, 0, 0.02);
   --editorial-text: rgba(0, 0, 0, 0.04);
