@@ -147,15 +147,6 @@ export default function SkillPage({
         }
       />
 
-      {/* Moon chips bar */}
-      {moons.length > 0 && (
-        <MoonChips
-          moons={moons}
-          selected={selectedMoonSlug}
-          onSelect={handleMoonSelect}
-        />
-      )}
-
       <div id="main-content" className="flex-1 overflow-hidden">
         <ChatInterface
           key={selectedMoonSlug}
@@ -166,6 +157,8 @@ export default function SkillPage({
           clientColor={client.color}
           documents={candidateDocs}
           initialActiveDocIds={autoActiveIds}
+          moons={moons}
+          onMoonSelect={handleMoonSelect}
         />
       </div>
     </main>

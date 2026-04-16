@@ -35,6 +35,8 @@ interface ChatInterfaceProps {
   clientColor?: string;
   documents: BibliotecaDocument[];
   initialActiveDocIds: string[];
+  moons?: { id: string; name: string; slug: string; description: string }[];
+  onMoonSelect?: (slug: string) => void;
 }
 
 const DEFAULT_AGENTES = ['Copywriter', 'Revisor'];
@@ -44,7 +46,7 @@ const GENERIC_FALLBACK: { content: string; highlight?: { label: string; body: st
     'Entendido. Estou analisando o contexto e preparando uma resposta personalizada com base na biblioteca do cliente e nas melhores praticas do setor.',
 };
 
-export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientName, clientColor, documents, initialActiveDocIds }: ChatInterfaceProps) {
+export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientName, clientColor, documents, initialActiveDocIds, moons, onMoonSelect }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeDocIds, setActiveDocIds] = useState<string[]>(initialActiveDocIds);
   const [pendingHighlight, setPendingHighlight] = useState<{ label: string; body: string } | undefined>();
@@ -291,7 +293,13 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-lg">
               {messages.length === 0 && !isStreaming && (
                 <div className="flex flex-1 items-center justify-center">
-                  <PromptTemplateBar templates={templates} onSelect={(prompt) => handleSend(prompt)} />
+                  <PromptTemplateBar
+                    templates={templates}
+                    onSelect={(prompt) => handleSend(prompt)}
+                    moons={moons}
+                    selectedMoon={moonSlug}
+                    onMoonSelect={onMoonSelect}
+                  />
                 </div>
               )}
 
