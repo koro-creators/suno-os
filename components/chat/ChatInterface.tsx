@@ -341,13 +341,25 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
               {isStreaming && streamingText && (
                 <MessageBubble role="assistant" content={streamingText} />
               )}
-              {isStreaming && !streamingText && <StreamingIndicator />}
+              {isStreaming && !streamingText && <StreamingIndicator model={skillConfig?.model} />}
 
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
+            {/* Model badge + Input */}
             <div className="shrink-0 px-lg pb-lg">
+              {/* Model badge - shows which AI model is being used */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
+                <span style={{
+                  fontSize: '0.55rem', color: 'var(--text-muted)',
+                  backgroundColor: 'var(--deep)', border: '1px solid var(--border-subtle)',
+                  borderRadius: 9999, padding: '2px 8px', display: 'inline-flex',
+                  alignItems: 'center', gap: 4,
+                }}>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#10B981' }} />
+                  {skillConfig?.model || 'gemini-flash'}
+                </span>
+              </div>
               <ChatInput onSend={handleSend} disabled={isStreaming} />
             </div>
           </>

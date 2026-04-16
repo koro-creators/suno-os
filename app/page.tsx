@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
+import QuickStats from '@/components/solar/QuickStats';
 
 // Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
@@ -21,8 +22,10 @@ export default function Home() {
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[{ label: 'Home', href: '/' }]}
-        rightLabel={`${clients.length} biomas`}
+        rightLabel={`${clients.length} clientes`}
       />
+
+      <QuickStats />
 
       <div id="main-content" className="flex-1 relative min-h-0">
         {/* Sun — anchored to left edge, half visible */}
@@ -111,7 +114,7 @@ export default function Home() {
         >
           <div style={{ fontSize: '3rem', fontWeight: 200, color: 'var(--editorial-text)', lineHeight: 1, letterSpacing: '-0.02em' }}>01</div>
           <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--editorial-label)', marginTop: 4 }}>Sistema Solar</div>
-          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>{clients.length} biomas &middot; {totalSkills} skills</div>
+          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>{clients.length} clientes &middot; {totalSkills} skills</div>
         </div>
       </div>
     </main>
