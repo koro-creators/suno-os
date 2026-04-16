@@ -11,6 +11,7 @@ import { MessageSquare, Type, ImageIcon } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
 import ChatInput from './ChatInput';
+import ModelSelector from './ModelSelector';
 import ContextSidebar from './ContextSidebar';
 import PromptTemplateBar from './PromptTemplateBar';
 import VariationCards from './VariationCards';
@@ -66,6 +67,8 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
   const { skills: skillsAdmin } = useSkills();
   const skillConfig = skillsAdmin.find((s) => s.slug === skillSlug);
 
+  const [selectedModel, setSelectedModel] = useState(skillConfig?.model || 'gemini-flash');
+
   // Auto-scroll to bottom when messages change or while streaming
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -97,7 +100,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
                 length: 'medium',
                 variations: 2,
                 skill_slug: skillSlug,
-                model: skillConfig?.model || 'gemini-flash',
+                model: selectedModel,
               }),
             });
             const data = await response.json();
@@ -136,7 +139,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
         startStream({
           message: text,
           skillSlug,
-          model: skillConfig?.model || 'gemini-flash',
+          model: selectedModel,
           temperature: skillConfig?.temperature ?? 0.7,
           maxTokens: skillConfig?.maxTokens ?? 4096,
           systemPrompt: skillConfig?.systemPrompt || undefined,
@@ -163,7 +166,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
         }, 500);
       }
     },
-    [isStreaming, clientSlug, moonSlug, skillSlug, documents, activeDocIds, skillConfig, startStream, startMockStream],
+    [isStreaming, clientSlug, moonSlug, skillSlug, documents, activeDocIds, skillConfig, selectedModel, startStream, startMockStream],
   );
 
   async function handleGenerateVariation(msgIndex: number) {
@@ -181,7 +184,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
             length: 'medium',
             variations: 2,
             skill_slug: skillSlug,
-            model: skillConfig?.model || 'gemini-flash',
+            model: selectedModel,
           }),
         });
         const data = await response.json();
@@ -341,26 +344,19 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
               {isStreaming && streamingText && (
                 <MessageBubble role="assistant" content={streamingText} />
               )}
-              {isStreaming && !streamingText && <StreamingIndicator model={skillConfig?.model} />}
+              {isStreaming && !streamingText && <StreamingIndicator model={selectedModel} />}
 
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Model badge + Input */}
+            {/* Model selector + Input */}
             <div className="shrink-0 px-lg pb-lg">
-              {/* Model badge - shows which AI model is being used */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0' }}>
-                <span style={{
-                  fontSize: '0.55rem', color: 'var(--text-muted)',
-                  backgroundColor: 'var(--deep)', border: '1px solid var(--border-subtle)',
-                  borderRadius: 9999, padding: '2px 8px', display: 'inline-flex',
-                  alignItems: 'center', gap: 4,
-                }}>
-                  <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#10B981' }} />
-                  {skillConfig?.model || 'gemini-flash'}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+                <div style={{ flex: 1 }}>
+                  <ChatInput onSend={handleSend} disabled={isStreaming} />
+                </div>
               </div>
-              <ChatInput onSend={handleSend} disabled={isStreaming} />
             </div>
           </>
         )}
@@ -370,7 +366,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
           <div className="flex-1 overflow-hidden">
             <TextGenPanel
               skillSlug={skillSlug}
-              model={skillConfig?.model}
+              model={selectedModel}
             />
           </div>
         )}
@@ -379,7 +375,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
         {chatMode === 'image' && (
           <div className="flex-1 overflow-hidden">
             <ImageGenPanel
-              model={skillConfig?.model}
+              model={selectedModel}
             />
           </div>
         )}
