@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, Shuffle, Bookmark, BookmarkCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Copy, Check, Sparkles, Bookmark, BookmarkCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { MessageFeedback } from '@/lib/feedback-types';
 
 interface ResultActionsProps {
@@ -14,16 +14,17 @@ interface ResultActionsProps {
   onFeedbackChange?: (f: MessageFeedback) => void;
 }
 
-const buttonStyle: React.CSSProperties = {
-  display: 'inline-flex',
+const iconBtnBase: React.CSSProperties = {
+  display: 'flex',
   alignItems: 'center',
-  gap: 4,
-  fontSize: '0.65rem',
-  color: 'var(--text-muted)',
+  justifyContent: 'center',
+  width: 28,
+  height: 28,
+  borderRadius: 6,
   background: 'none',
   border: 'none',
   cursor: 'pointer',
-  transition: 'color 150ms',
+  transition: 'color 150ms ease, background-color 150ms ease',
   padding: 0,
 };
 
@@ -37,7 +38,6 @@ export default function ResultActions({
   onFeedbackChange,
 }: ResultActionsProps) {
   const [copied, setCopied] = useState(false);
-  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     if (copied) {
@@ -46,31 +46,23 @@ export default function ResultActions({
     }
   }, [copied]);
 
-  useEffect(() => {
-    if (savedFlash) {
-      const t = setTimeout(() => setSavedFlash(false), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [savedFlash]);
-
   const handleCopy = useCallback(() => {
     const text = content + (highlightBody ? '\n\n' + highlightBody : '');
     navigator.clipboard.writeText(text);
     setCopied(true);
   }, [content, highlightBody]);
 
-  const handleSave = useCallback(() => {
-    onSave();
-    setSavedFlash(true);
-  }, [onSave]);
+  const handleHoverEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = 'var(--surface-hover)';
+  };
 
-  const handleHover = (e: React.MouseEvent<HTMLButtonElement>, enter: boolean) => {
-    e.currentTarget.style.color = enter ? 'var(--text-secondary)' : 'var(--text-muted)';
+  const handleHoverLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
     e.currentTarget.style.outline = 'none';
-    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255,200,1,0.5)';
+    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255,200,1,0.3)';
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLButtonElement>) => {
@@ -79,50 +71,58 @@ export default function ResultActions({
 
   return (
     <div className="orbit-appear" style={{ position: 'relative', marginTop: 8 }}>
-      <div style={{ display: 'flex', flexDirection: 'row', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
+        {/* Copy */}
         <button
-          style={buttonStyle}
+          style={{ ...iconBtnBase, color: copied ? 'var(--planejamento)' : 'var(--text-muted)' }}
           onClick={handleCopy}
-          onMouseEnter={(e) => handleHover(e, true)}
-          onMouseLeave={(e) => handleHover(e, false)}
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          title={copied ? 'Copiado!' : 'Copiar'}
+          aria-label={copied ? 'Copiado' : 'Copiar'}
         >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? 'Copiado!' : 'Copiar'}
+          {copied ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
         </button>
 
+        {/* Generate variation */}
         <button
-          style={buttonStyle}
+          style={{ ...iconBtnBase, color: 'var(--text-muted)' }}
           onClick={onGenerateVariation}
-          onMouseEnter={(e) => handleHover(e, true)}
-          onMouseLeave={(e) => handleHover(e, false)}
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          title="Gerar variação"
+          aria-label="Gerar variação"
         >
-          <Shuffle size={14} />
-          Gerar variação
+          <Sparkles size={14} strokeWidth={1.5} />
         </button>
 
+        {/* Save / Bookmark */}
         <button
-          style={buttonStyle}
-          onClick={handleSave}
-          onMouseEnter={(e) => handleHover(e, true)}
-          onMouseLeave={(e) => handleHover(e, false)}
+          style={{ ...iconBtnBase, color: isSaved ? 'var(--sun)' : 'var(--text-muted)' }}
+          onClick={onSave}
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          title={isSaved ? 'Salvo' : 'Salvar'}
+          aria-label={isSaved ? 'Salvo na Biblioteca' : 'Salvar na Biblioteca'}
         >
-          {isSaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-          {isSaved ? 'Salvo' : 'Salvar'}
+          {isSaved ? <BookmarkCheck size={14} strokeWidth={1.5} /> : <Bookmark size={14} strokeWidth={1.5} />}
         </button>
 
+        {/* Thumbs up */}
         <button
           style={{
-            ...buttonStyle,
-            color: feedback?.rating === 'up' ? 'var(--planejamento)' : buttonStyle.color,
+            ...iconBtnBase,
+            color: feedback?.rating === 'up' ? 'var(--planejamento)' : 'var(--text-muted)',
           }}
           aria-pressed={feedback?.rating === 'up'}
           aria-label="Aprovar"
+          title="Aprovar"
           onClick={() => {
             if (onFeedbackChange && feedback) {
               onFeedbackChange({
@@ -131,25 +131,23 @@ export default function ResultActions({
               });
             }
           }}
-          onMouseEnter={(e) => {
-            if (feedback?.rating !== 'up') handleHover(e, true);
-          }}
-          onMouseLeave={(e) => {
-            if (feedback?.rating !== 'up') handleHover(e, false);
-          }}
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
           onFocus={handleFocus}
           onBlur={handleBlur}
         >
           <ThumbsUp size={14} strokeWidth={1.5} />
         </button>
 
+        {/* Thumbs down */}
         <button
           style={{
-            ...buttonStyle,
-            color: feedback?.rating === 'down' ? '#EF4444' : buttonStyle.color,
+            ...iconBtnBase,
+            color: feedback?.rating === 'down' ? '#EF4444' : 'var(--text-muted)',
           }}
           aria-pressed={feedback?.rating === 'down'}
           aria-label="Rejeitar"
+          title="Rejeitar"
           onClick={() => {
             if (onFeedbackChange && feedback) {
               onFeedbackChange({
@@ -158,31 +156,14 @@ export default function ResultActions({
               });
             }
           }}
-          onMouseEnter={(e) => {
-            if (feedback?.rating !== 'down') handleHover(e, true);
-          }}
-          onMouseLeave={(e) => {
-            if (feedback?.rating !== 'down') handleHover(e, false);
-          }}
+          onMouseEnter={handleHoverEnter}
+          onMouseLeave={handleHoverLeave}
           onFocus={handleFocus}
           onBlur={handleBlur}
         >
           <ThumbsDown size={14} strokeWidth={1.5} />
         </button>
       </div>
-
-      {savedFlash && (
-        <span
-          style={{
-            fontSize: '0.55rem',
-            color: 'var(--text-muted)',
-            marginTop: 4,
-            display: 'block',
-          }}
-        >
-          Salvo na Biblioteca
-        </span>
-      )}
     </div>
   );
 }

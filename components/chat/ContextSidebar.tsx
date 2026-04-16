@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, X, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, Search, X, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import Toast from '@/components/ui/Toast';
@@ -50,6 +50,11 @@ export default function ContextSidebar({
   const [sessionRating, setSessionRating] = useState(0);
   const [sessionComment, setSessionComment] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (key: string) => {
+    setCollapsedSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const activeDocs = useMemo(
     () => documents.filter((d) => activeDocIds.includes(d.id)),
@@ -113,7 +118,17 @@ export default function ContextSidebar({
       {/* Biblioteca */}
       <section className="mb-5">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <SectionHeader color="var(--sun)" label="Biblioteca" />
+          <div
+            onClick={() => toggleSection('biblioteca')}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flex: 1 }}
+          >
+            <SectionHeader color="var(--sun)" label="Biblioteca" />
+            <ChevronDown size={12} strokeWidth={1.5} style={{
+              color: 'var(--text-muted)',
+              transform: collapsedSections['biblioteca'] ? 'rotate(-90deg)' : 'rotate(0)',
+              transition: 'transform 150ms ease',
+            }} />
+          </div>
           <button
             aria-label="Adicionar contexto"
             onClick={() => setShowSearch(!showSearch)}
@@ -126,6 +141,7 @@ export default function ContextSidebar({
               display: 'flex',
               borderRadius: 4,
               transition: 'color 150ms ease',
+              marginLeft: 6,
             }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--sun)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; }}
@@ -134,7 +150,7 @@ export default function ContextSidebar({
           </button>
         </div>
 
-        {showSearch && (
+        {!collapsedSections['biblioteca'] && showSearch && (
           <div style={{ marginBottom: 8 }}>
             <div style={{ position: 'relative', marginBottom: 6 }}>
               <Search size={11} strokeWidth={1.5} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
@@ -169,51 +185,76 @@ export default function ContextSidebar({
           </div>
         )}
 
-        <div className="flex flex-col gap-xs">
-          {activeDocs.map((doc) => (
-            <div
-              key={doc.id}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '2px solid var(--sun)', backgroundColor: 'rgba(255,200,1,0.06)', borderRadius: '0 8px 8px 0', padding: '6px 8px' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, overflow: 'hidden' }}>
-                <FileTypeIcon fileType={doc.fileType} size={12} />
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {doc.title}
-                </span>
-              </div>
-              <button
-                role="switch"
-                aria-checked={true}
-                aria-label={`Desativar ${doc.title}`}
-                onClick={() => onToggleDoc(doc.id)}
-                style={{ width: 28, height: 16, borderRadius: 8, border: 'none', backgroundColor: 'var(--sun)', cursor: 'pointer', position: 'relative', flexShrink: 0, marginLeft: 6, transition: 'background-color 200ms ease' }}
+        {!collapsedSections['biblioteca'] && (
+          <div className="flex flex-col gap-xs">
+            {activeDocs.map((doc) => (
+              <div
+                key={doc.id}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '2px solid var(--sun)', backgroundColor: 'rgba(255,200,1,0.06)', borderRadius: '0 8px 8px 0', padding: '6px 8px' }}
               >
-                <span style={{ position: 'absolute', top: 2, left: 14, width: 12, height: 12, borderRadius: '50%', backgroundColor: 'var(--void)', transition: 'left 200ms ease' }} />
-              </button>
-            </div>
-          ))}
-          {activeDocs.length === 0 && (
-            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', padding: '4px 0' }}>Nenhum contexto ativo</span>
-          )}
-        </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, overflow: 'hidden' }}>
+                  <FileTypeIcon fileType={doc.fileType} size={12} />
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {doc.title}
+                  </span>
+                </div>
+                <button
+                  role="switch"
+                  aria-checked={true}
+                  aria-label={`Desativar ${doc.title}`}
+                  onClick={() => onToggleDoc(doc.id)}
+                  style={{ width: 28, height: 16, borderRadius: 8, border: 'none', backgroundColor: 'var(--sun)', cursor: 'pointer', position: 'relative', flexShrink: 0, marginLeft: 6, transition: 'background-color 200ms ease' }}
+                >
+                  <span style={{ position: 'absolute', top: 2, left: 14, width: 12, height: 12, borderRadius: '50%', backgroundColor: 'var(--void)', transition: 'left 200ms ease' }} />
+                </button>
+              </div>
+            ))}
+            {activeDocs.length === 0 && (
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', padding: '4px 0' }}>Nenhum contexto ativo</span>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Agentes */}
       <section className="mb-5">
-        <SectionHeader color="var(--midia)" label="Agentes" />
-        <div className="flex flex-col gap-xs">
-          {agentes.map((agente) => (
-            <div key={agente} className="px-sm py-xs text-xs text-text-secondary">
-              {agente}
-            </div>
-          ))}
+        <div
+          onClick={() => toggleSection('agentes')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 8 }}
+        >
+          <SectionHeader color="var(--midia)" label="Agentes" />
+          <ChevronDown size={12} strokeWidth={1.5} style={{
+            color: 'var(--text-muted)',
+            transform: collapsedSections['agentes'] ? 'rotate(-90deg)' : 'rotate(0)',
+            transition: 'transform 150ms ease',
+          }} />
         </div>
+        {!collapsedSections['agentes'] && (
+          <div className="flex flex-col gap-xs">
+            {agentes.map((agente) => (
+              <div key={agente} className="px-sm py-xs text-xs text-text-secondary">
+                {agente}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Validação */}
       <section className="mb-5">
-        <SectionHeader color="var(--planejamento)" label="Validação" />
+        <div
+          onClick={() => toggleSection('validacao')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 8 }}
+        >
+          <SectionHeader color="var(--planejamento)" label="Validação" />
+          <ChevronDown size={12} strokeWidth={1.5} style={{
+            color: 'var(--text-muted)',
+            transform: collapsedSections['validacao'] ? 'rotate(-90deg)' : 'rotate(0)',
+            transition: 'transform 150ms ease',
+          }} />
+        </div>
 
+        {collapsedSections['validacao'] ? null : <>
         {/* HITL Badge */}
         <div
           className="inline-flex items-center gap-sm rounded-pill px-sm py-xs"
@@ -431,6 +472,7 @@ export default function ContextSidebar({
             Sessão avaliada ★ {sessionFeedback.rating}
           </div>
         )}
+        </>}
       </section>
 
       <Toast message={toast || ''} visible={!!toast} onClose={() => setToast(null)} />

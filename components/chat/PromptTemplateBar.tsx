@@ -1,5 +1,6 @@
 'use client';
 
+import { MessageSquare } from 'lucide-react';
 import { PromptTemplate } from '@/lib/types';
 
 interface PromptTemplateBarProps {
@@ -8,86 +9,47 @@ interface PromptTemplateBarProps {
 }
 
 export default function PromptTemplateBar({ templates, onSelect }: PromptTemplateBarProps) {
+  if (templates.length === 0) return null;
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-      }}
-    >
-      <span
-        style={{
-          fontSize: '0.7rem',
-          color: 'var(--text-muted)',
-          marginBottom: 12,
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-        }}
-      >
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      <span style={{
+        fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.12em',
+        color: 'var(--text-muted)',
+      }}>
         Comece com um template
       </span>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 8,
-          maxWidth: 500,
-          width: '100%',
-        }}
-      >
-        {templates.map((template) => (
-          <div
-            key={template.id}
-            role="button"
-            tabIndex={0}
-            aria-label={template.label}
-            onClick={() => onSelect(template.prompt)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onSelect(template.prompt);
-              }
-            }}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: 8, maxWidth: 600, width: '100%',
+      }}>
+        {templates.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => onSelect(t.prompt)}
             style={{
-              background: 'transparent',
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              backgroundColor: 'var(--deep)',
               border: '1px solid var(--border-subtle)',
-              borderRadius: 8,
-              padding: '10px 14px',
-              cursor: 'pointer',
-              transition: 'background 150ms, border-color 150ms',
+              borderRadius: 12, padding: '12px 14px',
+              cursor: 'pointer', textAlign: 'left',
+              transition: 'border-color 200ms ease, background-color 200ms ease',
             }}
             onMouseEnter={(e) => {
-              const el = e.currentTarget;
-              el.style.background = 'var(--surface-hover)';
-              el.style.borderColor = 'rgba(255,255,255,0.12)';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--twilight)';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--surface-hover)';
             }}
             onMouseLeave={(e) => {
-              const el = e.currentTarget;
-              el.style.background = 'transparent';
-              el.style.borderColor = 'var(--border-subtle)';
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.outline = 'none';
-              e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255,200,1,0.5)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.boxShadow = 'none';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-subtle)';
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--deep)';
             }}
           >
-            <span
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--text-secondary)',
-                lineHeight: 1.4,
-              }}
-            >
-              {template.label}
+            <MessageSquare size={14} strokeWidth={1.5} style={{ color: 'var(--sun)', flexShrink: 0, marginTop: 1 }} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+              {t.label}
             </span>
-          </div>
+          </button>
         ))}
       </div>
     </div>
