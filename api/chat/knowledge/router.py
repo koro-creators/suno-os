@@ -74,6 +74,10 @@ async def upload_document(
     """Upload a document to the knowledge base.
 
     Validates file size and type, saves to storage, and triggers async processing.
+
+    Validações de metadados (RN-006, FR-001 do SPEC-004):
+    - tags: mínimo 2 (separadas por vírgula)
+    - description: mínimo 50 caracteres
     """
     # Validate extension
     ext = _get_file_extension(file.filename or "")
@@ -94,6 +98,18 @@ async def upload_document(
     # Parse comma-separated tags and scope
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
     scope_list = [s.strip() for s in scope.split(",") if s.strip()] if scope else []
+
+    # RN-006 / INC-API-06: validação obrigatória de metadados
+    if len(tag_list) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Metadados obrigatórios: forneça no mínimo 2 tags (separadas por vírgula). RN-006/FR-001.",
+        )
+    if len(description.strip()) < 50:
+        raise HTTPException(
+            status_code=400,
+            detail="Metadados obrigatórios: descrição com no mínimo 50 caracteres. RN-006/FR-001.",
+        )
 
     # Save file locally (GCS fallback)
     doc_id = str(uuid.uuid4())

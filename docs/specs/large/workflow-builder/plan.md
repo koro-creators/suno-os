@@ -2,9 +2,13 @@
 spec-id: SPEC-003
 slug: workflow-builder
 artefato: plan
-atualizada: 2026-04-13
+atualizada: 2026-04-30
 versao: 1.0
+status: substituido
+substituido_por: SPEC-005 (docs/specs/large/workflow-builder-canvas/)
 ---
+
+> ⚠️ **Substituída em 2026-04-30 por SPEC-005 — `docs/specs/large/workflow-builder-canvas/plan.md`.**
 
 # Plan — Workflow Builder (v1)
 

@@ -4,9 +4,10 @@ slug: workflow-builder
 artefato: spec
 nivel-sdd: spec-anchored
 tamanho: large
-status: rascunho
+status: substituido
+substituido_por: SPEC-005 (docs/specs/large/workflow-builder-canvas/)
 criada: 2026-04-13
-atualizada: 2026-04-13
+atualizada: 2026-04-30
 versao: 1.0
 escopo:
   projeto: sunos
@@ -16,6 +17,8 @@ escopo:
   branch: master
   contexto: Empoderar times nao-engenharia a criar automacoes de AI usando tools existentes do LangGraph
 ---
+
+> ⚠️ **Esta SPEC foi substituída em 2026-04-30 por SPEC-005 — `docs/specs/large/workflow-builder-canvas/`.** A nova SPEC mantém a engine LangGraph + tools compartilhadas + HITL + schedule + MLflow; substitui apenas a UI (lista linear de steps → canvas React Flow drag-and-drop) e estende o data model para DAG genuíno.
 
 # Spec — Workflow Builder
 
