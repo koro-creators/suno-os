@@ -13,8 +13,9 @@
     "@xyflow/react": "^12.10.2",
     "dagre": "^0.8.5",
     "firebase": "^12.11.0",
+    "gaxios": "^7.1.4",
     "lucide-react": "^0.468.0",
-    "next": "14.2.29",
+    "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -24,11 +25,22 @@
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.27",
     "eslint": "^8",
-    "eslint-config-next": "14.2.29",
-    "firebase-admin": "^13.7.0",
-    "postcss": "^8",
+    "eslint-config-next": "^14.2.35",
+    "firebase-admin": "^13.8.0",
+    "postcss": "^8.5.13",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "glob": "^11.0.0",
+    "postcss": "$postcss",
+    "uuid": "^14.0.0",
+    "gaxios": "$gaxios",
+    "google-gax": "^5.0.0",
+    "retry-request": "^8.0.0",
+    "teeny-request": "^10.1.2",
+    "http-proxy-agent": "^9.0.0",
+    "@tootallnate/once": "^3.0.1"
   }
 }
