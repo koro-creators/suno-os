@@ -1,7 +1,28 @@
+// SPEC-005 (Workflow Builder Canvas): handles, merge policies, validation kinds.
+// `out` is the universal source handle (constitution §2). `success` is gone.
+export type SourceHandle =
+  | 'out'
+  | 'error'
+  | 'then'
+  | 'else'
+  | 'approved'
+  | 'rejected'
+  | 'modified';
+export type TargetHandle = 'in';
+export type MergePolicy = 'all' | 'any';
+export type ValidationErrorKind =
+  | 'cycle'
+  | 'fan_in_without_merge'
+  | 'merge_with_zero_inputs'
+  | 'edge_to_nonexistent_handle'
+  | 'unauthorized_tool'
+  | 'max_nodes_exceeded'
+  | 'no_entry_node';
+
 export interface WorkflowStep {
   id: string;
   name: string;
-  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow';
+  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge';
   tool_name?: string;
   prompt?: string;
   workflow_id?: string;
@@ -15,6 +36,55 @@ export interface WorkflowStep {
     then: string;
     else: string;
   };
+}
+
+/**
+ * Canvas-aware step (SPEC-005). Adds canvas coordinates and merge policy.
+ * Backend persists position_x/y inside `definition.steps[]` JSONB; the canvas
+ * treats them as the source of truth for layout.
+ */
+export interface WorkflowStepV2 extends WorkflowStep {
+  position_x: number;
+  position_y: number;
+  merge_policy?: MergePolicy;
+}
+
+/**
+ * Edge between two steps. Identity is the tuple
+ * (workflow_id, source_step_id, source_handle, target_step_id, target_handle).
+ */
+export interface WorkflowEdge {
+  edge_id?: string;
+  source_step_id: string;
+  source_handle: SourceHandle;
+  target_step_id: string;
+  target_handle: TargetHandle;
+}
+
+/**
+ * Validation finding emitted by `validateWorkflow()` / `useGraphValidation`.
+ * 7 kinds match backend `ValidationErrorKind`.
+ */
+export interface ValidationError {
+  kind: ValidationErrorKind;
+  detail: string;
+  edges: string[];
+  step_id: string | null;
+}
+
+export interface ValidateWorkflowResponse {
+  errors: ValidationError[];
+  warnings: ValidationError[];
+}
+
+export interface AutoLayoutResponse {
+  positions: Record<string, { x: number; y: number }>;
+}
+
+export interface MigrateV2Response {
+  migrated: boolean;
+  edges_created: number;
+  steps_with_position: number;
 }
 
 export interface CronSchedule {
@@ -45,6 +115,18 @@ export interface Workflow {
   client_scope?: string[];
   default_model?: string;
   max_execution_time?: number;
+}
+
+/**
+ * Canvas-aware workflow detail (SPEC-005). Mirrors backend
+ * `WorkflowDetailResponseV2`. `canvas_v2_migrated=false` triggers JIT migration
+ * on the frontend before rendering the canvas.
+ */
+export interface WorkflowV2 extends Workflow {
+  steps: WorkflowStepV2[];
+  edges: WorkflowEdge[];
+  canvas_v2_migrated: boolean;
+  updated_by?: string | null;
 }
 
 export interface StepLog {

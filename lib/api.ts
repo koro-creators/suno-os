@@ -245,3 +245,108 @@ export async function enhancePrompt(params: EnhancePromptParams): Promise<Enhanc
 
   return response.json();
 }
+
+// ---------------------------------------------------------------------------
+// SPEC-005 — Workflow Canvas API (Phase A stubs; backend returns 501 until B)
+// ---------------------------------------------------------------------------
+
+import type {
+  AutoLayoutResponse,
+  MigrateV2Response,
+  ValidateWorkflowResponse,
+  WorkflowEdge,
+} from '@/lib/workflow-types';
+
+async function workflowFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = getApiUrl(path);
+  const headers = await getHeaders();
+  const response = await fetch(url, {
+    ...init,
+    headers: { ...headers, ...(init?.headers ?? {}) },
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Workflow API ${response.status}: ${text || response.statusText}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+export async function getWorkflowEdges(workflowId: string): Promise<WorkflowEdge[]> {
+  return workflowFetch<WorkflowEdge[]>(`/api/workflows/${workflowId}/edges`);
+}
+
+export async function setWorkflowEdges(
+  workflowId: string,
+  edges: WorkflowEdge[],
+): Promise<WorkflowEdge[]> {
+  return workflowFetch<WorkflowEdge[]>(`/api/workflows/${workflowId}/edges`, {
+    method: 'POST',
+    body: JSON.stringify({ edges }),
+  });
+}
+
+export async function deleteWorkflowEdge(workflowId: string, edgeId: string): Promise<void> {
+  const url = getApiUrl(`/api/workflows/${workflowId}/edges/${edgeId}`);
+  const headers = await getHeaders();
+  const response = await fetch(url, { method: 'DELETE', headers });
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Workflow API ${response.status}: ${response.statusText}`);
+  }
+}
+
+export async function autoLayoutWorkflow(workflowId: string): Promise<AutoLayoutResponse> {
+  return workflowFetch<AutoLayoutResponse>(`/api/workflows/${workflowId}/auto-layout`, {
+    method: 'POST',
+  });
+}
+
+export async function validateWorkflow(workflowId: string): Promise<ValidateWorkflowResponse> {
+  return workflowFetch<ValidateWorkflowResponse>(`/api/workflows/${workflowId}/validate`, {
+    method: 'POST',
+  });
+}
+
+export async function migrateWorkflowV2(workflowId: string): Promise<MigrateV2Response> {
+  return workflowFetch<MigrateV2Response>(`/api/workflows/${workflowId}/migrate-v2`, {
+    method: 'POST',
+  });
+}
+
+// ---------------------------------------------------------------------------
+// SPEC-005 TASK-C08b — tool catalog filtered by user RBAC
+// ---------------------------------------------------------------------------
+
+export interface ToolDescriptor {
+  tool_name: string;
+  label: string;
+  category: 'criacao' | 'midia' | 'planejamento' | 'controle';
+  description: string;
+  default_config: Record<string, unknown>;
+  role_restriction: string[] | null;
+}
+
+export async function listAvailableTools(): Promise<ToolDescriptor[]> {
+  if (!apiAvailable()) {
+    // Mock fallback: front-end can still render the palette during dev
+    // when NEXT_PUBLIC_API_URL is unset.
+    return [
+      {
+        tool_name: 'search_knowledge',
+        label: 'Buscar conhecimento',
+        category: 'criacao',
+        description: 'Pesquisa Biblioteca + web (mock).',
+        default_config: { query: '' },
+        role_restriction: null,
+      },
+      {
+        tool_name: 'log_result',
+        label: 'Registrar resultado',
+        category: 'planejamento',
+        description: 'Persistência simples (mock).',
+        default_config: {},
+        role_restriction: null,
+      },
+    ];
+  }
+  return workflowFetch<ToolDescriptor[]>('/api/tools?for_user=current');
+}

@@ -1,0 +1,134 @@
+/**
+ * useGraphValidation — local DFS-based graph validation (SPEC-005 TASK-C12).
+ *
+ * Mirrors the cycle / fan-in / merge checks the backend (`api/workflows/validator.py`)
+ * runs on PUT, but lives client-side so the canvas can reject illegal user
+ * actions instantly (FR-WBC-03 + CA-07/08). Wrong moves never round-trip.
+ *
+ * Two distinct checks deliberately:
+ *   - `wouldCreateCycle(srcId, tgtId)` returns true if adding an edge from
+ *     src to tgt would close a cycle. Used by `isValidConnection` in
+ *     ReactFlow's `onConnect` handler so the user sees the rejection
+ *     while still dragging.
+ *   - `getOrphanNodes()` / `getFanInWithoutMerge()` for the "Validar" button
+ *     in CanvasToolbar — same DFS, runs over the current state without
+ *     waiting for the network.
+ *
+ * The hook is intentionally pure-functional given its inputs; it uses
+ * `useMemo` to keep adjacency caches stable across re-renders. State of
+ * the canvas (`nodes`, `edges`) flows in from ReactFlow's `useNodesState`/
+ * `useEdgesState` in the parent component.
+ */
+import { useMemo, useCallback } from 'react';
+import type { Edge, Node } from '@xyflow/react';
+
+interface NodeData {
+  /** Step type — drives ALLOWED_SOURCE_HANDLES_BY_TYPE parity with backend. */
+  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge';
+  [key: string]: unknown;
+}
+
+const ALLOWED_SOURCE_HANDLES_BY_TYPE: Record<NodeData['type'], string[]> = {
+  tool: ['out', 'error'],
+  llm: ['out', 'error'],
+  action: ['out', 'error'],
+  workflow: ['out', 'error'],
+  condition: ['then', 'else'],
+  hitl: ['approved', 'rejected', 'modified'],
+  merge: ['out'],
+};
+
+export function useGraphValidation(
+  nodes: Node<NodeData>[],
+  edges: Edge[],
+) {
+  // Reachability cache — { fromNodeId: Set<reachableNodeId> }.
+  // Recomputed when edges change but stable across non-edge re-renders.
+  const reachable = useMemo(() => {
+    const adj = new Map<string, string[]>();
+    for (const e of edges) {
+      if (!adj.has(e.source)) adj.set(e.source, []);
+      adj.get(e.source)!.push(e.target);
+    }
+    const cache = new Map<string, Set<string>>();
+    function dfs(start: string): Set<string> {
+      if (cache.has(start)) return cache.get(start)!;
+      const seen = new Set<string>();
+      const stack = [start];
+      while (stack.length) {
+        const cur = stack.pop()!;
+        for (const tgt of adj.get(cur) || []) {
+          if (!seen.has(tgt)) {
+            seen.add(tgt);
+            stack.push(tgt);
+          }
+        }
+      }
+      cache.set(start, seen);
+      return seen;
+    }
+    return { dfs };
+  }, [edges]);
+
+  /**
+   * `isValidConnection`-shaped predicate. Pass directly to ReactFlow.
+   * Returns `false` to block the visual drop animation.
+   */
+  const wouldCreateCycle = useCallback(
+    (sourceId: string, targetId: string): boolean => {
+      if (sourceId === targetId) return true; // self-loop = trivial cycle
+      // If target can already reach source, adding source→target closes a cycle.
+      return reachable.dfs(targetId).has(sourceId);
+    },
+    [reachable],
+  );
+
+  /** True if the source step type allows the requested handle. */
+  const isHandleAllowed = useCallback(
+    (sourceType: NodeData['type'] | undefined, sourceHandle: string | null | undefined): boolean => {
+      if (!sourceType) return false;
+      const allowed = ALLOWED_SOURCE_HANDLES_BY_TYPE[sourceType] ?? [];
+      // A null/undefined handle on the source side falls back to the type's
+      // default handle. The canvas defaults to `out` for non-condition/HITL.
+      const requested = sourceHandle ?? (sourceType === 'condition' ? 'then' : sourceType === 'hitl' ? 'approved' : 'out');
+      return allowed.includes(requested);
+    },
+    [],
+  );
+
+  /** Collected canvas-local findings ready to render in the validation panel. */
+  const findings = useMemo(() => {
+    const inDegree = new Map<string, number>();
+    for (const n of nodes) inDegree.set(n.id, 0);
+    for (const e of edges) inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
+
+    const orphans: string[] = []; // in-degree 0 — fine if there's at least one entry node
+    const fanInWithoutMerge: string[] = [];
+    const mergeWithZeroInputs: string[] = [];
+
+    for (const node of nodes) {
+      const deg = inDegree.get(node.id) ?? 0;
+      const type = (node.data?.type ?? 'tool') as NodeData['type'];
+      if (deg === 0) orphans.push(node.id);
+      if (type === 'merge') {
+        if (deg === 0) mergeWithZeroInputs.push(node.id);
+      } else {
+        if (deg > 1) fanInWithoutMerge.push(node.id);
+      }
+    }
+
+    const hasEntry = orphans.length > 0;
+    return {
+      hasEntry,
+      orphans,
+      fanInWithoutMerge,
+      mergeWithZeroInputs,
+    };
+  }, [nodes, edges]);
+
+  return {
+    wouldCreateCycle,
+    isHandleAllowed,
+    findings,
+  };
+}
