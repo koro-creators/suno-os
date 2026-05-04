@@ -1,0 +1,277 @@
+"""Workflow graph validation (SPEC-005 TASK-B03).
+
+Surfaces 7 ValidationError kinds (spec.md §6.3):
+  • cycle                       — DFS 3-color detects back edges
+  • fan_in_without_merge        — node with in-degree > 1 that is not type='merge'
+  • merge_with_zero_inputs      — type='merge' node with in-degree 0
+  • edge_to_nonexistent_handle  — handle vocabulary mismatch with source step type
+  • unauthorized_tool           — tool referenced not in user's RBAC scope
+  • max_nodes_exceeded          — definition has > 20 steps
+  • no_entry_node               — every node has at least one inbound edge
+
+Public API:
+  validate(workflow, *, allowed_tools=None)
+      Full validation. Returns (errors, warnings) where errors fail save and
+      warnings are surfaced as soft hints in the canvas.
+  hard_validate_for_put(workflow, *, allowed_tools=None)
+      Subset that PUT /api/workflows/{id} blocks on (TASK-B01b).
+      Per design §6.3 + revisão crítica I5: cycle, unauthorized_tool,
+      max_nodes_exceeded, edge_to_nonexistent_handle, no_entry_node.
+
+Helpers (cycle_edges, has_cycle) are exposed for the canvas frontend hook
+`useGraphValidation` reuse over HTTP — same algorithm both sides keeps
+behaviour predictable.
+"""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from typing import Iterable
+
+from .schemas import ValidationError, ValidationErrorKind
+
+MAX_NODES = 20  # constitution §3 of SPEC-003 + §3 SPEC-005 (max 20 nodes)
+
+# Per-step-type, the set of source handles the step is allowed to emit.
+ALLOWED_SOURCE_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
+    "tool": frozenset({"out", "error"}),
+    "llm": frozenset({"out", "error"}),
+    "action": frozenset({"out", "error"}),
+    "workflow": frozenset({"out", "error"}),
+    "condition": frozenset({"then", "else"}),
+    "hitl": frozenset({"approved", "rejected", "modified"}),
+    "merge": frozenset({"out"}),
+}
+
+# A subset of validation kinds that the PUT handler treats as blocking.
+HARD_KINDS: frozenset[ValidationErrorKind] = frozenset(
+    {
+        "cycle",
+        "unauthorized_tool",
+        "max_nodes_exceeded",
+        "edge_to_nonexistent_handle",
+        "no_entry_node",
+    }
+)
+# The remaining kinds are surfaced as warnings on PUT and as errors on
+# POST /validate (so the canvas can show them without blocking save).
+SOFT_KINDS: frozenset[ValidationErrorKind] = frozenset(
+    {"fan_in_without_merge", "merge_with_zero_inputs"}
+)
+
+
+def _build_adjacency(
+    edges: Iterable[dict],
+) -> tuple[dict[str, list[tuple[str, str]]], dict[str, int]]:
+    """Build (out_adj: src -> [(tgt, edge_id)], in_degree: step_id -> int)."""
+    out_adj: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    in_degree: dict[str, int] = defaultdict(int)
+    for edge in edges:
+        out_adj[edge["source_step_id"]].append(
+            (edge["target_step_id"], edge.get("edge_id", ""))
+        )
+        in_degree[edge["target_step_id"]] += 1
+    return out_adj, in_degree
+
+
+def has_cycle(edges: Iterable[dict]) -> bool:
+    """Return True if the edge set contains any cycle (DFS 3-color)."""
+    out_adj, _ = _build_adjacency(edges)
+    state: dict[str, int] = {}  # 0=white, 1=gray, 2=black
+    nodes = set(out_adj.keys()) | {tgt for _, tgt_list in out_adj.items() for tgt, _ in tgt_list}
+    for node in nodes:
+        if state.get(node, 0) != 0:
+            continue
+        stack = [(node, iter(out_adj.get(node, [])))]
+        state[node] = 1
+        while stack:
+            cur, it = stack[-1]
+            advanced = False
+            for tgt, _ in it:
+                color = state.get(tgt, 0)
+                if color == 1:
+                    return True
+                if color == 0:
+                    state[tgt] = 1
+                    stack.append((tgt, iter(out_adj.get(tgt, []))))
+                    advanced = True
+                    break
+            if not advanced:
+                state[cur] = 2
+                stack.pop()
+    return False
+
+
+def cycle_edges(edges: list[dict]) -> list[str]:
+    """Return edge_ids that participate in any cycle.
+
+    Best-effort: implementation is O(V+E) per node and bounded by MAX_NODES
+    so even brute force is fine. Returns sorted unique IDs for determinism.
+    """
+    out_adj, _ = _build_adjacency(edges)
+    cyclic: set[str] = set()
+    for start in sorted({e["source_step_id"] for e in edges}):
+        # Tarjan-lite: DFS from `start` looking for path back to `start`.
+        stack: list[tuple[str, list[tuple[str, str]]]] = [
+            (start, list(out_adj.get(start, [])))
+        ]
+        path_edges: list[str] = []
+        on_path: set[str] = {start}
+        while stack:
+            cur, neighbours = stack[-1]
+            if not neighbours:
+                stack.pop()
+                if path_edges:
+                    path_edges.pop()
+                on_path.discard(cur)
+                continue
+            tgt, eid = neighbours.pop()
+            if tgt == start:
+                cyclic.add(eid)
+                cyclic.update(path_edges)
+                continue
+            if tgt in on_path:
+                cyclic.add(eid)
+                continue
+            stack.append((tgt, list(out_adj.get(tgt, []))))
+            path_edges.append(eid)
+            on_path.add(tgt)
+    return sorted(cyclic)
+
+
+def validate(
+    workflow: dict,
+    *,
+    allowed_tools: set[str] | None = None,
+) -> tuple[list[ValidationError], list[ValidationError]]:
+    """Run all 7 checks. Return (errors, warnings).
+
+    `errors` here means the union; the PUT handler then partitions by
+    `HARD_KINDS` to decide what to block on. Soft kinds become `warnings`
+    in the response payload of POST /validate.
+    """
+    steps = workflow["definition"].get("steps", [])
+    edges = workflow.get("edges", [])
+    findings: list[ValidationError] = []
+
+    # 1. max_nodes_exceeded — early exit; canvas blocks creation past 20.
+    if len(steps) > MAX_NODES:
+        findings.append(
+            ValidationError(
+                kind="max_nodes_exceeded",
+                detail=f"workflow has {len(steps)} steps (limit {MAX_NODES})",
+            )
+        )
+
+    # 2. cycle (whole-graph)
+    if has_cycle(edges):
+        findings.append(
+            ValidationError(
+                kind="cycle",
+                detail="cycle detected; workflows must be DAGs",
+                edges=cycle_edges(edges),
+            )
+        )
+
+    # Build adjacency for subsequent per-step checks.
+    out_adj, in_degree = _build_adjacency(edges)
+    step_by_id = {s["id"]: s for s in steps}
+
+    # 3. edge_to_nonexistent_handle — source_handle must be allowed for type
+    for edge in edges:
+        src_step = step_by_id.get(edge["source_step_id"])
+        if src_step is None:
+            findings.append(
+                ValidationError(
+                    kind="edge_to_nonexistent_handle",
+                    detail=f"edge references missing source step '{edge['source_step_id']}'",
+                    step_id=edge["source_step_id"],
+                    edges=[edge.get("edge_id", "")],
+                )
+            )
+            continue
+        allowed = ALLOWED_SOURCE_HANDLES_BY_TYPE.get(src_step["type"], frozenset())
+        if edge["source_handle"] not in allowed:
+            findings.append(
+                ValidationError(
+                    kind="edge_to_nonexistent_handle",
+                    detail=(
+                        f"step '{src_step['id']}' (type={src_step['type']}) cannot emit "
+                        f"handle '{edge['source_handle']}' — allowed: {sorted(allowed)}"
+                    ),
+                    step_id=src_step["id"],
+                    edges=[edge.get("edge_id", "")],
+                )
+            )
+
+    # 4. fan_in_without_merge — non-merge node with in-degree > 1
+    # 5. merge_with_zero_inputs — merge node with in-degree 0
+    # 6. no_entry_node — must have at least one node with in-degree 0
+    has_entry = False
+    for step in steps:
+        deg = in_degree.get(step["id"], 0)
+        if deg == 0:
+            has_entry = True
+        if step["type"] == "merge":
+            if deg == 0:
+                findings.append(
+                    ValidationError(
+                        kind="merge_with_zero_inputs",
+                        detail=f"merge node '{step['id']}' has no inbound edges",
+                        step_id=step["id"],
+                    )
+                )
+        else:
+            if deg > 1:
+                findings.append(
+                    ValidationError(
+                        kind="fan_in_without_merge",
+                        detail=(
+                            f"step '{step['id']}' (type={step['type']}) has {deg} inbound edges; "
+                            "fan-in requires an explicit merge node"
+                        ),
+                        step_id=step["id"],
+                    )
+                )
+    if steps and not has_entry:
+        findings.append(
+            ValidationError(
+                kind="no_entry_node",
+                detail="every step has at least one inbound edge — no entry point exists",
+            )
+        )
+
+    # 7. unauthorized_tool — tool_name must be in allowed_tools (if provided)
+    if allowed_tools is not None:
+        for step in steps:
+            if step["type"] in {"tool", "action"}:
+                tool_name = step.get("tool_name")
+                if tool_name and tool_name not in allowed_tools:
+                    findings.append(
+                        ValidationError(
+                            kind="unauthorized_tool",
+                            detail=(
+                                f"step '{step['id']}' uses tool '{tool_name}' which the "
+                                "user is not authorized to invoke"
+                            ),
+                            step_id=step["id"],
+                        )
+                    )
+
+    errors = [f for f in findings if f.kind in HARD_KINDS]
+    warnings = [f for f in findings if f.kind in SOFT_KINDS]
+    return errors, warnings
+
+
+def hard_validate_for_put(
+    workflow: dict,
+    *,
+    allowed_tools: set[str] | None = None,
+) -> list[ValidationError]:
+    """Subset that PUT /api/workflows/{id} blocks save on (TASK-B01b).
+
+    Returns the list of HARD findings; an empty list means the PUT may
+    proceed. The canvas auto-save handler displays these inline as toasts.
+    """
+    errors, _warnings = validate(workflow, allowed_tools=allowed_tools)
+    return errors

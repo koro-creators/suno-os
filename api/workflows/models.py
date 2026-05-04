@@ -6,11 +6,13 @@ import uuid
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     ForeignKey,
     Integer,
     String,
     Text,
+    UniqueConstraint,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TIMESTAMP, UUID
@@ -38,11 +40,17 @@ class Workflow(Base):
     on_error_notify = Column(String(255))
     is_template = Column(Boolean, default=False)
     status = Column(String(20), default="draft")  # draft|active|paused
+    updated_by = Column(String(255))  # SPEC-005: FR-WBC-13 banner de edição concorrente
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"))
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"))
 
     runs = relationship(
         "WorkflowRun",
+        back_populates="workflow",
+        cascade="all, delete-orphan",
+    )
+    edges = relationship(
+        "WorkflowEdge",
         back_populates="workflow",
         cascade="all, delete-orphan",
     )
@@ -107,3 +115,49 @@ class StepLog(Base):
 
     def __repr__(self) -> str:
         return f"<StepLog id={self.id!r} step={self.step_id!r} status={self.status!r}>"
+
+
+class WorkflowEdge(Base):
+    """Edge between two workflow steps (SPEC-005).
+
+    Steps live in workflows.definition JSONB; source_step_id and target_step_id
+    are VARCHAR matching the step IDs declared inside that JSON, not FKs to a
+    workflow_steps table (which doesn't exist in this repo).
+    """
+
+    __tablename__ = "workflow_edges"
+    __table_args__ = (
+        CheckConstraint(
+            "source_handle IN ('out','error','then','else','approved','rejected','modified')",
+            name="chk_source_handle",
+        ),
+        CheckConstraint("target_handle IN ('in')", name="chk_target_handle"),
+        UniqueConstraint(
+            "workflow_id",
+            "source_step_id",
+            "source_handle",
+            "target_step_id",
+            "target_handle",
+            name="uq_workflow_edge",
+        ),
+    )
+
+    edge_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("workflows.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    source_step_id = Column(String(100), nullable=False)
+    source_handle = Column(String(20), nullable=False)
+    target_step_id = Column(String(100), nullable=False)
+    target_handle = Column(String(20), nullable=False, default="in")
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("NOW()"))
+
+    workflow = relationship("Workflow", back_populates="edges")
+
+    def __repr__(self) -> str:
+        return (
+            f"<WorkflowEdge {self.source_step_id}.{self.source_handle} → "
+            f"{self.target_step_id}.{self.target_handle}>"
+        )

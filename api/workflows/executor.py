@@ -96,15 +96,21 @@ class WorkflowExecutor:
         definition: dict,
         overrides: dict | None = None,
         depth: int = 0,
+        edges: list[dict] | None = None,
     ) -> dict:
-        """Execute workflow fully and return the final state."""
+        """Execute workflow fully and return the final state.
+
+        SPEC-005: when `edges` is provided (or `definition.edges` is set),
+        the compiler routes through the v2 path. Existing callers that pass
+        `definition` only keep the v1 behaviour unchanged.
+        """
         # Rate limit check
         if not _check_rate_limit(workflow_id):
             raise RuntimeError(
                 f"Rate limit exceeded: max {MAX_RUNS_PER_HOUR} runs/hour for workflow {workflow_id}"
             )
 
-        graph = self.compiler.compile(definition)
+        graph = self.compiler.compile(definition, edges=edges)
         max_time = definition.get("max_execution_time", 300)
 
         initial_state = {
@@ -141,8 +147,9 @@ class WorkflowExecutor:
         run_id: str,
         definition: dict,
         depth: int = 0,
+        edges: list[dict] | None = None,
     ) -> AsyncGenerator[SSEEvent, None]:
-        """Execute with streaming SSE events per step."""
+        """Execute with streaming SSE events per step (SPEC-005-aware)."""
         # Rate limit check
         if not _check_rate_limit(workflow_id):
             yield SSEEvent(
@@ -151,7 +158,7 @@ class WorkflowExecutor:
             )
             return
 
-        graph = self.compiler.compile(definition)
+        graph = self.compiler.compile(definition, edges=edges)
         max_time = definition.get("max_execution_time", 300)
 
         initial_state = {
