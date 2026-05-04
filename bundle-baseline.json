@@ -1,0 +1,4 @@
+{
+  "_comment": "SPEC-005 — bundle audit baseline. Populated by Phase E TASK-E05 once canvas ships. Until then, the audit script tolerates an empty/missing baseline (see scripts/bundle-audit.sh).",
+  "routes": {}
+}
