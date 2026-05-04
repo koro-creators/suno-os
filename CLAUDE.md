@@ -117,3 +117,48 @@ Para cada nova feature admin, o padrão é:
 - **Clientes Admin** (`/clientes`) — CRUD de clientes com métricas
 - **HITL Feedback** — Thumbs up/down no chat + validação no sidebar
 - **Sistema Solar** — 4 níveis de navegação (Home → Cliente → Skill → Chat)
+
+## Session Handoffs
+
+**Regra:** ao fim de cada sessão de trabalho não-trivial, criar um documento de handoff em `docs/handoff/sessions/YYYY-MM-DD-<slug-curto>.md` para que a próxima sessão (mesmo que dias depois ou com contexto comprimido) possa retomar sem custo cognitivo.
+
+**Quando criar:**
+- Sessão tocou múltiplos artefatos (BRD/PRD/SRD/UX/specs/código) ou tomou decisões arquiteturais
+- Há trabalho pendente que não cabe num único TODO
+- Houve correções de rumo ou debates importantes que valem ser registrados
+
+**Quando NÃO precisa:**
+- Sessão de bug fix simples (commit + PR description já contam)
+- Refactor pequeno encerrado e mergeado na mesma sessão
+- Pergunta-resposta sem mudança de arquivo
+
+**Conteúdo mínimo (template):**
+
+```markdown
+# Handoff — YYYY-MM-DD — <título curto>
+
+**Duração aproximada:** Xh
+**Foco:** <1-2 linhas do que foi o objetivo da sessão>
+
+## O que foi feito
+- Lista bullet do que mudou (com refs a arquivos:linha quando relevante)
+
+## Decisões tomadas
+- Decisão + por quê + onde está documentada (ADR, PRD, SRD)
+
+## Arquivos modificados
+- Lista de paths (agrupada por área: BRD/PRD/SRD/UX/código/adr)
+
+## Pendências (não abertas como TODO)
+- Coisas que ficaram em aberto e precisam atenção da próxima sessão
+
+## Próximo passo natural
+- 1-2 frases sobre por onde retomar
+
+## Aprendizados / pegadinhas
+- Coisas não óbvias descobertas (correções do usuário, dependências escondidas, decisões reversadas)
+```
+
+**Como retomar uma sessão:** o agente da próxima sessão deve ler o handoff mais recente em `docs/handoff/sessions/` antes de começar trabalho novo. Listagem por nome (data ISO no início) garante ordenação cronológica.
+
+**Diferença vs. memória auto (`~/.claude/.../memory/`):** memória guarda preferências e padrões duradouros do usuário; handoff é estado de projeto desta sessão específica (sempre datado, nunca sobrescrito).
