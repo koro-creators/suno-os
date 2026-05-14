@@ -1,8 +1,11 @@
 # ADR-001: Agent Builder — Aceito (Revisado)
 
 **Data:** 2026-04-14
-**Status:** ~~Rejeitado~~ → **Aceito** (revisado em 2026-04-14)
+**Status:** ~~Rejeitado~~ → ~~Aceito~~ → **Superseded por ADR-003 (2026-05-14)**
 **Decisores:** Heitor Miranda, José Lucas, William (Carioca)
+
+> **NOTA DE SUPERSEDÊNCIA (2026-05-14):** Esta decisão foi superseded por [ADR-003: Workflow Builder Visual Drag-and-Drop como Paradigma Operacional](./ADR-003-workflow-builder-visual.md). O contexto que motivava a rejeição de drag-and-drop visual mudou: o sponsor executivo (Guga) formalizou em 07/05 e 14/05/2026 a direção de "software estruturado com paradigmas visuais explícitos", e a feature de Workflows do sunOS já evoluiu para implementação com drag-and-drop. Esta ADR é mantida apenas para histórico.
+
 
 ## Contexto Original (2026-04-14)
 
@@ -160,4 +163,5 @@ class CronSchedule(BaseModel):
 | Data | Mudança |
 |------|---------|
 | 2026-04-14 (v2) | **Aceito.** Revisado com contexto de 48+ atividades pendentes, entrevistas em andamento, e LangGraph como engine. Reframed de "Agent Builder genérico" para "Workflow Builder com LangGraph". |
+| 2026-05-14 (v3) | **Superseded** por ADR-003. Reorientação do sponsor executivo (Guga) em 07/05 e 14/05/2026 sobre paradigma "software, não chat". Feature de Workflows já implementa drag-and-drop visual em código. |
 | 2026-04-14 (v1) | Rejeitado. Sem demanda validada, escopo desproporcional. |

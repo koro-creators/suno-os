@@ -1144,8 +1144,9 @@ O sistema MUST oferecer interface visual no Admin (`/workflows`) para compor Wor
 
 | Inclui | Não Inclui |
 |--------|------------|
-| Composição visual sequencial | Drag-and-drop visual de agentes (ADR-001 — não é esse o escopo) |
-| Validação básica de configuração por step | Substituir Zapier/n8n (BR-016) |
+| Composição visual drag-and-drop com nodes tipados (ADR-003) | Substituir Zapier/n8n na camada técnica (BR-016) |
+| Validação semântica de conexões entre nodes | Editor de código compilado (LangGraph) exposto a Champions |
+| Templates obrigatórios por área (Plano de Mídia, etc.) | Workflows sem inputs explícitos |
 
 **Atores / Personas**
 
@@ -1168,7 +1169,7 @@ O sistema MUST oferecer interface visual no Admin (`/workflows`) para compor Wor
 |---------|-------|
 | **Fase** | Piloto |
 | **Criticidade** | Core |
-| **Status** | Em Produção (SPEC-003) |
+| **Status** | Em Produção (SPEC-003), refatorado para drag-and-drop a partir de 05/2026 (ADR-003) |
 
 ---
 
@@ -2952,6 +2953,71 @@ Nenhum BR sem FR neste documento. Cada um dos 16 BRs tem ≥1 FR mapeado, consid
 
 Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 
+
+---
+
+### 3.X. FA-15 — Onboarding Automatizado de Cliente
+
+<!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-180 — Cadastro inicial via wizard de 4 passos
+
+**Descrição**: O sistema MUST oferecer wizard de cadastro de cliente em ≤4 passos: (1) nome e slug, (2) sponsor da conta na Suno e área, (3) briefing inicial (máx 1 página em texto ou upload), (4) confirmação e disparo do sync inicial. Total de tempo esperado: ≤30 minutos. <!-- TODO: expandir descrição completa antes de SDD -->
+
+| Fase | Piloto | Criticidade | Core |
+|------|--------|-------------|------|
+
+#### FR-181 — Trigger de sync inicial do Drive
+
+**Descrição**: Ao confirmar cadastro (FR-180), o sistema MUST disparar job de sync inicial das pastas do cliente no Drive da Suno, retornar ETA estimada (≤24h), e notificar admin se job falhar. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-182 — Geração automática de seed ontológico
+
+**Descrição**: Após sync completo (FR-181), o sistema MUST gerar automaticamente proposta de seed ontológico com no mínimo 6 entidades core (pessoas-chave, sistemas, objetivos de negócio, contratos vigentes, jornadas-foco, brand voice) a partir do Drive e briefing inicial. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-183 — Pesquisa web em fontes públicas com allow-list
+
+**Descrição**: O agente de Discovery MUST consultar fontes públicas (allow-list configurável) para enriquecer o seed ontológico. Cada fato sugerido MUST ter proveniência rastreável (fonte URL + data de consulta). Sem scraping de conteúdo protegido. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-184 — UI de validação humana de ontologia
+
+**Descrição**: O sistema MUST oferecer interface de validação onde Champion de Operações aceita/rejeita/edita cada entidade sugerida individualmente. Sem batch acceptance. Cada decisão é auditada com timestamp e responsável. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-185 — Status PRE-ACTIVE até validação completa
+
+**Descrição**: Cliente recém-cadastrado MUST ficar em status `PRE-ACTIVE` até validação humana das 6 entidades core. Skills processuais MUST NOT acessar cliente em `PRE-ACTIVE`. Admin vê lista de clientes pendentes. <!-- TODO: expandir descrição completa antes de SDD -->
+
+---
+
+### 3.Y. FA-16 — Captura Seletiva de Reuniões
+
+<!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-190 — Acionamento opt-in por reunião
+
+**Descrição**: O sistema MUST exigir acionamento explícito por usuário autorizado para cada reunião. Default OFF em todas as integrações de calendário. Sem auto-join ou captura passiva. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-191 — Notificação automática a participantes
+
+**Descrição**: Quando captura for iniciada, o sistema MUST enviar notificação a todos os participantes da reunião informando que a captura está ativa, com link para política. Notificação é visível e não bloqueante. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-192 — Transcrição automática em ≤1h
+
+**Descrição**: Após encerramento da reunião, o sistema MUST processar áudio e retornar transcrição em português brasileiro em ≤1h. Resultado em texto estruturado por speaker (diarization). <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-193 — Extração estruturada de decisões e entidades
+
+**Descrição**: O sistema MUST executar LLM sobre transcrição para extrair: (a) decisões tomadas com responsável, (b) próximos passos com prazo, (c) briefings capturados, (d) mudanças de escopo. Cada item com timestamp de ocorrência na transcrição. <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-194 — Alimentação da Wiki Ontológica com proveniência
+
+**Descrição**: Entidades extraídas (FR-193) MUST ser propostas para a Wiki Ontológica do cliente correspondente com proveniência: reunião ID + timestamp. Champion revisa antes de consolidar (HITL obrigatório). <!-- TODO: expandir descrição completa antes de SDD -->
+
+#### FR-195 — RBAC sobre transcrição e conteúdo extraído
+
+**Descrição**: Acesso à transcrição completa MUST ser restrito a participantes presentes + Líder/Admin. Conteúdo extraído (decisões, próximos passos) segue RBAC padrão da sessão de reunião. Auditoria completa de acesso. <!-- TODO: expandir descrição completa antes de SDD -->
+
+
 ---
 
 ## 5. Tabela de FRs por Jornada e Persona
@@ -3028,6 +3094,8 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 | FA-10 Mensuração | FR-144 a FR-150 (7 FRs) | — | OK |
 | FA-11 Safety cultural | FR-151 a FR-155 (5 FRs) | (compartilha FR-013, FR-014 do FRD para forced reflection e marcação) | OK |
 | FA-12 Admin areas | FR-156 a FR-159 (4 FRs) | — | OK |
+| FA-15 Onboarding de Cliente | FR-180 a FR-185 (6 FRs, placeholders) | — | Rascunho |
+| FA-16 Captura Seletiva | FR-190 a FR-195 (6 FRs, placeholders) | — | Rascunho |
 
 **Cobertura completa**: nenhuma FA órfã. FA-02 (Moon Shot) é a única FA cujos FRs vivem **integralmente no FRD externo** — esta Parte 4 referencia mas não duplica. Demais 11 FAs têm cobertura direta neste documento.
 
@@ -3039,3 +3107,4 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 |--------|------|-------|------------|
 | 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **60 FRs (FR-100 a FR-159)** detalhados neste documento, cobrindo 11 das 12 FAs (FA-01, FA-03 a FA-12). FA-02 (Moon Shot) cobre via referência ao FRD externo (FR-001 a FR-018, 18 FRs). Total combinado: **78 FRs**. Linguagem RFC 2119 (MUST/SHOULD/MAY) aplicada. Cada FR rastreia ≥1 BR + ≥1 FA + ≥1 RN aplicável. Cobertura completa: cada um dos 16 BRs tem ≥1 FR; nenhuma FA órfã. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma); anti-patterns evitados. **Koro sempre com K** |
 | 1.1 | 2026-04-28 | **+20 FRs** cobrindo as features novas: FR-160 a FR-170 (11 FRs para FA-13 Aprovação Hierárquica) e FR-171 a FR-179 (9 FRs para FA-14 Google Drive). Total documento: **80 FRs**; total combinado com FRD Moon Shot: **98 FRs**. Pedido Guga + Bruno Prosperi. BR-017 e BR-018 cobertos completamente |
+| 1.2 | 2026-05-14 | FR-122 atualizado: drag-and-drop aceito via ADR-003 (ADR-001 superseded). +12 FRs placeholder (FR-180 a FR-185 para FA-15 Onboarding, FR-190 a FR-195 para FA-16 Captura Seletiva). Total documento: **92 FRs**; todos marcados com TODO para expansão antes de SDD |

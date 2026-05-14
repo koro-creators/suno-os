@@ -155,36 +155,72 @@ O sunOS nasceu de forma **embrionária** com a popularização de LLMs (Gemini, 
 
 ## 3. Stakeholders
 
-### 3.1. Stakeholders Internos
+### 3.1. Estrutura de Governança Operacional do sunOS
 
-#### 3.1.1. Sponsor e Direção do Projeto
+O sunOS opera sob um modelo de governança em três camadas, formalizado pelo sponsor executivo (Guga Ketzer) nas reuniões de 07/05 e 14/05/2026. A estrutura existe para permitir que um time técnico não dedicado escale entrega de valor para todo o grupo United Creators, sem virar gargalo e sem perder accountability por área.
 
-| Pessoa | Cargo | Papel no projeto |
-|--------|-------|------------------|
-| **Guga (José Augusto Ketzer)** | Fundador / Presidente da Suno United Creators | Sponsor executivo, mandatário do projeto, decisões estratégicas finais. Reuniões semanais (terças) com Heitor |
-| **Heitor Miranda** | Diretor Executivo, Tecnologia e Dados para Marketing | Líder do projeto, arquiteto, direção técnica e estratégica. Mandato formalizado em 24/02/2026 |
+#### 3.1.1. Sponsor (sócio responsável por área)
 
-#### 3.1.2. Time de Desenvolvimento (não dedicação 100%)
+Sócio responsável por desenhar a arquitetura de automações da sua área de atuação no sunOS, e cobrado diretamente pelo Guga sobre o resultado. Não é executor. É o "arquiteto da obra" que valida o fluxo, aprova workflows propostos pelos Champions, e responde por adoção e impacto na sua área.
 
-⚠️ **Importante**: nenhum membro do time é integralmente dedicado ao sunOS. Todos compartilham com responsabilidades operacionais em outras frentes (clientes, plataforma, etc.).
+| Área | Sponsor |
+|------|---------|
+| Mídia | Leonardo Takai / César Toledo ? |
+| BI | Leonardo Takai / César Toledo ? |
+| Martech / Dados / Growth | Heitor Miranda |
+| Planejamento | Cíntia / Sérgio Katz ? |
+| Criação | Bruno Prosperi |
+| Operações | Elton |
+| Produção | Ana Luísa Andre |
+| Financeiro | Ronaldo Severino |
+| RH | Ronaldo Severino |
+| Contabilidade | Ronaldo Severino |
 
-| Pessoa | Papel | Foco |
-|--------|-------|------|
-| Heitor Miranda | Tech Lead | Arquitetura, direção técnica, specs |
-| José Lucas (Zé) | Dev Lead | Plataforma, frontend/backend, infraestrutura |
-| William (Carioca) | AI Engineer | Arquitetura de agents, eval, harness — apoio remoto durante mestrado em AI na Escócia |
-| Fabinho | Dev | Auxiliar do Zé, construção, em capacitação ativa em AI |
-| Yuri | Process / Design | Mapeamento de processos, UX, entrevistas com lideranças do grupo |
+> Notas:
+> - "?" em uma área indica dois Sponsors candidatos, decisão pendente até primeira reunião do Comitê de Produto.
+> - "Operações" consolida as antigas Eficiência, Atendimento e Operações sob o sponsor Elton, conforme decisão de 14/05/2026.
+> - Produção é separada de Operações e tem sponsor próprio (Ana Luísa Andre).
+> - Áreas administrativas (Financeiro, RH, Contabilidade) têm o mesmo sponsor (Ronaldo Severino) mas operam como linhas separadas para fins de mapeamento de processos e champions.
 
-#### 3.1.3. Patrocinadores Sócio (não-operacionais)
+Princípio operacional: "se o arquiteto não tiver presente na obra, não vai sair" (Guga, 07/05/2026).
 
-| Pessoa | Cargo | Papel |
-|--------|-------|-------|
-| **Bruno Prosperi** | Sócio (Criação) | Patrocinador — voz da criação na evolução do produto, fornece direção estratégica para skills criativos. NÃO atua na operação do sunOS |
-| **Leonardo Yukio Takai** | Sócio (Mídia) | Patrocinador — voz da mídia na evolução do produto. Também owner do produto separado **Toolbox** (mercado SMB). NÃO atua na operação do sunOS |
-| **Ronaldo Severino** | Sócio (CFO) | Patrocinador — voz do financeiro na evolução do produto. Co-construtor do business case (horas economizadas × custo médio) em parceria com Heitor. NÃO atua na operação do sunOS |
+#### 3.1.2. Champion (mão na massa por área)
 
-#### 3.1.5. Aprovadores (papel funcional, não nominal)
+Profissional sênior ou pleno da área que executa fluxos desenhados pelo Sponsor, valida que funcionam no dia a dia, e alimenta o Time Central com feedback de uso real. Não é necessariamente o líder da área. É a pessoa com afinidade pelo tema e disposição para ser referência operacional. Cada área tem 1 a 4 Champions, dependendo do volume e complexidade dos processos mapeados.
+
+Champions confirmados em 14/05/2026:
+
+| Área | Champions |
+|------|-----------|
+| Mídia | Bruna, Renata, Wagner, TBD |
+| BI | Caetano, Milu, Thalles |
+| Operações | Chamas |
+| Financeiro | João Drumond |
+| RH | Alessandra Pasquino |
+| Contabilidade | Vagner Silva |
+| Martech / Dados / Growth | Mayra Otsuka |
+| Planejamento | Philippe Guimarães Gava |
+| Criação | A definir (Sponsor Bruno Prosperi vai propor) |
+| Produção | A definir (Sponsor Ana Luísa Andre vai propor) |
+
+#### 3.1.3. Time Central (provedor de infra e componentes)
+
+Time técnico liderado por Heitor Miranda. Provê: infraestrutura GCP, componentes reutilizáveis (Skills, Tools, Workflows base), governança técnica (RBAC, auditoria, segurança), e desenvolvimento de novas features de plataforma. Não constrói automações setoriais sob demanda. Esse trabalho fica com Champions, usando componentes do Time Central.
+
+Composição atual: Heitor (líder), José Lucas, William, Mayra (gestão de projeto), e equipe técnica adjacente conforme demanda.
+
+#### 3.1.4. Rituais de governança
+
+Quatro cadências formais sustentam o modelo:
+
+| Ritual | Cadência | Participantes | Pauta principal |
+|--------|----------|---------------|-----------------|
+| Comitê de Produto sunOS | Mensal | Guga + Sponsors + Heitor | Priorização, releases, KPIs (custo evitado, adoção) |
+| Roundtable de Sponsors | Quinzenal | Sponsors + Heitor (sem Guga) | Conflitos de prioridade, dependências cruzadas |
+| Champion Sync | Semanal | Champions + Time Central | Feedback de uso, ajustes táticos, novos workflows |
+| Demo semanal com Guga | Semanal | Heitor + Guga | Acompanhamento contínuo (já existe) |
+
+#### 3.1.5. Aprovadores
 
 Com a chegada do fluxo de Aprovação Hierárquica (BR-017), o sunOS materializa a hierarquia interna da Suno. Aprovadores são **superiores diretos de creators** que recebem submissões pré-validadas por agentes para decisão final. **Não é um cargo novo** — é um papel funcional desempenhado por sócios, líderes de área e seniores conforme a hierarquia configurada.
 
@@ -195,15 +231,6 @@ Com a chegada do fluxo de Aprovação Hierárquica (BR-017), o sunOS materializa
 | Hierarquia configurável | RN-026 — admin mantém mapa creator → aprovador por área/cliente |
 | Fallback | Se aprovador inativo, sistema escala para líder da área e alerta admin |
 
-#### 3.1.4. Champions (em definição)
-
-A estrutura de champions distribuídos pelas áreas, recomendada pelo Heitor, está em curso de implementação:
-
-| Área | Champions identificados | Status |
-|------|------------------------|--------|
-| Mídia | Gus, Teda (do time do sócio Takai) | Em onboarding |
-| Outras áreas | Le | Estabelecido |
-| Demais áreas | A definir | Mapeamento em curso com Yuri |
 
 ### 3.2. Times Consumidores
 
@@ -286,7 +313,7 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 | **REST-05** | Patrocínio executivo concentrado em sponsor único (Guga) | Mudanças na liderança da Suno United Creators podem afetar continuidade do projeto |
 | **REST-06** | Diretriz interna de proteção de IP da Suno ("vendemos ideias na essência") | Tudo o que codifica a inteligência proprietária da Suno (skills, prompts, knowledge curado) deve permanecer fechado, mesmo internamente — restrição que afeta arquitetura e UX |
 | **REST-07** | Integração Google Drive é exclusivamente read-only | RN-027 — sunOS não escreve, deleta ou move arquivos do Drive em hipótese alguma. Curadoria por agentes é sugestiva (RN-029); humano executa |
-| **REST-08** | Consentimento contratual cliente-a-cliente para dados no Drive | LGPD — cliente individual pode ser excluído da integração se contrato/política exigir. Default: opt-in, não opt-out |
+| **REST-08** | Integração Drive limitada ao Drive interno da Suno | Escopo alterado em 14/05/2026 (BR-018 v2). Integração opera exclusivamente no Drive corporativo da Suno United Creators. Não há integração com Drives externos de clientes nesta fase. Consentimento contratual segue a relação cliente-agência padrão, sem cláusulas específicas de IA exigidas por integração externa. Revisão se cenário de integração externa for reaberto |
 | **REST-09** | Aprovador final é sempre humano | RN-024 — sunOS não pode aprovar autonomamente, mesmo com Validation Report 100% positivo |
 
 ### 5.2. Premissas Identificadas
@@ -378,6 +405,7 @@ Nenhum conflito explícito identificado neste momento. As tensões mapeadas no b
 | 1.0 | 2026-04-28 | Versão inicial baseada em PRODUCT_HANDOFF.md, transcrições de reuniões, deck Crescera SmartGrowth, materiais de research, dossiê executivo Guga Ketzer e confirmações Q1-Q20 + Q3a, Q7a, Q11a do briefing |
 | 1.1 | 2026-04-28 | Correções de revisão do Heitor: (a) Champions Gus e Teda são de Mídia, não Criação; (b) Ronaldo Severino reposicionado como Patrocinador Sócio (CFO), não como champion; (c) Stakeholder externo investidor anonimizado para "(a definir)"; (d) Seção 4.2 reescrita em linguagem de negócio (capacidades, não fases técnicas); (e) Seção 4.3 (Relação com sistemas) removida — é tratada em outros artefatos; (f) Seção 5.1 limpa — restrições técnicas e de stack movidas para escopo de SRD/PRD; mantidas apenas restrições de negócio puras |
 | 1.2 | 2026-04-28 | **+ Aprovadores como papel funcional** em §3.1.5 (não cargo novo — sócios/líderes assumem). **+ 3 restrições** (REST-07 Drive read-only · REST-08 consentimento cliente-a-cliente · REST-09 aprovador sempre humano). Pedido Guga + Bruno Prosperi para fluxo de Aprovação Hierárquica e integração Google Drive |
+| 1.3 | 2026-05-14 | §3.1 reescrito com modelo Sponsor-Champion-Time Central formalizado (reuniões 07/05 e 14/05/2026). Tabelas de Sponsors e Champions confirmados. REST-08 reformulado (escopo Drive limitado ao Drive interno da Suno, BR-018 v2). |
 
 ---
 

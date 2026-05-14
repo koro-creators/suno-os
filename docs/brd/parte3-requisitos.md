@@ -3,9 +3,9 @@ documento: BRD Parte 3 — Requisitos de Negócio (BR-XXX)
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.2
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -29,12 +29,12 @@ Esta parte traduz os **5 Objetivos de Negócio** da Parte 1 e as **7 Capacidades
 ## Como Usar
 
 - BRs estão organizados em **6 categorias temáticas** que correspondem a frentes de valor do projeto
-- Cada BR tem ID sequencial (BR-001 a BR-016), prioridade, stakeholder demandante, critérios de aceite e dependências
+- Cada BR tem ID sequencial (BR-001 a BR-022, com BR-021 como placeholder), prioridade, stakeholder demandante, critérios de aceite e dependências
 - **BR ≠ FR (Functional Requirement)**: BR descreve a necessidade; FR descreve a solução. FRs vivem em PRDs/FRDs separados
 - **Quando uma feature já tem FRD próprio (ex: Moon Shot), o BR aponta para ele** — nunca duplica
 - Critérios de aceite são **verificáveis**, não desejos vagos
 
-## Sumário Executivo (16 BRs)
+## Sumário Executivo (21 BRs)
 
 | ID | Título resumido | Prioridade | Categoria |
 |----|----------------|:----------:|----------|
@@ -55,7 +55,11 @@ Esta parte traduz os **5 Objetivos de Negócio** da Parte 1 e as **7 Capacidades
 | **BR-015** | Integração com Skills existentes do sunOS | Alta | F — Integração |
 | **BR-016** | Não substituir ferramentas de mercado adotadas | Média | F — Integração |
 | **BR-017** | Fluxo de aprovação hierárquica com pré-validação por agentes | Alta | G — Workflow & Governança |
-| **BR-018** | Google Drive como fonte curada da Biblioteca (read-only + curadoria sugestiva) | Média | F — Integração |
+| **BR-018** | Drive interno da Suno como fonte curada da Biblioteca e da Wiki Ontológica (v2) | Alta | G — Workflow & Governança |
+| **BR-019** | Princípio de UX operacional estruturada (software, não chat livre) | Alta | H — Princípios de Experiência |
+| **BR-020** | Captura seletiva de inputs operacionais via gravação assistida | Média | G — Workflow & Governança |
+| **BR-021** | (Placeholder — Wiki Ontológica) | A definir | G — Workflow & Governança |
+| **BR-022** | Onboarding automatizado de cliente com Oráculo do Cliente | Alta | G — Workflow & Governança |
 
 ---
 
@@ -506,27 +510,125 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 
 ---
 
-### BR-018 — Google Drive como fonte curada da Biblioteca
+### BR-018 — Drive interno da Suno como fonte curada da Biblioteca e da Wiki Ontológica (v2)
 
-**Descrição**: O sunOS deve integrar-se ao **Google Drive da Suno como fonte primária de insumo para a Biblioteca**. Conteúdos relevantes do Drive são curados (manualmente pelo líder, com **assistência sugestiva de agentes** para identificar oportunidades, duplicatas, conteúdo desatualizado) e ingeridos na Biblioteca. **A integração é unidirecional read-only**: agentes não escrevem, deletam, movem ou alteram arquivos do Drive — apenas analisam e sugerem reorganização para humanos executarem. Sync respeita **ACL do Drive ∩ RBAC do sunOS** (intersecção, default deny).
+**Descrição**: O sunOS deve integrar-se ao Google Drive corporativo da Suno United Creators como fonte primária de insumo para a Biblioteca e para a Wiki Ontológica de cada cliente. O Drive da Suno está estruturado em pastas que organizam o trabalho da agência por cliente, projeto, área e tipo de conteúdo. Conteúdos relevantes são curados (manualmente pelo Líder, com assistência sugestiva de agentes para identificar oportunidades, duplicatas e conteúdo desatualizado) e ingeridos. A integração é unidirecional read-only. Agentes do sunOS não escrevem, deletam, movem ou alteram arquivos do Drive. Apenas analisam e sugerem reorganização para humanos executarem. Sync respeita o ACL nativo do Drive da Suno cruzado com o RBAC do sunOS (intersecção, default deny). Conteúdo de cliente inativo permanece preservado mas oculto de retrievals padrão (RN-007).
 
-**Prioridade**: Média
+**Mudança vs. v1**: A v1 contemplava integração com Drives externos do cliente, gerando dependências contratuais (REST-08) e complexidades de ACL cross-empresa. A v2 limita o escopo ao Drive interno da Suno (com pastas de cliente dentro), eliminando essas dependências.
 
-**Stakeholders demandantes**: Guga (Sponsor), líderes/curadores de cada área
+**Prioridade**: Alta
+
+**Stakeholders demandantes**: Guga (sponsor), Heitor (Tecnologia), Fabiano (gestão do Drive corporativo da Suno)
 
 **Critérios de Aceite**:
-- [ ] Líder consegue conectar uma pasta autorizada do Drive ao sunOS via OAuth Google
-- [ ] Sync **read-only** — auditável: nenhuma operação de write/delete/move emitida pelo sunOS no Drive
-- [ ] **Intersecção ACL Drive × RBAC sunOS** funcional: usuário só vê conteúdo que pode ver em ambos os sistemas
-- [ ] Agentes geram **Drive Cleanup Report** semanal sugerindo: duplicatas, conteúdo órfão sem acesso há ≥180 dias, arquivos com nomenclatura inconsistente, candidatos a curadoria na Biblioteca
-- [ ] Líder revisa sugestões e executa (ou rejeita) — log de execução armazenado
-- [ ] Re-sync periódico de **24h** + webhook do Google para mudanças críticas em pastas monitoradas
-- [ ] Zero violação ACL durante Piloto (auditável)
-- [ ] Cliente individual pode ser **excluído** da integração se contrato/política exigir
+- [ ] Escopo OAuth restrito: aplicação solicita apenas `drive.readonly` e `drive.metadata.readonly` ao Workspace da Suno
+- [ ] Conta de serviço dedicada com acesso somente leitura ao Drive corporativo, configurada com auditoria de Acesso ativada no Google Workspace Admin
+- [ ] Estrutura de pastas mapeada e versionada. Agentes operam sobre estrutura conhecida (cliente, projeto, tipo de conteúdo). Mudanças na estrutura geram notificação ao admin
+- [ ] Sync incremental ≤24h para conteúdo geral. Webhook de sync ≤5min para pastas marcadas como críticas (Brand Guidelines, regras de negócio do cliente, contratos vigentes)
+- [ ] Sugestões curatórias (duplicatas, conteúdo desatualizado, pastas órfãs, brand guidelines de cliente ativo sem versão recente) produzidas em report semanal ao Líder. Humano executa as ações sugeridas
+- [ ] Bloqueio técnico de operações de escrita no client SDK. Qualquer tentativa de write/delete/move é interceptada, logada como violação e gera alerta admin
+- [ ] Auditoria completa. Cada item sincronizado registra origem (caminho no Drive), responsável pela curadoria, data de ingestão
+- [ ] Política de retenção: arquivo removido do Drive permanece indexado por 30 dias com flag `obsoleto` antes de ser removido do sunOS, permitindo rollback de remoção acidental no Drive
 
-**Dependências**: BR-004 (Biblioteca) · BR-007 (Proteção IP) · BR-008 (Privacidade clientes) · consentimento contratual cliente-a-cliente
+**Dependências**: BR-004 (Biblioteca), BR-007 (Caixa-preta/RBAC), BR-008 (privacidade cliente), BR-022 (Onboarding usa Drive como fonte do bootstrap)
 
-**Fonte**: Pedido Guga (28/04/2026). Versão ajustada vs. pedido original: Guga pediu "espelho bidirecional + agentes que organizam Drive"; ajuste recomendado e aprovado: **Drive como fonte read-only + curadoria sugestiva** (riscos LGPD, ACL, perda de dados, e violação de RN-011 da caixa-preta foram bloqueadores para a versão literal)
+**Fonte**: Reunião 07/05/2026 (validação no MRV: "qualquer documento que entra no drive de MRB ele atualiza a WIKI automaticamente. Essa trinca a gente tem que começar a fazer na Suno"). Reunião 13/05/2026 (Heitor confirmando estrutura proposta com Fabiano). Decisão de escopo 14/05/2026 (Heitor: "Drive da Suno como repositório único contendo dados do cliente").
+
+
+---
+
+### BR-020 — Captura seletiva de inputs operacionais via gravação assistida
+
+**Descrição**: O sunOS deve oferecer capacidade de gravação seletiva e estruturada de reuniões operacionais críticas (entrada de job no atendimento, reuniões de fim de dia, apresentações semanais e mensais com cliente, comitês de decisão), com transcrição automática, extração de elementos relevantes (decisões, próximos passos, briefings, mudanças de escopo) e alimentação direta da Wiki Ontológica do cliente correspondente. A captura é sempre opt-in por reunião, nunca por padrão, e respeita Caixa-preta (não acessível a perfis operacionais não autorizados). Aplicação prática da frase do sponsor: "a gente tem que achar um jeito de a gente gravar, e com uma caixa preta, isso não tá à disposição de todo mundo" (Guga, 07/05/2026).
+
+**Prioridade**: Média (Piloto, não Protótipo)
+
+**Stakeholders demandantes**: Guga (sponsor), Elton (Operações/Atendimento), Bruno Prosperi (Criação para apresentações), Cíntia (Planejamento para entrada de job)
+
+**Critérios de Aceite**:
+- [ ] Captura é explicitamente acionada por usuário autorizado para cada reunião. Sem auto-join em todas as reuniões da agenda
+- [ ] Tipos de reunião suportados no MVP: entrada de job, status semanal, status mensal, comitê de decisão. Outros tipos exigem configuração admin
+- [ ] Transcrição gerada em até 1h após o fim da reunião
+- [ ] Extração automática produz pelo menos: decisões tomadas (com responsável), próximos passos (com prazo), entidades mencionadas (briefing, cliente, projeto, pessoa) com link para a Wiki Ontológica
+- [ ] Conteúdo extraído alimenta a Wiki Ontológica do cliente correspondente, com proveniência rastreável (reunião X, timestamp Y)
+- [ ] Acesso à transcrição e ao conteúdo extraído segue RBAC. Operacionais não veem reuniões a que não estiveram presentes (RN-009, RN-011)
+- [ ] Auditoria registra cada captura: quem ativou, quando, qual reunião, quem teve acesso ao conteúdo
+- [ ] Política de retenção definida: 12 meses transcrição completa, depois cold storage. Conteúdo extraído mantido indefinidamente como parte da Wiki
+- [ ] Captura não acontece sem ciência dos participantes. Notificação automática no início da reunião
+
+**Dependências**: BR-007 (RBAC/Caixa-preta), BR-008 (privacidade), BR-022 (Onboarding/Wiki), BR-009 (Auditabilidade)
+
+**Fonte**: Reunião 07/05/2026 (Guga + Thais sobre captura assistida). Reunião 14/05/2026 (validação do conceito com Elton mencionando aprovação de material de mídia como fluxo correlato).
+
+**Observação**: A formulação evita o anti-padrão de "agente que grava toda reunião do calendário", que o próprio Guga e Thais rejeitaram. O foco é em inputs operacionais críticos (Bioma Job), não em conversas casuais.
+
+---
+
+### BR-022 — Onboarding automatizado de cliente com "Oráculo do Cliente"
+
+**Descrição**: O sunOS deve oferecer fluxo de onboarding de cliente automatizado que combina cadastro inicial, sync com pastas do Drive da Suno, geração automática de ontologia sugerida (Oráculo do Cliente) e validação humana via Time de Operações. O Discovery automatizado consulta as fontes disponíveis (Drive da Suno, briefing inicial do atendimento, pesquisa web em fontes públicas) para propor uma seed inicial de entidades (pessoas-chave, sistemas, objetivos de negócio, contratos vigentes, jornadas-foco, brand voice) que o humano valida antes de virar parte definitiva da Wiki Ontológica. Implementa o conceito de "oráculo do cliente" levantado na reunião de 13/05/2026 por Heitor: "a gente vai ter tipo um oráculo, esse DP agent aqui pra descobrir, seria um oráculo do cliente, ele teria todas as informações do cliente, e os outros agentes vão plugar lá aqui e escolher ele".
+
+**Prioridade**: Alta (Piloto)
+
+**Stakeholders demandantes**: Elton (Sponsor de Operações, dono do fluxo no MVP), Cíntia (Planejamento como consumidor primário do contexto), Guga (sponsor)
+
+**Critérios de Aceite**:
+- [ ] Fluxo de onboarding único orquestrado (cadastro + sync inicial + ontologia sugerida + validação) acessível em `/clientes/onboard`
+- [ ] Cadastro inicial mínimo concluído em ≤30 minutos: nome, slug, sponsor da conta na Suno, briefing inicial de no máximo 1 página
+- [ ] Sync inicial das pastas do cliente no Drive da Suno completa em ≤24h após cadastro
+- [ ] Ontologia inicial gerada automaticamente após sync, propondo no mínimo 6 entidades core: pessoas-chave (executivos, decisores), sistemas (CRM, CDP, plataformas usadas), objetivos de negócio, contratos vigentes, jornadas-foco, brand voice
+- [ ] Pesquisa web realizada em fontes públicas (perfil corporativo do cliente, LinkedIn de executivos mencionados, notícias relevantes dos últimos 12 meses) com proveniência rastreável de cada fato sugerido
+- [ ] Humano valida cada entidade individualmente. Sem auto-aprovação no seed inicial (HITL obrigatório, RN-014)
+- [ ] Fontes externas consultadas seguem governança: allow-list de domínios auditada, sem scraping de conteúdo protegido por paywall ou login
+- [ ] Time de Operações é dono do fluxo no MVP. Sponsor de Operações (Elton) aprova design final. Champion de Operações (Chamas) executa onboardings na operação
+- [ ] Auditoria registra cada onboarding: quem cadastrou, quais entidades foram aceitas, rejeitadas ou editadas, quais fontes foram consultadas, tempo total da validação
+- [ ] Cliente fica em status `PRE-ACTIVE` até validação humana da ontologia mínima ser concluída. Skills processuais não acessam cliente em `PRE-ACTIVE`
+- [ ] Onboarding deve ser idempotente: re-execução em cliente existente atualiza ontologia sem duplicar entidades
+
+**Dependências**: BR-018 v2 (Drive Suno), BR-021 (Wiki Ontológica, placeholder a criar em iteração futura), BR-007 (RBAC), BR-009 (Auditabilidade), BR-008 (privacidade cliente)
+
+**Fonte**: Reunião 13/05/2026 (Heitor descrevendo o "oráculo do cliente"). Decisão de design 14/05/2026 (Heitor + Elton sobre dono do fluxo no MVP).
+
+**Observação**: Este BR adota a Hipótese C (Discovery automatizado pesado) da análise de cobertura, em vez de wizard simples.
+
+---
+
+## Categoria H — Princípios de Experiência (NOVA — adicionada após validação Guga em 07/05 e 14/05)
+
+Princípios fundacionais que orientam decisões de UX em todas as features do sunOS.
+
+---
+
+### BR-019 — Princípio de UX operacional estruturada (software, não chat livre)
+
+**Descrição**: O sunOS deve oferecer UX operacional estruturada para todas as tarefas de creators e champions, com paradigmas visuais e fluxos guiados em vez de chat livre genérico. O princípio reflete direção formal do sponsor: "a gente não deve ser um chat, a gente deve ser um software. E esse software ou tem drag and drop, ou tem às vezes coisas que tu escolhe... fazer um pix de quanto? Pra quem? De que jeito?" (Guga, 07/05/2026). Para tarefas operacionais, o creator nunca compõe prompts livremente em produção. A UX captura o que precisa via inputs estruturados, escolhas pré-definidas e composição visual. Chat livre é reservado apenas para contextos específicos onde fluxo aberto é apropriado (Moon Shot de provocação criativa, Discovery de consultoria estruturada).
+
+**Prioridade**: Alta (princípio fundacional)
+
+**Stakeholders demandantes**: Guga (sponsor)
+
+**Critérios de Aceite**:
+- [ ] Toda Skill processual (FA-03) tem inputs estruturados visíveis no Chat. Operador nunca precisa "saber escrever o prompt" para usar uma Skill
+- [ ] Workflow Builder (FA-05) oferece composição visual via drag-and-drop de nodes, conforme ADR-003
+- [ ] Chat genérico sem Skill ativa é desencorajado via UX. Tela inicial sugere selecionar Skill ou Cliente. Chat sem contexto não é o uso default
+- [ ] Auditoria registra quando usuário usa chat genérico (sem Skill ativa), permitindo análise de gaps de cobertura via Skills
+- [ ] Documentação interna e onboarding de novos creators reforça o princípio: usar Skills, não ensinar o sunOS a fazer cada coisa via prompt
+- [ ] Exceções autorizadas (chat livre permitido): FA-02 Moon Shot (provocação criativa) e Discovery do consultor estruturado (chat persistente da capacidade absorvida do koro-studio). Outras exceções exigem aprovação do Comitê de Produto
+
+**Anti-padrões a evitar**:
+- Chat genérico estilo ChatGPT/Claude como interface principal
+- Prompt engineering exposto a creators operacionais
+- Workflows sem inputs explícitos (caixa-preta de configuração)
+- Skills sem documentação dos inputs esperados
+
+**Dependências**: ADR-003 (Workflow Builder visual), FA-03, FA-04, FA-05, FA-06
+
+**Fonte**:
+- Reunião 07/05/2026 (Guga: "não deve ser um chat, deve ser um software")
+- Reunião 14/05/2026 (Heitor + Guga: metáfora "app de banco" para Pix)
+- Decisão de design Heitor 14/05/2026
+
+**Observação**: Este BR é princípio orientador, não feature. Implementação prática vive em FA-03, FA-05, FA-06 e nos ADRs correspondentes. ADR-001 (que rejeitava drag-and-drop) é superseded por ADR-003 como parte desta atualização.
 
 ---
 
@@ -553,78 +655,14 @@ Cada BR deve cobrir pelo menos um Objetivo da Parte 1. Matriz garante que nenhum
 | BR-015 — Integração com Skills | ✓ | ✓ | | | |
 | BR-016 — Coexistência com ferramentas | | | ✓ | | |
 | BR-017 — Aprovação hierárquica | ✓ | ✓ | ✓ | ✓ | |
-| BR-018 — Google Drive como fonte | ✓ | ✓ | ✓ | | |
+| BR-018 — Drive interno da Suno | ✓ | ✓ | ✓ | | |
+| BR-019 — UX operacional estruturada | | ✓ | | | ✓ |
+| BR-020 — Captura seletiva | | ✓ | ✓ | ✓ | |
+| BR-022 — Onboarding Oráculo do Cliente | ✓ | ✓ | ✓ | ✓ | |
 
 **Cobertura**: cada um dos 5 OBJ tem ≥3 BRs associados — boa redundância sem inflação.
 
----
-
-## Matriz de Rastreabilidade — BR ↔ Personas (do FRD Moon Shot)
-
-Liga os BRs do BRD com as personas detalhadas no FRD para coerência cross-document.
-
-| BR | PX-01 Líder/Curador | PX-02 Criativo Sênior | PX-03 Operador | PX-04 Planner |
-|----|:---:|:---:|:---:|:---:|
-| BR-001 — Provocação criativa | | ✓ Primário | | ✓ Primário |
-| BR-002 — Aceleração operacional | | | ✓ Primário | |
-| BR-003 — ROI ao sponsor | (Métricas) | | | |
-| BR-004 — Biblioteca | ✓ Primário | (Indireto) | (Indireto) | (Indireto) |
-| BR-005 — Continuidade turnover | ✓ Primário | (Beneficiário) | (Beneficiário) | (Beneficiário) |
-| BR-006 — Acesso democrático | | ✓ | ✓ Primário | ✓ |
-| BR-007 — Proteção IP | ✓ Primário | | | |
-| BR-008 — Privacidade clientes | ✓ | | ✓ | |
-| BR-009 — Auditabilidade | ✓ Primário | | | |
-| BR-010 — Ownership criativo | | ✓ Primário | | ✓ |
-| BR-011 — Cultura brasileira | ✓ | ✓ | ✓ | ✓ |
-| BR-012 — UX por carreira | | ✓ Primário | | (Beneficiário) |
-| BR-013 — Mensuração custo | ✓ | | (Beneficiário indireto) | |
-| BR-014 — Detecção homogeneização | ✓ Primário | (Beneficiário) | | |
-| BR-015 — Integração Skills | ✓ Tutela | (Beneficiário) | ✓ Primário | (Beneficiário) |
-| BR-016 — Coexistência ferramentas | ✓ | (Beneficiário) | (Beneficiário) | (Beneficiário) |
 
 ---
 
-## Como esta Parte 3 impacta PRD, SRD e FRD
-
-A Parte 3 **fornece a baseline de necessidade** que será desdobrada em outros artefatos do pipeline Koro. A relação:
-
-| Artefato | Relação com Parte 3 |
-|----------|---------------------|
-| **PRD (Product Requirements Document)** | Cada BR vira ≥1 Feature (FA-XX) no Feature Map; BRs viram Jobs-to-be-Done por Persona; critérios de aceite de BRs alimentam testes de aceitação de PRD |
-| **SRD (Solution Requirements Document)** | BRs de governança (BR-007 a BR-009) viram NFRs ISO 25010 (Security, Maintainability); BR-013/014 viram requisitos de observabilidade; BRs de integração (BR-015) viram especificações de API/integração |
-| **FRD (Feature Requirement Document)** | Já existe FRD para Moon Shot — alinhado com BR-001, BR-004, BR-006, BR-007, BR-010. **FRD é tradução técnica dos BRs**: o que um BR diz como "necessidade", o FRD diz como "FR-XXX" |
-| **UX Specs** | BR-010 (ownership), BR-011 (cultura), BR-012 (career stage) são guidelines diretos para UI/UX |
-
-**Regra de consistência**: nenhum FR/feature em PRD ou FRD deve existir sem rastreabilidade a um BR. Se aparecer, ou precisamos adicionar BR aqui (negócio justifica), ou cortar do PRD/FRD (sem justificativa de negócio).
-
----
-
-## Pontos em aberto / a validar antes da Parte 4 (Regras de Negócio)
-
-| ID | Item | Responsável | Prazo sugerido |
-|----|------|-------------|----------------|
-| PA-01 | Validar critérios de aceite quantitativos (≥60% aprovação, ≥30% redução de tempo, etc.) com sponsor antes de virarem compromissos contratuais | Heitor + Guga | Maio 2026 |
-| PA-02 | Confirmar com Diretoria a política de auditoria/retenção de logs (BR-008 e BR-009) — necessária base para Parte 4 (RN-XXX) | Heitor + Diretoria | Antes Parte 4 |
-| PA-03 | Definir baseline pré-sunOS de métricas de homogeneização (BR-014) — sem baseline, alertas não funcionam | Bruno Prosperi + Heitor | Antes Piloto |
-| PA-04 | Validar a lista de tarefas-alvo prioritárias para BR-002 (≥10 tarefas) | Heitor + champions | Maio 2026 |
-| PA-05 | Definir frequência e formato dos relatórios trimestrais à Diretoria (BR-014) | Heitor + Guga | Junho 2026 |
-
----
-
-## Changelog
-
-| Versão | Data | Mudança |
-|--------|------|---------|
-| 1.0 | 2026-04-28 | Versão inicial. **16 BRs** organizados em 6 categorias (Valor primário, Conhecimento, Governança, Adoção/Cultura, Mensuração, Integração). Derivados dos 5 OBJ da Parte 1 + 7 capacidades de negócio §4.2 + FRD Moon Shot + research foundation engineering serendipity. Matrizes de rastreabilidade BR↔OBJ e BR↔Personas. Cada BR tem critérios de aceite verificáveis e fonte rastreável. Referências ao FRD onde aplicável (sem duplicação) |
-| 1.1 | 2026-04-28 | **+2 BRs** (BR-017 Aprovação hierárquica · BR-018 Google Drive como fonte) na nova **Categoria G — Workflow & Governança**. Pedido formal de Guga + Bruno Prosperi. Versão ajustada do Drive (read-only + curadoria sugestiva) vs. pedido literal (espelho bidirecional) — ajuste justificado por riscos LGPD/ACL/IP/RN-011 |
-
----
-
-<!-- REVIEW: Os 16 BRs cobrem o que o negócio realmente precisa? Algum BR está com critérios de aceite vagos? Algum BR fala de "como" e deveria virar FR no PRD/FRD? Algum BR essencial está faltando? -->
-
-**Próximos passos**:
-1. Revisar Parte 3 com Heitor Miranda
-2. Validar BRs com sponsor (Guga) e patrocinadores sócio
-3. Ajustar critérios de aceite quantitativos antes que virem compromissos formais
-4. Iniciar **Parte 4 — Regras de Negócio (RN-XXX)** com lógica SE/ENTÃO/SENÃO derivada dos BRs (especialmente BR-001, BR-006, BR-007, BR-008, BR-014)
-5. Em paralelo: revisar **FRD Moon Shot** para garantir que cada FR está rastreável a um BR aprovado aqui
+## Matriz de Rastreabilidade — BR ↔ Personas

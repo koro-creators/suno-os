@@ -469,7 +469,7 @@ Resolve a necessidade de **automação de tarefas recorrentes** sem dependência
 - Integração com ferramentas externas via API/webhook (RN-022)
 
 **Não Inclui:**
-- Drag-and-drop visual de composição de agentes (ADR-001 — não é esse o escopo)
+- Substituir orquestradores de mercado (Zapier, n8n) na camada técnica. sunOS é camada semântica acima, com nodes específicos do domínio da Suno (BR-016, RN-022)
 - Substituir orquestradores de mercado (Zapier, n8n) — sunOS é camada acima, não substituto (BR-016, RN-022)
 - Execução de Workflows críticos sem HITL para decisões de alto impacto
 
@@ -477,7 +477,7 @@ Resolve a necessidade de **automação de tarefas recorrentes** sem dependência
 
 | ID | Capacidade | Descrição |
 |----|------------|-----------|
-| FA-05-01 | Builder visual de steps | Configuração sequencial sem código |
+| FA-05-01 | Workflow Builder visual drag-and-drop | Composição via nodes conectáveis (ADR-003) |
 | FA-05-02 | Compilação LangGraph StateGraph | Engine de execução |
 | FA-05-03 | Schedule via Cloud Scheduler | Cron humanizado |
 | FA-05-04 | Encadeamento (sub-workflows) | SPEC-004 |
@@ -1319,10 +1319,61 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 | BR-014 (Detecção homogeneização) | FA-02, FA-07, FA-10, FA-11 | OK |
 | BR-015 (Integração com Skills) | FA-01, FA-03, FA-04, FA-12 | OK |
 | BR-017 (Aprovação hierárquica) | FA-13 (primário), FA-01, FA-09 | OK |
-| BR-018 (Drive como fonte) | FA-14 (primário), FA-01, FA-09 | OK |
+| BR-018 (Drive como fonte — v2) | FA-14 (primário), FA-15, FA-01, FA-09 | OK |
 | BR-016 (Coexistência ferramentas) | FA-05, FA-08 | OK |
+| BR-019 (UX estruturada — princípio) | FA-03, FA-04, FA-05, FA-06 | Princípio transversal |
+| BR-020 (Captura seletiva) | FA-16 (primário), FA-01, FA-09 | OK |
+| BR-022 (Onboarding Oráculo) | FA-15 (primário), FA-01, FA-14, FA-09, FA-12 | OK |
 
 **Cobertura completa**: todos os 16 BRs têm ≥1 Feature. BR-012 (UX por carreira) tem cobertura única em FA-11 — apontamento na §6.3.
+
+
+---
+
+### FA-15 — Onboarding Automatizado de Cliente (NOVA — pedido Heitor + Elton, decisão 14/05/2026)
+
+#### Resumo
+Fluxo único orquestrado que combina cadastro, sync inicial do Drive, geração automática de ontologia sugerida ("Oráculo do Cliente") e validação humana pelo Time de Operações. Implementa BR-022 (Hipótese C, Discovery automatizado). Cliente fica em status PRE-ACTIVE até validação da ontologia mínima.
+
+#### Capacidades / Subfeatures
+
+| ID | Capacidade |
+|----|------------|
+| FA-15-01 | Cadastro inicial mínimo (nome, slug, sponsor, briefing) |
+| FA-15-02 | Trigger de sync inicial do Drive |
+| FA-15-03 | Geração automática de seed ontológico (6 entidades core) |
+| FA-15-04 | Pesquisa web em fontes públicas (allow-list) com proveniência |
+| FA-15-05 | UI de validação humana (aceitar/rejeitar/editar por entidade) |
+| FA-15-06 | Auditoria do onboarding completo |
+| FA-15-07 | Idempotência (re-execução atualiza sem duplicar) |
+
+#### Personas
+PX-01 Líder, PX-06 Aprovador Sócio (Elton como Sponsor de Operações), Champion de Operações (Chamas) como executor.
+
+**Fase:** Piloto | **Criticidade:** Core
+
+---
+
+### FA-16 — Captura Seletiva de Reuniões (NOVA — pedido Guga, decisão 14/05/2026)
+
+#### Resumo
+Gravação assistida opt-in de reuniões operacionais críticas, com transcrição, extração estruturada e alimentação da Wiki Ontológica. Implementa BR-020. Foco em entrada de job, status semanal/mensal e comitês de decisão. Não grava reuniões casuais.
+
+#### Capacidades / Subfeatures
+
+| ID | Capacidade |
+|----|------------|
+| FA-16-01 | Acionamento opt-in por reunião |
+| FA-16-02 | Notificação a participantes no início |
+| FA-16-03 | Transcrição automática em até 1h |
+| FA-16-04 | Extração estruturada (decisões, próximos passos, entidades) |
+| FA-16-05 | Alimentação direta da Wiki Ontológica com proveniência |
+| FA-16-06 | RBAC sobre transcrição e conteúdo extraído |
+
+#### Personas
+PX-03 Operador Processual (acionador no atendimento), PX-01 Líder, PX-06 Aprovador Sócio.
+
+**Fase:** Piloto | **Criticidade:** Importante
 
 ---
 
@@ -1387,4 +1438,4 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
 | 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **12 Macro Features (FA-01 a FA-12)** com 41 subfeatures, derivadas dos 16 BRs (Parte 3) + 22 RNs (Parte 4) + PRODUCT_HANDOFF.md + SPECs SDD existentes (SPEC-001 a SPEC-007 + image-editor + video-generation) + FRD Moon Shot (referenciado). Cobertura completa: todos os 16 BRs têm ≥1 Feature. Ecossistema explicitado em 3 anéis (infraestrutura de conhecimento, capacidades de IA, governança e cultura). Vocabulário Suno (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma) aplicado; anti-patterns evitados |
-| 1.1 | 2026-04-28 | **+2 Macro Features**: FA-13 Aprovação Hierárquica (9 subfeatures) e FA-14 Google Drive como fonte (8 subfeatures, versão ajustada). Pedido formal Guga + Bruno Prosperi. Total agora: **14 Macro Features / 58 subfeatures**. Cobertura BR-017 e BR-018 adicionada às matrizes |
+| 1.1 | 2026-04-28 | **+2 Macro Features**: FA-13 Aprovação Hierárquica (9 subfeatures) e FA-14 Google Drive como fonte (8 subfeatures, versão ajustada). Pedido formal Guga + Bruno Prosperi. Total agora: **16 Macro Features / 71 subfeatures** (com FA-15 e FA-16). Cobertura BR-017 e BR-018 adicionada às matrizes |

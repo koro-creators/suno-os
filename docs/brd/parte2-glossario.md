@@ -260,6 +260,24 @@ Esta seção registra **termos que devem ser evitados** dentro do projeto sunOS,
 | Funil tradicional | **Smart Growth** | Smart Growth é o funil incrementado próprio da Suno |
 | AI agency / agência AI-native | **Agência ambidestra** | Posicionamento Guga: lado esquerdo (criatividade) + lado direito (tech) |
 
+
+## 10. Governança e Estrutura Operacional
+
+| Termo | Definição | Contexto de Uso | Fonte |
+|-------|-----------|-----------------|-------|
+| **Sponsor** | Sócio responsável por desenhar a arquitetura de automações na sua área e cobrado pelo Guga sobre resultado. Não é executor. Modelo formalizado em 14/05/2026 | Estrutura de governança do sunOS | BRD Parte 1 §3.1.1 |
+| **Champion** | Profissional sênior ou pleno que executa fluxos desenhados pelo Sponsor e dá feedback ao Time Central. Cada área tem 1 a 4 | Estrutura de governança | BRD Parte 1 §3.1.2 |
+| **Time Central** | Time técnico liderado por Heitor que provê infra, componentes reutilizáveis e governança técnica. Não constrói automações setoriais sob demanda | Estrutura de governança | BRD Parte 1 §3.1.3 |
+| **Captura Seletiva** | Gravação opt-in de reuniões operacionais críticas (entrada de job, status semanal/mensal, comitês). Não grava conversas casuais | BR-020, FA-16 | Reunião 07/05/2026 |
+| **Oráculo do Cliente** | Conceito do BR-022. Agente que conhece o cliente em profundidade após onboarding automatizado e serve de fonte para outros agentes do sunOS | BR-022, FA-15 | Reunião 13/05/2026 |
+
+## 11. Princípios de Experiência
+
+| Termo | Definição | Contexto de Uso | Fonte |
+|-------|-----------|-----------------|-------|
+| **Software estruturado** | Princípio fundacional do sunOS. UX operacional deve ser composta por paradigmas visuais explícitos (wizard, drag-and-drop, navegação hierárquica), não por chat livre genérico | BR-019, ADR-003 | Reunião 07/05/2026, fala do Guga |
+| **App de banco (metáfora)** | Metáfora do Guga para o paradigma desejado. "Fazer um Pix de quanto, pra quem, de que jeito" em vez de "me ajuda a fazer um Pix". Inputs estruturados, escolhas pré-definidas | BR-019 | Reunião 07/05/2026 |
+| **Chat livre** | Anti-padrão evitado em produção. Operador digita instrução aberta sem contexto estruturado. Permitido apenas em exceções (Moon Shot, Discovery do consultor estruturado) | BR-019 | BR-019 |
 ---
 
 ## Changelog

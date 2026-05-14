@@ -5,7 +5,7 @@ cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
 versao: 1.0
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -24,13 +24,13 @@ fonte_principal: Parte 3 (Requisitos BR-XXX) + FRD Moon Shot + Research foundati
 
 ## Objetivo
 
-Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em **regras decisionais formais (RN-XXX)** com lógica explícita SE/ENTÃO/SENÃO. Cada regra pode ser implementada como código, validada por auditoria, ou usada como guideline operacional para tomadas de decisão por humanos.
+Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **regras decisionais formais (RN-XXX)** com lógica explícita SE/ENTÃO/SENÃO. Cada regra pode ser implementada como código, validada por auditoria, ou usada como guideline operacional para tomadas de decisão por humanos.
 
 **RN ≠ FR (Functional Requirement)**: a RN descreve **a lógica de decisão de negócio**, não como o sistema implementa. O FRD/PRD/SRD traduzirão cada RN em mecanismos técnicos.
 
 ## Como Usar
 
-- Cada RN tem ID sequencial (RN-001 a RN-022), referencia ≥1 BR da Parte 3
+- Cada RN tem ID sequencial (RN-001 a RN-034), referencia ≥1 BR da Parte 3
 - Lógica formal: **SE** (condição) **ENTÃO** (ação) **SENÃO** (ação alternativa ou comportamento padrão)
 - Inputs declaram o que precisa estar disponível (origem, sistema)
 - KPIs ligam a regra a métricas de sucesso da Parte 3
@@ -585,6 +585,68 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 
 ---
 
+### RN-031 — Acionamento opt-in obrigatório para Captura de Reuniões
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-031 |
+| **BR(s) relacionado(s)** | BR-020 |
+| **Dimensão/Subdimensão** | Captura / Privacidade |
+| **Variável de decisão** | Quando o sunOS pode iniciar gravação |
+| **Inputs necessários** | Tipo de reunião · Usuário autorizado · Confirmação explícita |
+| **Condição** | **SE** usuário autorizado clica explicitamente em "Iniciar captura" para uma reunião específica **E** todos os participantes recebem notificação automática **ENTÃO** inicia gravação. **SE** qualquer condição faltar **ENTÃO** não inicia. **SENÃO** permanece off |
+| **Ação de negócio recomendada** | Default OFF em qualquer integração de calendário. Sem auto-join. Sem captura passiva |
+| **KPIs de sucesso** | Zero capturas sem opt-in registrado · 100% das capturas com notificação aos participantes |
+| **Fontes** | BR-020, princípio Caixa-preta |
+| **Confiabilidade** | **Alta** |
+
+### RN-032 — HITL obrigatório no seed ontológico inicial
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-032 |
+| **BR(s) relacionado(s)** | BR-022 |
+| **Dimensão/Subdimensão** | Onboarding / HITL |
+| **Variável de decisão** | Quando uma entidade da ontologia sugerida vira parte oficial da Wiki |
+| **Inputs necessários** | Sugestão do agente · Validação humana |
+| **Condição** | **SE** entidade foi sugerida pelo agente de Discovery **E** humano (Champion de Operações) validou explicitamente (aceitar/rejeitar/editar) **ENTÃO** entidade vira oficial. **SE** >7 dias sem validação **ENTÃO** entidade fica em status PENDING_REVIEW e bloqueia ativação do cliente. **SENÃO** não vira oficial |
+| **Ação de negócio recomendada** | Cliente permanece PRE-ACTIVE até no mínimo as 6 entidades core terem decisão humana registrada |
+| **KPIs de sucesso** | Zero clientes ativados sem validação completa do seed · Tempo médio de validação <72h após sync |
+| **Fontes** | BR-022, BR-010 (ownership humano) |
+| **Confiabilidade** | **Alta** |
+
+### RN-033 — Allow-list para pesquisa web no onboarding
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-033 |
+| **BR(s) relacionado(s)** | BR-022 |
+| **Dimensão/Subdimensão** | Onboarding / Governança de fontes |
+| **Variável de decisão** | Quais fontes externas o agente de Discovery pode consultar |
+| **Inputs necessários** | URL/domínio · Allow-list atual |
+| **Condição** | **SE** domínio está na allow-list configurada pelo admin **ENTÃO** consulta permitida. **SE** não está **ENTÃO** bloqueia e loga tentativa. **SE** conteúdo exige login ou paywall **ENTÃO** bloqueia (sem scraping protegido). **SENÃO** opera normalmente |
+| **Ação de negócio recomendada** | Allow-list inicial sugerida: linkedin.com (perfil público apenas), site corporativo do cliente, news públicas (G1, Folha, Estadão, Valor, Meio&Mensagem). Expansão exige aprovação do Comitê de Produto |
+| **KPIs de sucesso** | Zero acessos a fontes não autorizadas · 100% das consultas com proveniência rastreável |
+| **Fontes** | BR-022, princípio de governança de fontes |
+| **Confiabilidade** | **Média** (depende de configuração e disciplina) |
+
+### RN-034 — Bloqueio de chat livre em Skills processuais
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-034 |
+| **BR(s) relacionado(s)** | BR-019 |
+| **Dimensão/Subdimensão** | UX / Estruturação |
+| **Variável de decisão** | Quando o Chat aceita instrução livre vs. exige inputs estruturados |
+| **Inputs necessários** | Skill ativa · Contexto da sessão |
+| **Condição** | **SE** Skill processual está ativa **ENTÃO** Chat exige inputs estruturados conforme schema da Skill (form, wizard). **SE** Skill é FA-02 (Moon Shot) **ENTÃO** Chat aceita instrução livre. **SE** Skill é Discovery (chat persistente do consultor) **ENTÃO** Chat aceita instrução livre. **SE** nenhuma Skill ativa **ENTÃO** UI sugere selecionar Skill ou Cliente. Operação em chat genérico é logada para análise de gaps de cobertura |
+| **Ação de negócio recomendada** | Chat genérico não é proibido tecnicamente. É desencorajado por UX. Análise periódica de uso de chat genérico revela Skills faltantes |
+| **KPIs de sucesso** | >80% das sessões de creators operacionais com Skill ativa · Tendência decrescente de uso de chat genérico ao longo do Piloto |
+| **Fontes** | BR-019, ADR-003 |
+| **Confiabilidade** | **Alta** |
+
+---
+
 ## Matriz de Cobertura — RN ↔ BR
 
 | BR | RNs relacionadas |
@@ -606,9 +668,12 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | BR-015 (Integração Skills) | RN-021 |
 | BR-016 (Coexistência ferramentas) | RN-022 |
 | BR-017 (Aprovação hierárquica) | RN-023, RN-024, RN-025, RN-026 |
-| BR-018 (Google Drive fonte) | RN-027, RN-028, RN-029, RN-030 |
+| BR-018 (Drive interno da Suno) | RN-027, RN-028, RN-029, RN-030 |
+| BR-019 (UX estruturada) | RN-034 |
+| BR-020 (Captura seletiva) | RN-031 |
+| BR-022 (Onboarding Oráculo) | RN-032, RN-033 |
 
-**Cobertura completa**: cada um dos 16 BRs tem ≥1 RN. BRs prioritários (Alta) têm 1-3 RNs cada.
+**Cobertura completa**: cada um dos 19+ BRs (BR-001 a BR-022, exceto placeholders) tem ≥1 RN. BRs prioritários (Alta) têm 1-3 RNs cada.
 
 ---
 
@@ -655,6 +720,7 @@ RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de vir
 |--------|------|---------|
 | 1.0 | 2026-04-28 | Versão inicial. **22 RNs** organizadas em 6 categorias (espelhando a Parte 3). 12 Alta confiabilidade, 9 Média, 1 Baixa. Cobertura completa de todos os 16 BRs. Toda RN com lógica SE/ENTÃO/SENÃO formal, KPIs verificáveis e fonte rastreável. RNs críticas: RN-009 (RBAC), RN-010 (isolamento clientes), RN-011 (caixa-preta da Biblioteca), RN-019 e RN-020 (safety contra homogeneização) |
 | 1.1 | 2026-04-28 | **+8 RNs** (RN-023 a RN-030) na nova **Categoria G — Aprovação & Drive**. Cobre BR-017 (4 RNs sobre validators paralelos, aprovador humano, anti-loop, hierarquia configurável) e BR-018 (4 RNs sobre read-only, intersecção ACL/RBAC, curadoria sugestiva, sync periódico+webhook). Todas Alta confiabilidade exceto RN-026 e RN-030 (Média) |
+| 1.2 | 2026-05-14 | **+4 RNs** (RN-031 a RN-034). RN-031: opt-in obrigatório para captura de reuniões (BR-020). RN-032: HITL obrigatório no seed ontológico (BR-022). RN-033: allow-list para pesquisa web no onboarding (BR-022). RN-034: bloqueio de chat livre em Skills processuais (BR-019, ADR-003). Matriz RN x BR atualizada com novos BRs. |
 
 ---
 
