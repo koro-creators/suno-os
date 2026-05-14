@@ -155,6 +155,11 @@ from workflows.router import router as workflows_router
 
 app.include_router(workflows_router, prefix=f"{settings.API_PREFIX}/workflows")
 
+# Mount tools router (SPEC-005 TASK-C08b — powers canvas NodePalette)
+from tools.router import router as tools_router
+
+app.include_router(tools_router, prefix=settings.API_PREFIX)
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():

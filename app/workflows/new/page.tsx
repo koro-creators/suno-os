@@ -1,24 +1,26 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
-import AppHeader from '@/components/layout/AppHeader';
-import WorkflowBuilder from '@/components/workflows/WorkflowBuilder';
-import { useWorkflows } from '@/contexts/WorkflowsContext';
-import { Workflow, WorkflowStep } from '@/lib/workflow-types';
-import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
+/**
+ * New workflow page (SPEC-005 TASK-C17).
+ *
+ * Reset-and-redirect: creates an empty workflow with a single tool entry
+ * step and immediately navigates to the canvas editor for that ID.
+ * Templates remain supported through the `?template=` query string.
+ */
 
-const EMPTY_WORKFLOW: Workflow = {
-  id: '',
-  name: '',
-  description: '',
-  status: 'draft',
-  client_id: '',
-  steps: [],
-  steps_count: 0,
-  created_by: 'admin',
-  created_at: '',
-  updated_at: '',
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import AppHeader from '@/components/layout/AppHeader';
+import { useWorkflows } from '@/contexts/WorkflowsContext';
+import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
+import type { WorkflowStep } from '@/lib/workflow-types';
+
+const ENTRY_STEP: WorkflowStep = {
+  id: 'entry',
+  name: 'Buscar dados',
+  type: 'tool',
+  tool_name: 'search_knowledge',
+  config: { query: '' },
 };
 
 function CreateWorkflowContent() {
@@ -26,43 +28,52 @@ function CreateWorkflowContent() {
   const searchParams = useSearchParams();
   const { createWorkflow } = useWorkflows();
 
-  // Check for template query param
-  const templateId = searchParams.get('template');
-  let initial = EMPTY_WORKFLOW;
+  useEffect(() => {
+    const templateId = searchParams.get('template');
+    let name = 'Novo workflow';
+    let description = '';
+    let steps: WorkflowStep[] = [ENTRY_STEP];
 
-  if (templateId) {
-    const template = WORKFLOW_TEMPLATES.find((t) => t.id === templateId);
-    if (template) {
-      initial = {
-        ...EMPTY_WORKFLOW,
-        name: template.name,
-        description: template.description,
-        steps: template.steps as WorkflowStep[],
-        steps_count: template.steps.length,
-      };
+    if (templateId) {
+      const template = WORKFLOW_TEMPLATES.find((t) => t.id === templateId);
+      if (template) {
+        name = template.name;
+        description = template.description;
+        steps = template.steps as WorkflowStep[];
+      }
     }
-  }
 
-  const handleCreate = (data: Workflow) => {
-    createWorkflow({
-      name: data.name,
-      description: data.description,
-      client_id: data.client_id,
-      steps: data.steps,
-      schedule: data.schedule,
+    const created = createWorkflow({
+      name,
+      description,
+      client_id: '',
+      steps,
     });
-    router.push('/workflows');
-  };
+    router.replace(`/workflows/${created.id}`);
+    // Effect runs once on mount; createWorkflow + router stable enough.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <AppHeader
         breadcrumbs={[
           { label: 'Workflows', href: '/workflows' },
-          { label: 'Novo Workflow', href: '/workflows/new' },
+          { label: 'Novo workflow', href: '/workflows/new' },
         ]}
       />
-      <WorkflowBuilder initial={initial} onSave={handleCreate} isNew />
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--text-muted)',
+          fontSize: 12,
+        }}
+      >
+        Criando workflow…
+      </div>
     </>
   );
 }

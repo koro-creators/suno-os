@@ -10,12 +10,17 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from .schemas import (
+    AutoLayoutResponse,
+    MigrateV2Response,
     ResumeRunRequest,
     RunWorkflowRequest,
     RunWorkflowResponse,
+    SetEdgesRequest,
     StepLogResponse,
+    ValidateWorkflowResponse,
     WorkflowCreate,
     WorkflowDetailResponse,
+    WorkflowEdge,
     WorkflowListResponse,
     WorkflowResponse,
     WorkflowRunListResponse,
@@ -199,7 +204,15 @@ async def get_workflow(workflow_id: str) -> WorkflowDetailResponse:
 
 @router.put("/{workflow_id}")
 async def update_workflow(workflow_id: str, req: WorkflowUpdate) -> WorkflowDetailResponse:
-    """Update an existing workflow."""
+    """Update an existing workflow.
+
+    SPEC-005 TASK-B01b: when steps change, run `hard_validate_for_put` against
+    the *resulting* state. Hard findings (cycle, unauthorized_tool,
+    max_nodes_exceeded, edge_to_nonexistent_handle, no_entry_node) block the
+    save with 400 and a structured payload so the canvas can revert.
+    Soft findings (fan_in_without_merge, merge_with_zero_inputs) do NOT block
+    save — they show up as warnings on POST /validate.
+    """
     wf = _workflows.get(workflow_id)
     if not wf:
         raise HTTPException(status_code=404, detail="Workflow not found")
@@ -216,6 +229,22 @@ async def update_workflow(workflow_id: str, req: WorkflowUpdate) -> WorkflowDeta
         if step_errors:
             raise HTTPException(status_code=422, detail=step_errors)
         wf["definition"]["steps"] = step_dicts
+
+        # SPEC-005 TASK-B01b: hard validation against the new step set.
+        # Edges aren't part of the PUT body in this endpoint (canvas uses
+        # dedicated /edges endpoints), so we validate against whatever edges
+        # are currently persisted plus the new steps.
+        from .validator import hard_validate_for_put
+
+        hard_errors = hard_validate_for_put(wf)
+        if hard_errors:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "validation_failed",
+                    "errors": [e.model_dump() for e in hard_errors],
+                },
+            )
     if req.schedule is not None:
         wf["schedule_cron"] = req.schedule.cron
         wf["schedule_timezone"] = req.schedule.timezone
@@ -286,7 +315,7 @@ async def run_workflow(
     _runs[run_id] = run
     _step_logs[run_id] = []
 
-    # Execute asynchronously via executor
+    # Execute asynchronously via executor (SPEC-005-aware: pass edges if v2).
     try:
         from .executor import WorkflowExecutor
 
@@ -296,6 +325,7 @@ async def run_workflow(
             run_id=run_id,
             definition=wf["definition"],
             overrides=req.input_overrides,
+            edges=wf.get("edges"),
         )
         run["status"] = "completed"
         run["completed_at"] = _now()
@@ -565,3 +595,107 @@ _TEMPLATES = [
 async def list_templates() -> list[dict]:
     """Return available workflow templates."""
     return _TEMPLATES
+
+
+# ---------------------------------------------------------------------------
+# SPEC-005 (Workflow Builder Canvas) — endpoint skeletons
+# Phase A delivers these as 501 Not Implemented; Phase B fills in real bodies.
+# Each handler asserts the workflow exists (404 caixa-preta) before bowing out
+# with 501, so the contract surface is real even though behaviour is stubbed.
+# ---------------------------------------------------------------------------
+
+
+def _require_workflow(workflow_id: str) -> dict:
+    wf = _workflows.get(workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return wf
+
+
+@router.get("/{workflow_id}/edges")
+async def get_workflow_edges(workflow_id: str) -> list[WorkflowEdge]:
+    """List edges of a workflow (SPEC-005 TASK-B01)."""
+    _require_workflow(workflow_id)
+    from .edges import get_edges as _get_edges
+
+    raw = _get_edges(workflow_id, _workflows)
+    return [WorkflowEdge(**e) for e in raw]
+
+
+@router.post("/{workflow_id}/edges")
+async def set_workflow_edges(workflow_id: str, req: SetEdgesRequest) -> list[WorkflowEdge]:
+    """Bulk-replace edges of a workflow (SPEC-005 TASK-B01).
+
+    Validation is structural (handles, step refs, uniqueness). Graph-shape
+    validation (cycles, fan-in without merge, …) lives in `validator.py` and
+    is enforced on PUT /api/workflows/{id} (TASK-B01b).
+    """
+    _require_workflow(workflow_id)
+    from .edges import EdgeValidationError, set_edges as _set_edges
+
+    try:
+        persisted = _set_edges(workflow_id, req.edges, _workflows)
+    except EdgeValidationError as err:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": str(err), "edge_index": err.edge_index},
+        ) from err
+
+    # Bump updated_at so concurrent-edit banner (FR-WBC-13) reflects the change.
+    _workflows[workflow_id]["updated_at"] = _now()
+    return [WorkflowEdge(**e) for e in persisted]
+
+
+@router.delete("/{workflow_id}/edges/{edge_id}", status_code=204)
+async def delete_workflow_edge(workflow_id: str, edge_id: str) -> None:
+    """Delete a single edge by ID (SPEC-005 TASK-B01)."""
+    _require_workflow(workflow_id)
+    from .edges import delete_edge as _delete_edge
+
+    removed = _delete_edge(workflow_id, edge_id, _workflows)
+    if not removed:
+        raise HTTPException(status_code=404, detail="Edge not found")
+    _workflows[workflow_id]["updated_at"] = _now()
+
+
+@router.post("/{workflow_id}/auto-layout")
+async def auto_layout_workflow(workflow_id: str) -> AutoLayoutResponse:
+    """Compute a server-side layered layout for the workflow graph (TASK-B02)."""
+    wf = _require_workflow(workflow_id)
+    from .auto_layout import layered_layout
+
+    positions = layered_layout(
+        wf["definition"].get("steps", []),
+        wf.get("edges", []),
+    )
+    return AutoLayoutResponse(positions=positions)
+
+
+@router.post("/{workflow_id}/validate")
+async def validate_workflow(workflow_id: str) -> ValidateWorkflowResponse:
+    """Validate the workflow graph (TASK-B03).
+
+    Returns hard findings as `errors` and soft findings as `warnings` so the
+    canvas can render them differently (errors block run; warnings hint).
+    """
+    wf = _require_workflow(workflow_id)
+    from .validator import validate
+
+    errors, warnings = validate(wf)
+    return ValidateWorkflowResponse(errors=errors, warnings=warnings)
+
+
+@router.post("/{workflow_id}/migrate-v2")
+async def migrate_workflow_v2(workflow_id: str) -> MigrateV2Response:
+    """Idempotently migrate a v1 workflow to the canvas v2 format (TASK-B06)."""
+    _require_workflow(workflow_id)
+    from .migration_v1_v2 import migrate_workflow
+
+    result = migrate_workflow(workflow_id, _workflows)
+    if result.migrated:
+        _workflows[workflow_id]["updated_at"] = _now()
+    return MigrateV2Response(
+        migrated=result.migrated,
+        edges_created=result.edges_created,
+        steps_with_position=result.steps_with_position,
+    )

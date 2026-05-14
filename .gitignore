@@ -26,6 +26,11 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# Claude Code per-user overrides — must NOT be committed.
+# CLAUDE.md and .claude/settings.json are committed; *.local.* are personal.
+CLAUDE.local.md
+.claude/settings.local.json
+
 # vercel
 .vercel
 

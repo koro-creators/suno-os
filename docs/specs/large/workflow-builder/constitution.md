@@ -2,8 +2,10 @@
 spec-id: SPEC-003
 slug: workflow-builder
 artefato: constitution
-atualizada: 2026-04-13
+atualizada: 2026-04-30
 versao: 1.0
+status: substituido
+substituido_por: SPEC-005 (docs/specs/large/workflow-builder-canvas/)
 escopo:
   projeto: sunos
   stack: "Frontend: Next.js 14 + TypeScript | Backend: FastAPI + LangGraph + Python"
@@ -12,6 +14,9 @@ escopo:
   branch: master
   contexto: Empoderar times nao-engenharia a criar automacoes de AI
 ---
+
+> ⚠️ **Esta SPEC foi substituída em 2026-04-30 por SPEC-005 — `docs/specs/large/workflow-builder-canvas/`.**
+> A nova SPEC reverte a decisão "não é drag-and-drop visual" (linha 81 abaixo) e estende o data model para DAG genuíno (fan-out paralelo + merge + handles tipados) com canvas React Flow. Os princípios de arquitetura (LangGraph engine único, tools compartilhadas, workflows como dados, HITL nativo, schedule-first, templates, eval) **continuam valendo** e foram herdados pela nova constitution. Backend (compiler/executor) é estendido, não substituído.
 
 # Constitution — Workflow Builder
 
