@@ -32,7 +32,7 @@ Adotar drag-and-drop visual de nodes como paradigma da feature FA-05 (Workflows)
 ### Positivas
 - Alinhamento explícito com sponsor executivo
 - Reflete o código real, eliminando dívida documental
-- Paradigma claro para Champions construírem automações setoriais sem dependência de engenharia
+- Paradigma claro para Builders construírem automações setoriais sem dependência de engenharia
 - Reduz curva de aprendizado em relação a YAML/configuração textual
 
 ### Negativas
@@ -42,7 +42,7 @@ Adotar drag-and-drop visual de nodes como paradigma da feature FA-05 (Workflows)
 - Risco de virar Zapier-like se não houver disciplina semântica
 
 ### Mitigações
-- Biblioteca curada de nodes pré-construídos pelo Time Central, evitando que Champions criem nodes ad-hoc
+- Biblioteca curada de nodes pré-construídos pelo Time Central, evitando que Builders criem nodes ad-hoc
 - Validação semântica obrigatória de conexões (output type deve ser compatível com input type esperado)
 - Templates por área (Plano de Mídia, Report Mensal, etc.) como ponto de partida
 - Limite de nodes por workflow (sugestão inicial: 20 nodes) para evitar workflows monstrengos
@@ -63,7 +63,7 @@ Adotar drag-and-drop visual de nodes como paradigma da feature FA-05 (Workflows)
 ## O que NAO é
 
 - Não é Zapier/n8n. A diferença é semântica, não técnica. Composição é em cima do domínio da Suno.
-- Não é editor de código. Champions configuram via UI visual. Acesso ao código compilado (LangGraph StateGraph) é restrito ao Time Central.
+- Não é editor de código. Builders configuram via UI visual. Acesso ao código compilado (LangGraph StateGraph) é restrito ao Time Central.
 - Não é livre. Conexões inválidas são bloqueadas. Templates obrigatórios para áreas específicas (Mídia tem template obrigatório de Plano de Mídia).
 
 ## Estado de transição

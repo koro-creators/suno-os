@@ -161,7 +161,7 @@ O sunOS opera sob um modelo de governança em três camadas, formalizado pelo sp
 
 #### 3.1.1. Sponsor (sócio responsável por área)
 
-Sócio responsável por desenhar a arquitetura de automações da sua área de atuação no sunOS, e cobrado diretamente pelo Guga sobre o resultado. Não é executor. É o "arquiteto da obra" que valida o fluxo, aprova workflows propostos pelos Champions, e responde por adoção e impacto na sua área.
+Sócio responsável por desenhar a arquitetura de automações da sua área de atuação no sunOS, e cobrado diretamente pelo Guga sobre o resultado. Não é executor. É o "arquiteto da obra" que valida o fluxo, aprova workflows propostos pelos Builders, e responde por adoção e impacto na sua área.
 
 | Área | Sponsor |
 |------|---------|
@@ -180,17 +180,17 @@ Sócio responsável por desenhar a arquitetura de automações da sua área de a
 > - "?" em uma área indica dois Sponsors candidatos, decisão pendente até primeira reunião do Comitê de Produto.
 > - "Operações" consolida as antigas Eficiência, Atendimento e Operações sob o sponsor Elton, conforme decisão de 14/05/2026.
 > - Produção é separada de Operações e tem sponsor próprio (Ana Luísa Andre).
-> - Áreas administrativas (Financeiro, RH, Contabilidade) têm o mesmo sponsor (Ronaldo Severino) mas operam como linhas separadas para fins de mapeamento de processos e champions.
+> - Áreas administrativas (Financeiro, RH, Contabilidade) têm o mesmo sponsor (Ronaldo Severino) mas operam como linhas separadas para fins de mapeamento de processos e builders.
 
 Princípio operacional: "se o arquiteto não tiver presente na obra, não vai sair" (Guga, 07/05/2026).
 
-#### 3.1.2. Champion (mão na massa por área)
+#### 3.1.2. Builder (mão na massa por área)
 
-Profissional sênior ou pleno da área que executa fluxos desenhados pelo Sponsor, valida que funcionam no dia a dia, e alimenta o Time Central com feedback de uso real. Não é necessariamente o líder da área. É a pessoa com afinidade pelo tema e disposição para ser referência operacional. Cada área tem 1 a 4 Champions, dependendo do volume e complexidade dos processos mapeados.
+Profissional sênior ou pleno da área que executa fluxos desenhados pelo Sponsor, valida que funcionam no dia a dia, e alimenta o Time Central com feedback de uso real. Não é necessariamente o líder da área. É a pessoa com afinidade pelo tema e disposição para ser referência operacional. Cada área tem 1 a 4 Builders, dependendo do volume e complexidade dos processos mapeados.
 
-Champions confirmados em 14/05/2026:
+Builders confirmados em 14/05/2026:
 
-| Área | Champions |
+| Área | Builders |
 |------|-----------|
 | Mídia | Bruna, Renata, Wagner, TBD |
 | BI | Caetano, Milu, Thalles |
@@ -205,7 +205,7 @@ Champions confirmados em 14/05/2026:
 
 #### 3.1.3. Time Central (provedor de infra e componentes)
 
-Time técnico liderado por Heitor Miranda. Provê: infraestrutura GCP, componentes reutilizáveis (Skills, Tools, Workflows base), governança técnica (RBAC, auditoria, segurança), e desenvolvimento de novas features de plataforma. Não constrói automações setoriais sob demanda. Esse trabalho fica com Champions, usando componentes do Time Central.
+Time técnico liderado por Heitor Miranda. Provê: infraestrutura GCP, componentes reutilizáveis (Skills, Tools, Workflows base), governança técnica (RBAC, auditoria, segurança), e desenvolvimento de novas features de plataforma. Não constrói automações setoriais sob demanda. Esse trabalho fica com Builders, usando componentes do Time Central.
 
 Composição atual: Heitor (líder), José Lucas, William, Mayra (gestão de projeto), e equipe técnica adjacente conforme demanda.
 
@@ -217,7 +217,7 @@ Quatro cadências formais sustentam o modelo:
 |--------|----------|---------------|-----------------|
 | Comitê de Produto sunOS | Mensal | Guga + Sponsors + Heitor | Priorização, releases, KPIs (custo evitado, adoção) |
 | Roundtable de Sponsors | Quinzenal | Sponsors + Heitor (sem Guga) | Conflitos de prioridade, dependências cruzadas |
-| Champion Sync | Semanal | Champions + Time Central | Feedback de uso, ajustes táticos, novos workflows |
+| Builder Sync | Semanal | Builders + Time Central | Feedback de uso, ajustes táticos, novos workflows |
 | Demo semanal com Guga | Semanal | Heitor + Guga | Acompanhamento contínuo (já existe) |
 
 #### 3.1.5. Aprovadores
@@ -338,7 +338,7 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 
 | Risco | Prob. | Impacto | Mitigação |
 |-------|-------|---------|-----------|
-| Adoção lenta por resistência cultural | Média | Alto | Champions em cada área, testes com 3-5 users antes de rollout, treinamento contínuo |
+| Adoção lenta por resistência cultural | Média | Alto | Builders em cada área, testes com 3-5 users antes de rollout, treinamento contínuo |
 | API keys de IA não disponíveis ou caras | Média | Alto | Fallback para mock em todas as features (já implementado em SPEC-001/002/003) |
 | Custo de LLM escalar com uso | Alta | Médio | Gemini Flash como padrão (barato), rate limits por workflow, MLflow tracing para detectar abusos |
 | Time pequeno e não-dedicado limita evolução | Alta | Alto | Workflow Builder empodera outros times, descentraliza demanda; SDD documenta tudo para acelerar onboarding |
@@ -361,7 +361,7 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 ### 6.3. Possíveis Mitigadores Transversais
 
 - **Spec-Driven Development (SDD)**: skill `sdd-koro` está em uso ativo; cada feature crítica tem 5 artefatos (constitution, spec, design, plan, tasks) antes da implementação
-- **Champions distribuídos**: empoderar 1 pessoa por área para reduzir dependência do time central
+- **Builders distribuídos**: empoderar 1 pessoa por área para reduzir dependência do time central
 - **Demos semanais com sponsor**: cadência fixa que mantém visibilidade e mitiga risco de descontinuidade
 
 ---
@@ -403,9 +403,9 @@ Nenhum conflito explícito identificado neste momento. As tensões mapeadas no b
 | Versão | Data | Mudança |
 |--------|------|---------|
 | 1.0 | 2026-04-28 | Versão inicial baseada em PRODUCT_HANDOFF.md, transcrições de reuniões, deck Crescera SmartGrowth, materiais de research, dossiê executivo Guga Ketzer e confirmações Q1-Q20 + Q3a, Q7a, Q11a do briefing |
-| 1.1 | 2026-04-28 | Correções de revisão do Heitor: (a) Champions Gus e Teda são de Mídia, não Criação; (b) Ronaldo Severino reposicionado como Patrocinador Sócio (CFO), não como champion; (c) Stakeholder externo investidor anonimizado para "(a definir)"; (d) Seção 4.2 reescrita em linguagem de negócio (capacidades, não fases técnicas); (e) Seção 4.3 (Relação com sistemas) removida — é tratada em outros artefatos; (f) Seção 5.1 limpa — restrições técnicas e de stack movidas para escopo de SRD/PRD; mantidas apenas restrições de negócio puras |
+| 1.1 | 2026-04-28 | Correções de revisão do Heitor: (a) Builders Gus e Teda são de Mídia, não Criação; (b) Ronaldo Severino reposicionado como Patrocinador Sócio (CFO), não como builder; (c) Stakeholder externo investidor anonimizado para "(a definir)"; (d) Seção 4.2 reescrita em linguagem de negócio (capacidades, não fases técnicas); (e) Seção 4.3 (Relação com sistemas) removida — é tratada em outros artefatos; (f) Seção 5.1 limpa — restrições técnicas e de stack movidas para escopo de SRD/PRD; mantidas apenas restrições de negócio puras |
 | 1.2 | 2026-04-28 | **+ Aprovadores como papel funcional** em §3.1.5 (não cargo novo — sócios/líderes assumem). **+ 3 restrições** (REST-07 Drive read-only · REST-08 consentimento cliente-a-cliente · REST-09 aprovador sempre humano). Pedido Guga + Bruno Prosperi para fluxo de Aprovação Hierárquica e integração Google Drive |
-| 1.3 | 2026-05-14 | §3.1 reescrito com modelo Sponsor-Champion-Time Central formalizado (reuniões 07/05 e 14/05/2026). Tabelas de Sponsors e Champions confirmados. REST-08 reformulado (escopo Drive limitado ao Drive interno da Suno, BR-018 v2). |
+| 1.3 | 2026-05-14 | §3.1 reescrito com modelo Sponsor-Builder-Time Central formalizado (reuniões 07/05 e 14/05/2026). Tabelas de Sponsors e Builders confirmados. REST-08 reformulado (escopo Drive limitado ao Drive interno da Suno, BR-018 v2). |
 
 ---
 
@@ -414,5 +414,5 @@ Nenhum conflito explícito identificado neste momento. As tensões mapeadas no b
 **Próximos passos**:
 1. Revisar Parte 1 com Heitor Miranda
 2. Apresentar para Guga em reunião semanal (terça)
-3. Iniciar Parte 2 (Glossário) com termos como United Creators, Smart Growth, Bioma Zero/Job/Agenting, Skill, Moon, HITL, Champion, Toolbox, Inteligência Natural
+3. Iniciar Parte 2 (Glossário) com termos como United Creators, Smart Growth, Bioma Zero/Job/Agenting, Skill, Moon, HITL, Builder, Toolbox, Inteligência Natural
 4. Em paralelo, finalizar business case (horas × custo) com Ronaldo

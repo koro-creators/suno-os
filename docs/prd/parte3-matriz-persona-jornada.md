@@ -897,7 +897,7 @@ Diferença-chave de JN-02: input é uma ideia consolidada; output são contra-ar
 
 Jornada de **automação sem código**. Líder/Operador configura Workflow recorrente (Report Mensal, Plano de Mídia, Monitor de Anomalias, Pesquisa de Mercado) via Admin (`/workflows`) compondo steps (tool, LLM, condição, ação, HITL gate). Define **schedule humanizado** ("Toda segunda às 9h"), atribui clientes/Skills, ativa. Cloud Scheduler dispara conforme cron; LangGraph StateGraph executa; HITL gates pausam para revisão humana em decisões críticas. Histórico de execuções em timeline.
 
-Endereça gargalo de **time de 4 devs não escala** (BR-002): champions e analistas configuram suas próprias automações sem fila de eng.
+Endereça gargalo de **time de 4 devs não escala** (BR-002): builders e analistas configuram suas próprias automações sem fila de eng.
 
 #### Fluxo de Alto Nível
 
@@ -1314,7 +1314,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | Persona | Papel na Jornada | Objetivo Específico |
 |---------|------------------|---------------------|
 | PX-01 Líder/Curador (primária) | Configurador | Empoderar área sem fila de eng |
-| Champions (Gus/Teda/Le) | Co-configuradores | Iterar Skills da própria área |
+| Builders (Gus/Teda/Le) | Co-configuradores | Iterar Skills da própria área |
 | PX-02/03/04/05 | Beneficiários downstream | Recebem novas Skills |
 
 #### Telas Tocadas
@@ -1478,7 +1478,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | Aprovar política específica de retenção de dados pessoais (PA-07) | RN-013 fica subespecificada para JN-08 (auditoria) | Diretoria + Heitor | Antes do Piloto |
 | Decidir se FA-12-08 (validação automática de vocabulário) é gate Piloto ou MVP | Afeta JN-01, JN-10 (cultura UX) | Heitor + time dev | Junho 2026 |
 | Validar critérios quantitativos das jornadas antes de virarem compromissos | -30%, ≥60%, ≥70% etc. | Heitor + Guga | Maio 2026 |
-| Confirmar champions (Gus/Teda/Le) como sub-papel de PX-01 ou persona separada (ASS-PX-02) | Pode demandar JN-11 dedicada de "Champion ativando área" | Heitor + Yuri | Maio 2026 |
+| Confirmar builders (Gus/Teda/Le) como sub-papel de PX-01 ou persona separada (ASS-PX-02) | Pode demandar JN-11 dedicada de "Builder ativando área" | Heitor + Yuri | Maio 2026 |
 
 ### 6.4. Riscos Identificados
 

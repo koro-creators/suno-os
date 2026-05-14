@@ -1030,7 +1030,7 @@ Transversal a JN-02, JN-03, JN-06.
 
 #### 9.2.1 Propósito
 
-Primeiro contato do Creator com o sunOS. **Sugere track** conforme estágio (RN-017): junior → "Estou começando uma ideia"; sênior → "Me prova que tá errada"; pleno → escolhe. Persona principal PX-05 (junior); também PX-02 e champions.
+Primeiro contato do Creator com o sunOS. **Sugere track** conforme estágio (RN-017): junior → "Estou começando uma ideia"; sênior → "Me prova que tá errada"; pleno → escolhe. Persona principal PX-05 (junior); também PX-02 e builders.
 
 #### 9.2.2 Rota
 

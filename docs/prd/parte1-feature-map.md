@@ -87,7 +87,7 @@ Este documento organiza o sunOS em **features de alto nível (FA-XX)**, orientad
 |------|----------|------------------|
 | **POC** | FA-02 (Moon Shot — pipeline Explorer↔Crítico em ambiente controlado) | Validar viabilidade técnica do motor de Provocação e calibrar zona Sweet Spot de bisociação com 3+ Creators seniores em testes blind |
 | **Protótipo** | FA-01 (Biblioteca v2 com upload + pgvector), FA-03 (Skills com context injection), FA-04 (Chat real Gemini), FA-06 (Sistema Solar 3 níveis), FA-07 (HITL), FA-12 (Admin Model Repo pattern) | Testar fluxos principais com 5-10 Creators internos, em ambiente local + staging |
-| **Piloto** | Todas as anteriores + FA-05 (Workflows com schedule), FA-08 (Image gen real), FA-09 (RBAC + Caixa-preta), FA-10 (MLflow + dashboard), FA-11 (Safety cultural), FA-02 em uso real | Validar no contexto real com champions (Gus/Teda em Mídia, Le em outras áreas) — meta 10+ UAS, 50+ msgs/sem, score HITL > 4.0 |
+| **Piloto** | Todas as anteriores + FA-05 (Workflows com schedule), FA-08 (Image gen real), FA-09 (RBAC + Caixa-preta), FA-10 (MLflow + dashboard), FA-11 (Safety cultural), FA-02 em uso real | Validar no contexto real com builders (Gus/Teda em Mídia, Le em outras áreas) — meta 10+ UAS, 50+ msgs/sem, score HITL > 4.0 |
 | **MVP** | Todas + refinamentos + FA-08 (Video gen Veo 3.1) + cobertura ≥10 tarefas-alvo automatizadas | Produto em produção contínua, business case aprovado pela Diretoria, ≥3 cases internos por trimestre |
 
 ### 2.3. Ecossistema de Features
@@ -261,7 +261,7 @@ A arquitetura interna é um loop multi-agente Explorer↔Crítico calibrado pela
 |------|--------|---------------|
 | **POC** | FA-02-01, FA-02-02 (pipeline mínimo + filtragem por zona) com 3+ Creators seniores em testes blind | Critério de aceite BR-001: ≥60% das provocações classificadas como úteis |
 | **Protótipo** | + FA-02-03, FA-02-04, FA-02-07 (acionamento, personas, marcação) | Validação de UX com 5-10 Creators |
-| **Piloto** | + FA-02-05, FA-02-06, FA-02-08 (modos completos + forced reflection); operação real com champions | ≥70% de aprovação por Creators em uso real |
+| **Piloto** | + FA-02-05, FA-02-06, FA-02-08 (modos completos + forced reflection); operação real com builders | ≥70% de aprovação por Creators em uso real |
 | **MVP** | Calibração contínua de zonas; dataset de provocações aprovadas evoluindo Eval | Sustentação de qualidade pós-Piloto |
 
 #### Dependências
@@ -454,7 +454,7 @@ Inclui ModelSelector (troca de modelo por mensagem), ChatInput com auto-resize e
 
 **Engine LangGraph** que combina Skills, Tools e validações humanas (HITL) em fluxos executados por agendamento (Cloud Scheduler) ou disparo manual. Cada Workflow é uma sequência de steps (tool, LLM, condição, ação, HITL) que compila para LangGraph StateGraph. Suporta encadeamento (sub-workflows, SPEC-004) e schedule humanizado ("Toda segunda às 9h"). Já em produção (SPEC-003) com 4 templates pré-configurados.
 
-Resolve a necessidade de **automação de tarefas recorrentes** sem dependência de squad dedicado (BR-002): time de 4 devs não escala se cada automação depender deles. Workflows empoderam analistas de mídia, BI, financeiro e champions a configurar steps com tools compartilhadas. Atende prioritariamente PX-01 (Líder/Curador) e PX-03 (Operador Processual).
+Resolve a necessidade de **automação de tarefas recorrentes** sem dependência de squad dedicado (BR-002): time de 4 devs não escala se cada automação depender deles. Workflows empoderam analistas de mídia, BI, financeiro e builders a configurar steps com tools compartilhadas. Atende prioritariamente PX-01 (Líder/Curador) e PX-03 (Operador Processual).
 
 #### Propósito e Escopo
 
@@ -1348,7 +1348,7 @@ Fluxo único orquestrado que combina cadastro, sync inicial do Drive, geração 
 | FA-15-07 | Idempotência (re-execução atualiza sem duplicar) |
 
 #### Personas
-PX-01 Líder, PX-06 Aprovador Sócio (Elton como Sponsor de Operações), Champion de Operações (Chamas) como executor.
+PX-01 Líder, PX-06 Aprovador Sócio (Elton como Sponsor de Operações), Builder de Operações (Chamas) como executor.
 
 **Fase:** Piloto | **Criticidade:** Core
 

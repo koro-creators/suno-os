@@ -1332,7 +1332,7 @@ Abre on click row · 480px width:
 
 ### 12.2 Propósito
 
-Primeiro contato do Creator com o sunOS. **Sugere track** conforme estágio (RN-017): junior → "Estou começando uma ideia"; sênior → "Me prova que tá errada"; pleno → escolhe. Preserva autonomia (sugere, não impõe). Persona principal PX-05 (Junior); também PX-02 e champions.
+Primeiro contato do Creator com o sunOS. **Sugere track** conforme estágio (RN-017): junior → "Estou começando uma ideia"; sênior → "Me prova que tá errada"; pleno → escolhe. Preserva autonomia (sugere, não impõe). Persona principal PX-05 (Junior); também PX-02 e builders.
 
 ### 12.3 Layout Estrutural (Wizard 3 passos)
 

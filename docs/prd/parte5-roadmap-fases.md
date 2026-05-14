@@ -45,7 +45,7 @@ Este documento distribui as **14 Macro Features (FA-01 a FA-14)** e os **98 Requ
 |------|----------|----------|------------|----------------|
 | **1. POC** | Lab/Studio | Validar viabilidade do motor de Provocação (Moon Shot) | 3+ Creators seniores em testes blind | 4–6 semanas |
 | **2. Protótipo** | Lab/Studio + staging | Validar fluxos principais com Creators internos | 5–10 Creators internos | Em curso (≈80% concluído desde Phases 1–10) |
-| **3. Piloto** | Real World | Validar a solução no contexto real com champions | Champions (Gus/Teda em Mídia, Le em outras áreas) + 10+ UAS | 12–20 semanas |
+| **3. Piloto** | Real World | Validar a solução no contexto real com builders | Builders (Gus/Teda em Mídia, Le em outras áreas) + 10+ UAS | 12–20 semanas |
 | **4. MVP** | Real World | Core da solução em produção contínua com business case aprovado | Todos os ~300 Creators do grupo United Creators | Contínuo (a partir de Q1 2027) |
 
 ### 1.3. Mapeamento Prioridade BRD → Fase PRD
@@ -53,7 +53,7 @@ Este documento distribui as **14 Macro Features (FA-01 a FA-14)** e os **98 Requ
 | Prioridade BRD | Fase PRD | Justificativa |
 |----------------|----------|---------------|
 | **Alta** (BR-001, BR-002, BR-003, BR-004, BR-006, BR-007, BR-008, BR-010, BR-013, BR-014, BR-015) | POC + Protótipo + Piloto | Validar valor primário e infraestrutura antes de escalar |
-| **Média** (BR-005, BR-009, BR-011, BR-012, BR-016) | Piloto | Cobertura completa com champions reais |
+| **Média** (BR-005, BR-009, BR-011, BR-012, BR-016) | Piloto | Cobertura completa com builders reais |
 | **Baixa / Refinamento** | MVP | Após validação do core |
 
 ### 1.4. Realinhamento ROADMAP.md → Fases POC/Protótipo/Piloto/MVP
@@ -87,7 +87,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 2. **Mensuração coletiva e Custo Evitado (FA-10)** — dashboard executivo, MLflow tracing 100%, cálculo de custo evitado por Skill, KPIs de negócio (win rate, shortlist rate, retenção), mensuração de homogeneização (RN-019/020) não constavam como Phase explícita.
 3. **Safety Cultural (FA-11)** — marcação visual, forced reflection, tracks de onboarding por carreira, validação de vocabulário UI (RN-014/015/016/017) não constavam como Phase explícita.
 4. **Biblioteca v2 com governança** — Caixa-preta operacional (RN-011), detecção de conhecimento crítico em risco (RN-008), retenção LGPD (RN-013) não constavam como Phase explícita após upload básico.
-5. **Integração com Skills + Workflows como gates de Piloto** — operação real com champions com schedule funcionando em Cloud Scheduler real (FA-05-08) não estava destacada como gate.
+5. **Integração com Skills + Workflows como gates de Piloto** — operação real com builders com schedule funcionando em Cloud Scheduler real (FA-05-08) não estava destacada como gate.
 
 ### 1.5. Restrições que Condicionam o Roadmap
 
@@ -138,7 +138,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
    │            │       │ FA-12 Admin          │       │ FA-10 MLflow + dashboard │   │ Business case aprovado      │
    │            │       │ + Phase 11 Deploy    │       │ FA-11 Safety cultural    │   │                              │
    └────────────┘       └──────────────────────┘       └──────────────────────────┘   └──────────────────────────────┘
-   3+ Creators           5-10 Creators                  Champions Gus/Teda/Le         Todos os ~300 Creators
+   3+ Creators           5-10 Creators                  Builders Gus/Teda/Le         Todos os ~300 Creators
    seniores blind         internos                       + 10+ UAS reais              do grupo United Creators
    JN-02, JN-06           JN-01, JN-02, JN-03            JN-01 a JN-08 completas      JN-01 a JN-10 completas
    parciais               parciais                                                     + Cmd+K + Sidebar dinâmico
@@ -236,7 +236,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 |---------|-----------|
 | **O que testar** | Como os fluxos principais do sunOS funcionam e se comportam — Sistema Solar, Skills processuais com contexto, Chat ReAct com streaming, Biblioteca v2, HITL, Admin areas |
 | **Sucesso de negócio** | Fluxos validados por 5–10 Creators internos; arquitetura técnica estável (FastAPI + LangGraph + Firebase Auth + SSE) pronta para Piloto |
-| **Quem testa** | 5–10 Creators internos (mix de PX-01, PX-02, PX-03); time do projeto + champions iniciais (Le) |
+| **Quem testa** | 5–10 Creators internos (mix de PX-01, PX-02, PX-03); time do projeto + builders iniciais (Le) |
 | **Duração típica** | Em curso desde Phase 1 (2026-03-23) — concluído em ~80% até Phase 10 (2026-03-26); Phase 11 (Polish + Deploy) é o **gate de saída** |
 | **Ambiente** | Lab/Studio + staging em Cloud Run |
 
@@ -302,7 +302,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 - [ ] **Endpoints batch** (TextGen, ImageGen panels) operacionais
 - [ ] **Testes de integração com API keys reais** (Gemini, OpenAI, Anthropic, Vertex AI Imagen) passando
 - [ ] **POC do Moon Shot (FA-02) concluída** com critérios de saída atendidos (vide §3.7)
-- [ ] **Champions identificados e onboarded**: Gus e Teda (Mídia, time Takai), Le (outras áreas)
+- [ ] **Builders identificados e onboarded**: Gus e Teda (Mídia, time Takai), Le (outras áreas)
 - [ ] **Decisão DEC-02 tomada** (Workflows entram em Piloto ou só MVP)
 - [ ] **Sponsor (Guga) e patrocinadores sócio (Bruno, Takai, Ronaldo) aprovaram avanço para Piloto** em reunião semanal de terça
 - [ ] **Manifesto de produto interno publicado** (gate cultural — RN-014/015)
@@ -338,7 +338,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 |---------|-----------|
 | **O que testar** | Solução funciona no contexto real com Creators usando para trabalho de cliente — Skills aceleram tarefas, Workflows agendados rodam em Cloud Scheduler real, HITL acumula dados, Caixa-preta protege Operacionais, dashboard executivo gera evidências para Diretoria |
 | **Sucesso de negócio** | KPIs da Parte 1 §2.3 atingidos: 10+ UAS, 50+ msgs/sem, score HITL > 4.0, 5+ Workflows ativos com schedule, ≥30% redução de tempo em ≥5 tarefas-piloto, ≥3 cases internos documentados |
-| **Quem testa** | Champions (Gus/Teda em Mídia, Le em outras áreas) + 10+ usuários ativos semanais reais; sponsor (Guga) acompanha via dashboard |
+| **Quem testa** | Builders (Gus/Teda em Mídia, Le em outras áreas) + 10+ usuários ativos semanais reais; sponsor (Guga) acompanha via dashboard |
 | **Duração típica** | 12–20 semanas-calendário (considerando REST-01) |
 | **Ambiente** | Real World — produção em Cloud Run com clientes reais (subset controlado de contas) |
 
@@ -430,7 +430,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | # | Risco | Probabilidade | Impacto | Mitigação |
 |---|-------|:-------------:|:-------:|-----------|
 | 1 | **Business case não aprovado pela Diretoria a tempo** (REST-04 + DEC-06) bloqueia investimentos maiores e pode interromper continuidade do projeto | Média | **Crítico** | Heitor + Ronaldo aceleram cálculo das 136 atividades; reuniões semanais de terça apresentam evidências incrementais; dashboard FA-10-04 publica custo evitado mensal a partir do mês 2; ≥3 cases internos documentados por trimestre como prova social |
-| 2 | **Adoção lenta por resistência cultural** (champions Gus/Teda/Le não conseguem mobilizar áreas) — risco crítico se UAS < 10 ao final do trimestre 1 do Piloto | Média | Alto | Champions distribuídos por área (1 por BU); treinamento contínuo; demos semanais; tracks de onboarding por carreira (FA-11-03); manifesto de produto interno; testes A/B de Skills com baseline manual visível |
+| 2 | **Adoção lenta por resistência cultural** (builders Gus/Teda/Le não conseguem mobilizar áreas) — risco crítico se UAS < 10 ao final do trimestre 1 do Piloto | Média | Alto | Builders distribuídos por área (1 por BU); treinamento contínuo; demos semanais; tracks de onboarding por carreira (FA-11-03); manifesto de produto interno; testes A/B de Skills com baseline manual visível |
 | 3 | **Vertex AI Veo + Imagen com quota insuficiente ou custo escalando** (FA-08-01 sai do mock, FA-08-02 entra real) | Média | Alto | Validar quota antes de Phase 5 do plan SPEC `image-editor`; Gemini Flash como default em texto; rate limits por Skill; alertas no dashboard; lifecycle rules em GCS staging (TTL 24h); fallback para mock em caso de quota |
 
 ### 5.9. Dependências Cross-Feature Críticas do Piloto
@@ -615,7 +615,7 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
         │                         │                          │                              │
    Critério               Phase 11 +                   KPIs §5.6 +                    Business case aprovado +
    ≥60% úteis             persistência +               business case +                ≥3 cases/trim sustentado
-                          champions onboarded          Caixa-preta operante           homogeneização monitorada
+                          builders onboarded          Caixa-preta operante           homogeneização monitorada
 ```
 
 ---
@@ -628,7 +628,7 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 |----------|------------------|--------|
 | **POC do Moon Shot não-bloqueante para Phases 1-10 (já entregues)** — POC roda em paralelo com Protótipo (Phases 1-10 já concluídas independem da POC) | Se POC falhar, FA-02 entra no Piloto como "experimental" sem comprometer demais Features | Confirmado pela arquitetura (FA-02 é módulo isolado em LangGraph) |
 | **Time não-dedicado mantém ritmo de Phase 11 em ~6-8 semanas** (REST-01) | Atraso > 12 semanas adiaria entrada no Piloto e risco de business case | A validar — depende de janela de Cloud Run setup |
-| **Champions Gus/Teda/Le conseguem onboarding em ≤4 semanas** | Sem champions, Piloto não atinge 10+ UAS no trimestre 1 | Onboarding em curso conforme PRODUCT_HANDOFF.md |
+| **Builders Gus/Teda/Le conseguem onboarding em ≤4 semanas** | Sem builders, Piloto não atinge 10+ UAS no trimestre 1 | Onboarding em curso conforme PRODUCT_HANDOFF.md |
 | **Vertex AI quota será aprovada antes do Piloto** | FA-08-01 fica em mock no Piloto; afeta Copy Social, Roteiro de Vídeo | A validar — solicitar com 4 semanas de antecedência |
 | **Business case aprovado até Q3 2026** (REST-04 resolvido a tempo) | Phase 16 (Video) atrasa para 2027 ou cancela | Crítico — Heitor + Ronaldo em construção ativa |
 | **Persistência de conversas implementada antes de Piloto** (ASS-03 do PRD Parte 1) | HITL e Eval não acumulam dados consistentes; dashboard subutilizado | A validar com Heitor + Zé |
@@ -652,7 +652,7 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 - **Datas formais de cada Phase** — Phase 11 fim, Piloto início, MVP go-live
 - **Eventual exigência de cliente** para vetar uso de IA externa (cliente a cliente)
 - **Disponibilidade de Bruno Prosperi** para validação cultural antes de releases maiores (FA-11-09)
-- **Estrutura final de champions** (todas as áreas mapeadas com Yuri)
+- **Estrutura final de builders** (todas as áreas mapeadas com Yuri)
 
 ---
 

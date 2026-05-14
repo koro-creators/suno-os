@@ -609,7 +609,7 @@ Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **re
 | **Dimensão/Subdimensão** | Onboarding / HITL |
 | **Variável de decisão** | Quando uma entidade da ontologia sugerida vira parte oficial da Wiki |
 | **Inputs necessários** | Sugestão do agente · Validação humana |
-| **Condição** | **SE** entidade foi sugerida pelo agente de Discovery **E** humano (Champion de Operações) validou explicitamente (aceitar/rejeitar/editar) **ENTÃO** entidade vira oficial. **SE** >7 dias sem validação **ENTÃO** entidade fica em status PENDING_REVIEW e bloqueia ativação do cliente. **SENÃO** não vira oficial |
+| **Condição** | **SE** entidade foi sugerida pelo agente de Discovery **E** humano (Builder de Operações) validou explicitamente (aceitar/rejeitar/editar) **ENTÃO** entidade vira oficial. **SE** >7 dias sem validação **ENTÃO** entidade fica em status PENDING_REVIEW e bloqueia ativação do cliente. **SENÃO** não vira oficial |
 | **Ação de negócio recomendada** | Cliente permanece PRE-ACTIVE até no mínimo as 6 entidades core terem decisão humana registrada |
 | **KPIs de sucesso** | Zero clientes ativados sem validação completa do seed · Tempo médio de validação <72h após sync |
 | **Fontes** | BR-022, BR-010 (ownership humano) |

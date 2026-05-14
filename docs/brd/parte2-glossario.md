@@ -24,7 +24,7 @@ fonte_principal: docs/brd/parte1-contexto.md + PRODUCT_HANDOFF.md + transcriçõ
 
 ## Objetivo
 
-Este glossário define os termos utilizados no projeto sunOS, garantindo alinhamento de linguagem entre Diretoria, time de produto, sócios patrocinadores, champions e times consumidores. É a referência oficial — em caso de divergência sobre significado de qualquer termo, este documento prevalece.
+Este glossário define os termos utilizados no projeto sunOS, garantindo alinhamento de linguagem entre Diretoria, time de produto, sócios patrocinadores, builders e times consumidores. É a referência oficial — em caso de divergência sobre significado de qualquer termo, este documento prevalece.
 
 O glossário foi organizado em **seções temáticas** (não puramente alfabéticas) para que um leitor novo no projeto consiga construir o contexto de forma progressiva. Use o **Índice Alfabético** abaixo para busca rápida.
 
@@ -50,7 +50,7 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | Bioma Zero | 1 |
 | BRD / PRD / SRD / UX | 6 |
 | Caixa-preta | 1 |
-| Champion | 4 |
+| Builder | 4 |
 | Cliente | 7 |
 | Creator | 1 |
 | DPO | 4 |
@@ -148,7 +148,7 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | **Sponsor** | **Patrocinador executivo único** do projeto sunOS. No caso, **José Augusto "Guga" Ketzer** (Fundador e Presidente da Suno United Creators). Detém a autoridade final sobre direção, orçamento e continuidade do projeto. Reúne-se semanalmente (terças) com Heitor Miranda | Decisões estratégicas, aprovações de orçamento, mudanças de escopo grandes | Q14, Parte 1 §3.1.1 |
 | **Tutela técnica** | Responsabilidade pela **arquitetura, decisão técnica e direção estratégica** do projeto sunOS. Atribuída a **Heitor Miranda** (Diretor Executivo, Tecnologia e Dados para Marketing). Mandato formalizado em 24/02/2026 | Lidera time de desenvolvimento, escreve specs, conduz roadmap, presta contas ao sponsor | Q5, Q6, Q7a, Parte 1 §3.1.1 |
 | **Patrocinador Sócio** | Sócio do grupo Suno United Creators que **patrocina o projeto sunOS sem atuação operacional**. Provê voz da sua área (Criação, Mídia, Financeiro) na evolução do produto, mas não executa entregas. Atualmente: Bruno Prosperi (Criação), Leonardo Yukio Takai (Mídia), Ronaldo Severino (CFO) | Validação estratégica, garantia de patrocínio cross-grupo | Confirmação ajustada Q19, Parte 1 §3.1.3 |
-| **Champion** | Profissional embarcado em uma área de negócio (Criação, Mídia, Planejamento, etc.) que **direciona demandas, valida soluções e dissemina o uso do sunOS** dentro de sua área. Não é cargo técnico — é papel cultural. Necessário 1+ champion por área para escalar adoção sem sobrecarregar o time central | Identificação de oportunidades de Skills/Workflows, feedback de uso, treinamento informal | Transcrição reunião sobre sunOS (Heitor: *"tem que ter um champion em cada área"*), Parte 1 §3.1.4 |
+| **Builder** | Profissional embarcado em uma área de negócio (Criação, Mídia, Planejamento, etc.) que **direciona demandas, valida soluções e dissemina o uso do sunOS** dentro de sua área. Não é cargo técnico — é papel cultural. Necessário 1+ builder por área para escalar adoção sem sobrecarregar o time central | Identificação de oportunidades de Skills/Workflows, feedback de uso, treinamento informal | Transcrição reunião sobre sunOS (Heitor: *"tem que ter um builder em cada área"*), Parte 1 §3.1.4 |
 | **Atendimento** | Função clássica de agência responsável pela **interface com o cliente** e gestão de contas. No contexto do sunOS, são consumidores potenciais (acessam Biblioteca, podem disparar Workflows de relatório) e fonte de input para configuração de Clientes/Planetas | Gestão de relacionamento, briefing, coordenação interdepartamental | Dossiê executivo, contexto de mercado |
 | **Cliente** | No contexto do sunOS, **cliente** refere-se a **clientes da Suno** (Vivo, Americanas, Sicredi, etc.) — não a usuários do sunOS. Cada cliente é um Planeta no Sistema Solar. **Não confundir**: usuários do sunOS são creators internos | UX, configuração admin, escopo de Biblioteca | Parte 1 §3.3, `data/clients.ts` |
 | **DPO (Data Protection Officer)** | Encarregado de proteção de dados, conforme LGPD. **Não existe formalmente na Suno** atualmente. Governance e privacidade são responsabilidade combinada do time do projeto sunOS e da Diretoria | Importante registrar a ausência: implica que decisões de privacidade são tomadas no nível do projeto, não delegadas a uma função especializada | Confirmação briefing (sem DPO), Parte 1 §3.4 |
@@ -162,7 +162,7 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | **Agent / Agente** | **Instância de IA** que orquestra ferramentas (tools) e Skills para realizar uma tarefa. Diferente de um simples "chatbot" — um agente toma decisões sobre quais ferramentas usar, em que ordem. No sunOS: ContentCreator, VisualCreator, Conversational | Conversas no chat, execução de Workflows | `docs/handoff/PRODUCT_HANDOFF.md`:492, `api/chat/agents/` |
 | **ReAct** | **Padrão de agente** (Reason + Act) — o agente alterna entre raciocinar sobre a tarefa e agir (chamar ferramentas, gerar texto). Padrão técnico adotado no sunOS para todos os agentes | Justifica por que respostas do sunOS levam alguns segundos: o agente está raciocinando entre passos | `docs/specs/large/sunohub-tools-integration/spec.md` |
 | **RAG (Retrieval-Augmented Generation)** | Técnica em que a IA, antes de responder, **busca informação relevante** em uma base de conhecimento (no caso, a Biblioteca do sunOS). Faz a IA responder com fatos do contexto da Suno, não apenas com seu treinamento genérico | Toda interação com Biblioteca ativa é RAG por trás | `docs/handoff/PRODUCT_HANDOFF.md`, `api/chat/knowledge/` |
-| **HITL (Human in the Loop)** | **Sistema de avaliação humana** dos outputs da IA. No sunOS, cada resposta da IA pode receber thumbs up/down, comentário, e cada sessão recebe rating (1-5). Esses dados alimentam a melhoria contínua de Skills e a avaliação de Champions/líderes sobre a qualidade da plataforma | Feedback loop, governança de qualidade, dados para evolução | `docs/handoff/PRODUCT_HANDOFF.md`:490 |
+| **HITL (Human in the Loop)** | **Sistema de avaliação humana** dos outputs da IA. No sunOS, cada resposta da IA pode receber thumbs up/down, comentário, e cada sessão recebe rating (1-5). Esses dados alimentam a melhoria contínua de Skills e a avaliação de Builders/líderes sobre a qualidade da plataforma | Feedback loop, governança de qualidade, dados para evolução | `docs/handoff/PRODUCT_HANDOFF.md`:490 |
 | **Eval (Avaliação)** | **Framework de mensuração de qualidade** das respostas da IA, em três camadas: (1) **Tracing** via MLflow (latência, tokens, routing); (2) **Trajectory** (o agente seguiu o fluxo correto?); (3) **Quality** (o output é bom para a Skill?) — com scorers customizados de tom, formato, routing e contexto | Garantia de qualidade técnica do sunOS, base para reportar ROI da plataforma | `docs/specs/large/sunohub-tools-integration/spec.md` |
 | **MLflow** | **Plataforma de tracing e avaliação** de IA usada no sunOS. Captura cada interação com modelos para análise de custo, latência e qualidade | Operação técnica; relatórios de uso e custo | `docs/specs/large/sunohub-tools-integration/spec.md` |
 | **LangGraph** | **Framework de orquestração de agentes** (StateGraph) usado no backend do sunOS. Permite construir fluxos complexos de IA com decisões e ramificações | Construção de Workflows e Skills compostas | `docs/handoff/PRODUCT_HANDOFF.md`:495 |
@@ -266,7 +266,7 @@ Esta seção registra **termos que devem ser evitados** dentro do projeto sunOS,
 | Termo | Definição | Contexto de Uso | Fonte |
 |-------|-----------|-----------------|-------|
 | **Sponsor** | Sócio responsável por desenhar a arquitetura de automações na sua área e cobrado pelo Guga sobre resultado. Não é executor. Modelo formalizado em 14/05/2026 | Estrutura de governança do sunOS | BRD Parte 1 §3.1.1 |
-| **Champion** | Profissional sênior ou pleno que executa fluxos desenhados pelo Sponsor e dá feedback ao Time Central. Cada área tem 1 a 4 | Estrutura de governança | BRD Parte 1 §3.1.2 |
+| **Builder** | Profissional sênior ou pleno que executa fluxos desenhados pelo Sponsor e dá feedback ao Time Central. Cada área tem 1 a 4 | Estrutura de governança | BRD Parte 1 §3.1.2 |
 | **Time Central** | Time técnico liderado por Heitor que provê infra, componentes reutilizáveis e governança técnica. Não constrói automações setoriais sob demanda | Estrutura de governança | BRD Parte 1 §3.1.3 |
 | **Captura Seletiva** | Gravação opt-in de reuniões operacionais críticas (entrada de job, status semanal/mensal, comitês). Não grava conversas casuais | BR-020, FA-16 | Reunião 07/05/2026 |
 | **Oráculo do Cliente** | Conceito do BR-022. Agente que conhece o cliente em profundidade após onboarding automatizado e serve de fonte para outros agentes do sunOS | BR-022, FA-15 | Reunião 13/05/2026 |
@@ -290,7 +290,7 @@ Esta seção registra **termos que devem ser evitados** dentro do projeto sunOS,
 
 ---
 
-<!-- REVIEW: Os termos cobrem o vocabulário que você precisa alinhar com Diretoria, sponsors e champions? Há algum termo proprietário Suno que não está aqui e deveria estar? Algum termo aqui está com definição imprecisa? -->
+<!-- REVIEW: Os termos cobrem o vocabulário que você precisa alinhar com Diretoria, sponsors e builders? Há algum termo proprietário Suno que não está aqui e deveria estar? Algum termo aqui está com definição imprecisa? -->
 
 **Próximos passos**:
 1. Revisar Parte 2 com Heitor Miranda

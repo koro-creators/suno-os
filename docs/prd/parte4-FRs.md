@@ -1145,7 +1145,7 @@ O sistema MUST oferecer interface visual no Admin (`/workflows`) para compor Wor
 | Inclui | Não Inclui |
 |--------|------------|
 | Composição visual drag-and-drop com nodes tipados (ADR-003) | Substituir Zapier/n8n na camada técnica (BR-016) |
-| Validação semântica de conexões entre nodes | Editor de código compilado (LangGraph) exposto a Champions |
+| Validação semântica de conexões entre nodes | Editor de código compilado (LangGraph) exposto a Builders |
 | Templates obrigatórios por área (Plano de Mídia, etc.) | Workflows sem inputs explícitos |
 
 **Atores / Personas**
@@ -2981,7 +2981,7 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 
 #### FR-184 — UI de validação humana de ontologia
 
-**Descrição**: O sistema MUST oferecer interface de validação onde Champion de Operações aceita/rejeita/edita cada entidade sugerida individualmente. Sem batch acceptance. Cada decisão é auditada com timestamp e responsável. <!-- TODO: expandir descrição completa antes de SDD -->
+**Descrição**: O sistema MUST oferecer interface de validação onde Builder de Operações aceita/rejeita/edita cada entidade sugerida individualmente. Sem batch acceptance. Cada decisão é auditada com timestamp e responsável. <!-- TODO: expandir descrição completa antes de SDD -->
 
 #### FR-185 — Status PRE-ACTIVE até validação completa
 
@@ -3011,7 +3011,7 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 
 #### FR-194 — Alimentação da Wiki Ontológica com proveniência
 
-**Descrição**: Entidades extraídas (FR-193) MUST ser propostas para a Wiki Ontológica do cliente correspondente com proveniência: reunião ID + timestamp. Champion revisa antes de consolidar (HITL obrigatório). <!-- TODO: expandir descrição completa antes de SDD -->
+**Descrição**: Entidades extraídas (FR-193) MUST ser propostas para a Wiki Ontológica do cliente correspondente com proveniência: reunião ID + timestamp. Builder revisa antes de consolidar (HITL obrigatório). <!-- TODO: expandir descrição completa antes de SDD -->
 
 #### FR-195 — RBAC sobre transcrição e conteúdo extraído
 
@@ -3072,7 +3072,7 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 | Validar definições por área de junior/pleno/sênior (PA-09) | Bruno Prosperi (criação), Takai (mídia) | FR-151 fica subespecificado | Junho 2026 |
 | Definir formato e infraestrutura de validação automática de copy (PA-10) | Heitor + time dev | FR-153 fica bloqueado | Antes do Protótipo |
 | Aprovar lista atualizada de ferramentas adotadas (PA-11) | Diretoria | FR-127 fica subespecificado | Junho 2026 |
-| Importar baseline ROI das 136 atividades (PA-04) | Heitor + champions | FR-149 não calcula custo evitado em Skills sem baseline | Maio 2026 |
+| Importar baseline ROI das 136 atividades (PA-04) | Heitor + builders | FR-149 não calcula custo evitado em Skills sem baseline | Maio 2026 |
 | Decidir formato exato do Dashboard executivo (PA-05) | Heitor + Guga | FR-148 fica subespecificado | Junho 2026 |
 | Confirmar PX-05 como persona separada (ASS-PX-01 da Parte 2) | Heitor + Bruno Prosperi | FR-151, FR-154 viram variantes se PX-05 vira track | Maio 2026 |
 

@@ -49,8 +49,8 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 
 | Artefato | Relação |
 |----------|---------|
-| BRD Parte 1 (Contexto §3.1.4) | Champions são embriões das personas operacionais (Gus/Teda em Mídia, Le em outras áreas) |
-| BRD Parte 2 (Glossário) | Vocabulário "Creator", "Bioma Zero/Job", "Patrocinador Sócio", "Champion" |
+| BRD Parte 1 (Contexto §3.1.4) | Builders são embriões das personas operacionais (Gus/Teda em Mídia, Le em outras áreas) |
+| BRD Parte 2 (Glossário) | Vocabulário "Creator", "Bioma Zero/Job", "Patrocinador Sócio", "Builder" |
 | BRD Parte 3 (BRs) | Cada persona é demandante de BRs específicos (matriz no §3.2 da Parte 3) |
 | BRD Parte 4 (RNs) | RN-017 (Track por carreira) explicita diferença junior/sênior |
 | PRD Parte 1 (Feature Map FA-XX) | Cada feature mapeia para personas atendidas |
@@ -66,7 +66,7 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 
 | ID | Persona | Papel no Negócio | Importância | Features Principais |
 |----|---------|------------------|-------------|---------------------|
-| **PX-01** | Líder/Curador | Bioma Zero — sócio/diretor/líder de área que governa Inteligência Coletiva, IP e qualidade. Champions também se encaixam aqui parcialmente | Core | FA-01 (Biblioteca), FA-09 (Governança), FA-10 (Mensuração), FA-12 (Admin) |
+| **PX-01** | Líder/Curador | Bioma Zero — sócio/diretor/líder de área que governa Inteligência Coletiva, IP e qualidade. Builders também se encaixam aqui parcialmente | Core | FA-01 (Biblioteca), FA-09 (Governança), FA-10 (Mensuração), FA-12 (Admin) |
 | **PX-02** | Criativo Sênior | Bioma Job — Creator de criação/redação/direção com 7+ anos, identidade-protetivo, engaja IA seletivamente para refinamento e devil's advocate | Core | FA-02 (Moon Shot), FA-04 (Chat), FA-11 (Safety cultural) |
 | **PX-03** | Operador Processual | Bioma Job — Creator que executa tarefas processuais recorrentes (mídia, BI, planejamento, financeiro) e busca aceleração com contexto preservado | Core | FA-03 (Skills processuais), FA-04 (Chat), FA-05 (Workflows) |
 | **PX-04** | Planejamento Estratégico | Bioma Job — Planner/CSO/analista de mercado que conecta insights de mercado a territórios criativos e estratégicos | Importante | FA-02 (Moon Shot), FA-03 (Análise de Mercado, Persona Sintética), FA-05 (Pesquisa de Mercado) |
@@ -103,7 +103,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Aspecto | Descrição |
 |---------|-----------|
-| **Papel Organizacional** | Bioma Zero — sócio, diretor de área, head de criação/mídia/planejamento, gerente sênior. Inclui champions de área (Gus/Teda em Mídia, Le em outras áreas) parcialmente, embora champions sejam papel cultural mais que cargo |
+| **Papel Organizacional** | Bioma Zero — sócio, diretor de área, head de criação/mídia/planejamento, gerente sênior. Inclui builders de área (Gus/Teda em Mídia, Le em outras áreas) parcialmente, embora builders sejam papel cultural mais que cargo |
 | **Senioridade Típica** | Liderança (10+ anos de experiência) |
 | **KPIs pelos quais é cobrado(a)** | Saúde de receita da área, retenção de clientes, retenção de talento, qualidade percebida do output do time, win rate em new business, shortlist em festivais (Cannes/Effie), accountability de uso de IA, custo evitado da área |
 | **Relação com outras personas** | Lidera PX-02, PX-03, PX-04, PX-05; presta contas ao Sponsor (Guga) e patrocinadores sócio (Bruno, Takai, Ronaldo) |
@@ -145,7 +145,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 - **Inteligência Coletiva acionável**: repertório histórico vira patrimônio compartilhado, sobrevive a turnover (FA-01)
 - **Caixa-preta operacional**: IP da Suno protegido nas sete chaves, sem expor a perfis Operacionais (FA-09)
 - **Dashboard executivo defensável**: tendência mensal de custo evitado, qualidade percebida, KPIs de negócio (FA-10)
-- **Empoderamento de Workflows sem dependência de eng**: PX-03 e champions configuram suas próprias automações (FA-05)
+- **Empoderamento de Workflows sem dependência de eng**: PX-03 e builders configuram suas próprias automações (FA-05)
 - **Safety contra homogeneização**: monitor mensal das 3 métricas + bloqueio de relatório com satisfação isolada (FA-10-08, FA-10-09)
 - **Captura proativa pré-saída**: alerta de conhecimento crítico em risco (FA-01-07)
 
@@ -688,10 +688,10 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 | ID | Assunção | Impacto se Falsa | Status |
 |----|----------|------------------|--------|
 | ASS-PX-01 | PX-05 (Creator Junior) merece persona separada de PX-02/PX-03 (e não apenas "track" nas existentes) | Se falsa, simplificar para 4 personas com tracks adaptativos; risco de subdimensionar proteção contra over-reliance | A validar com Bruno Prosperi e Heitor — pesquisa setorial sustenta a separação (research foundation AI & Society 2025) |
-| ASS-PX-02 | Champions (Gus/Teda em Mídia, Le em outras áreas) se encaixam parcialmente em PX-01, mas papel cultural específico pode merecer persona separada | Se falsa e champion vira persona PX-06, refazer matrizes; risco de subdimensionar adoção cross-grupo | A validar com Heitor e Yuri — atualmente tratado como sub-papel de PX-01 |
+| ASS-PX-02 | Builders (Gus/Teda em Mídia, Le em outras áreas) se encaixam parcialmente em PX-01, mas papel cultural específico pode merecer persona separada | Se falsa e builder vira persona PX-06, refazer matrizes; risco de subdimensionar adoção cross-grupo | A validar com Heitor e Yuri — atualmente tratado como sub-papel de PX-01 |
 | ASS-PX-03 | PX-04 (Planejamento Estratégico) inclui CSO ao nível de área e Planners de squad — perfis suficientemente parecidos para uma persona única | Se falsa e CSO precisa persona separada, refazer JTBDs | A validar com Sergio Katz |
 | ASS-PX-04 | Definições por área de "júnior/pleno/sênior" (RN-017) são suficientemente convergentes para que tracks adaptativos funcionem cross-área | Se falsa, tracks precisam ser por área (criação ≠ mídia ≠ planejamento) | A validar (PA-09) com Bruno Prosperi (criação), Takai (mídia) |
-| ASS-PX-05 | Personas brasileiras dos agentes (Antropófaga, Carnavalesco, Anciã) ressoam com PX-02 e PX-04, e não causam ruído com PX-03 (mais técnico) | Se falsa e PX-03 considera "infantil", precisa de modos neutros + brasileiros | A validar com sócios e champions |
+| ASS-PX-05 | Personas brasileiras dos agentes (Antropófaga, Carnavalesco, Anciã) ressoam com PX-02 e PX-04, e não causam ruído com PX-03 (mais técnico) | Se falsa e PX-03 considera "infantil", precisa de modos neutros + brasileiros | A validar com sócios e builders |
 | ASS-PX-06 | Forced reflection moments (RN-015) são aceitos como proteção, não fricção, especialmente por PX-05 e PX-02 | Adoção cai; risco de virar feature ignorada | A validar via A/B testing no Piloto |
 
 ### 6.2. Informações Adicionais Necessárias
@@ -700,7 +700,7 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 |--------|-------------|------------|
 | Confirmação de PX-05 como persona separada | Decisão formal de PM + Sponsor sobre dimensão de proteção a juniors | Heitor + Bruno Prosperi |
 | Definições por área de júnior/pleno/sênior | Critérios para acionar track de onboarding correto (RN-017) | Bruno Prosperi (criação), Takai (mídia), demais sócios — PA-09 |
-| Champions como persona separada (PX-06?) | Confirmar se papel cultural específico de champion (cross-grupo, identificação de oportunidades, treinamento informal) merece tratamento próprio | Heitor + Yuri |
+| Builders como persona separada (PX-06?) | Confirmar se papel cultural específico de builder (cross-grupo, identificação de oportunidades, treinamento informal) merece tratamento próprio | Heitor + Yuri |
 | Validação de PX-02 vs. PX-04 | Confirmar que perfis criativos seniores (PX-02) e planners (PX-04) têm jobs suficientemente diferentes para personas separadas | Sergio Katz + Bruno Prosperi |
 | KPIs de negócio adicionais por persona | Lista exaustiva de KPIs que cada persona é cobrada (atualmente proposta mas não validada) | RH + sócios das áreas |
 

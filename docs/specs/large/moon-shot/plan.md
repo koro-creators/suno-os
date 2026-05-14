@@ -90,7 +90,7 @@ POC ──► Protótipo ──► Piloto ──► MVP
 |-------|:---:|:---:|-----------|
 | Provocações percebidas como aleatórias | Alta | Alto | Calibração iterativa thresholds + POC com seniores antes |
 | Biblioteca pobre → Moon Shot fraco | Alta | Alto | Seed cultural robusto + curadoria semanal |
-| Líderes não curam Biblioteca | Média | Alto | Demonstrar ROI da curadoria; champions |
+| Líderes não curam Biblioteca | Média | Alto | Demonstrar ROI da curadoria; builders |
 | Latência > 15s | Média | Médio | Cache de embeddings, paralelização |
 | Homogeneização das provocações | Média | Alto | Monitoramento de diversidade + rotação de personas |
 | Exposição de IP (caixa-preta vazada) | Baixa | Crítico | RBAC + audit logs + frontend sem acesso direto |

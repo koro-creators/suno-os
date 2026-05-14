@@ -580,7 +580,7 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 - [ ] Pesquisa web realizada em fontes públicas (perfil corporativo do cliente, LinkedIn de executivos mencionados, notícias relevantes dos últimos 12 meses) com proveniência rastreável de cada fato sugerido
 - [ ] Humano valida cada entidade individualmente. Sem auto-aprovação no seed inicial (HITL obrigatório, RN-014)
 - [ ] Fontes externas consultadas seguem governança: allow-list de domínios auditada, sem scraping de conteúdo protegido por paywall ou login
-- [ ] Time de Operações é dono do fluxo no MVP. Sponsor de Operações (Elton) aprova design final. Champion de Operações (Chamas) executa onboardings na operação
+- [ ] Time de Operações é dono do fluxo no MVP. Sponsor de Operações (Elton) aprova design final. Builder de Operações (Chamas) executa onboardings na operação
 - [ ] Auditoria registra cada onboarding: quem cadastrou, quais entidades foram aceitas, rejeitadas ou editadas, quais fontes foram consultadas, tempo total da validação
 - [ ] Cliente fica em status `PRE-ACTIVE` até validação humana da ontologia mínima ser concluída. Skills processuais não acessam cliente em `PRE-ACTIVE`
 - [ ] Onboarding deve ser idempotente: re-execução em cliente existente atualiza ontologia sem duplicar entidades
@@ -601,7 +601,7 @@ Princípios fundacionais que orientam decisões de UX em todas as features do su
 
 ### BR-019 — Princípio de UX operacional estruturada (software, não chat livre)
 
-**Descrição**: O sunOS deve oferecer UX operacional estruturada para todas as tarefas de creators e champions, com paradigmas visuais e fluxos guiados em vez de chat livre genérico. O princípio reflete direção formal do sponsor: "a gente não deve ser um chat, a gente deve ser um software. E esse software ou tem drag and drop, ou tem às vezes coisas que tu escolhe... fazer um pix de quanto? Pra quem? De que jeito?" (Guga, 07/05/2026). Para tarefas operacionais, o creator nunca compõe prompts livremente em produção. A UX captura o que precisa via inputs estruturados, escolhas pré-definidas e composição visual. Chat livre é reservado apenas para contextos específicos onde fluxo aberto é apropriado (Moon Shot de provocação criativa, Discovery de consultoria estruturada).
+**Descrição**: O sunOS deve oferecer UX operacional estruturada para todas as tarefas de creators e builders, com paradigmas visuais e fluxos guiados em vez de chat livre genérico. O princípio reflete direção formal do sponsor: "a gente não deve ser um chat, a gente deve ser um software. E esse software ou tem drag and drop, ou tem às vezes coisas que tu escolhe... fazer um pix de quanto? Pra quem? De que jeito?" (Guga, 07/05/2026). Para tarefas operacionais, o creator nunca compõe prompts livremente em produção. A UX captura o que precisa via inputs estruturados, escolhas pré-definidas e composição visual. Chat livre é reservado apenas para contextos específicos onde fluxo aberto é apropriado (Moon Shot de provocação criativa, Discovery de consultoria estruturada).
 
 **Prioridade**: Alta (princípio fundacional)
 
