@@ -86,7 +86,7 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 
 ### 2.8 Role-based enablement por perfil
 
-3 perfis (RN-009): **Admin** (CRUD total) · **Líder** (CRUD da sua área) · **Operacional** (apenas consumo via Skills/Shoot for the Moon, sem acesso a Biblioteca/system prompts). Visibilidade do menu lateral, breadcrumbs e ações é filtrada antes da renderização (default deny).
+3 perfis (RN-009): **Admin** (CRUD total) · **Líder** (CRUD da sua área) · **Operacional** (apenas consumo via Skills/Moon Shot, sem acesso a Biblioteca/system prompts). Visibilidade do menu lateral, breadcrumbs e ações é filtrada antes da renderização (default deny).
 
 ---
 
@@ -170,7 +170,7 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 | Rota | Nó/Tela | Função | Personas |
 |------|---------|--------|----------|
 | `/` | T-02 | L0 — Sun + Planetas (Clientes) | Todas |
-| `/[clientSlug]` | T-03 | L1 — Planeta + Órbitas (Skills) + CTA Shoot for the Moon | Todas |
+| `/[clientSlug]` | T-03 | L1 — Planeta + Órbitas (Skills) + CTA Moon Shot | Todas |
 | `/[clientSlug]/[skillSlug]` | T-04 + T-05 | L2 + Chat (PromptTemplateBar com Moon chips) | Todas |
 | `/[clientSlug]/[skillSlug]?moon=[moonSlug]` | T-05 | L3 — Moon ativa (chip selecionado) | Todas |
 | `/[clientSlug]/[skillSlug]/[moonSlug]` | (redirect) | Backward compat — redireciona para `?moon=` | — |
@@ -229,9 +229,9 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 | `/mensuracao/skills/[skillId]` | T-25 | Skill Health Detail (RN-004) |
 | `/mensuracao/homogeneizacao` | T-26 | Diversidade Coletiva (RN-019/020) |
 
-### 5.7 Shoot for the Moon (FA-02) — **modal sobreposto** (sem rota dedicada)
+### 5.7 Moon Shot (FA-02) — **modal sobreposto** (sem rota dedicada)
 
-> **Decisão IA:** Shoot for the Moon não cria rota — é modal/painel sobre T-03 ou T-05. Justificativa: preserva contexto da Skill ativa e atende RN-003 (≤3 cliques).
+> **Decisão IA:** Moon Shot não cria rota — é modal/painel sobre T-03 ou T-05. Justificativa: preserva contexto da Skill ativa e atende RN-003 (≤3 cliques).
 
 | Trigger | Nó/Tela | Função |
 |---------|---------|--------|
@@ -239,7 +239,7 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 | Após T-06 | T-07 | Painel de Faíscas (streaming) |
 | Variante de T-07 | T-08 | Modo Dupla (time-boxing) |
 
-> Decisão alternativa pendente (PA): rota dedicada `/[clientSlug]/[skillSlug]/shoot-for-the-moon` se futuras integrações exigirem deep-link.
+> Decisão alternativa pendente (PA): rota dedicada `/[clientSlug]/[skillSlug]/moon-shot` se futuras integrações exigirem deep-link.
 
 ---
 
@@ -249,7 +249,7 @@ Algumas funcionalidades têm múltiplos pontos de entrada — o sistema deve man
 
 | Funcionalidade | Entradas | Comportamento |
 |----------------|----------|---------------|
-| **Shoot for the Moon** | (1) CTA em T-03 (Planeta) · (2) CTA em T-04/T-05 (Chat) · (3) ⌘K [futuro] | Mesmo modal T-06 com contexto pré-preenchido conforme origem |
+| **Moon Shot** | (1) CTA em T-03 (Planeta) · (2) CTA em T-04/T-05 (Chat) · (3) ⌘K [futuro] | Mesmo modal T-06 com contexto pré-preenchido conforme origem |
 | **Forced Reflection** | (1) T-05 Chat (após N stars) · (2) T-07 Painel de Faíscas (após N stars) | Mesmo interstitial T-09; tracking N=5 sênior / N=3 junior |
 | **Settings/Profile** | Sidebar footer + User Menu no AppHeader | Mesma tela [futura] de Settings |
 | **Search/Discovery** | ⌘K (futuro) + filter sidebars das Admin areas | ⌘K busca cross-cutting; filter sidebars são contextuais ao módulo |
@@ -306,7 +306,7 @@ Algumas funcionalidades têm múltiplos pontos de entrada — o sistema deve man
 | Categoria | Exemplos | Permissão |
 |-----------|----------|-----------|
 | **Navegação** | "Ir para Sun", "Ir para [Cliente]", "Ir para Skills", "Ir para Biblioteca" | Filtrado por RBAC — Operacional NÃO vê "Ir para Biblioteca" |
-| **Ações** | "Nova Skill", "Novo Workflow", "Devorar briefing (Shoot for the Moon)" | Filtrado por RBAC |
+| **Ações** | "Nova Skill", "Novo Workflow", "Devorar briefing (Moon Shot)" | Filtrado por RBAC |
 | **Busca por entidade** | Nome de Cliente, Skill, Workflow, KnowledgeItem (semantic search) | KnowledgeItem **invisível para Operacional** (RN-011) |
 | **Recentes** | Últimos 5 itens acessados (Sessões, Skills) | Por usuário |
 
@@ -391,14 +391,14 @@ Para perfil Operacional:
 │   /[clientSlug]                                                      │
 │   ├─ Planeta no centro local                                         │
 │   ├─ Órbitas (Skills disponíveis)                                    │
-│   └─ CTA Shoot for the Moon (modal T-06)                             │
+│   └─ CTA Moon Shot (modal T-06)                             │
 ├─────────────────────────────────────────────────────────────────────┤
 │ L2: ÓRBITA (SKILL) + CHAT                                            │
 │   /[clientSlug]/[skillSlug]                                          │
 │   ├─ PromptTemplateBar com Moon chips                                │
 │   ├─ Chat (MessageList + ChatInput)                                  │
 │   ├─ Context Sidebar (Biblioteca/Agentes/HITL — Caixa-preta para Op) │
-│   └─ CTA Shoot for the Moon contextual                               │
+│   └─ CTA Moon Shot contextual                               │
 ├─────────────────────────────────────────────────────────────────────┤
 │ L3: MOON (sub-área via chip)                                         │
 │   /[clientSlug]/[skillSlug]?moon=[moonSlug]                          │
@@ -473,12 +473,12 @@ Login (T-01)
 
 ## 11. Profundidade Máxima e Princípio dos 3 Cliques
 
-**RN-003 (Acionamento Shoot for the Moon ≤ 3 cliques)** generaliza-se como princípio de IA:
+**RN-003 (Acionamento Moon Shot ≤ 3 cliques)** generaliza-se como princípio de IA:
 
 | Persona | Tarefa | Caminho | Cliques |
 |---------|--------|---------|:-------:|
 | PX-02/03/04/05 | Chegar ao Chat de uma Skill | Sun → Planeta → Skill | **3** |
-| PX-02 | Acionar Shoot for the Moon | Sun → Planeta → CTA Shoot (ou Sun → Planeta → Skill → CTA Shoot) | **3-4** |
+| PX-02 | Acionar Moon Shot | Sun → Planeta → CTA Shoot (ou Sun → Planeta → Skill → CTA Shoot) | **3-4** |
 | PX-05 | Iniciar onboarding | Login → Onboarding → completar | **2** |
 | PX-01 | Editar uma Skill | Sun → Sidebar Skills → row → Editar | **3-4** |
 | PX-01 | Cadastrar item na Biblioteca | Sun → Sidebar Biblioteca → Adicionar (modal T-14) | **3** |
@@ -498,7 +498,7 @@ Login (T-01)
 | Sun (T-02) | Sim | Sim | Sim |
 | Planeta (T-03) | Sim | Sim | Sim (apenas clientes ativos — RN-007) |
 | Órbita/Skill + Chat (T-04/T-05) | Sim | Sim | Sim |
-| Shoot for the Moon (T-06/T-07/T-08) | Sim | Sim | Sim (com track adaptado por carreira — RN-017) |
+| Moon Shot (T-06/T-07/T-08) | Sim | Sim | Sim (com track adaptado por carreira — RN-017) |
 | Forced Reflection (T-09) | Sim | Sim | Sim (N=3 para junior; N=5 para sênior) |
 | Skills Admin (T-10/T-11/T-12) | Sim (CRUD total) | Sim (CRUD da sua área) | **NÃO** |
 | Biblioteca Admin (T-13/T-14/T-15/T-16) | Sim | Sim | **NÃO — Caixa-preta total (RN-011)** |
@@ -543,7 +543,7 @@ Ver §8.
 |---------|---------------|
 | Sistema Solar como navegação operacional, Sidebar como navegação administrativa | Separa ato de **consumir IA** (jornada Creator → Cliente → Skill) de **governar IA** (jornada Líder → CRUDs). Reflete cultura "Bioma Zero (administra) vs. Bioma Job (executa)" do Glossário §1. |
 | Moon como chip (L3) em vez de tela própria | SPEC-007. Reduz profundidade de 4 para 3 níveis no Sistema Solar; preserva contexto da Skill. |
-| Shoot for the Moon como modal sobre Chat (sem rota dedicada) | RN-003: ≤3 cliques. Modal preserva contexto da Skill ativa. Decisão revisitável se deep-link for necessário. |
+| Moon Shot como modal sobre Chat (sem rota dedicada) | RN-003: ≤3 cliques. Modal preserva contexto da Skill ativa. Decisão revisitável se deep-link for necessário. |
 | Sem `companySlug` na URL | sunOS é single-tenant interno (Suno United Creators implícita). Diferencia da convenção Koro genérica `/{companySlug}/workspace/{buSlug}/...`. Decisão consciente. |
 | Sidebar separa "Admin" e "Mensuração" mesmo ambos restritos a PX-01 | Ajuda hierarquia mental: Admin = configurar; Mensuração = monitorar. Diferentes intenções da PX-01. |
 | Biblioteca **invisível** (não desabilitada) para Operacional | RN-011 explícita do Guga: *"a biblioteca o cara não pode saber. A biblioteca é o olho também."* Não é só restrição de acesso — é Caixa-preta. |
@@ -571,7 +571,7 @@ Ver §8.
 | Componente | Para qual feature/tela | Nota |
 |-----------|------------------------|------|
 | `CommandPalette` | Cmd+K (cross-cutting) | P2/P3 do roadmap; aplicar RBAC e Caixa-preta |
-| `ShootForTheMoonModal` | T-06 | Modal com seleção de track/zona |
+| `MoonShotModal` | T-06 | Modal com seleção de track/zona |
 | `FaiscaCard` + `FaiscaPanel` | T-07 | Painel streaming com cards de Faísca |
 | `TimeBoxingTimer` | T-08 | Timer 90s/5min com bloqueio alternado |
 | `ForcedReflectionInterstitial` | T-09 | Modal de pausa cognitiva |
@@ -586,7 +586,7 @@ Ver §8.
 | `AuthContext` | Expor `role` (Admin/Líder/Operacional) e `careerStage` (junior/pleno/sênior — RN-017) |
 | `useTheme` | Já existe — manter |
 | Novo `OnboardingContext` | Persistir track escolhido, applied flag |
-| Novo `ShootForTheMoonContext` | Pipeline state, Faíscas geradas, stars count (trigger T-09) |
+| Novo `MoonShotContext` | Pipeline state, Faíscas geradas, stars count (trigger T-09) |
 | `BibliotecaContext` | Filtrar resultados conforme RBAC; expor método `redactedLanguage()` para PX-03 |
 
 ---

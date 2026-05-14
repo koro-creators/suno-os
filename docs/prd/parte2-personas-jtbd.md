@@ -19,7 +19,7 @@ aprovacoes:
     status: Pendente
 fonte_brd: docs/brd/parte1-contexto.md, docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_handoff: docs/handoff/PRODUCT_HANDOFF.md
-fonte_frd: FRD Shoot for the Moon (referenciado nos BRDs Parte 3 e 4)
+fonte_frd: FRD Moon Shot (referenciado nos BRDs Parte 3 e 4)
 total_personas: 5 (PX-01 a PX-05)
 ---
 
@@ -56,7 +56,7 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 | PRD Parte 1 (Feature Map FA-XX) | Cada feature mapeia para personas atendidas |
 | PRD Parte 3 (Matriz Persona × Jornada) | Persona × Jornada × Feature × KPI |
 | PRD Parte 4 (FRs) | FRs especificam comportamento por persona quando relevante |
-| FRD Shoot for the Moon | PX-01 a PX-04 já existem no FRD; este documento referencia e adiciona PX-05 |
+| FRD Moon Shot | PX-01 a PX-04 já existem no FRD; este documento referencia e adiciona PX-05 |
 
 ---
 
@@ -67,9 +67,9 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 | ID | Persona | Papel no Negócio | Importância | Features Principais |
 |----|---------|------------------|-------------|---------------------|
 | **PX-01** | Líder/Curador | Bioma Zero — sócio/diretor/líder de área que governa Inteligência Coletiva, IP e qualidade. Champions também se encaixam aqui parcialmente | Core | FA-01 (Biblioteca), FA-09 (Governança), FA-10 (Mensuração), FA-12 (Admin) |
-| **PX-02** | Criativo Sênior | Bioma Job — Creator de criação/redação/direção com 7+ anos, identidade-protetivo, engaja IA seletivamente para refinamento e devil's advocate | Core | FA-02 (Shoot for the Moon), FA-04 (Chat), FA-11 (Safety cultural) |
+| **PX-02** | Criativo Sênior | Bioma Job — Creator de criação/redação/direção com 7+ anos, identidade-protetivo, engaja IA seletivamente para refinamento e devil's advocate | Core | FA-02 (Moon Shot), FA-04 (Chat), FA-11 (Safety cultural) |
 | **PX-03** | Operador Processual | Bioma Job — Creator que executa tarefas processuais recorrentes (mídia, BI, planejamento, financeiro) e busca aceleração com contexto preservado | Core | FA-03 (Skills processuais), FA-04 (Chat), FA-05 (Workflows) |
-| **PX-04** | Planejamento Estratégico | Bioma Job — Planner/CSO/analista de mercado que conecta insights de mercado a territórios criativos e estratégicos | Importante | FA-02 (Shoot for the Moon), FA-03 (Análise de Mercado, Persona Sintética), FA-05 (Pesquisa de Mercado) |
+| **PX-04** | Planejamento Estratégico | Bioma Job — Planner/CSO/analista de mercado que conecta insights de mercado a territórios criativos e estratégicos | Importante | FA-02 (Moon Shot), FA-03 (Análise de Mercado, Persona Sintética), FA-05 (Pesquisa de Mercado) |
 | **PX-05** | Creator Junior | Bioma Job — Creator com < 3 anos de experiência, adota IA entusiasticamente em ideação, em risco de over-reliance | Importante | FA-02 (track junior), FA-04 (Chat), FA-11 (forced reflection, validação vocabulário) |
 
 ### 2.2. Ecossistema de Personas
@@ -77,9 +77,9 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 As personas formam uma cadeia de valor onde **PX-01 cura, PX-02/PX-04 ideam, PX-03 executa, PX-05 aprende** — e o sunOS amplifica todas sem substituir nenhuma.
 
 - **PX-01 Líder/Curador** alimenta o sistema (Biblioteca, configuração de Skills, definição de Workflows recorrentes) e governa qualidade (HITL, Mensuração, RBAC). Sua produtividade depende de eficiência de curadoria e de evidências defensáveis para Diretoria.
-- **PX-02 Criativo Sênior** consome o sistema em modo **divergente** prioritariamente — Shoot for the Moon como rompedor de bloqueio e devil's advocate. Para tarefas processuais, delega frequentemente a PX-03 ou usa Skills processuais com supervisão.
+- **PX-02 Criativo Sênior** consome o sistema em modo **divergente** prioritariamente — Moon Shot como rompedor de bloqueio e devil's advocate. Para tarefas processuais, delega frequentemente a PX-03 ou usa Skills processuais com supervisão.
 - **PX-03 Operador Processual** consome o sistema em modo **convergente** prioritariamente — Skills com contexto injetado para entregar relatório/plano/copy mais rápido. Workflows automatizam o que ele faria manualmente. Beneficiário direto da Biblioteca (FA-01) sem precisar saber que ela existe (Caixa-preta).
-- **PX-04 Planejamento Estratégico** transita entre divergente (Shoot for the Moon para conectar insights) e convergente (Análise de Mercado, Persona Sintética, Pesquisa de Mercado como Workflow). É ponte entre PX-02 e PX-03.
+- **PX-04 Planejamento Estratégico** transita entre divergente (Moon Shot para conectar insights) e convergente (Análise de Mercado, Persona Sintética, Pesquisa de Mercado como Workflow). É ponte entre PX-02 e PX-03.
 - **PX-05 Creator Junior** é o perfil mais sensível ao sistema: maior risco de over-reliance, maior necessidade de proteção via UX adaptada (track junior, forced reflection com N=3, visible reasoning hidden by default).
 
 PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam saúde criativa coletiva (via FA-11 e RN-019/020); PX-03 valida custo evitado (via FA-10-03 e RN-018); PX-05 valida UX adaptada (via RN-017).
@@ -88,7 +88,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Fase | Personas Core | Personas Importantes | Personas Secundárias |
 |------|---------------|----------------------|----------------------|
-| **POC** | PX-02 Criativo Sênior (testes blind do Shoot for the Moon) | — | — |
+| **POC** | PX-02 Criativo Sênior (testes blind do Moon Shot) | — | — |
 | **Protótipo** | PX-01, PX-02, PX-03 | PX-04 | PX-05 |
 | **Piloto** | PX-01, PX-02, PX-03, PX-04 | PX-05 | — |
 | **MVP** | Todas | — | — |
@@ -241,7 +241,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 - Receio (justificado) de que ferramentas externas vazem ideias confidenciais
 
 **Oportunidades (o que o sunOS destrava):**
-- **Shoot for the Moon Provoca Faíscas inesperadas**: combina conceitos de domínios distantes na zona Sweet Spot (FA-02)
+- **Moon Shot Provoca Faíscas inesperadas**: combina conceitos de domínios distantes na zona Sweet Spot (FA-02)
 - **Modo "Tenho uma ideia, me prova que tá errada"** (devil's advocate, senior-leaning) — usa IA para stress-test sem perder ownership (RN-017)
 - **Marcação visual de outputs como Faísca/estímulo** — não há ambiguidade sobre o que é IA vs. autor (RN-014, FA-11)
 - **Forced reflection após N stars** — protege engajamento cognitivo (RN-015)
@@ -253,7 +253,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | ID | JTBD | Features | BRs |
 |----|------|----------|-----|
-| **JTBD-08** | When estou bloqueado em territórios óbvios para um briefing, I want to acionar Shoot for the Moon em ≤3 cliques e receber Faíscas inesperadas mas mappeáveis, so that consigo romper bloqueio sem perder ownership autoral | FA-02, FA-06 | BR-001, BR-010 |
+| **JTBD-08** | When estou bloqueado em territórios óbvios para um briefing, I want to acionar Moon Shot em ≤3 cliques e receber Faíscas inesperadas mas mappeáveis, so that consigo romper bloqueio sem perder ownership autoral | FA-02, FA-06 | BR-001, BR-010 |
 | **JTBD-09** | When tenho uma ideia que acho boa, I want to pedir ao agente "me prove que tá errada" em modo devil's advocate, so that consigo stress-testar antes de defender com cliente | FA-02 (modo senior), FA-04 | BR-001, BR-012 |
 | **JTBD-10** | When uso IA em sessão de ideação, I want to ver claramente o que é estímulo/Faísca vs. peça final, so that preservo identidade autoral e cliente sabe quem assinou | FA-04, FA-11 | BR-010 |
 | **JTBD-11** | When preciso de referência cultural ou case similar de cliente, I want to receber automaticamente como contexto da Skill ativa em ≤2 minutos, so that não quebro fluxo criativo buscando em drives | FA-01, FA-03 | BR-006 |
@@ -275,7 +275,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Feature | Como esta Persona Usa |
 |---------|----------------------|
-| FA-02 Shoot for the Moon | **Uso primário** — modo "me prova que tá errada", modo dupla, todas as zonas de bisociação |
+| FA-02 Moon Shot | **Uso primário** — modo "me prova que tá errada", modo dupla, todas as zonas de bisociação |
 | FA-04 Chat | Interface principal para conversa com agentes ReAct |
 | FA-08 Multimodal | Visualizar Faíscas como imagem ou vídeo (Phase 16) |
 | FA-11 Safety cultural | Beneficiário primário — marcação Faísca, forced reflection, personas brasileiras |
@@ -433,7 +433,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 - Falta de método estruturado para Provocar territórios não-óbvios
 
 **Oportunidades (o que o sunOS destrava):**
-- **Shoot for the Moon como ferramenta estratégica**: conecta insights de domínios distantes a território criativo (FA-02, BR-001)
+- **Moon Shot como ferramenta estratégica**: conecta insights de domínios distantes a território criativo (FA-02, BR-001)
 - **Skill Análise de Mercado** com contexto histórico do cliente injetado automaticamente (FA-03)
 - **Skill Persona Sintética** com referências culturais brasileiras curadas (FA-03)
 - **Workflow Pesquisa de Mercado** como agendamento ou disparo manual com sub-workflows (FA-05)
@@ -447,7 +447,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 |----|------|----------|-----|
 | **JTBD-20** | When inicio Pesquisa de Mercado para new business pitch, I want to disparar Workflow Pesquisa de Mercado que faz busca web + síntese + contexto + report, so that entrego pesquisa em ≤50% do tempo histórico | FA-05, FA-03 | BR-002, BR-013 |
 | **JTBD-21** | When monto Persona Sintética para campanha, I want to receber referências culturais brasileiras e dados demográficos contextualizados pela Biblioteca, so that persona não é genérica e respeita cultura local | FA-03, FA-01, FA-11 | BR-006, BR-011 |
-| **JTBD-22** | When tenho insight de mercado e quero conectar a território criativo não-óbvio, I want to acionar Shoot for the Moon com modo "começando uma ideia" e receber Faíscas que combinam meu insight com domínios distantes, so that rompo o óbvio e provoco PX-02 com insumo rico | FA-02, FA-04 | BR-001, BR-011 |
+| **JTBD-22** | When tenho insight de mercado e quero conectar a território criativo não-óbvio, I want to acionar Moon Shot com modo "começando uma ideia" e receber Faíscas que combinam meu insight com domínios distantes, so that rompo o óbvio e provoco PX-02 com insumo rico | FA-02, FA-04 | BR-001, BR-011 |
 | **JTBD-23** | When construo Brief Builder, I want to ter inputs históricos do cliente, briefings anteriores e tom de voz injetados automaticamente, so that briefing é estratégico desde a primeira versão | FA-03, FA-01 | BR-002, BR-006 |
 | **JTBD-24** | When apresento análise estratégica ao Líder, I want to ter custo evitado da minha pesquisa visível no dashboard, so that valor estratégico do trabalho automatizado é reconhecido | FA-10 | BR-013 |
 
@@ -456,7 +456,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 > O que faria o Planejamento Estratégico dizer que o sunOS "funciona" para ele?
 
 - Tempo médio para Análise de Mercado / Pesquisa de Mercado / Persona Sintética reduz ≥30%
-- Insights estratégicos de Shoot for the Moon classificados como "úteis" por ≥60% das vezes (testes blind)
+- Insights estratégicos de Moon Shot classificados como "úteis" por ≥60% das vezes (testes blind)
 - Persona Sintética e Análise de Mercado avaliadas como mais ricas em insight (vs. sem sunOS) em ≥65% dos casos
 - Win rate em new business pitches mantém ou melhora pós-sunOS (KPI de negócio do BR-013)
 - Brief Builder reduz ciclo de iteração com PX-02 em ≥30%
@@ -465,7 +465,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Feature | Como esta Persona Usa |
 |---------|----------------------|
-| FA-02 Shoot for the Moon | **Uso primário** — modo "começando uma ideia" e exploração de territórios |
+| FA-02 Moon Shot | **Uso primário** — modo "começando uma ideia" e exploração de territórios |
 | FA-03 Skills | **Uso primário** — Análise de Mercado, Persona Sintética, Brief Builder |
 | FA-05 Workflows | **Uso primário** — Pesquisa de Mercado |
 | FA-04 Chat | Interface principal |
@@ -554,7 +554,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Feature | Como esta Persona Usa |
 |---------|----------------------|
-| FA-02 Shoot for the Moon | **Uso primário** — modo "começando uma ideia" (junior-leaning), zona Sweet Spot |
+| FA-02 Moon Shot | **Uso primário** — modo "começando uma ideia" (junior-leaning), zona Sweet Spot |
 | FA-04 Chat | Interface principal |
 | FA-11 Safety cultural | **Beneficiário primário** — track junior, forced reflection N=3, visible reasoning hidden, personas brasileiras |
 | FA-07 HITL | Engaja com forced reflection mais frequente |
@@ -576,7 +576,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Persona | Fase de Entrada | Justificativa |
 |---------|-----------------|---------------|
-| PX-02 Criativo Sênior | POC | POC do Shoot for the Moon valida com 3+ Creators seniores em testes blind (BR-001, critério ≥60% provocações úteis) |
+| PX-02 Criativo Sênior | POC | POC do Moon Shot valida com 3+ Creators seniores em testes blind (BR-001, critério ≥60% provocações úteis) |
 | PX-01 Líder/Curador | Protótipo | Curadoria da Biblioteca, configuração de Skills, governança são pré-requisitos de qualquer uso real |
 | PX-03 Operador Processual | Protótipo | Skills processuais com context injection e Workflows são valor primário de aceleração (BR-002) |
 
@@ -651,7 +651,7 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 
 ### 5.1. Para UX
 
-- **PX-02 e PX-04 guiam o desenho de Shoot for the Moon** (FA-02) — modos "me prova que tá errada" (sênior) e "começando uma ideia" (junior/exploração estratégica) são guidelines diretos
+- **PX-02 e PX-04 guiam o desenho de Moon Shot** (FA-02) — modos "me prova que tá errada" (sênior) e "começando uma ideia" (junior/exploração estratégica) são guidelines diretos
 - **PX-03 guia o desenho de Skills processuais e Workflows** (FA-03, FA-05) — context injection automática, schedule humanizado, HITL gates não-fricativos
 - **PX-01 guia o desenho de Admin areas e Mensuração** (FA-12, FA-10) — pattern Model Repo (table + sidebar + drawer), dashboard executivo mensal, alertas
 - **PX-05 guia o desenho de proteções culturais** (FA-11) — track junior, forced reflection com N=3, visible reasoning hidden, marcação Faísca
@@ -660,8 +660,8 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 
 ### 5.2. Para Produto
 
-- **Priorização de POC**: foco em PX-02 (validação BR-001 do Shoot for the Moon)
-- **Priorização de Protótipo**: cobertura PX-01 (curadoria), PX-02 (Shoot for the Moon), PX-03 (Skills + Workflows iniciais)
+- **Priorização de POC**: foco em PX-02 (validação BR-001 do Moon Shot)
+- **Priorização de Protótipo**: cobertura PX-01 (curadoria), PX-02 (Moon Shot), PX-03 (Skills + Workflows iniciais)
 - **Priorização de Piloto**: + PX-04 (cobertura completa de Análise/Persona/Pesquisa) + PX-05 (track + proteções)
 - **Trade-off PX-02 × PX-05**: investir em RN-015 (forced reflection adaptativo) é gate para evitar adoção que prejudica saúde criativa coletiva (research Doshi & Hauser)
 - **Validação cultural com PX-01 (sponsor + sócios)**: ≥90% das releases aprovadas culturalmente antes de chegar a PX-02/PX-03/PX-05 (RN-016, FA-11-09)
@@ -670,7 +670,7 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 ### 5.3. Para Engenharia
 
 - **Performance crítica para PX-03**: Skills processuais e Workflows não podem regredir > 10% de latência após context injection (BR-015)
-- **Performance crítica para PX-02**: pipeline Shoot for the Moon < 15s tempo médio de resposta (RN-003)
+- **Performance crítica para PX-02**: pipeline Moon Shot < 15s tempo médio de resposta (RN-003)
 - **Segurança/permissionamento por perfil**: RBAC é central — PX-01 (Admin/Líder) acessa CRUDs; PX-02/03/04/05 (Operacional para a maioria) consome via Chat sem ver Biblioteca
 - **Personalização por perfil**:
   - PX-05 (junior): track de onboarding "começando uma ideia", N=3 forced reflection
@@ -710,5 +710,5 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **5 Personas (PX-01 a PX-05)** com perfil, KPIs, ferramentas atuais, dores, oportunidades, JTBDs verificáveis ("When X, I want to Y, so that Z"), critérios de sucesso e mapeamento para Features (FA-XX) e BRs (BR-XXX). PX-01 a PX-04 derivadas do FRD Shoot for the Moon (referenciado nos BRDs Parte 3 e 4). PX-05 (Creator Junior) adicionada para preencher lacuna de cobertura única de BR-012 (UX por carreira) e endereçar risco de over-reliance documentado em research foundation (Microsoft Research / MIT Media Lab 2025). Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma Zero/Job); anti-patterns evitados |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **5 Personas (PX-01 a PX-05)** com perfil, KPIs, ferramentas atuais, dores, oportunidades, JTBDs verificáveis ("When X, I want to Y, so that Z"), critérios de sucesso e mapeamento para Features (FA-XX) e BRs (BR-XXX). PX-01 a PX-04 derivadas do FRD Moon Shot (referenciado nos BRDs Parte 3 e 4). PX-05 (Creator Junior) adicionada para preencher lacuna de cobertura única de BR-012 (UX por carreira) e endereçar risco de over-reliance documentado em research foundation (Microsoft Research / MIT Media Lab 2025). Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma Zero/Job); anti-patterns evitados |
 | 1.1 | 2026-04-28 | **+1 Persona**: PX-06 Aprovador Sócio (papel funcional, não cargo novo) com 5 JTBDs (JTBD-30 a JTBD-34). Pedido Guga + Bruno Prosperi para FA-13 Aprovação Hierárquica. Total agora: **6 Personas / 34 JTBDs**. Anti-rubber-stamping (RN-024) é princípio central da PX-06 |

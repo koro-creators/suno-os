@@ -1,12 +1,12 @@
 ---
 spec-id: SPEC-004
-slug: shoot-for-the-moon
+slug: moon-shot
 artefato: design
 atualizada: 2026-04-28
 versao: 1.0
 ---
 
-# Design — Shoot for the Moon
+# Design — Moon Shot
 
 ## 1. Arquitetura (referencia SRD Parte 6 §CTM-04)
 
@@ -15,13 +15,13 @@ versao: 1.0
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ Frontend (sunOS Next.js)                                 │
-│  components/shoot-for-the-moon/                          │
-│    ├── ShootForTheMoonModal                              │
+│  components/moon-shot/                          │
+│    ├── MoonShotModal                              │
 │    ├── FaiscaPanel + FaiscaCard                          │
 │    └── AgentPersonaBadge + BisociationZoneBadge          │
 └────────────────────┬─────────────────────────────────────┘
-                     │ POST /chat/shoot-for-the-moon
-                     │ POST /chat/shoot-for-the-moon/feedback
+                     │ POST /chat/moon-shot
+                     │ POST /chat/moon-shot/feedback
 ┌────────────────────▼─────────────────────────────────────┐
 │ Backend (sunos-api)                                      │
 │                                                          │

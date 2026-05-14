@@ -3,7 +3,7 @@
 /**
  * AIBadge — marcação visual obrigatória de outputs gerados por IA.
  *
- * Atende RN-014 (BRD Parte 4) e FR-012 (SPEC-004 Shoot for the Moon).
+ * Atende RN-014 (BRD Parte 4) e FR-012 (SPEC-004 Moon Shot).
  *
  * Estados:
  *  - 'faisca'    → output bruto da IA (estímulo, não peça final). Cor: --sun (amarelo).

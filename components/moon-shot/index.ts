@@ -1,7 +1,7 @@
 /**
- * Componentes do Shoot for the Moon — motor de serendipidade do sunOS.
+ * Componentes do Moon Shot — motor de serendipidade do sunOS.
  *
- * Spec: docs/specs/large/shoot-for-the-moon/spec.md (SPEC-004)
+ * Spec: docs/specs/large/moon-shot/spec.md (SPEC-004)
  *
  * Princípios obrigatórios:
  *  - Vocabulário: Devorar, Provocar, Faísca, Brasa, Inteligência Natural
@@ -24,4 +24,4 @@ export type { FaiscaData, ConceptCombined } from './FaiscaCard';
 export { default as FaiscaPanel } from './FaiscaPanel';
 export type { IntensityMode } from './FaiscaPanel';
 
-export { default as ShootForTheMoonModal } from './ShootForTheMoonModal';
+export { default as MoonShotModal } from './MoonShotModal';

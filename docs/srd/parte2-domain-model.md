@@ -69,7 +69,7 @@ O domínio do sunOS é fragmentado em **6 Bounded Contexts**, cada um com vocabu
 | **BC-01** | Identity & Access | Autenticação, RBAC, perfis (Admin/Líder/Operacional), auditoria de acessos administrativos | User, Role, Profile, Session, AuditEntry | FA-09, FA-12 |
 | **BC-02** | Content & Knowledge | Curadoria da Biblioteca, ingestão multimodal, indexação vetorial+grafo, Skills (definição) e Workflows | KnowledgeItem, Chunk, Skill, Moon, Workflow, Reference | FA-01, FA-03, FA-05 |
 | **BC-03** | Conversation & Inference | Chat com agentes ReAct, orquestração LangGraph, streaming SSE, eval de turnos, geração de texto/imagem | Conversation, Turn, Agent, Tool, Trace, Score | FA-04, FA-07, FA-08 |
-| **BC-04** | Insight & Provocation | Motor Shoot for the Moon — Devorar briefing, Provocar Faíscas via loop Explorer↔Crítico, filtragem por zona de bisociação | Brief, Spark, Provocation, BisociationZone, ExplorerRun, CriticReview | FA-02 |
+| **BC-04** | Insight & Provocation | Motor Moon Shot — Devorar briefing, Provocar Faíscas via loop Explorer↔Crítico, filtragem por zona de bisociação | Brief, Spark, Provocation, BisociationZone, ExplorerRun, CriticReview | FA-02 |
 | **BC-05** | Measurement & Observability | Mensuração de custo evitado, homogeneização coletiva, tracing MLflow, dashboard executivo, safety cultural | CostBaseline, AvoidedCost, DiversityMetric, ExecutiveReport, ReflectionMoment | FA-10, FA-11 |
 | **BC-06** | Multi-tenant (Sistema Solar) | Modelo de Cliente (Planeta) e área (Bioma), Sistema Solar como navegação, scope de retrieval, governança cross-client | Client, Bioma, SolarSystem, Scope, ClientStatus | FA-06 |
 | **BC-07** | Approval & Validation (External Sources) | Submissão de outputs para aprovação hierárquica, pré-validação automatizada por agentes paralelos (Brand/Português), curadoria sugestiva sobre fontes externas (Google Drive read-only) | ApprovalRequest, ApprovalChain, ApprovalDecision, ValidationReport, BrandValidatorAgent, PortuguêsValidatorAgent, DriveSync, DriveDocument, CurationSuggestion, OAuthCredential, DriveCleanupReport, Aprovador, Validado | FA-13, FA-14 |
@@ -137,7 +137,7 @@ flowchart TB
 - **BC-01 → demais (Customer-Supplier upstream)**: Identity & Access fornece a identidade do `principal` (user_id, role) que todos os contextos consomem.
 - **BC-06 → BC-02/03/04 (Conformist)**: scope de cliente atravessa retrieval, conversation e provocação — clientes consomem o modelo do Sistema Solar sem influenciá-lo.
 - **BC-02 → BC-03 (Open Host Service)**: Biblioteca expõe interface estável `retrieve(scope, query)` consumida por agentes.
-- **BC-02 → BC-04 (Open Host Service)**: Biblioteca expõe `devour(brief)` para Shoot for the Moon — retrieval divergente, não convergente.
+- **BC-02 → BC-04 (Open Host Service)**: Biblioteca expõe `devour(brief)` para Moon Shot — retrieval divergente, não convergente.
 - **BC-03/04 → BC-05 (Published Language)**: Conversation e Provocation publicam eventos `TurnCompleted`, `SparkApproved`, `ProvocationGenerated` consumidos pela Mensuração via tópicos/streams.
 - **BC-03/04 → BC-07 (Customer-Supplier)**: Conversation e Provocation submetem outputs para aprovação; BC-07 retorna `Validado` (carimbo após pré-validação automatizada) e `Aprovado` (decisão humana hierárquica).
 - **BC-07 → BC-02 (Conformist)**: Brand Validator e Português Validator consomem `KnowledgeItem`s tagueados como `brand-guideline`, `tone-of-voice` e `glossary` da Biblioteca como base de regra — não influenciam a curadoria.
@@ -156,7 +156,7 @@ flowchart LR
 
     BC06 -->|seleciona cliente / bioma| BC02[BC-02<br/>Content and Knowledge]
     BC06 -->|inicia turn| BC03[BC-03<br/>Conversation and Inference]
-    BC06 -->|aciona Shoot for the Moon| BC04[BC-04<br/>Insight and Provocation]
+    BC06 -->|aciona Moon Shot| BC04[BC-04<br/>Insight and Provocation]
 
     BC02 -->|injeta contexto| BC03
     BC02 -->|Devora briefing| BC04
@@ -204,7 +204,7 @@ flowchart LR
 | DO-28 | Agent | Entity | BC-03 | Persona executora (ContentCreator, Conversational, VisualCreator) | FA-04 | BR-015 |
 | DO-29 | Tool | Entity | BC-03 | Ferramenta invocável (search_knowledge, generate_text, generate_image) | FA-04 | BR-015 |
 | DO-30 | Trace | Entity (AR) | BC-05 | Trace MLflow com prompt/output/latency/cost (NFR-026) | FA-10 | BR-009, RN-013 |
-| DO-31 | Brief | Entity (AR) | BC-04 | Briefing/tema do creator que alimenta o pipeline Shoot for the Moon | FA-02 | BR-001, RN-003 |
+| DO-31 | Brief | Entity (AR) | BC-04 | Briefing/tema do creator que alimenta o pipeline Moon Shot | FA-02 | BR-001, RN-003 |
 | DO-32 | Spark | Entity (AR) | BC-04 | Faísca (provocação aprovada) — saída do pipeline ao creator | FA-02 | BR-001, RN-001 |
 | DO-33 | Provocation | Entity | BC-04 | Candidato gerado pelo Explorer antes da revisão do Crítico | FA-02 | BR-001, RN-002 |
 | DO-34 | BisociationZone | VO | BC-04 | Classificação por distância semântica (Óbvio / Sweet Spot / Incoerente / Adjacente / Radical) — RN-001 | FA-02 | BR-001, RN-001 |
@@ -366,7 +366,7 @@ Representa um **Cliente da Suno** — Planeta no Sistema Solar (FA-06). Cada Cli
 
 **Descrição de Negócio**
 
-Item curado da Biblioteca (PDF, DOCX, áudio, vídeo, imagem, texto puro). É a unidade da **Inteligência Coletiva** (Glossário §1). Alimenta simultaneamente Skills processuais (modo convergente — FA-03) e Shoot for the Moon (modo divergente — FA-02). Invisível para Operacionais (RN-011 — Caixa-preta).
+Item curado da Biblioteca (PDF, DOCX, áudio, vídeo, imagem, texto puro). É a unidade da **Inteligência Coletiva** (Glossário §1). Alimenta simultaneamente Skills processuais (modo convergente — FA-03) e Moon Shot (modo divergente — FA-02). Invisível para Operacionais (RN-011 — Caixa-preta).
 
 **Atributos Principais**
 
@@ -549,7 +549,7 @@ Sessão de chat entre creator e o sunOS, ancorada em uma Skill ativa e em um Cli
 
 **Descrição de Negócio**
 
-Briefing/tema do creator que **alimenta** o pipeline Shoot for the Moon. É o objeto **devorado** (Glossário). Pode ser fornecido explicitamente (free text) ou herdado de Conversation ativa.
+Briefing/tema do creator que **alimenta** o pipeline Moon Shot. É o objeto **devorado** (Glossário). Pode ser fornecido explicitamente (free text) ou herdado de Conversation ativa.
 
 **Atributos Principais**
 

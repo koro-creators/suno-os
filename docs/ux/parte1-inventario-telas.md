@@ -47,7 +47,7 @@ aprovacoes:
 1. [Visão Geral e Mapeamento](#1-visão-geral-e-mapeamento)
 2. [FA-06 Sistema Solar (Navegação)](#2-fa-06--sistema-solar-navegação)
 3. [FA-04 Chat com Agentes ReAct](#3-fa-04--chat-com-agentes-react)
-4. [FA-02 Shoot for the Moon (Provocação Criativa)](#4-fa-02--shoot-for-the-moon)
+4. [FA-02 Moon Shot (Provocação Criativa)](#4-fa-02--moon-shot)
 5. [FA-12 Admin Areas (CRUD configurável)](#5-fa-12--admin-areas-crud-configurável)
 6. [FA-01 Biblioteca (Inteligência Coletiva)](#6-fa-01--biblioteca-inteligência-coletiva)
 7. [FA-05 Workflows Automatizados](#7-fa-05--workflows-automatizados)
@@ -68,7 +68,7 @@ aprovacoes:
 Este documento especifica o **inventário completo de telas (T-XX)** do sunOS — sistema operacional de IA da Suno United Creators — cobrindo:
 
 - **Telas existentes** (estado: `existe`) — já implementadas em `app/` e em produção/staging
-- **Telas a construir** (estado: `a construir`) — necessárias para features ainda não implementadas (FA-02 Shoot for the Moon, FA-08 Phase 16 multimodal, FA-10 Mensuração, FA-11 Safety, FA-09 RBAC operacional, FA-01 captura proativa)
+- **Telas a construir** (estado: `a construir`) — necessárias para features ainda não implementadas (FA-02 Moon Shot, FA-08 Phase 16 multimodal, FA-10 Mensuração, FA-11 Safety, FA-09 RBAC operacional, FA-01 captura proativa)
 - **Telas em refactor** (estado: `em refactor`) — existem mas precisam evoluir (ex: ChatSession persistência, Sistema Solar com sincronização de Admin)
 
 Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Parte 2). Jornadas JN-XX são inferidas de personas + JTBDs (Parte 3 do PRD ainda não escrita formalmente; mapeamento provisório no §12).
@@ -82,9 +82,9 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 | T-03 | Sistema Solar L1 (Planeta/Cliente) | FA-06 | Todas | JN-00 | existe | P0 |
 | T-04 | Sistema Solar L2 (Órbita/Skill) | FA-06 | Todas | JN-00 | existe | P0 |
 | T-05 | Chat (Skill + Moon ativos) | FA-04 | PX-02, PX-03, PX-04, PX-05 | JN-02, JN-03, JN-04 | existe (em refactor para persistência P1) | P0 |
-| T-06 | Shoot for the Moon — Acionamento Modal | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | P0 (POC) |
-| T-07 | Shoot for the Moon — Painel de Faíscas | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | P0 (POC) |
-| T-08 | Shoot for the Moon — Modo Dupla (time-boxing) | FA-02 | PX-02 | JN-02, JN-06 | a construir | P1 (Piloto) |
+| T-06 | Moon Shot — Acionamento Modal | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | P0 (POC) |
+| T-07 | Moon Shot — Painel de Faíscas | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | P0 (POC) |
+| T-08 | Moon Shot — Modo Dupla (time-boxing) | FA-02 | PX-02 | JN-02, JN-06 | a construir | P1 (Piloto) |
 | T-09 | Forced Reflection Interstitial | FA-11, FA-07 | PX-02, PX-05 | Transversal | a construir | P1 (Piloto) |
 | T-10 | Skills Admin — Catálogo | FA-12, FA-03 | PX-01 | JN-01 | existe | P0 |
 | T-11 | Skills Admin — Editor (4 tabs) | FA-12, FA-03 | PX-01 | JN-01 | existe | P0 |
@@ -188,7 +188,7 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 
 **Rotas backlog (estado: a construir):**
 
-- `/[clientSlug]/[skillSlug]/shoot-for-the-moon` — Painel de Faíscas (T-07) [Inferido]
+- `/[clientSlug]/[skillSlug]/moon-shot` — Painel de Faíscas (T-07) [Inferido]
 - `/biblioteca/risco` ou seção dedicada em `/biblioteca` — Alerta Conhecimento em Risco (T-16)
 - `/mensuracao` — Dashboard Executivo (T-24)
 - `/mensuracao/skills/[skillId]` — Skill Health Detail (T-25)
@@ -201,7 +201,7 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 - `/drive/[clientSlug]/sugestoes` — Inbox de Curadoria (T-33)
 - T-31 é **modal sobreposto** ao Chat (T-05) ou ao Painel de Faíscas (T-07) — não rota dedicada (preserva contexto do output sendo submetido)
 
-> Decisão pendente: Shoot for the Moon vive como **modal sobreposto ao Chat** (T-06 → T-07 in-context) ou como **rota dedicada**? Recomendação UX: modal/painel sobreposto preserva contexto da Skill ativa e atende RN-003 (≤3 cliques). Validar com Bruno Prosperi.
+> Decisão pendente: Moon Shot vive como **modal sobreposto ao Chat** (T-06 → T-07 in-context) ou como **rota dedicada**? Recomendação UX: modal/painel sobreposto preserva contexto da Skill ativa e atende RN-003 (≤3 cliques). Validar com Bruno Prosperi.
 
 ---
 
@@ -277,7 +277,7 @@ JN-00 (Entrada/Wayfinding) — qualquer jornada começa aqui.
 
 #### 2.2.1 Propósito
 
-Tela do cliente. O Planeta torna-se centro local; ao redor dele orbitam as **Skills disponíveis** (Órbitas). Persona todas; objetivo é escolher uma Skill em ≤2 cliques após entrar. Aqui aparece também o atalho **Shoot for the Moon** (FA-02-03 — acionamento contextual).
+Tela do cliente. O Planeta torna-se centro local; ao redor dele orbitam as **Skills disponíveis** (Órbitas). Persona todas; objetivo é escolher uma Skill em ≤2 cliques após entrar. Aqui aparece também o atalho **Moon Shot** (FA-02-03 — acionamento contextual).
 
 #### 2.2.2 Rota
 
@@ -313,7 +313,7 @@ JN-00 (Wayfinding); entrada para JN-02 (ideação), JN-03 (execução), JN-04 (a
 
 3. **FilterPills** (filtra Skills por tipo)
 
-4. **CTA Shoot for the Moon** (FA-02-03 — RN-003)
+4. **CTA Moon Shot** (FA-02-03 — RN-003)
    - Botão flutuante ou na barra superior
    - Variante primary (Sun gradient)
    - Texto: "Devorar este briefing" *(vocabulário Suno; nunca "Gerar ideias")*
@@ -334,7 +334,7 @@ JN-00 (Wayfinding); entrada para JN-02 (ideação), JN-03 (execução), JN-04 (a
 #### 2.2.7 Interações
 
 - Click em Skill → T-04
-- Click em CTA Shoot for the Moon → T-06 (modal sobreposto)
+- Click em CTA Moon Shot → T-06 (modal sobreposto)
 - Hover em Skill → tooltip com descrição curta + score HITL (FA-03-06)
 
 ---
@@ -368,7 +368,7 @@ Esta tela é uma **tela combinada**: header do Sistema Solar + área de Chat (T-
    - Pills selecionáveis representando Moons da Skill
    - Estado ativo: Moon escolhida marcada via `?moon=[moonSlug]`
    - Cor: `--sun` na ativa, `--text-muted` nas inativas
-3. **CTA Shoot for the Moon** persistente no header (atalho contextual — RN-003)
+3. **CTA Moon Shot** persistente no header (atalho contextual — RN-003)
 
 #### 2.3.6 Estados da Tela
 
@@ -377,7 +377,7 @@ Mesmos de T-05.
 #### 2.3.7 Interações
 
 - Click em Moon chip → atualiza query string e re-injeta contexto de Moon
-- Click em CTA Shoot for the Moon → T-06
+- Click em CTA Moon Shot → T-06
 
 ---
 
@@ -387,7 +387,7 @@ Mesmos de T-05.
 
 #### 3.1.1 Propósito
 
-Interface conversacional principal — onde **Creator e IA conversam**. Toda Skill processual e o Shoot for the Moon chegam ao usuário através desta tela. É o ponto de **maior densidade funcional** do sunOS.
+Interface conversacional principal — onde **Creator e IA conversam**. Toda Skill processual e o Moon Shot chegam ao usuário através desta tela. É o ponto de **maior densidade funcional** do sunOS.
 
 #### 3.1.2 Rota
 
@@ -410,7 +410,7 @@ JN-02, JN-03, JN-04, JN-06 — todas as jornadas de uso ativo do Chat.
 1. **Breadcrumb**: `Home > [Cliente] > [Skill]`
 2. **PromptTemplateBar** com Moon chips
 3. **ModelSelector** (FA-04-02): dropdown para trocar Gemini Flash, Pro, GPT-4o, Claude
-4. **CTA Shoot for the Moon** (atalho)
+4. **CTA Moon Shot** (atalho)
 
 **Área Principal — Conversa:**
 
@@ -471,7 +471,7 @@ JN-02, JN-03, JN-04, JN-06 — todas as jornadas de uso ativo do Chat.
 - Click em "Variar" → gera 3 alternativas (FA-04-06)
 - Click em "Salvar" [Inferido — pendente] → adiciona a algum repositório do Creator
 - Drag-and-drop em paperclip → upload de arquivo (SPEC-006)
-- Click em CTA Shoot for the Moon → abre T-06 sobre Chat preservando histórico
+- Click em CTA Moon Shot → abre T-06 sobre Chat preservando histórico
 
 #### 3.1.8 Marcação Faísca (RN-014)
 
@@ -479,9 +479,9 @@ Toda MessageBubble assistant exibe badge com texto "Faísca" / "Estímulo" enqua
 
 ---
 
-## 4. FA-02 — Shoot for the Moon
+## 4. FA-02 — Moon Shot
 
-### T-06: Shoot for the Moon — Acionamento Modal
+### T-06: Moon Shot — Acionamento Modal
 
 #### 4.1.1 Propósito
 
@@ -504,7 +504,7 @@ JN-02 (ideação contextualizada), JN-04 (análise estratégica → território 
 **Modal centralizado, max-width 600px, bg `--deep`, radius 12px:**
 
 1. **Header do Modal**
-   - Título: "Shoot for the Moon" (com ícone planet)
+   - Título: "Moon Shot" (com ícone planet)
    - Subtítulo: *"Devorar [Cliente] e Provocar Faíscas"* (vocabulário Suno)
    - Botão close (×)
 
@@ -541,7 +541,7 @@ JN-02 (ideação contextualizada), JN-04 (análise estratégica → território 
 
 ---
 
-### T-07: Shoot for the Moon — Painel de Faíscas
+### T-07: Moon Shot — Painel de Faíscas
 
 #### 4.2.1 Propósito
 
@@ -549,7 +549,7 @@ Painel onde o pipeline Explorer↔Crítico (FA-02-01) **transmite Faíscas em st
 
 #### 4.2.2 Rota
 
-Modal/painel sobreposto, ou rota dedicada `/[clientSlug]/[skillSlug]/shoot-for-the-moon` *(estado: a construir; recomendação UX: painel sobreposto preserva contexto)*. **Estado: a construir** (P0 — POC).
+Modal/painel sobreposto, ou rota dedicada `/[clientSlug]/[skillSlug]/moon-shot` *(estado: a construir; recomendação UX: painel sobreposto preserva contexto)*. **Estado: a construir** (P0 — POC).
 
 #### 4.2.3 Jornada
 
@@ -601,7 +601,7 @@ JN-02, JN-04, JN-06.
 
 ---
 
-### T-08: Shoot for the Moon — Modo Dupla (Time-Boxing)
+### T-08: Moon Shot — Modo Dupla (Time-Boxing)
 
 #### 4.3.1 Propósito
 
@@ -1359,7 +1359,7 @@ T-20 (Workflows) ←→ T-21, T-22
 T-02 → T-03 → T-04
     ↓
 T-05 (Chat com Skill ativa)
-    ↓ [acionamento Shoot for the Moon]
+    ↓ [acionamento Moon Shot]
 T-06 (Modal Acionamento) → T-07 (Painel de Faíscas)
     ↓ [N stars atingido]
 T-09 (Forced Reflection)
@@ -1386,7 +1386,7 @@ T-02 → T-03 → T-04
     ↓
 T-05 (Skill Análise de Mercado / Persona Sintética / Brief Builder)
     ↓ [opcional]
-T-06 → T-07 (Shoot for the Moon para conectar insight a território criativo)
+T-06 → T-07 (Moon Shot para conectar insight a território criativo)
     ↓ [opcional]
 T-22 → T-21 (Configura Workflow Pesquisa de Mercado)
 ```
@@ -1475,7 +1475,7 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 
 **Elementos prioritários:**
 - T-05 Chat
-- T-06, T-07, T-08 Shoot for the Moon (modos sênior + dupla)
+- T-06, T-07, T-08 Moon Shot (modos sênior + dupla)
 - Marcação visual Faísca (RN-014) sempre visível
 - Visible reasoning toggle (default hidden — RN-017)
 
@@ -1512,7 +1512,7 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 
 **Elementos prioritários:**
 - T-05 Chat com Skills Análise de Mercado, Persona Sintética, Brief Builder
-- T-06, T-07 Shoot for the Moon (modo "começando uma ideia")
+- T-06, T-07 Moon Shot (modo "começando uma ideia")
 - T-20, T-21, T-22 Workflows (Pesquisa de Mercado)
 
 **Elementos secundários:**
@@ -1527,7 +1527,7 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 **Elementos prioritários:**
 - T-27 Onboarding (track "Estou começando uma ideia" sugerido — RN-017)
 - T-05 Chat
-- T-06, T-07 Shoot for the Moon (modo divergente, junior-leaning)
+- T-06, T-07 Moon Shot (modo divergente, junior-leaning)
 - T-09 Forced Reflection (N=3, mais frequente — RN-015)
 - Marcação Faísca/estímulo sempre visível (RN-014)
 
@@ -1601,7 +1601,7 @@ Toggle disponível no AppHeader (T-Topo) — aplica `data-theme` em `<html>`. Am
 | FA | Nome | Telas que entregam |
 |----|------|--------------------|
 | **FA-01** Biblioteca | Inteligência Coletiva | T-13, T-14, T-15, T-16 (todas Caixa-preta para Operacional) — RN-011 |
-| **FA-02** Shoot for the Moon | Provocação Criativa | T-06, T-07, T-08 (todas a construir — POC/Piloto) |
+| **FA-02** Moon Shot | Provocação Criativa | T-06, T-07, T-08 (todas a construir — POC/Piloto) |
 | **FA-03** Skills processuais | Catálogo + contexto | T-04, T-05 (consumo); T-10, T-11, T-12 (configuração) |
 | **FA-04** Chat ReAct | Interface conversacional | T-04, T-05 (em refactor para persistência) |
 | **FA-05** Workflows | Engine LangGraph | T-20, T-21, T-22, T-23 |

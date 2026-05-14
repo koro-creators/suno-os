@@ -127,7 +127,7 @@ Engine único LangGraph: `top_supervisor → orchestrator → agent (BaseAgent)`
 
 **O que esta decisão NÃO impede**:
 
-- Adotar `deepagents` (ou outro harness multi-agente) **dentro de um BC** quando a topologia do problema for genuinamente multi-agente com sub-agentes isolados (caso de Shoot for the Moon e Validators paralelos). Ver ADR-011.
+- Adotar `deepagents` (ou outro harness multi-agente) **dentro de um BC** quando a topologia do problema for genuinamente multi-agente com sub-agentes isolados (caso de Moon Shot e Validators paralelos). Ver ADR-011.
 - Spawn de sub-agentes em runtime via LangGraph (já em uso no padrão Explorer↔Crítico).
 - Usar modelos diferentes por skill (já decidido em ADR-004).
 
@@ -166,7 +166,7 @@ Revisores: pendente (José Lucas, William)
 
 #### Context
 
-A Biblioteca do sunOS precisa indexar centenas (Piloto) a milhares (MVP) de documentos curados (PDFs, transcrições, briefings, brand books, cases) para retrieval semântico via similaridade de embeddings. As skills processuais (Copy Social, Plano de Mídia, etc.) e o Shoot for the Moon dependem dessa busca para injeção de contexto.
+A Biblioteca do sunOS precisa indexar centenas (Piloto) a milhares (MVP) de documentos curados (PDFs, transcrições, briefings, brand books, cases) para retrieval semântico via similaridade de embeddings. As skills processuais (Copy Social, Plano de Mídia, etc.) e o Moon Shot dependem dessa busca para injeção de contexto.
 
 A escolha técnica observada no código (`api/chat/knowledge/vector_store.py`, `api/models/knowledge.py`) é **pgvector** dentro do mesmo PostgreSQL Cloud SQL onde residem `conversations`, `chat_messages` e `knowledge_documents`. A coluna `embedding` é `Vector(768)` e a busca usa cosine distance (`<=>`).
 
@@ -1073,7 +1073,7 @@ Adotar `deepagents` como harness oficial para **três Bounded Contexts**, manten
 
 **Pré-requisitos para passar de Proposto para Aceito**
 
-1. **PoC de 1 sprint** em CTM-04 (Shoot for the Moon) implementando Explorer↔Crítico via `create_deep_agent` com 2 sub-agents
+1. **PoC de 1 sprint** em CTM-04 (Moon Shot) implementando Explorer↔Crítico via `create_deep_agent` com 2 sub-agents
 2. Validação de tracing MLflow nesse PoC (spans aninhados visíveis, latência por sub-agent)
 3. Validação de qualidade do plan com Gemini Flash puro vs. Claude Sonnet híbrido (TODO-DM-08 já mede latência; estender para qualidade)
 4. Confirmação de que wrapper FS resolve Caixa-preta sem performance penalty significativa

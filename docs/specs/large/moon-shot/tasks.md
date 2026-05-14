@@ -1,12 +1,12 @@
 ---
 spec-id: SPEC-004
-slug: shoot-for-the-moon
+slug: moon-shot
 artefato: tasks
 atualizada: 2026-04-28
 versao: 1.0
 ---
 
-# Tasks — Shoot for the Moon
+# Tasks — Moon Shot
 
 ## Resumo
 
@@ -17,7 +17,7 @@ versao: 1.0
 ## Fase POC
 
 ### TASK-001 — Schema SQL para Biblioteca com 3 embeddings
-- Arquivos: criar `api/migrations/003_shoot_for_the_moon.sql`
+- Arquivos: criar `api/migrations/003_moon_shot.sql`
 - Escopo: ALTER `knowledge_documents` + criar `knowledge_graph_edges`, `briefs`, `provocations`, `explorer_runs`, `critic_reviews`, `provocation_feedback`, `diversity_metrics`
 - Critérios: tabelas criadas, índices HNSW para os 3 embeddings, FK constraints
 - Estimativa: M
@@ -47,22 +47,22 @@ versao: 1.0
 - Escopo: orquestra Retrieval → Explorer → Bisociation → Crítico → loop até 5 iter ou aprovação; acumula 3-5 provocações
 - Estimativa: G
 
-### TASK-007 — Endpoint POST /chat/shoot-for-the-moon
+### TASK-007 — Endpoint POST /chat/moon-shot
 - Arquivos: estender `api/chat/router.py`
 - Escopo: receber `{client_slug, brief, intensity_mode}`, executar pipeline, retornar provocações
 - Estimativa: M
 
-### TASK-008 — Schemas Pydantic Shoot for the Moon
-- Arquivos: estender `api/chat/schemas/chat.py` com `ShootForTheMoonRequest`, `ProvocationResponse`
+### TASK-008 — Schemas Pydantic Moon Shot
+- Arquivos: estender `api/chat/schemas/chat.py` com `MoonShotRequest`, `ProvocationResponse`
 - Estimativa: P
 
-### TASK-009 — Componente ShootForTheMoonModal (frontend)
-- Arquivos: criar `components/shoot-for-the-moon/ShootForTheMoonModal.tsx`
+### TASK-009 — Componente MoonShotModal (frontend)
+- Arquivos: criar `components/moon-shot/MoonShotModal.tsx`
 - Escopo: modal com input briefing, animação "Devorando", apresentação de FaiscaPanel
 - Estimativa: M
 
 ### TASK-010 — FaiscaPanel + FaiscaCard
-- Arquivos: criar `components/shoot-for-the-moon/FaiscaPanel.tsx` + `FaiscaCard.tsx`
+- Arquivos: criar `components/moon-shot/FaiscaPanel.tsx` + `FaiscaCard.tsx`
 - Escopo: layout em scroll horizontal de cards com vocabulário Suno
 - Estimativa: M
 
@@ -93,7 +93,7 @@ versao: 1.0
 - Estimativa: M
 
 ### TASK-016 — AgentPersonaBadge + BisociationZoneBadge
-- Arquivos: criar 2 componentes em `shoot-for-the-moon/`
+- Arquivos: criar 2 componentes em `moon-shot/`
 - Escopo: badges visuais com ícone, cor, tooltip explicando paradigma/zona em linguagem de negócio
 - Estimativa: P
 
@@ -102,7 +102,7 @@ versao: 1.0
 - Escopo: adicionar botão flutuante acessível em ≤3 cliques de qualquer skill/cliente
 - Estimativa: M
 
-### TASK-018 — Endpoint POST /chat/shoot-for-the-moon/feedback
+### TASK-018 — Endpoint POST /chat/moon-shot/feedback
 - Arquivos: estender `api/chat/router.py` + provocation_feedback table
 - Escopo: receber thumbs + motivo, persistir
 - Estimativa: P
@@ -155,10 +155,10 @@ versao: 1.0
 ```
 Implemente TASK-XXX: <título>.
 
-Spec: docs/specs/large/shoot-for-the-moon/spec.md
-Design: docs/specs/large/shoot-for-the-moon/design.md
-Constitution: docs/specs/large/shoot-for-the-moon/constitution.md (LEIA antes — princípios obrigatórios)
-Plan: docs/specs/large/shoot-for-the-moon/plan.md
+Spec: docs/specs/large/moon-shot/spec.md
+Design: docs/specs/large/moon-shot/design.md
+Constitution: docs/specs/large/moon-shot/constitution.md (LEIA antes — princípios obrigatórios)
+Plan: docs/specs/large/moon-shot/plan.md
 
 Escopo desta task: <colar do tasks.md>
 Arquivos: <colar do tasks.md>

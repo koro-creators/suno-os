@@ -29,7 +29,7 @@ Este documento especifica as **APIs REST** expostas pelo backend FastAPI do sunO
 A especificação cobre:
 
 - **APIs existentes** (já implementadas em `api/chat/router.py`, `api/chat/knowledge/router.py`, `api/workflows/router.py`)
-- **APIs novas** necessárias para entregar a Parte 6 (Arch To-Be) — destaque para Phase 16 (VideoGen, Editor, Enhance), Shoot for the Moon, Biblioteca admin, Mensuração, Auth/RBAC, Multi-tenant
+- **APIs novas** necessárias para entregar a Parte 6 (Arch To-Be) — destaque para Phase 16 (VideoGen, Editor, Enhance), Moon Shot, Biblioteca admin, Mensuração, Auth/RBAC, Multi-tenant
 - **Schemas Pydantic / OpenAPI** referenciados ou inline com tipos precisos (`Literal`, `datetime`, `UUID`, `vector(768)`)
 - **Códigos de erro** padrão 4xx/5xx
 - **Auth Firebase JWT** documentado por endpoint (obrigatório / service account / público)
@@ -78,7 +78,7 @@ A especificação cobre:
 | Knowledge (Biblioteca) | `/api/knowledge` | Upload + CRUD + search + admin | CTM-02 Knowledge & Skills | FA-01 | Existente + Evoluído |
 | Skills | `/api/skills` | CRUD Skills + versions + Moons | CTM-02 | FA-03, FA-12 | Novo |
 | Workflows | `/api/workflows` | CRUD Workflows + run + schedule + sub-workflow | CTM-02 | FA-05 | Existente |
-| Provocation (Shoot for the Moon) | `/api/chat/shoot-for-the-moon` | Brief + Sparks + feedback | CTM-04 Provocation Engine | FA-02 | Novo |
+| Provocation (Moon Shot) | `/api/chat/moon-shot` | Brief + Sparks + feedback | CTM-04 Provocation Engine | FA-02 | Novo |
 | Multi-tenant | `/api/clients` | Clients (Planetas) + Biomas + Solar metadata | CTM-07 | FA-06 | Novo |
 | Users | `/api/users` | Profiles + roles + assign-to-client | CTM-01 | FA-09 | Novo |
 | Measurement | `/api/measurement` | AvoidedCost + DiversityMetric + ExecutiveReport + jobs | CTM-05 Measurement Service | FA-10 | Novo |
@@ -123,7 +123,7 @@ const token = await auth.currentUser?.getIdToken();
 |------|-----------|------------|
 | **Admin** | CRUD total + governança | Todas |
 | **Lider** | Cura Biblioteca/Skills da própria área (bioma) | `bib:*`, `skill:*` (filtro bioma), `workflow:create/update/run`, `measurement:read`, `audit:read` |
-| **Operacional** | Usa Skills/Chat/Shoot for the Moon | `chat:execute`, `chat:read_history` (própria), `provocation:execute`, `score:submit`, **NÃO** `bib:*`, **NÃO** `skill:read_prompt` |
+| **Operacional** | Usa Skills/Chat/Moon Shot | `chat:execute`, `chat:read_history` (própria), `provocation:execute`, `score:submit`, **NÃO** `bib:*`, **NÃO** `skill:read_prompt` |
 
 **Caixa-preta para Operacional** (RN-011, FR-140): qualquer endpoint de Biblioteca ou system_prompt retorna **404 genérico** ao Operacional (não revela existência do recurso).
 
@@ -183,7 +183,7 @@ Política proposta (a aplicar via middleware `slowapi` ou Cloud Armor — ver TO
 | `/api/chat/stream` | 30 / min / user | rolling | Evitar abuso de LLM |
 | `/api/chat/generate-image` | 10 / min / user | rolling | Custo Vertex |
 | `/api/chat/generate-video` | 5 / min / user | rolling | Custo alto Veo |
-| `/api/chat/shoot-for-the-moon` | 10 / min / user | rolling | Pipeline pesado |
+| `/api/chat/moon-shot` | 10 / min / user | rolling | Pipeline pesado |
 | `/api/knowledge/upload` | 60 / hour / user | rolling | Curadoria |
 | Outros endpoints | 120 / min / user | rolling | Default |
 | Service account (jobs) | 10 / min | rolling | Cloud Scheduler |
@@ -823,11 +823,11 @@ class SkillHealthResponse(BaseModel):
 
 ---
 
-### 3.6. Módulo: Provocation / Shoot for the Moon (`/api/chat/shoot-for-the-moon`) [Novo — CTM-04]
+### 3.6. Módulo: Provocation / Moon Shot (`/api/chat/moon-shot`) [Novo — CTM-04]
 
-#### API-060 — `POST /api/chat/shoot-for-the-moon` [FA-02]
+#### API-060 — `POST /api/chat/moon-shot` [FA-02]
 
-**Descrição**: Aciona pipeline Shoot for the Moon. SSE com Sparks aprovados.
+**Descrição**: Aciona pipeline Moon Shot. SSE com Sparks aprovados.
 
 **FR(s)**: FR-001..018 (FRD externo), FR-152 (mark visual)
 **RNs**: RN-001 (zonas), RN-002 (convergência ≥8), RN-003 (acionamento)
@@ -840,7 +840,7 @@ class SkillHealthResponse(BaseModel):
 
 **Request schema** (`SCH-010`):
 ```python
-class ShootForTheMoonRequest(BaseModel):
+class MoonShotRequest(BaseModel):
     brief_text: str = Field(min_length=10, max_length=2000)
     client_slug: str           # RN-003 — obrigatório
     intensity: Literal["adjacente", "equilibrado", "radical"] = "equilibrado"
@@ -872,13 +872,13 @@ class ShootForTheMoonRequest(BaseModel):
 
 ---
 
-#### API-061 — `GET /api/chat/shoot-for-the-moon/briefs/{brief_id}` [Novo]
+#### API-061 — `GET /api/chat/moon-shot/briefs/{brief_id}` [Novo]
 
 **Descrição**: Recupera Brief + Sparks gerados.
 
 ---
 
-#### API-062 — `POST /api/chat/shoot-for-the-moon/sparks/{spark_id}/star` [FR-131]
+#### API-062 — `POST /api/chat/moon-shot/sparks/{spark_id}/star` [FR-131]
 
 **Descrição**: Marca Spark como starred (HITL approval). Feeds RN-015 ReflectionTrigger.
 
@@ -886,9 +886,9 @@ class ShootForTheMoonRequest(BaseModel):
 
 ---
 
-#### API-063 — `POST /api/chat/shoot-for-the-moon/feedback` [Novo]
+#### API-063 — `POST /api/chat/moon-shot/feedback` [Novo]
 
-**Descrição**: Feedback geral sobre execução do Shoot for the Moon (vs. score por Spark).
+**Descrição**: Feedback geral sobre execução do Moon Shot (vs. score por Spark).
 
 **Request**:
 ```python
@@ -901,7 +901,7 @@ class ShootFeedbackRequest(BaseModel):
 
 ---
 
-#### API-064 — `POST /api/chat/shoot-for-the-moon/reflection` [Novo — RN-015]
+#### API-064 — `POST /api/chat/moon-shot/reflection` [Novo — RN-015]
 
 **Descrição**: Submete resposta ao Reflection Moment ("Por que essas? Que padrão você vê?").
 
@@ -1755,7 +1755,7 @@ class KnowledgeDocumentSchema(BaseModel):
 
 Ver §3.9 API-091.
 
-### SCH-010 — ShootForTheMoonRequest
+### SCH-010 — MoonShotRequest
 
 Ver §3.6 API-060.
 
@@ -2196,7 +2196,7 @@ FastAPI gera OpenAPI 3.0 automaticamente em **runtime**:
 | API-020..028 (knowledge) | FR-100..108 | KnowledgeItem, IngestionJob, RiskFlag | NFR-002, NFR-004, NFR-007 | DFL-03 |
 | API-030..037 (skills) | FR-109, FR-112..115, FR-156 | Skill, SystemPrompt, Moon, TimeBaseline | NFR-016, NFR-025 | DFL-04 |
 | API-040..053 (workflows) | FR-122..127 | Workflow, WorkflowRun, StepLog | NFR-002, NFR-005 | DFL-05 |
-| API-060..064 (shoot-for-the-moon) | FR-001..018 (FRD), FR-152 | Brief, Spark, Provocation | NFR-001, NFR-024 | DFL-02 |
+| API-060..064 (moon-shot) | FR-001..018 (FRD), FR-152 | Brief, Spark, Provocation | NFR-001, NFR-024 | DFL-02 |
 | API-070..076 (clients) | FR-128 | Client, Bioma | NFR-010 | (transversal) |
 | API-080..083 (users) | FR-138, FR-151 | User, Profile | NFR-008, NFR-009 | DFL-07 |
 | API-090..099 (measurement) | FR-144, FR-145, FR-147..150 | Trace, AvoidedCost, DiversityMetric, ExecutiveReport | NFR-026, NFR-027, NFR-028 | DFL-04, DFL-06 |
@@ -2288,5 +2288,5 @@ A maioria das inconsistências reflete o **estado de protótipo** (Parte 5 LIM-0
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. **66 endpoints** documentados (19 existentes em `api/chat/router.py` + `api/chat/knowledge/router.py` + `api/workflows/router.py`; 47 novos para Auth, Skills, Provocation/Shoot for the Moon, Multi-tenant, Users, Measurement, Safety, VideoGen, ImageEditor). **12 schemas compartilhados** (SCH-001 a SCH-012) alinhados com Aggregates da Parte 2 e Entidades da Parte 3. **11 integration contracts** (INT-01 a INT-11) cobrindo Firebase, Gemini/OpenAI/Anthropic, Cloud Scheduler (5 jobs cron), MLflow, Pub/Sub (proposto ADR-009), Vertex AI Imagen+Veo, GCS (3 buckets), Looker, Slack/Email. **14 inconsistências** entre router atual e specs novos catalogadas (INC-API-01 a INC-API-14) — todas endereçadas na Parte 6 (Arch To-Be). Auth Firebase JWT detalhada com matriz RBAC 3-níveis (Admin/Líder/Operacional). Rate limiting proposto por endpoint group. Phase 16 (VideoGen + ImageEditor) com schemas Pydantic completos extraídos das specs `docs/specs/large/`. Status: Rascunho aguardando revisão de Eng + Heitor. |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. **66 endpoints** documentados (19 existentes em `api/chat/router.py` + `api/chat/knowledge/router.py` + `api/workflows/router.py`; 47 novos para Auth, Skills, Provocation/Moon Shot, Multi-tenant, Users, Measurement, Safety, VideoGen, ImageEditor). **12 schemas compartilhados** (SCH-001 a SCH-012) alinhados com Aggregates da Parte 2 e Entidades da Parte 3. **11 integration contracts** (INT-01 a INT-11) cobrindo Firebase, Gemini/OpenAI/Anthropic, Cloud Scheduler (5 jobs cron), MLflow, Pub/Sub (proposto ADR-009), Vertex AI Imagen+Veo, GCS (3 buckets), Looker, Slack/Email. **14 inconsistências** entre router atual e specs novos catalogadas (INC-API-01 a INC-API-14) — todas endereçadas na Parte 6 (Arch To-Be). Auth Firebase JWT detalhada com matriz RBAC 3-níveis (Admin/Líder/Operacional). Rate limiting proposto por endpoint group. Phase 16 (VideoGen + ImageEditor) com schemas Pydantic completos extraídos das specs `docs/specs/large/`. Status: Rascunho aguardando revisão de Eng + Heitor. |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude | Adicionados **2 módulos novos para BC-07** (Approval Engine CTM-08 + Drive Connector CTM-09): **§3.13 Approval** (7 endpoints — submit, inbox, detail, decide, resubmit, chains, validation reports) cobrindo FA-13/FR-160..169; **§3.14 Drive** (11 endpoints — connect OAuth, callback, sync state, sync run, webhook, documents, content fetch, suggestions inbox, decide suggestion, cleanup reports, revoke OAuth) cobrindo FA-14/FR-170..179. **+5 schemas** (SCH-013 ApprovalRequest, SCH-014 ValidationReport, SCH-015 ApprovalChain, SCH-016 DriveDocument, SCH-017 CurationSuggestion). **+5 integration contracts** (INT-12 Google Drive API readonly, INT-13 Drive Push webhook, INT-14 Cloud KMS, INT-15 Pub/Sub Approval, INT-16 Pub/Sub Drive). Total: **14 módulos | 19 existentes + 60 novos = 79 endpoints**. Rastreabilidade API↔FR↔Aggregate↔NFR↔DFL estendida com DFL-08/09. +2 assunções (ASS-API-08/09) e +4 TODOs (TODO-API-11..14). Status: Rascunho aguardando revisão de Eng + Heitor. |

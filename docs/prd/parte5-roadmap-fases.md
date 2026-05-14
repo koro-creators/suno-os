@@ -20,7 +20,7 @@ aprovacoes:
 fonte_brd: docs/brd/parte1-contexto.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_prd: docs/prd/parte1-feature-map.md, docs/prd/parte2-personas-jtbd.md, docs/prd/parte3-matriz-persona-jornada.md, docs/prd/parte4-FRs.md
 fonte_handoff: docs/ROADMAP.md, docs/handoff/PRODUCT_HANDOFF.md
-fonte_specs: docs/specs/large/{sunohub-tools-integration,knowledge-biblioteca-v2,workflow-builder,image-editor,video-generation,ux-redesign}/, FRD Shoot for the Moon (externo)
+fonte_specs: docs/specs/large/{sunohub-tools-integration,knowledge-biblioteca-v2,workflow-builder,image-editor,video-generation,ux-redesign}/, FRD Moon Shot (externo)
 total_fases: 4 (POC, Protótipo, Piloto, MVP)
 ---
 
@@ -30,7 +30,7 @@ total_fases: 4 (POC, Protótipo, Piloto, MVP)
 
 ### 1.1. Objetivo deste Documento
 
-Este documento distribui as **14 Macro Features (FA-01 a FA-14)** e os **98 Requisitos Funcionais (FR-001 a FR-018 do FRD Shoot for the Moon + FR-100 a FR-179 da Parte 4)** nas **4 fases progressivas** do produto sunOS — POC, Protótipo, Piloto, MVP — definindo:
+Este documento distribui as **14 Macro Features (FA-01 a FA-14)** e os **98 Requisitos Funcionais (FR-001 a FR-018 do FRD Moon Shot + FR-100 a FR-179 da Parte 4)** nas **4 fases progressivas** do produto sunOS — POC, Protótipo, Piloto, MVP — definindo:
 
 - **Objetivo de negócio** de cada fase
 - **Features (FA-XX) e subfeatures incluídas** com escopo claro
@@ -43,7 +43,7 @@ Este documento distribui as **14 Macro Features (FA-01 a FA-14)** e os **98 Requ
 
 | Fase | Ambiente | Objetivo | Quem Testa | Duração Típica |
 |------|----------|----------|------------|----------------|
-| **1. POC** | Lab/Studio | Validar viabilidade do motor de Provocação (Shoot for the Moon) | 3+ Creators seniores em testes blind | 4–6 semanas |
+| **1. POC** | Lab/Studio | Validar viabilidade do motor de Provocação (Moon Shot) | 3+ Creators seniores em testes blind | 4–6 semanas |
 | **2. Protótipo** | Lab/Studio + staging | Validar fluxos principais com Creators internos | 5–10 Creators internos | Em curso (≈80% concluído desde Phases 1–10) |
 | **3. Piloto** | Real World | Validar a solução no contexto real com champions | Champions (Gus/Teda em Mídia, Le em outras áreas) + 10+ UAS | 12–20 semanas |
 | **4. MVP** | Real World | Core da solução em produção contínua com business case aprovado | Todos os ~300 Creators do grupo United Creators | Contínuo (a partir de Q1 2027) |
@@ -83,7 +83,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 
 **Lacunas no ROADMAP atual** que esta Parte 5 endereça e que não estavam mapeadas:
 
-1. **POC do Shoot for the Moon (FA-02)** — único módulo que ainda exige validação prévia de viabilidade técnica (BR-001 critério ≥60% de provocações úteis em testes blind); não constava como Phase no ROADMAP.
+1. **POC do Moon Shot (FA-02)** — único módulo que ainda exige validação prévia de viabilidade técnica (BR-001 critério ≥60% de provocações úteis em testes blind); não constava como Phase no ROADMAP.
 2. **Mensuração coletiva e Custo Evitado (FA-10)** — dashboard executivo, MLflow tracing 100%, cálculo de custo evitado por Skill, KPIs de negócio (win rate, shortlist rate, retenção), mensuração de homogeneização (RN-019/020) não constavam como Phase explícita.
 3. **Safety Cultural (FA-11)** — marcação visual, forced reflection, tracks de onboarding por carreira, validação de vocabulário UI (RN-014/015/016/017) não constavam como Phase explícita.
 4. **Biblioteca v2 com governança** — Caixa-preta operacional (RN-011), detecção de conhecimento crítico em risco (RN-008), retenção LGPD (RN-013) não constavam como Phase explícita após upload básico.
@@ -107,7 +107,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | BRD Parte 3 (BRs com prioridade) | Definem ordem de entrada nas fases |
 | PRD Parte 1 (FA-01 a FA-12) | Features distribuídas por fase |
 | PRD Parte 4 (FR-100 a FR-159) | FRs alocados por fase via §3 |
-| FRD Shoot for the Moon (FR-001 a FR-018) | Detalhamento da POC e Piloto de FA-02 |
+| FRD Moon Shot (FR-001 a FR-018) | Detalhamento da POC e Piloto de FA-02 |
 | ROADMAP.md | Phases técnicos remapeados aqui em fases de produto |
 | Specs SDD (`docs/specs/large/`) | Estimativas técnicas das fases de implementação |
 
@@ -119,7 +119,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 
 | Fase | Features Incluídas | FRs (Parte 4) | Personas Core | Jornadas Completas |
 |------|--------------------|---------------|---------------|--------------------|
-| **POC** | FA-02 (Shoot for the Moon — pipeline mínimo) **+ FA-13-01/02 (submissão + 1 validator com mock)** | FR-001 a FR-011 (FRD externo) **+ FR-160, FR-161 (1 validator)** | PX-02 (Criativo Sênior), PX-04 (Planejamento) | JN-02 parcial, JN-06 parcial, **JN-11 parcial** |
+| **POC** | FA-02 (Moon Shot — pipeline mínimo) **+ FA-13-01/02 (submissão + 1 validator com mock)** | FR-001 a FR-011 (FRD externo) **+ FR-160, FR-161 (1 validator)** | PX-02 (Criativo Sênior), PX-04 (Planejamento) | JN-02 parcial, JN-06 parcial, **JN-11 parcial** |
 | **Protótipo** | FA-01 (v2), FA-03, FA-04, FA-06, FA-07, FA-12 + Phase 11 (Polish + Deploy) **+ FA-13-03 a 05/08 (Validation Report, Inbox, Detail, notificação)** **+ FA-14-01/02/03/06/08 (conexão OAuth, sync, ACL∩RBAC, ingestão, audit)** | ~30 FRs originais **+ FR-162 a FR-167, FR-170 (Aprovação core) + FR-171 a FR-174, FR-177 (Drive base)** | PX-01, PX-02, PX-03, **PX-06 Aprovador** | JN-01, JN-02, JN-03 (parciais), **JN-11 e JN-12 parciais** |
 | **Piloto** | Todas anteriores + FA-02 (modos completos), FA-05 (com schedule real), FA-08-01/02/03 (Image gen real + Editor), FA-09 (Caixa-preta + LGPD), FA-10 (MLflow + dashboard + custo evitado), FA-11 **+ FA-13-06/07/09 (anti-loop, hierarquia, auditoria) + 2º validator (Português)** **+ FA-14-04/05/07 (Cleanup Report, curadoria assistida, exclusão por cliente)** | + ~24 FRs anteriores **+ FR-168/169 + FR-163 + FR-175/176/178/179** | Todas (PX-01 a PX-06) | JN-01 a JN-08 (completas), **JN-11 e JN-12 (completas)** |
 | **MVP** | Todas + FA-08-04/05 (Video Veo 3.1) + FA-10-08/09 (homogeneização) + Phases 12, 13, 15 **+ FA-13 validators adicionais (Legal, Acessibilidade) + integração Slack** **+ FA-14 webhook em mais pastas + dashboard refinado** | + ~6 refinamentos | Todas | JN-01 a JN-12 (completas) |
@@ -146,13 +146,13 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 
 ---
 
-## 3. Fase 1: POC (Proof of Concept) — Shoot for the Moon
+## 3. Fase 1: POC (Proof of Concept) — Moon Shot
 
 ### 3.1. Objetivo de Negócio da Fase
 
 | Aspecto | Descrição |
 |---------|-----------|
-| **O que testar** | Viabilidade técnica e cultural do motor de Provocação Criativa (FA-02) — o **Shoot for the Moon Devora o briefing e Provoca Faíscas** úteis em zona Sweet Spot de bisociação? |
+| **O que testar** | Viabilidade técnica e cultural do motor de Provocação Criativa (FA-02) — o **Moon Shot Devora o briefing e Provoca Faíscas** úteis em zona Sweet Spot de bisociação? |
 | **Sucesso de negócio** | ≥60% das provocações classificadas como úteis por 3+ Creators seniores em testes blind (BR-001 critério primário) |
 | **Quem testa** | 3+ Creators seniores (Bruno Prosperi como sócio Criação + dupla de criação sênior selecionada) em testes blind controlados |
 | **Duração típica** | 4–6 semanas-calendário (considerando REST-01 — time não-dedicado) |
@@ -162,10 +162,10 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 
 | Feature | Escopo no POC | Subfeatures Incluídas |
 |---------|---------------|----------------------|
-| **FA-02 — Shoot for the Moon** | Pipeline mínimo Explorer↔Crítico + filtragem por zona Sweet Spot, sem UX completa | FA-02-01 (Pipeline Explorer↔Crítico), FA-02-02 (Filtragem por zona de bisociação Sweet Spot cosseno 0.5–0.85) |
+| **FA-02 — Moon Shot** | Pipeline mínimo Explorer↔Crítico + filtragem por zona Sweet Spot, sem UX completa | FA-02-01 (Pipeline Explorer↔Crítico), FA-02-02 (Filtragem por zona de bisociação Sweet Spot cosseno 0.5–0.85) |
 | **FA-01 — Biblioteca (mock leve)** | Subset de KnowledgeItems mocados (10–20 documentos representativos de 1 cliente) para Devorar contexto | (sem subfeatures formais — mock embarcado) |
 
-### 3.3. FRs do POC (Referenciados no FRD Shoot for the Moon)
+### 3.3. FRs do POC (Referenciados no FRD Moon Shot)
 
 | FR | Nome (do FRD externo) | Criticidade | BR Relacionado |
 |----|----------------------|-------------|----------------|
@@ -175,7 +175,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | FR-011 | Filtragem por zona de bisociação (Sweet Spot default) | Core | BR-001 |
 | FR-015 a FR-017 | Marcação Faísca/Brasa, dimensões de avaliação | Core | BR-001, BR-010 |
 
-> Observação: FR-001 a FR-018 vivem no FRD Shoot for the Moon (externo). Esta Parte 5 referencia mas não duplica.
+> Observação: FR-001 a FR-018 vivem no FRD Moon Shot (externo). Esta Parte 5 referencia mas não duplica.
 
 ### 3.4. Jornadas Suportadas no POC
 
@@ -301,7 +301,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 - [ ] **Persistência de conversas** entre sessões implementada (débito P1 do handoff resolvido)
 - [ ] **Endpoints batch** (TextGen, ImageGen panels) operacionais
 - [ ] **Testes de integração com API keys reais** (Gemini, OpenAI, Anthropic, Vertex AI Imagen) passando
-- [ ] **POC do Shoot for the Moon (FA-02) concluída** com critérios de saída atendidos (vide §3.7)
+- [ ] **POC do Moon Shot (FA-02) concluída** com critérios de saída atendidos (vide §3.7)
 - [ ] **Champions identificados e onboarded**: Gus e Teda (Mídia, time Takai), Le (outras áreas)
 - [ ] **Decisão DEC-02 tomada** (Workflows entram em Piloto ou só MVP)
 - [ ] **Sponsor (Guga) e patrocinadores sócio (Bruno, Takai, Ronaldo) aprovaram avanço para Piloto** em reunião semanal de terça
@@ -347,7 +347,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | Feature | Escopo no Piloto | Subfeatures Incluídas | Incremento vs Protótipo |
 |---------|------------------|----------------------|-------------------------|
 | **FA-01 — Biblioteca v2 (governança)** | + Visibilidade por status do cliente + Detecção de conhecimento em risco + Política LGPD aprovada | + FA-01-06, FA-01-07, FA-01-08 | Governança operacional completa |
-| **FA-02 — Shoot for the Moon (modos completos)** | + Acionamento contextual ≤3 cliques + Personas brasileiras + Modos dupla/me prova/começando + Marcação Faísca + Forced reflection | + FA-02-03 a FA-02-08 | UX completa pós-POC |
+| **FA-02 — Moon Shot (modos completos)** | + Acionamento contextual ≤3 cliques + Personas brasileiras + Modos dupla/me prova/começando + Marcação Faísca + Forced reflection | + FA-02-03 a FA-02-08 | UX completa pós-POC |
 | **FA-03 — Skills (cobertura)** | + Hierarquia de truncamento RN-021 + Score real do HITL + Avaliação mensal de redução de tempo | + FA-03-04, FA-03-06, FA-03-07 | Operação real com baseline |
 | **FA-04 — Chat (completo)** | + Chat Attachments (SPEC-006) + persistência completa | + FA-04-08 | UX completa |
 | **FA-05 — Workflows Automatizados** | Builder + Compilação LangGraph + Schedule Cloud Scheduler real + Encadeamento + 4 Templates + HITL gates + Histórico + Integração API/webhook | FA-05-01 a FA-05-08 | **Nova feature** (em produção desde SPEC `workflow-builder` mas schedule real é gate Piloto) |
@@ -379,11 +379,11 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | Jornada | Status no Piloto | Incremento |
 |---------|------------------|------------|
 | JN-01 (Curadoria) | Completa | Era parcial — agora com governança LGPD + detecção de risco |
-| JN-02 (Ideação contextualizada) | Completa | Era parcial — agora com Shoot for the Moon completo + persistência |
+| JN-02 (Ideação contextualizada) | Completa | Era parcial — agora com Moon Shot completo + persistência |
 | JN-03 (Execução processual) | Completa | Era parcial — agora com truncamento + score real |
 | **JN-04** (Análise estratégica) | Completa | Nova jornada — Análise de Mercado + Persona Sintética com contexto |
 | **JN-05** (Captura pré-saída/Offboarding) | Parcial | Nova jornada — detecção de conhecimento em risco implantada |
-| **JN-06** (Devil's advocate) | Completa | Nova jornada — modo "Me prova que tá errada" do Shoot for the Moon |
+| **JN-06** (Devil's advocate) | Completa | Nova jornada — modo "Me prova que tá errada" do Moon Shot |
 | **JN-07** (Configuração de Workflow agendado) | Completa | Nova jornada — Workflow Builder + Cloud Scheduler real |
 | **JN-08** (Governança e mensuração) | Completa | Nova jornada — Dashboard executivo + auditoria + custo evitado |
 
@@ -392,10 +392,10 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | Persona | Fluxo no Piloto | JTBD Atendidos |
 |---------|-----------------|----------------|
 | PX-01 Líder/Curador (primária) | Fluxo completo — curadoria + governança + dashboard + Workflows | Todos |
-| PX-02 Criativo Sênior | Fluxo completo — ideação + Shoot for the Moon + ownership preservado | Todos |
+| PX-02 Criativo Sênior | Fluxo completo — ideação + Moon Shot + ownership preservado | Todos |
 | PX-03 Operador Processual (primária) | Fluxo completo — Skills processuais com Caixa-preta ativa, sem ver Biblioteca | Todos |
-| **PX-04 Planejamento Estratégico** | Fluxo completo — Análise de Mercado + Persona Sintética + Shoot for the Moon | Todos |
-| **PX-05 Creator Junior** | Fluxo com track júnior — Shoot for the Moon modo "Começando uma ideia" + forced reflection N=3 | Subset focado em proteção de over-reliance |
+| **PX-04 Planejamento Estratégico** | Fluxo completo — Análise de Mercado + Persona Sintética + Moon Shot | Todos |
+| **PX-05 Creator Junior** | Fluxo com track júnior — Moon Shot modo "Começando uma ideia" + forced reflection N=3 | Subset focado em proteção de over-reliance |
 
 ### 5.6. Critérios de Sucesso do Piloto
 
@@ -409,7 +409,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | **Cobertura de tarefas** | Tarefas-alvo distintas cobertas por Skills | ≥10 | BR-002 |
 | **Cases documentados** | Cases internos com impacto atribuível ao sunOS | ≥3/trimestre | BR-003 |
 | **Caixa-preta operante** | Operacional em ambiente real não vê Biblioteca em nenhum menu/link/breadcrumb | 0 vazamentos | RN-011 |
-| **Aprovação Shoot for the Moon real** | % de Faíscas aprovadas por Creators em uso real | ≥70% | BR-001 |
+| **Aprovação Moon Shot real** | % de Faíscas aprovadas por Creators em uso real | ≥70% | BR-001 |
 | **Provocações úteis (validação contínua)** | % de provocações classificadas como úteis | ≥60% sustentado | BR-001 |
 | **Custo evitado mensurado** | Skills com tempo manual baseline calculado | 100% das Skills em uso | BR-013, RN-018 |
 
@@ -421,7 +421,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 - [ ] **Política LGPD aprovada** para retenção de logs e dados pessoais (RN-013)
 - [ ] **NDA + processos formais** para colaboradores com acesso administrativo documentados (FA-09-08, BR-007)
 - [ ] **Sponsor (Guga) e patrocinadores sócio aprovam** transição para produção contínua e Phase 16 completa
-- [ ] **Validação cultural com Bruno Prosperi** sobre Shoot for the Moon em uso real (sem reação de fricção decorativa) — ASS-04 resolvida
+- [ ] **Validação cultural com Bruno Prosperi** sobre Moon Shot em uso real (sem reação de fricção decorativa) — ASS-04 resolvida
 - [ ] **Time não-dedicado escalável**: pelo menos 2 contratações ou realocações aprovadas para sustentar MVP
 - [ ] **Decisão DEC-06** tomada (budget Phase 16 aprovado para Image Editor + Video Generation)
 
@@ -437,9 +437,9 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 
 | Feature Origem | Feature Destino | Tipo de Dependência | Criticidade | Observação |
 |----------------|-----------------|---------------------|:-----------:|------------|
-| FA-01 Biblioteca | FA-02 Shoot for the Moon | Dados — Devora contexto real | **Alta** | Sem Biblioteca real, Shoot for the Moon volta a ser POC |
-| FA-02 Shoot for the Moon | FA-04 Chat | Operacional — pipeline roda no Chat | Alta | UX completa precisa do Chat com Moon chips |
-| FA-02 Shoot for the Moon | FA-10 Mensuração | Dados — DiversityMetric mede homogeneização | Alta | Necessário para RN-019/020 (parcial no Piloto, completo no MVP) |
+| FA-01 Biblioteca | FA-02 Moon Shot | Dados — Devora contexto real | **Alta** | Sem Biblioteca real, Moon Shot volta a ser POC |
+| FA-02 Moon Shot | FA-04 Chat | Operacional — pipeline roda no Chat | Alta | UX completa precisa do Chat com Moon chips |
+| FA-02 Moon Shot | FA-10 Mensuração | Dados — DiversityMetric mede homogeneização | Alta | Necessário para RN-019/020 (parcial no Piloto, completo no MVP) |
 | FA-05 Workflows | FA-03 Skills | Operacional — orquestra Skills | Alta | Sem Skills maduras, Workflows não geram valor |
 | FA-05 Workflows | FA-09 RBAC | Operacional — quem pode criar/executar | Alta | Cloud Scheduler real exige RBAC funcionando |
 | FA-08 Image gen | FA-04 Chat | Operacional — VisualCreator chega via Chat | Alta | Copy Social e Roteiro de Vídeo dependem de imagem real |
@@ -469,7 +469,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | Feature | Escopo no MVP | Status |
 |---------|---------------|--------|
 | FA-01 Biblioteca | Completa + ≥500 itens curados sustentado + zero conhecimento crítico em uma única pessoa | Refinada |
-| FA-02 Shoot for the Moon | Completa + calibração contínua de zonas + dataset de provocações aprovadas evoluindo Eval | Refinada |
+| FA-02 Moon Shot | Completa + calibração contínua de zonas + dataset de provocações aprovadas evoluindo Eval | Refinada |
 | FA-03 Skills processuais | Completa + ≥80% das Skills com redução ≥30% sustentada por 3+ meses (RN-004) | Completa |
 | FA-04 Chat | Completa + **Phase 13 (Cmd+K Busca Global)** + **Phase 12 (Sidebar Recentes Dinâmico)** | Refinada (UX) |
 | FA-05 Workflows | Completa + 5+ Workflows ativos com schedule sustentado | Completa |
@@ -489,7 +489,7 @@ O `docs/ROADMAP.md` original está estruturado em **Phases 1–16** (sequência 
 | Herdados do Piloto | ~52 | FRs já implementados |
 | Novos no MVP | ~6 | FR-137 (Video gen), FR-149 (Mensuração homogeneização), FR-150 (Bloqueio relatório), refinamentos UX (Cmd+K, Sidebar dinâmico, Onboarding) |
 | Refinamentos | Vários | Melhorias em FRs existentes via feedback do Piloto |
-| **Total combinado** | **~58 FRs (Parte 4) + 18 FRs (FRD Shoot for the Moon)** | **76 FRs** |
+| **Total combinado** | **~58 FRs (Parte 4) + 18 FRs (FRD Moon Shot)** | **76 FRs** |
 
 ### 6.4. Jornadas Completas no MVP
 
@@ -540,11 +540,11 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 
 | Origem | Destino | Tipo | Fase em que se materializa | Criticidade |
 |--------|---------|------|----------------------------|:-----------:|
-| FA-01 Biblioteca | FA-02 Shoot for the Moon | Dados (Devora contexto) | POC (mock) → Piloto (real) | **Alta** |
+| FA-01 Biblioteca | FA-02 Moon Shot | Dados (Devora contexto) | POC (mock) → Piloto (real) | **Alta** |
 | FA-01 Biblioteca | FA-03 Skills | Dados (context injection) | Protótipo | Alta |
 | FA-01 Biblioteca | FA-05 Workflows | Dados (search_knowledge tool) | Piloto | Alta |
-| FA-02 Shoot for the Moon | FA-04 Chat | Operacional | Piloto | Alta |
-| FA-02 Shoot for the Moon | FA-10 Mensuração | Dados (DiversityMetric) | Piloto (parcial) → MVP (completo) | Alta |
+| FA-02 Moon Shot | FA-04 Chat | Operacional | Piloto | Alta |
+| FA-02 Moon Shot | FA-10 Mensuração | Dados (DiversityMetric) | Piloto (parcial) → MVP (completo) | Alta |
 | FA-03 Skills | FA-04 Chat | Operacional | Protótipo | Alta |
 | FA-03 Skills | FA-07 HITL | Dados (Score) | Protótipo | Alta |
 | FA-04 Chat | FA-07 HITL | UX | Protótipo | Alta |
@@ -553,7 +553,7 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 | FA-05 Workflows | FA-03 Skills | Operacional | Piloto | Alta |
 | FA-05 Workflows | FA-10 Mensuração | Dados (tracing execuções) | Piloto | Alta |
 | FA-06 Sistema Solar | FA-04 Chat | UX | Protótipo | Alta |
-| FA-06 Sistema Solar | FA-02 Shoot for the Moon | UX (≤3 cliques) | Piloto | Alta |
+| FA-06 Sistema Solar | FA-02 Moon Shot | UX (≤3 cliques) | Piloto | Alta |
 | FA-07 HITL | FA-10 Mensuração | Dados (feedback alimenta dashboard) | Piloto | Alta |
 | FA-09 RBAC | FA-01 Biblioteca | Operacional (Caixa-preta) | Piloto | **Alta — gate** |
 | FA-09 RBAC | FA-03 Skills | Operacional (system prompts) | Piloto | Alta |
@@ -626,7 +626,7 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 
 | Assunção | Impacto se Falsa | Status |
 |----------|------------------|--------|
-| **POC do Shoot for the Moon não-bloqueante para Phases 1-10 (já entregues)** — POC roda em paralelo com Protótipo (Phases 1-10 já concluídas independem da POC) | Se POC falhar, FA-02 entra no Piloto como "experimental" sem comprometer demais Features | Confirmado pela arquitetura (FA-02 é módulo isolado em LangGraph) |
+| **POC do Moon Shot não-bloqueante para Phases 1-10 (já entregues)** — POC roda em paralelo com Protótipo (Phases 1-10 já concluídas independem da POC) | Se POC falhar, FA-02 entra no Piloto como "experimental" sem comprometer demais Features | Confirmado pela arquitetura (FA-02 é módulo isolado em LangGraph) |
 | **Time não-dedicado mantém ritmo de Phase 11 em ~6-8 semanas** (REST-01) | Atraso > 12 semanas adiaria entrada no Piloto e risco de business case | A validar — depende de janela de Cloud Run setup |
 | **Champions Gus/Teda/Le conseguem onboarding em ≤4 semanas** | Sem champions, Piloto não atinge 10+ UAS no trimestre 1 | Onboarding em curso conforme PRODUCT_HANDOFF.md |
 | **Vertex AI quota será aprovada antes do Piloto** | FA-08-01 fica em mock no Piloto; afeta Copy Social, Roteiro de Vídeo | A validar — solicitar com 4 semanas de antecedência |
@@ -660,7 +660,7 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **4 fases (POC, Protótipo, Piloto, MVP)** com features (FA-XX) e subfeatures distribuídas, critérios de saída/entrada verificáveis, estimativas temporais considerando REST-01 (time não-dedicado), riscos top-3 por fase, dependências cross-feature críticas e mapeamento explícito do `ROADMAP.md` (Phases 1–16) na linguagem de produto. **Inclui POC do Shoot for the Moon (FA-02)** como fase ainda não mapeada no ROADMAP. **Considera REST-04** (business case não aprovado) como bloqueador para Phase 16 completa. Phases 1-10 já concluídas reorganizadas em Protótipo; Phase 11 (Polish + Deploy) como gate de saída do Protótipo; Phase 16 (Image Editor) entra no Piloto, Phase 16 (Video Generation Veo 3.0/3.1) entra no MVP. **Lacunas endereçadas**: POC do Shoot for the Moon, Mensuração coletiva (FA-10), Safety Cultural (FA-11), Biblioteca v2 com governança LGPD (FA-01-06/07/08), Workflows com schedule real como gate de Piloto. Vocabulário Suno (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Sistema Solar, Sun, Planeta, Órbita, Moon) aplicado; anti-patterns (gerar, otimizar, eficiência, accelerator, Coro) evitados |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **4 fases (POC, Protótipo, Piloto, MVP)** com features (FA-XX) e subfeatures distribuídas, critérios de saída/entrada verificáveis, estimativas temporais considerando REST-01 (time não-dedicado), riscos top-3 por fase, dependências cross-feature críticas e mapeamento explícito do `ROADMAP.md` (Phases 1–16) na linguagem de produto. **Inclui POC do Moon Shot (FA-02)** como fase ainda não mapeada no ROADMAP. **Considera REST-04** (business case não aprovado) como bloqueador para Phase 16 completa. Phases 1-10 já concluídas reorganizadas em Protótipo; Phase 11 (Polish + Deploy) como gate de saída do Protótipo; Phase 16 (Image Editor) entra no Piloto, Phase 16 (Video Generation Veo 3.0/3.1) entra no MVP. **Lacunas endereçadas**: POC do Moon Shot, Mensuração coletiva (FA-10), Safety Cultural (FA-11), Biblioteca v2 com governança LGPD (FA-01-06/07/08), Workflows com schedule real como gate de Piloto. Vocabulário Suno (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Sistema Solar, Sun, Planeta, Órbita, Moon) aplicado; anti-patterns (gerar, otimizar, eficiência, accelerator, Coro) evitados |
 | 1.1 | 2026-04-28 | Heitor + Claude (assistido) | **+2 macro features** distribuídas nas 4 fases: FA-13 Aprovação Hierárquica (POC parcial → Protótipo core → Piloto operação real → MVP validators+integrações) e FA-14 Google Drive (Protótipo base → Piloto cleanup+curadoria → MVP refinamentos). Phases 17 e 18 adicionadas ao mapeamento. JN-11 e JN-12 incorporadas às fases. PX-06 Aprovador entra no Protótipo. Total: **14 features / 98 FRs / 6 personas / 12 jornadas** distribuídos. Pedido formal Guga + Bruno Prosperi (28/04/2026) |
 
 ---
@@ -670,6 +670,6 @@ Todas as personas (PX-01 a PX-05, conforme PRD Parte 2) terão fluxos completos 
 **Próximos passos**:
 1. Revisar Parte 5 com Heitor Miranda
 2. Apresentar critérios de saída do Protótipo na próxima reunião de terça com Guga (gate Phase 11)
-3. Confirmar com Bruno Prosperi disponibilidade para POC do Shoot for the Moon
+3. Confirmar com Bruno Prosperi disponibilidade para POC do Moon Shot
 4. Confirmar com Ronaldo timeline do business case (gate de saída do Piloto)
 5. Atualizar ROADMAP.md com referência cruzada a este documento

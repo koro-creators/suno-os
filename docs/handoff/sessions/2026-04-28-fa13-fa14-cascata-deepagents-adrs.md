@@ -92,7 +92,7 @@
 ## Pendências (não abertas como TODO)
 
 1. **Alinhamento Guga sobre Drive read-only** — pedido literal era "espelho bidirecional". ADR-009 documenta o ajuste e os 4 riscos. Antes de qualquer implementação de FA-14, Heitor precisa fechar com Guga. Status do ADR-009 não pode passar de Proposto → Aceito sem isso.
-2. **PoC de `deepagents`** — ADR-011 lista 5 pré-requisitos para virar Aceito. O PoC mais barato é em CTM-04 (Shoot for the Moon — Explorer↔Crítico com 2 sub-agents). Validar ali tracing MLflow, qualidade do plan com Gemini Flash vs. Sonnet híbrido, e wrapper FS RBAC-aware.
+2. **PoC de `deepagents`** — ADR-011 lista 5 pré-requisitos para virar Aceito. O PoC mais barato é em CTM-04 (Moon Shot — Explorer↔Crítico com 2 sub-agents). Validar ali tracing MLflow, qualidade do plan com Gemini Flash vs. Sonnet híbrido, e wrapper FS RBAC-aware.
 3. **TODOs propagados pelos docs** — vários TODO-DM-*, TODO-DT-*, TODO-DF-*, TODO-API-*, TODO-TB-* foram adicionados ao longo da cascata. Lista vive nos respectivos docs §11/§10.
 4. **Defaults de ApprovalChain por cliente** — Vivo, Sicredi etc. precisam ter chain default definida antes de FA-13 ir a piloto (TODO-TB-09).
 5. **Política KMS** — key per environment vs. key per cliente para `drive_oauth_credentials` (TODO-DT-10) — Eng + SRE + Jurídico.
@@ -104,7 +104,7 @@
 
 1. Criar `docs/specs/large/approval-hierarchy/` com os 5 artefatos (constitution, spec, design, plan, tasks) cobrindo FA-13 + FR-160..169 + ADR-008/010.
 2. Criar `docs/specs/large/drive-readonly-curation/` cobrindo FA-14 + FR-170..179 + ADR-009.
-3. Considerar uma terceira spec `docs/specs/large/deepagents-poc-shoot-for-the-moon/` para validar ADR-011 (PoC com prazo curto, 1 sprint).
+3. Considerar uma terceira spec `docs/specs/large/deepagents-poc-moon-shot/` para validar ADR-011 (PoC com prazo curto, 1 sprint).
 
 Toda documentação upstream (BRD, PRD, SRD, UX) já está pronta para alimentar essas specs sem retrabalho.
 

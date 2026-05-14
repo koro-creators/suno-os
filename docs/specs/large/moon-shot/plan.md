@@ -1,18 +1,18 @@
 ---
 spec-id: SPEC-004
-slug: shoot-for-the-moon
+slug: moon-shot
 artefato: plan
 atualizada: 2026-04-28
 versao: 1.0
 ---
 
-# Plano de Implementação — Shoot for the Moon
+# Plano de Implementação — Moon Shot
 
 ## 1. Stack
 
 | Camada | Tecnologia | Justificativa |
 |--------|-----------|---------------|
-| Frontend | Next.js 14 + TS + componentes em `shoot-for-the-moon/` | Padrão sunOS |
+| Frontend | Next.js 14 + TS + componentes em `moon-shot/` | Padrão sunOS |
 | Pipeline agents | LangGraph sub-graph | ADR-008 |
 | Vector store | pgvector (3 embeddings por doc) | ADR-003 |
 | Knowledge graph | tabelas adjacência em PostgreSQL | sem Neo4j (CLAUDE.md) |
@@ -29,7 +29,7 @@ versao: 1.0
 - Backend: pipeline mínimo Explorer↔Crítico em LangGraph
 - Backend: bisociation scorer com sentence-transformers
 - Backend: retrieval divergente com MMR (sem graph traverse ainda)
-- Frontend: ShootForTheMoonModal + FaiscaPanel + FaiscaCard (mock data)
+- Frontend: MoonShotModal + FaiscaPanel + FaiscaCard (mock data)
 - Biblioteca seed: 50-100 conceitos cross-domain manualmente curados
 **Critérios de saída**:
 - ≥60% das provocações classificadas como "úteis" por 3+ creators seniores
@@ -55,7 +55,7 @@ versao: 1.0
 **Objetivo**: Uso real em múltiplas áreas e clientes; calibração de thresholds.
 **Entregáveis**:
 - Biblioteca: 500+ conceitos
-- Todas as áreas com acesso ao Shoot for the Moon
+- Todas as áreas com acesso ao Moon Shot
 - Dashboard de métricas para líderes (FR-018)
 - Cache inteligente operacional
 - Mensuração mensal de homogeneização ativa (RN-019)
@@ -89,7 +89,7 @@ POC ──► Protótipo ──► Piloto ──► MVP
 | Risco | Prob | Impacto | Mitigação |
 |-------|:---:|:---:|-----------|
 | Provocações percebidas como aleatórias | Alta | Alto | Calibração iterativa thresholds + POC com seniores antes |
-| Biblioteca pobre → Shoot for the Moon fraco | Alta | Alto | Seed cultural robusto + curadoria semanal |
+| Biblioteca pobre → Moon Shot fraco | Alta | Alto | Seed cultural robusto + curadoria semanal |
 | Líderes não curam Biblioteca | Média | Alto | Demonstrar ROI da curadoria; champions |
 | Latência > 15s | Média | Médio | Cache de embeddings, paralelização |
 | Homogeneização das provocações | Média | Alto | Monitoramento de diversidade + rotação de personas |

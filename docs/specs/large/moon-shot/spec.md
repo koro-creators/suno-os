@@ -1,6 +1,6 @@
 ---
 spec-id: SPEC-004
-slug: shoot-for-the-moon
+slug: moon-shot
 artefato: spec
 nivel-sdd: spec-anchored
 tamanho: large
@@ -10,7 +10,7 @@ atualizada: 2026-04-28
 versao: 1.0
 ---
 
-# Especificação — Shoot for the Moon
+# Especificação — Moon Shot
 
 ## 1. Visão Geral
 
@@ -27,9 +27,9 @@ versao: 1.0
 
 **Escopo incluído**:
 - Biblioteca de Conhecimento (FA-01) com indexação dual (vetor + grafo) e curadoria por líderes
-- Motor Shoot for the Moon (FA-02) com debate multi-agente Explorer↔Crítico, retrieval divergente MMR + graph traverse, scoring de bisociação
+- Motor Moon Shot (FA-02) com debate multi-agente Explorer↔Crítico, retrieval divergente MMR + graph traverse, scoring de bisociação
 - Integração Biblioteca-Skills (FA-03) — context injection transparente em skills processuais
-- 3 níveis de retrieval: convergente (skills), divergente (Shoot for the Moon), híbrido (admin)
+- 3 níveis de retrieval: convergente (skills), divergente (Moon Shot), híbrido (admin)
 - 6 personas brasileiras de agente: Antropófaga, Cético, Constraint Queen, Carnavalesco, Anciã, Estranho
 - Mensuração de homogeneização coletiva (input para RN-019/020)
 
@@ -43,16 +43,16 @@ versao: 1.0
 ## 2. Personas e Jornadas
 
 ### PX-01 Líder/Curador
-**Job**: Manter Biblioteca rica e diversa para alimentar Shoot for the Moon e Skills.
+**Job**: Manter Biblioteca rica e diversa para alimentar Moon Shot e Skills.
 **Jornada**: Identifica referência → cataloga via interface admin → metadados obrigatórios → indexação automática (vetor + grafo).
 
 ### PX-02 Criativo Sênior
 **Job**: Sair de territórios conceituais habituais.
-**Jornada**: Em contexto de cliente/briefing → clica "Shoot for the Moon" → vê 3-5 cards de Faísca → marca úteis → integra como inspiração no trabalho.
+**Jornada**: Em contexto de cliente/briefing → clica "Moon Shot" → vê 3-5 cards de Faísca → marca úteis → integra como inspiração no trabalho.
 
 ### PX-04 Planejamento Estratégico
 **Job**: Mapear espaço conceitual de marca.
-**Jornada**: Constrói brief → aciona Shoot for the Moon → testa hipóteses contra combinações inesperadas → identifica territórios inexplorados.
+**Jornada**: Constrói brief → aciona Moon Shot → testa hipóteses contra combinações inesperadas → identifica territórios inexplorados.
 
 ### PX-03 Operador Processual
 **Job**: Entregar tarefas operacionais com qualidade e velocidade.
@@ -77,22 +77,22 @@ O sistema MUST indexar todo conteúdo simultaneamente em (a) vector store com 3 
 **FR-003 — Retrieval convergente para Skills**
 O sistema MUST fornecer endpoint de retrieval otimizado para precisão (similarity search com λ=0.7-1.0), filtrável por cliente e domínio, retornando top-k documentos mais relevantes. Endpoint MUST suportar filtro por metadados.
 
-**FR-004 — Retrieval divergente para Shoot for the Moon**
+**FR-004 — Retrieval divergente para Moon Shot**
 O sistema MUST fornecer endpoint otimizado para diversidade: (a) MMR com λ=0.3-0.5 sobre purpose embeddings, (b) graph traverse 2+ hops a partir de entidades do tema, (c) injeção de conteúdo de domínios diferentes do domínio do cliente ativo, (d) filtro adicional `mechanism_similarity > 0.5` para evitar mash-ups aleatórios. Parâmetro λ SHOULD ser ajustável via slider de intensidade (FR-014).
 
 **FR-005 — Catálogo cliente ativo vs. inativo**
 O sistema MUST organizar conteúdo por cliente. Conteúdo de cliente inativo MUST permanecer na Biblioteca mas NOT ser surfado em retrieval padrão (apenas em busca explícita por líder).
 
 **FR-006 — Catálogo cultural cross-domain**
-O sistema MUST manter seção dedicada a conteúdo cross-domain não-cliente (referências culturais, tendências, arquétipos, movimentos artísticos, filosofia, ciência). Esta seção é o combustível primário do Shoot for the Moon.
+O sistema MUST manter seção dedicada a conteúdo cross-domain não-cliente (referências culturais, tendências, arquétipos, movimentos artísticos, filosofia, ciência). Esta seção é o combustível primário do Moon Shot.
 
 **FR-007 — Controle de acesso por perfil (RBAC)**
-3 níveis: Admin (CRUD total), Líder (CRUD na Biblioteca da sua área + leitura áreas relacionadas), Operacional (sem acesso direto — consumo apenas via Skills/Shoot for the Moon). Existência da Biblioteca MUST NOT ser exposta na interface de operacionais (RN-011).
+3 níveis: Admin (CRUD total), Líder (CRUD na Biblioteca da sua área + leitura áreas relacionadas), Operacional (sem acesso direto — consumo apenas via Skills/Moon Shot). Existência da Biblioteca MUST NOT ser exposta na interface de operacionais (RN-011).
 
-### Shoot for the Moon (FA-02)
+### Moon Shot (FA-02)
 
 **FR-008 — Acionamento em ≤3 cliques**
-Botão "Shoot for the Moon" MUST estar acessível em qualquer tela de skill/cliente. Ao clicar: (a) captura contexto atual (cliente, tema/briefing), (b) executa pipeline em background, (c) apresenta resultado em ≤15s mediano, ≤30s P95.
+Botão "Moon Shot" MUST estar acessível em qualquer tela de skill/cliente. Ao clicar: (a) captura contexto atual (cliente, tema/briefing), (b) executa pipeline em background, (c) apresenta resultado em ≤15s mediano, ≤30s P95.
 
 **FR-009 — Agente Explorer com persona criativa divergente**
 Agente LLM MUST receber contexto do briefing + contexto cross-domain da Biblioteca via FR-004, e propor conexões entre o universo do cliente e domínios inesperados. Explorer MUST receber histórico da sessão para evitar repetição. Persona SHOULD ser configurável pelo líder (Antropófaga, Cético, Constraint Queen, Carnavalesco, Anciã, Estranho).
@@ -130,7 +130,7 @@ Sistema SHOULD fornecer dashboard ao líder com: conteúdos mais consumidos por 
 
 - **POC**: ≥60% das provocações classificadas como "úteis" por 3+ creators seniores em testes blind. Score de bisociação médio na zona Sweet Spot. Tempo de resposta < 30s P95.
 - **Protótipo**: ≥70% aprovação em uso real. Skills com context injection avaliados como melhores em ≥65% dos casos.
-- **Piloto**: ≥75% aprovação. ≥3 campanhas reais com referência a provocações do Shoot for the Moon. Líderes usando dashboard ativamente.
+- **Piloto**: ≥75% aprovação. ≥3 campanhas reais com referência a provocações do Moon Shot. Líderes usando dashboard ativamente.
 - **MVP**: Mensuração contínua de homogeneização ativa. Detecção de divergência > 2σ funcional.
 
 ## 5. Fora de Escopo

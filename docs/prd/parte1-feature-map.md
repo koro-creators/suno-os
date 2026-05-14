@@ -19,7 +19,7 @@ aprovacoes:
     status: Pendente
 fonte_brd: docs/brd/parte1-contexto.md, docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_handoff: docs/handoff/PRODUCT_HANDOFF.md
-fonte_frd: docs/specs/large/{knowledge-biblioteca-v2,sunohub-tools-integration,workflow-builder,image-editor,video-generation,ux-redesign}/, FRD Shoot for the Moon (externo, referenciado)
+fonte_frd: docs/specs/large/{knowledge-biblioteca-v2,sunohub-tools-integration,workflow-builder,image-editor,video-generation,ux-redesign}/, FRD Moon Shot (externo, referenciado)
 total_features: 12 macro features (FA-01 a FA-12) com 41 subfeatures
 ---
 
@@ -29,11 +29,11 @@ total_features: 12 macro features (FA-01 a FA-12) com 41 subfeatures
 
 ### 1.1. Visão Geral do Produto
 
-O **sunOS** é o sistema operacional de IA da Suno United Creators — plataforma interna unificada que organiza skills de IA, Biblioteca de conhecimento, Workflows automatizados, agentes ReAct, motor de provocação criativa (Shoot for the Moon) e governança institucional num único produto, navegado pela metáfora visual de Sistema Solar (clientes como Planetas, Skills como Órbitas, Moons como sub-áreas). É 100% interno, destinado a ~300 Creators do grupo United Creators (Suno, Paim, Revo, Koro, Ludi, etc.).
+O **sunOS** é o sistema operacional de IA da Suno United Creators — plataforma interna unificada que organiza skills de IA, Biblioteca de conhecimento, Workflows automatizados, agentes ReAct, motor de provocação criativa (Moon Shot) e governança institucional num único produto, navegado pela metáfora visual de Sistema Solar (clientes como Planetas, Skills como Órbitas, Moons como sub-áreas). É 100% interno, destinado a ~300 Creators do grupo United Creators (Suno, Paim, Revo, Koro, Ludi, etc.).
 
 O problema de fundo é a **Inteligência Coletiva fragmentada**: hoje, o repertório, os cases, os briefings e o know-how operacional vivem em e-mails, drives e cabeças de pessoas que podem sair amanhã. O sunOS transforma essa dispersão em **patrimônio compartilhado e acionável** por qualquer Creator, com governança, proteção de IP (Caixa-preta) e accountability mensurável de impacto. Em paralelo, oferece capacidade ativa de **Provocar** ideias inesperadas para combater a homogeneização criativa coletiva documentada em pesquisa recente sobre uso de IA em ideação.
 
-O valor entregue é triplo: (a) **Devorar** o briefing e Provocar Faíscas inesperadas onde antes havia bloqueio criativo (Shoot for the Moon); (b) **acelerar** tarefas processuais recorrentes (reports, planos, análises, briefings) preservando contexto de cada cliente; (c) **demonstrar** continuamente, ao Sponsor e à Diretoria, evidências de custo evitado, qualidade percebida e impacto em campanhas — sustentando a continuidade do investimento e o posicionamento de agência ambidestra (criatividade + tech) frente a holdings, consultorias e agências AI-native.
+O valor entregue é triplo: (a) **Devorar** o briefing e Provocar Faíscas inesperadas onde antes havia bloqueio criativo (Moon Shot); (b) **acelerar** tarefas processuais recorrentes (reports, planos, análises, briefings) preservando contexto de cada cliente; (c) **demonstrar** continuamente, ao Sponsor e à Diretoria, evidências de custo evitado, qualidade percebida e impacto em campanhas — sustentando a continuidade do investimento e o posicionamento de agência ambidestra (criatividade + tech) frente a holdings, consultorias e agências AI-native.
 
 ### 1.2. Objetivo deste Documento
 
@@ -58,7 +58,7 @@ Este documento organiza o sunOS em **features de alto nível (FA-XX)**, orientad
 | PRD Parte 4 (FRs FR-XXX) | Features são decompostas em requisitos funcionais |
 | PRD Parte 5 (Roadmap) | Features distribuídas em POC → Protótipo → Piloto → MVP |
 | PRODUCT_HANDOFF.md | Fonte do estado atual de implementação por feature |
-| FRDs / SPECs SDD | SPEC-001 a SPEC-007 já implementam parcialmente FA-04, FA-05, FA-06, FA-08; FRD Shoot for the Moon detalha FA-02 |
+| FRDs / SPECs SDD | SPEC-001 a SPEC-007 já implementam parcialmente FA-04, FA-05, FA-06, FA-08; FRD Moon Shot detalha FA-02 |
 
 ---
 
@@ -68,8 +68,8 @@ Este documento organiza o sunOS em **features de alto nível (FA-XX)**, orientad
 
 | ID | Feature | Descrição Curta | Fase Alvo |
 |----|---------|-----------------|-----------|
-| **FA-01** | Biblioteca (Inteligência Coletiva) | Repositório institucional unificado e curado — base de conhecimento multimodal por escopo (Suno + cliente), invisível para perfis Operacionais, alimenta Skills e Shoot for the Moon | Piloto (v2 já em Protótipo) |
-| **FA-02** | Shoot for the Moon (Provocação Criativa) | Motor de serendipidade que Devora o briefing e Provoca Faíscas inesperadas via loop multi-agente Explorer↔Crítico, calibrado pela zona Sweet Spot de bisociação | POC |
+| **FA-01** | Biblioteca (Inteligência Coletiva) | Repositório institucional unificado e curado — base de conhecimento multimodal por escopo (Suno + cliente), invisível para perfis Operacionais, alimenta Skills e Moon Shot | Piloto (v2 já em Protótipo) |
+| **FA-02** | Moon Shot (Provocação Criativa) | Motor de serendipidade que Devora o briefing e Provoca Faíscas inesperadas via loop multi-agente Explorer↔Crítico, calibrado pela zona Sweet Spot de bisociação | POC |
 | **FA-03** | Skills processuais com contexto automático | Catálogo de Skills (Copy Social, Plano de Mídia, Roteiro de Vídeo, Texto de Rádio, Persona Sintética, Brief Builder, Análise de Mercado, Report Performance) que injetam contexto de cliente da Biblioteca sem ação do operador | Piloto (já em Protótipo) |
 | **FA-04** | Chat com Agentes ReAct (streaming SSE) | Interface conversacional com IA real (Gemini Flash default; GPT-4o, Claude, Imagen 4 alternativos), agentes ReAct (ContentCreator, VisualCreator, Conversational), multi-modelo por mensagem | Piloto (já em Produção) |
 | **FA-05** | Workflows Automatizados | Engine LangGraph para automações encadeadas (reports, planos de mídia, monitoramento, pesquisa) com schedule (Cloud Scheduler), HITL gates, sub-workflows | Piloto (já em Produção) |
@@ -85,7 +85,7 @@ Este documento organiza o sunOS em **features de alto nível (FA-XX)**, orientad
 
 | Fase | Features | Objetivo da Fase |
 |------|----------|------------------|
-| **POC** | FA-02 (Shoot for the Moon — pipeline Explorer↔Crítico em ambiente controlado) | Validar viabilidade técnica do motor de Provocação e calibrar zona Sweet Spot de bisociação com 3+ Creators seniores em testes blind |
+| **POC** | FA-02 (Moon Shot — pipeline Explorer↔Crítico em ambiente controlado) | Validar viabilidade técnica do motor de Provocação e calibrar zona Sweet Spot de bisociação com 3+ Creators seniores em testes blind |
 | **Protótipo** | FA-01 (Biblioteca v2 com upload + pgvector), FA-03 (Skills com context injection), FA-04 (Chat real Gemini), FA-06 (Sistema Solar 3 níveis), FA-07 (HITL), FA-12 (Admin Model Repo pattern) | Testar fluxos principais com 5-10 Creators internos, em ambiente local + staging |
 | **Piloto** | Todas as anteriores + FA-05 (Workflows com schedule), FA-08 (Image gen real), FA-09 (RBAC + Caixa-preta), FA-10 (MLflow + dashboard), FA-11 (Safety cultural), FA-02 em uso real | Validar no contexto real com champions (Gus/Teda em Mídia, Le em outras áreas) — meta 10+ UAS, 50+ msgs/sem, score HITL > 4.0 |
 | **MVP** | Todas + refinamentos + FA-08 (Video gen Veo 3.1) + cobertura ≥10 tarefas-alvo automatizadas | Produto em produção contínua, business case aprovado pela Diretoria, ≥3 cases internos por trimestre |
@@ -94,11 +94,11 @@ Este documento organiza o sunOS em **features de alto nível (FA-XX)**, orientad
 
 As features formam três anéis concêntricos em torno do valor central de **Inteligência Coletiva** da Suno:
 
-- **Anel 1 — Infraestrutura de conhecimento**: FA-01 (Biblioteca) é a base. Tudo o que o sunOS faz consome contexto da Biblioteca de forma transparente. Sem ela, Skills (FA-03) operam descontextualizadas e Shoot for the Moon (FA-02) não tem matéria-prima para Devorar.
+- **Anel 1 — Infraestrutura de conhecimento**: FA-01 (Biblioteca) é a base. Tudo o que o sunOS faz consome contexto da Biblioteca de forma transparente. Sem ela, Skills (FA-03) operam descontextualizadas e Moon Shot (FA-02) não tem matéria-prima para Devorar.
 - **Anel 2 — Capacidades de IA**: FA-02 (Provocação criativa) e FA-03 (Skills processuais) são os dois motores de valor — um divergente (modo serendipidade) e outro convergente (modo aceleração). Ambos chegam ao Creator via FA-04 (Chat) e FA-06 (Sistema Solar) e podem ser orquestrados em FA-05 (Workflows). FA-08 (Multimodal) amplia o repertório de outputs (texto → imagem → vídeo).
 - **Anel 3 — Governança e cultura**: FA-07 (HITL), FA-09 (RBAC/Caixa-preta), FA-10 (Mensuração) e FA-11 (Safety cultural) garantem que o sistema operacional **funcione com integridade** — IP protegido, dados de cliente isolados, ownership criativo preservado, homogeneização monitorada, custo evitado mensurado. FA-12 (Admin) é o painel pelo qual líderes e Admins curam tudo.
 
-O fluxo principal de uso é: Creator entra pelo Sun (FA-06) → escolhe um Planeta (cliente) → escolhe uma Órbita (Skill, FA-03) ou aciona o atalho Shoot for the Moon (FA-02) → conversa via Chat (FA-04) com contexto injetado da Biblioteca (FA-01) → avalia outputs via HITL (FA-07) → líder consolida em Workflows recorrentes (FA-05) — tudo sob RBAC (FA-09) e mensurado em MLflow (FA-10).
+O fluxo principal de uso é: Creator entra pelo Sun (FA-06) → escolhe um Planeta (cliente) → escolhe uma Órbita (Skill, FA-03) ou aciona o atalho Moon Shot (FA-02) → conversa via Chat (FA-04) com contexto injetado da Biblioteca (FA-01) → avalia outputs via HITL (FA-07) → líder consolida em Workflows recorrentes (FA-05) — tudo sob RBAC (FA-09) e mensurado em MLflow (FA-10).
 
 ---
 
@@ -108,7 +108,7 @@ O fluxo principal de uso é: Creator entra pelo Sun (FA-06) → escolhe um Plane
 
 #### Resumo da Feature
 
-A Biblioteca é o **repositório institucional unificado** do sunOS — base de conhecimento multimodal compartilhada que consolida referências culturais, cases de clientes, briefings históricos, guidelines de marca, contexto de mercado, metodologias proprietárias da Suno e regras de negócio por cliente. Funciona como **infraestrutura invisível**: Líderes curam, plataforma consome via RAG (pgvector + indexação dual vetorial+grafo), e Operacionais nunca veem sua existência (Caixa-preta). A Biblioteca alimenta simultaneamente Skills processuais (modo convergente, FA-03) e Shoot for the Moon (modo divergente, FA-02), sem duplicação.
+A Biblioteca é o **repositório institucional unificado** do sunOS — base de conhecimento multimodal compartilhada que consolida referências culturais, cases de clientes, briefings históricos, guidelines de marca, contexto de mercado, metodologias proprietárias da Suno e regras de negócio por cliente. Funciona como **infraestrutura invisível**: Líderes curam, plataforma consome via RAG (pgvector + indexação dual vetorial+grafo), e Operacionais nunca veem sua existência (Caixa-preta). A Biblioteca alimenta simultaneamente Skills processuais (modo convergente, FA-03) e Moon Shot (modo divergente, FA-02), sem duplicação.
 
 Resolve o problema central que o sunOS endereça: **Inteligência Coletiva fragmentada** — hoje conhecimento crítico vive em e-mails, drives e cabeças de pessoas que saem amanhã (turnover histórico do setor: ~30%/ano; Suno 2024: 18%). Atende prioritariamente o Líder/Curador (PX-01), que ganha controle de IP e governança de contexto; serve indiretamente todos os outros perfis, que recebem contexto sem precisar buscar manualmente.
 
@@ -136,7 +136,7 @@ Resolve o problema central que o sunOS endereça: **Inteligência Coletiva fragm
 |----|------------|-----------|
 | FA-01-01 | Upload e ingestão multimodal | Aceita PDF, DOCX, TXT, áudio, vídeo, imagem; processamento automático em background |
 | FA-01-02 | Curadoria com metadados obrigatórios | Líder cadastra item em < 5 min; bloqueio se metadados incompletos (RN-006) |
-| FA-01-03 | Indexação dual (vetorial + grafo) | pgvector para similarity search + grafo para retrieval divergente do Shoot for the Moon |
+| FA-01-03 | Indexação dual (vetorial + grafo) | pgvector para similarity search + grafo para retrieval divergente do Moon Shot |
 | FA-01-04 | Busca semântica via agente | Tool `search_knowledge` invocada por agentes durante chat e workflows |
 | FA-01-05 | Escopo Suno vs. Cliente | Filtragem hierárquica; cliente sempre injeta também conteúdo Suno global |
 | FA-01-06 | Visibilidade por status do cliente | Cliente inativo: oculta do Sistema Solar e retrievals padrão; Líder consegue busca explícita (RN-007) |
@@ -167,7 +167,7 @@ Resolve o problema central que o sunOS endereça: **Inteligência Coletiva fragm
 | Scope | Escopo do item (Suno global ou client_slug) | Controle de visibilidade e retrieval |
 | Tag | Categoria livre por item | Filtragem e auto-seleção |
 | Embedding | Vetor pgvector por chunk | Busca semântica |
-| KnowledgeGraph | Grafo de relações entre items | Retrieval divergente para Shoot for the Moon |
+| KnowledgeGraph | Grafo de relações entre items | Retrieval divergente para Moon Shot |
 | Client | Cliente da Suno (status ativo/inativo) | Modula visibilidade |
 | AccessLog | Log de acesso/contribuição por usuário | Detecção de risco |
 
@@ -175,7 +175,7 @@ Resolve o problema central que o sunOS endereça: **Inteligência Coletiva fragm
 
 | Fase | Escopo | Justificativa |
 |------|--------|---------------|
-| **POC** | (não aplicável — depende de POC do Shoot for the Moon para validar consumo divergente) | — |
+| **POC** | (não aplicável — depende de POC do Moon Shot para validar consumo divergente) | — |
 | **Protótipo** | FA-01-01 a FA-01-05 (upload + curadoria + busca semântica + escopos) — já implementado em SPEC-002 (knowledge-biblioteca-v2) | Base para qualquer Skill funcionar com contexto real |
 | **Piloto** | + FA-01-06, FA-01-07 (detecção de risco), FA-01-08 (política LGPD aprovada) | Necessário para uso real com clientes ativos |
 | **MVP** | ≥500 itens curados, curadoria contínua sustentada, zero conhecimento crítico vivendo em uma única pessoa | Critério de aceite BR-004 e BR-005 |
@@ -190,11 +190,11 @@ Resolve o problema central que o sunOS endereça: **Inteligência Coletiva fragm
 
 ---
 
-### FA-02 — Shoot for the Moon (Provocação Criativa)
+### FA-02 — Moon Shot (Provocação Criativa)
 
 #### Resumo da Feature
 
-Shoot for the Moon é o **motor de serendipidade criativa** do sunOS — capacidade que **Devora** o briefing do Creator e **Provoca Faíscas** inesperadas combinando conceitos de domínios distantes para combater a homogeneização criativa coletiva documentada em pesquisa recente (Doshi & Hauser, Science Advances 2024; Padmakumar & He, ICLR 2024 — leveling-up illusion). É o coração da diferenciação do sunOS frente a ferramentas genéricas de IA: aqui a IA **provoca, não gera** — outputs são **estímulo/Brasa** para o Creator, nunca peça final.
+Moon Shot é o **motor de serendipidade criativa** do sunOS — capacidade que **Devora** o briefing do Creator e **Provoca Faíscas** inesperadas combinando conceitos de domínios distantes para combater a homogeneização criativa coletiva documentada em pesquisa recente (Doshi & Hauser, Science Advances 2024; Padmakumar & He, ICLR 2024 — leveling-up illusion). É o coração da diferenciação do sunOS frente a ferramentas genéricas de IA: aqui a IA **provoca, não gera** — outputs são **estímulo/Brasa** para o Creator, nunca peça final.
 
 A arquitetura interna é um loop multi-agente Explorer↔Crítico calibrado pela zona Sweet Spot de bisociação (cosseno 0.5–0.85): provocações triviais são descartadas (zona "óbvio"), provocações sem ponte de sentido também (zona "incoerente"), e apenas as moderadamente surpreendentes mas mappeáveis chegam ao Creator. Acessível em ≤3 cliques a partir de qualquer Planeta — princípio "Botão da criatividade, não do desespero".
 
@@ -213,7 +213,7 @@ A arquitetura interna é um loop multi-agente Explorer↔Crítico calibrado pela
 
 **Não Inclui:**
 - Geração de peças finais para publicação (princípio fundador: provoca, não gera)
-- Substituição de Skills processuais (Shoot for the Moon é divergente; Skills FA-03 são convergentes)
+- Substituição de Skills processuais (Moon Shot é divergente; Skills FA-03 são convergentes)
 - Inspiração genérica desconectada do contexto do cliente (sempre puxa Biblioteca via FA-01)
 
 #### Capacidades / Subfeatures
@@ -281,7 +281,7 @@ A arquitetura interna é um loop multi-agente Explorer↔Crítico calibrado pela
 
 Catálogo de **Skills configuráveis** que executam tarefas processuais recorrentes (Copy Social, Plano de Mídia, Roteiro de Vídeo, Texto de Rádio, Persona Sintética, Brief Builder, Análise de Mercado, Report Performance) com **contexto de cliente injetado automaticamente** da Biblioteca (FA-01), sem ação do operador. Cada Skill tem nome, descrição, system prompt proprietário (Caixa-preta), modelo de IA preferencial, temperatura, Moons (sub-áreas) e referências curadas. Hoje há 8 Skills configurados em produção.
 
-É o motor convergente do sunOS — o oposto polar do Shoot for the Moon (divergente). Atende prioritariamente o Operador Processual (PX-03), que precisa entregar relatório/plano/copy com qualidade e contexto sem reconstruir tudo a cada interação. Critério-chave: redução de tempo médio ≥30% em ≥10 tarefas-alvo até final do Piloto, sem regressão de qualidade percebida.
+É o motor convergente do sunOS — o oposto polar do Moon Shot (divergente). Atende prioritariamente o Operador Processual (PX-03), que precisa entregar relatório/plano/copy com qualidade e contexto sem reconstruir tudo a cada interação. Critério-chave: redução de tempo médio ≥30% em ≥10 tarefas-alvo até final do Piloto, sem regressão de qualidade percebida.
 
 #### Propósito e Escopo
 
@@ -364,7 +364,7 @@ Catálogo de **Skills configuráveis** que executam tarefas processuais recorren
 
 #### Resumo da Feature
 
-Interface conversacional com **IA real** (Gemini Flash default; GPT-4o, Claude e Imagen 4 como alternativas configuráveis), agentes ReAct (ContentCreator, VisualCreator, Conversational) e streaming via SSE para reduzir percepção de latência. É o ponto de contato primário entre Creator e o sunOS — toda Skill processual e o Shoot for the Moon chegam ao usuário através do Chat.
+Interface conversacional com **IA real** (Gemini Flash default; GPT-4o, Claude e Imagen 4 como alternativas configuráveis), agentes ReAct (ContentCreator, VisualCreator, Conversational) e streaming via SSE para reduzir percepção de latência. É o ponto de contato primário entre Creator e o sunOS — toda Skill processual e o Moon Shot chegam ao usuário através do Chat.
 
 Inclui ModelSelector (troca de modelo por mensagem), ChatInput com auto-resize e Shift+Enter, PromptTemplateBar com Moon chips, Social Preview (Instagram para Copy Social), variações automáticas (3 opções), ResultActions (copiar/variar/salvar/thumbs), MessageBubble com syntax highlighting e StreamingIndicator com nome do modelo ativo. Já em produção; expansão prevista para Chat Attachments (SPEC-006, ainda não implementado).
 
@@ -441,7 +441,7 @@ Inclui ModelSelector (troca de modelo por mensagem), ChatInput com auto-resize e
 | Feature | Tipo de Dependência | Criticidade |
 |---------|---------------------|-------------|
 | FA-03 (Skills) | Operacional — toda Skill chega via Chat | Alta |
-| FA-02 (Shoot for the Moon) | Operacional — pipeline roda no Chat | Alta |
+| FA-02 (Moon Shot) | Operacional — pipeline roda no Chat | Alta |
 | FA-01 (Biblioteca) | Dados — context injection | Alta |
 | FA-07 (HITL) | UX — feedback inline vive aqui | Alta |
 | FA-08 (Multimodal) | Operacional — VisualCreator gera imagem via Chat | Média |
@@ -578,7 +578,7 @@ Metáfora visual proprietária de navegação — **Sun (home `/`) → Planeta (
 
 | Tipo | IDs | Descrição Resumida |
 |------|-----|-------------------|
-| **BRs** | BR-001 (acionamento ≤3 cliques), BR-006, BR-011 | Acionamento Shoot for the Moon, acesso democrático, cultura visual proprietária |
+| **BRs** | BR-001 (acionamento ≤3 cliques), BR-006, BR-011 | Acionamento Moon Shot, acesso democrático, cultura visual proprietária |
 | **RNs** | RN-003, RN-011, RN-016 | Acionamento contextual, ocultação Biblioteca para Operacional, validação vocabulário |
 
 #### Objetos de Domínio Envolvidos
@@ -931,7 +931,7 @@ Materializa o **business case** que sustenta o investimento — sem mensuração
 | FA-05 (Workflows) | Dados — tracing de execuções | Alta |
 | FA-07 (HITL) | Dados — feedback alimenta scorers e dashboard | Alta |
 | FA-09 (RBAC) | Operacional — auditoria de acessos administrativos | Alta |
-| FA-02 (Shoot for the Moon) | Dados — DiversityMetric mede homogeneização | Alta |
+| FA-02 (Moon Shot) | Dados — DiversityMetric mede homogeneização | Alta |
 
 ---
 
@@ -1016,7 +1016,7 @@ Inclui: marcação visual de outputs IA como "estímulo/Faísca" (nunca peça fi
 
 | Feature | Tipo de Dependência | Criticidade |
 |---------|---------------------|-------------|
-| FA-02 (Shoot for the Moon) | Operacional — marcação Faísca, modos de entrada, dupla | Alta |
+| FA-02 (Moon Shot) | Operacional — marcação Faísca, modos de entrada, dupla | Alta |
 | FA-04 (Chat) | UX — marcação, forced reflection, ChatBubble | Alta |
 | FA-07 (HITL) | Dados — N stars trigger | Alta |
 | FA-08 (Multimodal) | UX — marcação em outputs visuais | Alta |
@@ -1166,7 +1166,7 @@ Fluxo no sunOS em que um asset finalizado pelo creator é submetido a um aprovad
 | FA-01 (Biblioteca) | Operacional — Brand Guidelines como fonte para BrandValidator | Crítica |
 | FA-09 (RBAC) | Operacional — hierarquia configurada no admin; aprovador autenticado | Crítica |
 | FA-04 (Chat) | Operacional — assets gerados em Chat são submetíveis | Alta |
-| FA-02 (Shoot for the Moon) | Operacional — provocações eventualmente vão para approval | Média |
+| FA-02 (Moon Shot) | Operacional — provocações eventualmente vão para approval | Média |
 
 ---
 
@@ -1237,12 +1237,12 @@ Integração read-only do Google Drive da Suno como fonte primária para aliment
 
 ### 4.1. Fluxo Principal
 
-O fluxo de uso predominante do sunOS começa pelo Sistema Solar (FA-06) e escolhe um caminho convergente (Skills) ou divergente (Shoot for the Moon):
+O fluxo de uso predominante do sunOS começa pelo Sistema Solar (FA-06) e escolhe um caminho convergente (Skills) ou divergente (Moon Shot):
 
 ```
                         ┌─► FA-03 Skills processuais ─┐
 FA-06 Sistema Solar ────┤                              ├─► FA-04 Chat ─► FA-07 HITL
-                        └─► FA-02 Shoot for the Moon ─┘             ▲
+                        └─► FA-02 Moon Shot ─┘             ▲
                                                                      │
 FA-05 Workflows ──────► FA-03 Skills ─► FA-04 Chat (interno) ───────┘
 
@@ -1258,11 +1258,11 @@ FA-12 Admin governa FA-01 + FA-03 + FA-05 + Clientes (transversal)
 
 | Feature Origem | Feature Destino | Tipo de Relação | Criticidade |
 |----------------|-----------------|-----------------|-------------|
-| FA-01 Biblioteca | FA-02 Shoot for the Moon | Dados (Devora contexto) | Alta |
+| FA-01 Biblioteca | FA-02 Moon Shot | Dados (Devora contexto) | Alta |
 | FA-01 Biblioteca | FA-03 Skills | Dados (context injection) | Alta |
 | FA-01 Biblioteca | FA-05 Workflows | Dados (search_knowledge tool) | Alta |
-| FA-02 Shoot for the Moon | FA-04 Chat | Operacional (pipeline roda no Chat) | Alta |
-| FA-02 Shoot for the Moon | FA-10 Mensuração | Dados (DiversityMetric) | Alta |
+| FA-02 Moon Shot | FA-04 Chat | Operacional (pipeline roda no Chat) | Alta |
+| FA-02 Moon Shot | FA-10 Mensuração | Dados (DiversityMetric) | Alta |
 | FA-03 Skills | FA-04 Chat | Operacional (Skills via Chat) | Alta |
 | FA-03 Skills | FA-07 HITL | Dados (Score por Skill) | Alta |
 | FA-04 Chat | FA-07 HITL | UX (feedback inline) | Alta |
@@ -1271,7 +1271,7 @@ FA-12 Admin governa FA-01 + FA-03 + FA-05 + Clientes (transversal)
 | FA-05 Workflows | FA-03 Skills | Operacional (orquestra Skills) | Alta |
 | FA-05 Workflows | FA-10 Mensuração | Dados (tracing de execuções) | Alta |
 | FA-06 Sistema Solar | FA-04 Chat | UX (navegação leva ao Chat) | Alta |
-| FA-06 Sistema Solar | FA-02 Shoot for the Moon | UX (botão ≤3 cliques) | Alta |
+| FA-06 Sistema Solar | FA-02 Moon Shot | UX (botão ≤3 cliques) | Alta |
 | FA-07 HITL | FA-10 Mensuração | Dados (feedback alimenta dashboard) | Alta |
 | FA-09 RBAC | FA-01 Biblioteca | Operacional (Caixa-preta para Operacional) | Alta |
 | FA-09 RBAC | FA-03 Skills | Operacional (system prompts protegidos) | Alta |
@@ -1287,7 +1287,7 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 | Feature | BRs Mapeados (Primário em **negrito**) |
 |---------|----------------------------------------|
 | FA-01 Biblioteca | **BR-004**, BR-005, BR-006, BR-007, BR-008, BR-015 |
-| FA-02 Shoot for the Moon | **BR-001**, BR-010, BR-011, BR-014 |
+| FA-02 Moon Shot | **BR-001**, BR-010, BR-011, BR-014 |
 | FA-03 Skills processuais | **BR-002**, BR-006, BR-015 |
 | FA-04 Chat ReAct | BR-002, BR-006, BR-015 |
 | FA-05 Workflows | **BR-002**, BR-013, BR-016 |
@@ -1339,7 +1339,7 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 ### 5.2. Para UX/Navegação
 
 - **Navegação principal**: Sistema Solar (FA-06) → Planeta → Skill (Chat, FA-04 com Moon chips, SPEC-007); Admin (FA-12) acessível via Sidebar para Admin/Líder; Workflows (FA-05) acessível via Sidebar
-- **Princípio ≤3 cliques**: validar em cada feature que o caminho do Sun ao valor (output do Chat, Faísca do Shoot for the Moon, execução de Workflow) cumpre o princípio
+- **Princípio ≤3 cliques**: validar em cada feature que o caminho do Sun ao valor (output do Chat, Faísca do Moon Shot, execução de Workflow) cumpre o princípio
 - **Caixa-preta** (FA-09 + RN-011): para Operacional, qualquer menu/link/breadcrumb à Biblioteca deve sumir; URLs diretas redirecionam para home com mensagem genérica
 - **Marcação visual de outputs IA** (FA-11-01 + RN-014): aparece em FA-02, FA-04, FA-08 — definir padrão único de design
 - **Vocabulário** (FA-11-04 + RN-016): toda copy de UI passa por validação contra Glossário; bloqueio de anti-patterns; sugestões do dicionário
@@ -1353,7 +1353,7 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 
 | ID | Assunção | Impacto se Falsa | Status |
 |----|----------|------------------|--------|
-| ASS-01 | FRD Shoot for the Moon existe como artefato (referenciado nos BRDs Parte 3 e 4 com FR-008, FR-010, FR-011, FR-015, FR-016, FR-017) e detalhará FA-02 e parte de FA-01 | FA-02 fica subespecificado; precisaria gerar FRD a partir do BRD | A validar com Heitor — não localizado em `/docs/specs/` no momento da geração |
+| ASS-01 | FRD Moon Shot existe como artefato (referenciado nos BRDs Parte 3 e 4 com FR-008, FR-010, FR-011, FR-015, FR-016, FR-017) e detalhará FA-02 e parte de FA-01 | FA-02 fica subespecificado; precisaria gerar FRD a partir do BRD | A validar com Heitor — não localizado em `/docs/specs/` no momento da geração |
 | ASS-02 | A Phase 16 (Image Editor + Video Generation) será aprovada no business case — specs prontos, código pendente | FA-08 fica em mock por mais tempo; afeta Copy Social e Roteiro de Vídeo | A validar (DEC-06 da Parte 1 §7.1) |
 | ASS-03 | Persistência de conversas é débito P1 mas será endereçada antes do Piloto | Sem persistência, HITL e Eval não acumulam dados consistentes | A validar com Heitor + Zé |
 | ASS-04 | Forced reflection moments (RN-015) são aceitos culturalmente como proteção, não como fricção decorativa | Resistência de Creators seniores; risco de adoção | A validar com Bruno Prosperi |
@@ -1364,7 +1364,7 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 
 | Lacuna | Informação Necessária | Fonte Esperada |
 |--------|----------------------|----------------|
-| FRD Shoot for the Moon | Localização do artefato e numeração de FRs (FR-008, FR-010, FR-011, FR-015, FR-016, FR-017) | Heitor Miranda |
+| FRD Moon Shot | Localização do artefato e numeração de FRs (FR-008, FR-010, FR-011, FR-015, FR-016, FR-017) | Heitor Miranda |
 | Personas detalhadas além de PX-01 a PX-04 | Validação de PX-05 (Creator Junior) como persona separada ou variação de PX-02/PX-03 | PRD Parte 2 (gerada em paralelo) |
 | Lista atualizada de ferramentas adotadas (RN-022) | Para guiar avaliação de duplicidade em FA-05 e FA-08 | Diretoria (PA-11) |
 | Definições por área de júnior/pleno/sênior (RN-017) | Para implementar tracks de onboarding em FA-11-03 | Bruno Prosperi (criação), Takai (mídia) — PA-09 |
@@ -1378,7 +1378,7 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 | Validar critérios quantitativos das FA-XX (≥30% redução, ≥60% aprovação) antes que virem compromissos | Heitor + Guga | Maio 2026 |
 | Confirmar que FA-12-08 (validação automática de vocabulário) é viável como Phase do Piloto ou fica para MVP | Heitor + time dev | Junho 2026 |
 | Confirmar que FA-10-08/09 (mensuração de homogeneização + bloqueio de relatório) é gate para Piloto ou MVP | Heitor + Bruno + Guga | Junho 2026 |
-| Validar a numeração de FRD Shoot for the Moon e gerar FRD se ausente | Heitor + PM | Antes de Parte 4 do PRD |
+| Validar a numeração de FRD Moon Shot e gerar FRD se ausente | Heitor + PM | Antes de Parte 4 do PRD |
 
 ---
 
@@ -1386,5 +1386,5 @@ Cada FA-XX deve mapear para ≥1 BR-XXX. Esta matriz garante cobertura completa 
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **12 Macro Features (FA-01 a FA-12)** com 41 subfeatures, derivadas dos 16 BRs (Parte 3) + 22 RNs (Parte 4) + PRODUCT_HANDOFF.md + SPECs SDD existentes (SPEC-001 a SPEC-007 + image-editor + video-generation) + FRD Shoot for the Moon (referenciado). Cobertura completa: todos os 16 BRs têm ≥1 Feature. Ecossistema explicitado em 3 anéis (infraestrutura de conhecimento, capacidades de IA, governança e cultura). Vocabulário Suno (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma) aplicado; anti-patterns evitados |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **12 Macro Features (FA-01 a FA-12)** com 41 subfeatures, derivadas dos 16 BRs (Parte 3) + 22 RNs (Parte 4) + PRODUCT_HANDOFF.md + SPECs SDD existentes (SPEC-001 a SPEC-007 + image-editor + video-generation) + FRD Moon Shot (referenciado). Cobertura completa: todos os 16 BRs têm ≥1 Feature. Ecossistema explicitado em 3 anéis (infraestrutura de conhecimento, capacidades de IA, governança e cultura). Vocabulário Suno (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma) aplicado; anti-patterns evitados |
 | 1.1 | 2026-04-28 | **+2 Macro Features**: FA-13 Aprovação Hierárquica (9 subfeatures) e FA-14 Google Drive como fonte (8 subfeatures, versão ajustada). Pedido formal Guga + Bruno Prosperi. Total agora: **14 Macro Features / 58 subfeatures**. Cobertura BR-017 e BR-018 adicionada às matrizes |

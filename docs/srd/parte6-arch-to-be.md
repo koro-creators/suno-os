@@ -32,7 +32,7 @@ A arquitetura é apresentada em **C4 Model** (Context, Containers, Components), 
 
 - **C4 Level 1** — Context (atores e sistemas externos): poucas mudanças vs. As-Is
 - **C4 Level 2** — Containers (deploy units): adicionar **Provocation Engine**, **Measurement Service**, **Safety Gateway**, **Auth Gateway** — quebrar monólito FastAPI em módulos com fronteiras Bounded Context
-- **C4 Level 3** — Componentes (módulos internos): novos componentes para Shoot for the Moon (Explorer, Crítico, Bisociation Filter), Mensuração (Diversity Job, Avoided Cost Calculator), Safety (Visual Mark Enforcer, Reflection Trigger, Cross-client Guard, Vocabulary Linter), e mudança de retrieval (convergente vs. divergente)
+- **C4 Level 3** — Componentes (módulos internos): novos componentes para Moon Shot (Explorer, Crítico, Bisociation Filter), Mensuração (Diversity Job, Avoided Cost Calculator), Safety (Visual Mark Enforcer, Reflection Trigger, Cross-client Guard, Vocabulary Linter), e mudança de retrieval (convergente vs. divergente)
 - **Integrações de alto nível**
 - **Diff explícito As-Is → To-Be**
 
@@ -55,12 +55,12 @@ A arquitetura é apresentada em **C4 Model** (Context, Containers, Components), 
 
 A arquitetura To-Be **mantém os pilares estabelecidos no As-Is** (Next.js 14 + FastAPI/LangGraph + PostgreSQL/pgvector + MLflow + Cloud Run, conforme ADR-001 a ADR-007) e **acrescenta 4 containers/módulos novos** que materializam capacidades hoje ausentes ou parciais:
 
-1. **Provocation Engine** (BC-04, FA-02) — implementa o motor Shoot for the Moon (Explorer ↔ Crítico, filtragem por zona de bisociação) que hoje só existe conceitualmente
+1. **Provocation Engine** (BC-04, FA-02) — implementa o motor Moon Shot (Explorer ↔ Crítico, filtragem por zona de bisociação) que hoje só existe conceitualmente
 2. **Measurement Service** (BC-05, FA-10/FA-11) — calcula avoided cost, diversity metrics e gera executive reports — endereça NFR-027/NFR-028 e RN-019/RN-020
 3. **Safety Gateway** (BC-05, FA-11) — valida invariantes culturais e operacionais antes de exposição ao usuário (visual mark, reflection trigger, vocabulary linter, cross-client guard) — endereça RN-014/RN-015/RN-016/RN-020
 4. **Auth Gateway** (BC-01, FA-09) — formaliza autenticação Firebase JWT como dependência obrigatória + RBAC server-side com `users`/`roles`/`audit_log` — endereça LIM-01, LIM-02, NFR-008/NFR-009
 
-Em paralelo, o componente de **retrieval evolui** para suportar dois modos: **convergente** (já existe — `search_knowledge` para Skills processuais) e **divergente** (novo — para Shoot for the Moon: knowledge graph + sampling em zona Sweet Spot). O backend FastAPI permanece **engine único** (ADR-002), mas é organizado internamente em **módulos por Bounded Context** com APIs explícitas entre eles, preparando split físico futuro caso necessário.
+Em paralelo, o componente de **retrieval evolui** para suportar dois modos: **convergente** (já existe — `search_knowledge` para Skills processuais) e **divergente** (novo — para Moon Shot: knowledge graph + sampling em zona Sweet Spot). O backend FastAPI permanece **engine único** (ADR-002), mas é organizado internamente em **módulos por Bounded Context** com APIs explícitas entre eles, preparando split físico futuro caso necessário.
 
 ### 2.2. Objetivos Arquiteturais
 
@@ -70,7 +70,7 @@ Em paralelo, o componente de **retrieval evolui** para suportar dois modos: **co
 | OBJ-02 | Latência percebida <1500ms first-token + retrieval <300ms | NFR-001, NFR-003 | Alta |
 | OBJ-03 | RBAC server-side com 3 perfis e auditabilidade | NFR-008, NFR-009, RN-009, RN-012 | Alta |
 | OBJ-04 | Observabilidade 100% via MLflow + dashboards | NFR-026, BR-009 | Alta |
-| OBJ-05 | Pipeline Shoot for the Moon com filtragem por zona Sweet Spot | NFR-024, BR-001, RN-001/002 | Alta |
+| OBJ-05 | Pipeline Moon Shot com filtragem por zona Sweet Spot | NFR-024, BR-001, RN-001/002 | Alta |
 | OBJ-06 | Mensuração contínua de homogeneização e custo evitado | NFR-027, NFR-028, BR-013/014, RN-018/019/020 | Alta |
 | OBJ-07 | Safety cultural e ownership preservados na UX | NFR-021, BR-010, RN-014/015 | Alta |
 | OBJ-08 | Resiliência a falhas LLM (fallback dinâmico) | NFR-006, RSK-07 | Média |
@@ -284,7 +284,7 @@ flowchart TB
     auth -->|validate token| fb
 
     conv -->|invoca skill| kn
-    conv -->|aciona Shoot for the Moon| prov
+    conv -->|aciona Moon Shot| prov
     conv -->|valida output antes de devolver| safe
     conv -->|emite trace| mlf
 
@@ -374,7 +374,7 @@ Middleware FastAPI obrigatório em todas as rotas `/api/*` (exceto `/health`). V
 
 **Descrição**
 
-Pipeline multi-agente Shoot for the Moon que **Devora** briefing e **Provoca** Faíscas via loop Explorer ↔ Crítico, com filtragem por zona de bisociação (RN-001) e convergência por score médio ≥ 8 (RN-002). Implementa as personas brasileiras (Antropófaga, Carnavalesco, Anciã) via system prompts dedicados.
+Pipeline multi-agente Moon Shot que **Devora** briefing e **Provoca** Faíscas via loop Explorer ↔ Crítico, com filtragem por zona de bisociação (RN-001) e convergência por score médio ≥ 8 (RN-002). Implementa as personas brasileiras (Antropófaga, Carnavalesco, Anciã) via system prompts dedicados.
 
 **Tecnologia**: Python 3.11 + LangGraph (subgraph compilado, ADR-005) + pgvector (cosine + graph) + Gemini 2.5 Flash (default — ADR-004) com Claude opt-in para Crítico
 
@@ -399,7 +399,7 @@ Pipeline multi-agente Shoot for the Moon que **Devora** briefing e **Provoca** F
 
 **NFRs aplicáveis**: NFR-001, NFR-024 (filtragem zonas)
 
-**FRs/Features**: FA-02 (Shoot for the Moon)
+**FRs/Features**: FA-02 (Moon Shot)
 
 ---
 
@@ -566,7 +566,7 @@ flowchart LR
 
 **Modo Convergente** (Skills processuais — FA-03): mantido como hoje, com adições — filter `client_id` denormalizado (NFR-010), índice HNSW (NFR-003), cross-client guard (RN-010).
 
-**Modo Divergente** (Shoot for the Moon — FA-02): novo — combina:
+**Modo Divergente** (Moon Shot — FA-02): novo — combina:
 1. **Recuperação na zona Sweet Spot**: amostra chunks com cosine distance entre 0.5 e 0.85 do `brief.embedding` (não os mais próximos!)
 2. **Walk no knowledge_graph_edges**: a partir de chunks recuperados, segue arestas tipo `metaphor`, `contrast`, `analogy` para territórios distantes
 3. **Sampling cultural**: prioriza chunks com tag `cultura` ou `referencia` (vetor cultural brasileiro)
@@ -576,7 +576,7 @@ flowchart LR
 flowchart TB
     brief[Brief embedding]
 
-    subgraph divergent["Modo Divergente NOVO - Shoot for the Moon"]
+    subgraph divergent["Modo Divergente NOVO - Moon Shot"]
         sweet[1 - Sample Sweet Spot zone<br/>cosine 0.5-0.85]
         graph[2 - Walk knowledge_graph_edges<br/>metaphor / contrast / analogy]
         cult[3 - Boost cultural<br/>tag cultura / referencia]
@@ -766,7 +766,7 @@ flowchart TB
     C03 -->|tools| KN04
     C04 -->|emite| C05
 
-    C03 -->|invoca Shoot for the Moon| P01
+    C03 -->|invoca Moon Shot| P01
     P01 --> P02 --> KN02
     KN02 --> KN03
     P02 --> P06
@@ -911,7 +911,7 @@ ADRs já catalogados na **Parte 7** sustentam a arquitetura To-Be. Decisões adi
 | ADR-005 | LangGraph framework | Proposto | Provocation Engine implementa StateGraph dedicado |
 | ADR-006 | Firebase Auth | Proposto | Auth Gateway formaliza como dependência obrigatória |
 | ADR-007 | Skills como SKILL.md + references/ | Proposto | Mantido; SkillLoader continua sendo entrypoint |
-| **ADR-008** (proposto) | **Pipeline Multi-Agente Explorer ↔ Crítico para Shoot for the Moon** | **A escrever** | Define topologia LangGraph sub-graph + filtragem por zona |
+| **ADR-008** (proposto) | **Pipeline Multi-Agente Explorer ↔ Crítico para Moon Shot** | **A escrever** | Define topologia LangGraph sub-graph + filtragem por zona |
 | **ADR-009** (proposto) | **Pub/Sub para Domain Events entre Bounded Contexts** | **A escrever** | Define quando usar event-driven (cross-BC) vs. síncrono (intra-BC) |
 | **ADR-010** (proposto) | **Safety Gateway como interceptor obrigatório nas fronteiras de saída** | **A escrever** | Define padrão de validação de invariantes (visual mark, vocabulary, cross-client) |
 | **ADR-011** (proposto, opcional) | **Looker Studio para Executive Reports vs. dashboard custom** | **A discutir** | Time + UX |
@@ -950,7 +950,7 @@ ADRs já catalogados na **Parte 7** sustentam a arquitetura To-Be. Decisões adi
 ### 9.3. O que foi ADICIONADO (containers/módulos/integrações novos)
 
 - **CTM-01 Auth Gateway** (RBAC, AuditEntry)
-- **CTM-04 Provocation Engine** (Shoot for the Moon — Explorer + Crítico + BisociationFilter)
+- **CTM-04 Provocation Engine** (Moon Shot — Explorer + Crítico + BisociationFilter)
 - **CTM-05 Measurement Service** (DiversityJob, AvoidedCostCalc, ExecutiveReportGen, RetentionJob)
 - **CTM-06 Safety Gateway** (VisualMarkEnforcer, ReflectionTrigger, CrossClientGuard, VocabularyLinter)
 - **CTM-07 Multi-tenant Resolver** (Clients API, Solar metadata sync)
@@ -979,11 +979,11 @@ ADRs já catalogados na **Parte 7** sustentam a arquitetura To-Be. Decisões adi
 
 A construção desta Parte 6 fez **emergir 3 decisões arquiteturais adicionais** que merecem ADR formal Michael Nygard (a serem documentados em `docs/adr/`):
 
-### 10.1. ADR-008 (proposto) — Pipeline Multi-Agente Explorer ↔ Crítico para Shoot for the Moon
+### 10.1. ADR-008 (proposto) — Pipeline Multi-Agente Explorer ↔ Crítico para Moon Shot
 
 **Drivers**: BR-001, RN-001/002; FA-02; NFR-024
 
-**Decisão proposta**: implementar Shoot for the Moon como **sub-graph LangGraph dedicado** (não como Skill regular) com nós Devour, Explorer, Crítico, Filter, Converge — invocado pelo Conversation Service via `interrupt`/sub-graph composition.
+**Decisão proposta**: implementar Moon Shot como **sub-graph LangGraph dedicado** (não como Skill regular) com nós Devour, Explorer, Crítico, Filter, Converge — invocado pelo Conversation Service via `interrupt`/sub-graph composition.
 
 **Alternativas a considerar**:
 - (a) Implementar como Skill regular usando ContentCreatorAgent (baixo esforço, mas perde explicitação do loop)

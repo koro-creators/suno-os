@@ -48,9 +48,9 @@ aprovacoes:
 2. [T-02 — Sistema Solar L0 (Sun/Home)](#2-t-02--sistema-solar-l0-sunhome)
 3. [T-04 — Órbita/Skill (L2)](#3-t-04--órbitaskill-l2)
 4. [T-05 — Chat com Persistência](#4-t-05--chat-com-persistência)
-5. [T-06 — Shoot for the Moon: Acionamento (Modal)](#5-t-06--shoot-for-the-moon-acionamento-modal)
-6. [T-07 — Shoot for the Moon: Painel de Faíscas](#6-t-07--shoot-for-the-moon-painel-de-faíscas)
-7. [T-08 — Shoot for the Moon: Modo Dupla (Time-Boxing)](#7-t-08--shoot-for-the-moon-modo-dupla-time-boxing)
+5. [T-06 — Moon Shot: Acionamento (Modal)](#5-t-06--moon-shot-acionamento-modal)
+6. [T-07 — Moon Shot: Painel de Faíscas](#6-t-07--moon-shot-painel-de-faíscas)
+7. [T-08 — Moon Shot: Modo Dupla (Time-Boxing)](#7-t-08--moon-shot-modo-dupla-time-boxing)
 8. [T-09 — Forced Reflection Interstitial](#8-t-09--forced-reflection-interstitial)
 9. [T-10 — Skills Admin: Catálogo](#9-t-10--skills-admin-catálogo)
 10. [T-13 — Biblioteca Admin: Catálogo (Caixa-preta)](#10-t-13--biblioteca-admin-catálogo-caixa-preta)
@@ -71,9 +71,9 @@ aprovacoes:
 | **T-02** | Sistema Solar L0 (Sun/Home) | FA-06 | existe | P0 | Todas |
 | **T-04** | Órbita/Skill (L2) | FA-06 | existe | P0 | Todas |
 | **T-05** | Chat com persistência | FA-04 | existe (refactor P1) | P0 | PX-02, PX-03, PX-04, PX-05 |
-| **T-06** | Shoot for the Moon — Modal Acionamento | FA-02 | a construir | P0 (POC) | PX-02, PX-04, PX-05 |
-| **T-07** | Shoot for the Moon — Painel de Faíscas | FA-02 | a construir | P0 (POC) | PX-02, PX-04, PX-05 |
-| **T-08** | Shoot for the Moon — Modo Dupla | FA-02 | a construir | P1 (Piloto) | PX-02 |
+| **T-06** | Moon Shot — Modal Acionamento | FA-02 | a construir | P0 (POC) | PX-02, PX-04, PX-05 |
+| **T-07** | Moon Shot — Painel de Faíscas | FA-02 | a construir | P0 (POC) | PX-02, PX-04, PX-05 |
+| **T-08** | Moon Shot — Modo Dupla | FA-02 | a construir | P1 (Piloto) | PX-02 |
 | **T-09** | Forced Reflection Interstitial | FA-11, FA-07 | a construir | P1 (Piloto) | PX-02, PX-05 |
 | **T-10** | Skills Admin — Catálogo | FA-12, FA-03 | existe | P0 | PX-01 |
 | **T-13** | Biblioteca Admin — Catálogo (Caixa-preta RN-011) | FA-12, FA-01 | existe | P0 | PX-01 |
@@ -293,7 +293,7 @@ Tela onde o Creator escolhe a Moon (sub-área) da Skill ativa e abre o Chat. Ap�
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ APPHEADER · Breadcrumb: Home > [Cliente] > [Skill]●  · [Shoot for the Moon] │
+│ APPHEADER · Breadcrumb: Home > [Cliente] > [Skill]●  · [Moon Shot] │
 ├────┬─────────────────────────────────────────────────────────────────────┤
 │ S  │ PROMPTTEMPLATEBAR — Moon chips                                       │
 │ I  │ ┌──────────────────────────────────────────────────────────────────┐│
@@ -329,7 +329,7 @@ Tela onde o Creator escolhe a Moon (sub-área) da Skill ativa e abre o Chat. Ap�
 | `aria-pressed` | `true` na ativa |
 | Vocabulário (RN-016) | Nome da Moon vem do catálogo Skill (ex: "Stories e Reels", "Feed", "Carousel") |
 
-#### 3.4.3 CTA "Shoot for the Moon" persistente
+#### 3.4.3 CTA "Moon Shot" persistente
 
 | Propriedade | Valor |
 |-------------|-------|
@@ -353,7 +353,7 @@ Tela onde o Creator escolhe a Moon (sub-área) da Skill ativa e abre o Chat. Ap�
 | Evento | Resultado |
 |--------|-----------|
 | Click em Moon chip | Atualiza query string `?moon=[slug]`; re-injeta contexto; **mantém ChatSession atual** (não limpa histórico) |
-| Click em CTA Shoot for the Moon | Abre T-06 modal |
+| Click em CTA Moon Shot | Abre T-06 modal |
 | Click em ModelSelector | Abre dropdown; troca modelo ativo (Gemini Flash / GPT-4o / Claude) |
 
 ---
@@ -377,13 +377,13 @@ Tela onde o Creator escolhe a Moon (sub-área) da Skill ativa e abre o Chat. Ap�
 
 ### 4.2 Propósito
 
-Interface conversacional principal — onde **Creator e IA conversam**. Toda Skill processual e o Shoot for the Moon chegam aqui. É o ponto de **maior densidade funcional** do sunOS. Em refactor: ganhar **persistência cross-session** (histórico recuperável via Sidebar) sem perder a sensação de imediatismo.
+Interface conversacional principal — onde **Creator e IA conversam**. Toda Skill processual e o Moon Shot chegam aqui. É o ponto de **maior densidade funcional** do sunOS. Em refactor: ganhar **persistência cross-session** (histórico recuperável via Sidebar) sem perder a sensação de imediatismo.
 
 ### 4.3 Layout Estrutural (Desktop 3 colunas)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ APPHEADER · Breadcrumb · [Moon chips] · [Model ▼] · [Shoot for the Moon] │
+│ APPHEADER · Breadcrumb · [Moon chips] · [Model ▼] · [Moon Shot] │
 ├────┬───────────────────────────────────────────┬────────────────────────┤
 │ S  │ MESSAGELIST (scroll vertical reverso)     │ CONTEXT SIDEBAR (320)  │
 │ I  │                                           │                        │
@@ -490,7 +490,7 @@ Interface conversacional principal — onde **Creator e IA conversam**. Toda Ski
 | Thumbs up/down | Animação `scale(1) → scale(1.15) → scale(1)` em 200ms; commit ao backend; counter incrementa; após N stars → T-09 |
 | Click "Variar" | Substitui bubble por `VariationsCarousel` com 3 cards (V1, V2, V3); usuário escolhe uma → resto descarta com fade |
 | Drag-and-drop arquivo | Border-color do ChatInput → `--sun`; bg muda para `--nebula`; drop processa upload (SPEC-006) |
-| Click em CTA Shoot for the Moon | Abre T-06 modal preservando contexto |
+| Click em CTA Moon Shot | Abre T-06 modal preservando contexto |
 | `Esc` durante streaming | Interrompe geração; mostra mensagem "Geração interrompida" |
 | Click em ContextSidebar item | Drawer com detalhes (Admin/Líder); Operacional vê apenas resumo neutro |
 
@@ -514,22 +514,22 @@ Interface conversacional principal — onde **Creator e IA conversam**. Toda Ski
 
 ---
 
-## 5. T-06 — Shoot for the Moon: Acionamento (Modal)
+## 5. T-06 — Moon Shot: Acionamento (Modal)
 
 ### 5.1 Metadados
 
 | Atributo | Valor |
 |----------|-------|
 | **ID** | T-06 |
-| **Nome** | Shoot for the Moon — Modal de Acionamento |
+| **Nome** | Moon Shot — Modal de Acionamento |
 | **Feature** | FA-02 |
 | **Rota** | Modal sobreposto (sem rota dedicada) — sobre T-03 ou T-05 |
 | **Prioridade** | P0 (POC) |
 | **Jornadas** | JN-02, JN-04, JN-06 |
-| **FRs** | FR-001 a FR-008 (FRD Shoot for the Moon externo) |
+| **FRs** | FR-001 a FR-008 (FRD Moon Shot externo) |
 | **RNs** | RN-001 (zona bisociação), RN-003 (3 cliques), RN-016 (vocabulário), RN-017 (track por carreira) |
 | **Status (App)** | A construir |
-| **Componentes-chave** | `ShootForTheMoonModal` (a criar) |
+| **Componentes-chave** | `MoonShotModal` (a criar) |
 
 ### 5.2 Propósito
 
@@ -541,7 +541,7 @@ Modal sobreposto que **dispara o pipeline de Provocação criativa**. Preserva c
 ┌────────────────────────────────────────────────┐  ← Backdrop rgba(0,0,0,0.6)
 │        [Modal centralizado, max-w 600px]       │
 │ ┌────────────────────────────────────────────┐ │
-│ │ 🌑 Shoot for the Moon                  [×] │ │  ← Header
+│ │ 🌑 Moon Shot                  [×] │ │  ← Header
 │ │ Devorar [Cliente] e Provocar Faíscas       │ │
 │ ├────────────────────────────────────────────┤ │
 │ │ Briefing                                   │ │
@@ -569,10 +569,10 @@ Modal sobreposto que **dispara o pipeline de Provocação criativa**. Preserva c
 
 | Elemento | Especificação |
 |----------|---------------|
-| **Modal container** | `role="dialog"` · `aria-modal="true"` · `aria-label="Acionar Shoot for the Moon"` · max-width 600px · bg `--deep` · radius 12px · padding 24px |
+| **Modal container** | `role="dialog"` · `aria-modal="true"` · `aria-label="Acionar Moon Shot"` · max-width 600px · bg `--deep` · radius 12px · padding 24px |
 | **Backdrop** | bg `rgba(0,0,0,0.6)` · click fecha · z-index 90 |
 | **Botão close** | `aria-label="Fechar"` · ícone `X` 16px · canto sup. direito |
-| **Título** | "Shoot for the Moon" + ícone `Moon` 18px · font-size 1.1rem · weight 500 |
+| **Título** | "Moon Shot" + ícone `Moon` 18px · font-size 1.1rem · weight 500 |
 | **Subtítulo** | *"Devorar [Cliente] e Provocar Faíscas"* (RN-016) · `--text-secondary` |
 | **Textarea Briefing** | min-height 100px · auto-resize · pré-preenchida com contexto da sessão · placeholder *"Cole ou descreva o briefing que vamos Devorar..."* |
 | **Modo cards** | 3 cards selecionáveis (radio comportamento) · highlight ativo: border `--sun` + bg `rgba(255,200,1,0.06)` · sugestão pré-aplicada conforme RN-017 com badge "Sugerido para você" |
@@ -608,7 +608,7 @@ Modal sobreposto que **dispara o pipeline de Provocação criativa**. Preserva c
 
 ---
 
-## 6. T-07 — Shoot for the Moon: Painel de Faíscas
+## 6. T-07 — Moon Shot: Painel de Faíscas
 
 ### 6.1 Metadados
 
@@ -617,7 +617,7 @@ Modal sobreposto que **dispara o pipeline de Provocação criativa**. Preserva c
 | **ID** | T-07 |
 | **Nome** | Painel de Faíscas (streaming pipeline Explorer↔Crítico) |
 | **Feature** | FA-02 |
-| **Rota** | Painel sobreposto (preferido) ou rota dedicada `/[clientSlug]/[skillSlug]/shoot-for-the-moon` |
+| **Rota** | Painel sobreposto (preferido) ou rota dedicada `/[clientSlug]/[skillSlug]/moon-shot` |
 | **Prioridade** | P0 (POC) |
 | **Jornadas** | JN-02, JN-04, JN-06 |
 | **FRs** | FR-009 a FR-014 (FRD externo) |
@@ -734,7 +734,7 @@ Painel onde o pipeline Explorer↔Crítico **transmite Faíscas em streaming**. 
 
 ---
 
-## 7. T-08 — Shoot for the Moon: Modo Dupla (Time-Boxing)
+## 7. T-08 — Moon Shot: Modo Dupla (Time-Boxing)
 
 ### 7.1 Metadados
 
@@ -1867,11 +1867,11 @@ AppHeader (Breadcrumb + rightLabel "ADMIN")
 
 Para entregar as telas detalhadas neste documento, o time precisa criar os seguintes componentes (não existem no `components/` atual). Lista priorizada por urgência (POC → Piloto):
 
-### 14.1 Prioridade P0 (POC — Shoot for the Moon e Caixa-preta)
+### 14.1 Prioridade P0 (POC — Moon Shot e Caixa-preta)
 
 | Componente | Para qual tela | Descrição |
 |------------|----------------|-----------|
-| **`ShootForTheMoonModal`** | T-06 | Modal de acionamento com track por carreira + zona de bisociação |
+| **`MoonShotModal`** | T-06 | Modal de acionamento com track por carreira + zona de bisociação |
 | **`FaiscaPanel`** | T-07 | Painel sobreposto com streaming de FaiscaCards + counter + persona ativa |
 | **`FaiscaCard`** | T-07, T-08 | Card individual de Faísca com 3 scores (Novidade, Coerência, Potencial) + zona + ações |
 | **`AgentPersonaBadge`** | T-07 | Badge com persona brasileira (Antropófaga, Carnavalesco, Anciã) |

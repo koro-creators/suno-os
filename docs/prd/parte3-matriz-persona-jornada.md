@@ -19,7 +19,7 @@ aprovacoes:
     status: Pendente
 fonte_brd: docs/brd/parte1-contexto.md, docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_prd: docs/prd/parte1-feature-map.md, docs/prd/parte2-personas-jtbd.md
-fonte_frd: FRD Shoot for the Moon (referenciado nos BRDs Parte 3 e 4)
+fonte_frd: FRD Moon Shot (referenciado nos BRDs Parte 3 e 4)
 total_jornadas: 10 (JN-01 a JN-10)
 ---
 
@@ -80,7 +80,7 @@ Aplicam-se a **toda** jornada:
 | PRD Parte 2 (PX-01 a PX-05, JTBD-01 a JTBD-29) | Cada jornada é executada por ≥1 Persona e cumpre ≥1 JTBD |
 | PRD Parte 4 (FRs FR-XXX) | Passos críticos de jornada viram FRs |
 | PRD Parte 5 (Roadmap) | Jornadas distribuídas por fase POC → Protótipo → Piloto → MVP |
-| FRD Shoot for the Moon | JN-02 e JN-06 são detalhadas no FRD; este documento referencia |
+| FRD Moon Shot | JN-02 e JN-06 são detalhadas no FRD; este documento referencia |
 
 ---
 
@@ -90,12 +90,12 @@ Aplicam-se a **toda** jornada:
 
 | ID | Jornada | Objetivo Principal | Personas Primárias | Features Centrais | Fase de Entrada |
 |----|---------|--------------------|--------------------|-------------------|-----------------|
-| **JN-01** | Curadoria da Biblioteca (Inteligência Coletiva) | Líder cura conteúdo institucional que vira contexto invisível para Skills e Shoot for the Moon | PX-01 | FA-01, FA-12 | Protótipo |
-| **JN-02** | Ideação criativa com Shoot for the Moon | Romper bloqueio criativo recebendo Faíscas inesperadas para um briefing | PX-02, PX-04, PX-05 | FA-02, FA-04, FA-06, FA-11 | POC |
+| **JN-01** | Curadoria da Biblioteca (Inteligência Coletiva) | Líder cura conteúdo institucional que vira contexto invisível para Skills e Moon Shot | PX-01 | FA-01, FA-12 | Protótipo |
+| **JN-02** | Ideação criativa com Moon Shot | Romper bloqueio criativo recebendo Faíscas inesperadas para um briefing | PX-02, PX-04, PX-05 | FA-02, FA-04, FA-06, FA-11 | POC |
 | **JN-03** | Execução de tarefa processual com Skill | Operador executa Copy Social / Plano de Mídia / Roteiro / Report com contexto injetado | PX-03 (primária), PX-02 | FA-03, FA-04, FA-01, FA-07 | Protótipo |
-| **JN-04** | Análise estratégica e Persona Sintética | Planner conecta dados de mercado a território criativo via Skills + Shoot for the Moon | PX-04 | FA-03, FA-02, FA-04, FA-01 | Protótipo |
+| **JN-04** | Análise estratégica e Persona Sintética | Planner conecta dados de mercado a território criativo via Skills + Moon Shot | PX-04 | FA-03, FA-02, FA-04, FA-01 | Protótipo |
 | **JN-05** | Captura de conhecimento pré-saída de Creator | Líder captura repertório/cases vividos antes da saída efetiva de Creator-chave | PX-01 | FA-01, FA-12, FA-09 | Piloto |
-| **JN-06** | Devil's advocate — "me prova que tá errada" | Sênior usa modo divergente do Shoot for the Moon como stress-test de ideia já formada | PX-02, PX-04 | FA-02, FA-04, FA-11 | Piloto |
+| **JN-06** | Devil's advocate — "me prova que tá errada" | Sênior usa modo divergente do Moon Shot como stress-test de ideia já formada | PX-02, PX-04 | FA-02, FA-04, FA-11 | Piloto |
 | **JN-07** | Configuração e operação de Workflow recorrente | Líder/Operador configura Workflow agendado (Report Mensal, Plano de Mídia, Pesquisa) com HITL gate | PX-01, PX-03, PX-04 | FA-05, FA-12, FA-03 | Piloto |
 | **JN-08** | Governança executiva e Mensuração mensal | Líder consome dashboard executivo, audita acessos, monitora homogeneização coletiva | PX-01 | FA-10, FA-09, FA-11, FA-12 | Piloto |
 | **JN-09** | Onboarding de Creator Junior | Junior escolhe track de onboarding e aprende vocabulário/cultura via Biblioteca + Skills | PX-05 | FA-11, FA-02, FA-01, FA-04 | Piloto |
@@ -105,7 +105,7 @@ Aplicam-se a **toda** jornada:
 
 | Fase | Jornadas Core (validação obrigatória) | Jornadas Suportadas | Jornadas Futuras |
 |------|---------------------------------------|---------------------|------------------|
-| **POC** | JN-02 (Shoot for the Moon, blind tests com seniores) | — | JN-01, JN-03 a JN-10 |
+| **POC** | JN-02 (Moon Shot, blind tests com seniores) | — | JN-01, JN-03 a JN-10 |
 | **Protótipo** | JN-01, JN-02, JN-03, JN-04, JN-10 | — | JN-05 a JN-09 |
 | **Piloto** | JN-01, JN-02, JN-03, JN-04, JN-05, JN-06, JN-07, JN-08, JN-09 | JN-10 (refinamento) | — |
 | **MVP** | Todas as 10 jornadas em produção contínua | — | — |
@@ -164,7 +164,7 @@ As 10 jornadas formam três anéis funcionais que espelham os anéis de Features
 
 | Objetivo / JTBD | Jornada | Passos-Chave | Features | BRs / RNs | Fase |
 |-----------------|---------|--------------|----------|-----------|------|
-| JTBD-08 (romper bloqueio) | JN-02 | 1. Devorar briefing no Chat (Cliente ativo) → 2. Acionar Shoot for the Moon (≤3 cliques, RN-003) → 3. Receber 3 Faíscas zona Sweet Spot → 4. Estrelar úteis → 5. Forced reflection após N=5 (RN-015) | FA-02, FA-04, FA-06, FA-11 | BR-001, BR-010, BR-011, BR-014; RN-001, RN-002, RN-003, RN-014, RN-015 | POC |
+| JTBD-08 (romper bloqueio) | JN-02 | 1. Devorar briefing no Chat (Cliente ativo) → 2. Acionar Moon Shot (≤3 cliques, RN-003) → 3. Receber 3 Faíscas zona Sweet Spot → 4. Estrelar úteis → 5. Forced reflection após N=5 (RN-015) | FA-02, FA-04, FA-06, FA-11 | BR-001, BR-010, BR-011, BR-014; RN-001, RN-002, RN-003, RN-014, RN-015 | POC |
 | JTBD-09 (devil's advocate) | JN-06 | 1. Apresentar ideia ao agente em modo "me prova que tá errada" (track sênior, RN-017) → 2. Receber contra-argumentos estruturados → 3. Estrelar argumentos válidos → 4. Decidir refinar/manter ideia | FA-02, FA-04, FA-11 | BR-001, BR-012; RN-014, RN-015, RN-017 | Piloto |
 | JTBD-10 (preservar identidade autoral) | JN-02, JN-03 (transversal) | 1. Output IA marcado como Faísca/estímulo (RN-014) → 2. Confirmar explicitamente promoção a peça final → 3. Sistema bloqueia compartilhamento sem confirmação | FA-04, FA-11, FA-08 | BR-010; RN-014 | Protótipo |
 | JTBD-11 (referência cultural rápida) | JN-02, JN-03 (transversal) | 1. Skill ativa puxa contexto da Biblioteca por scope/tags → 2. Tempo médio de retrieval < 2 minutos → 3. Refinar prompt sem trocar de tela | FA-01, FA-03, FA-04 | BR-006, BR-015; RN-021 | Protótipo |
@@ -188,7 +188,7 @@ As 10 jornadas formam três anéis funcionais que espelham os anéis de Features
 |-----------------|---------|--------------|----------|-----------|------|
 | JTBD-20 (Pesquisa de Mercado como Workflow) | JN-07 (variante) | 1. PX-04 dispara Workflow Pesquisa de Mercado → 2. Sub-workflow busca web + síntese + retrieval Biblioteca → 3. HITL gate → 4. Report estruturado | FA-05, FA-03, FA-01 | BR-002, BR-013; RN-022 | Piloto |
 | JTBD-21 (Persona Sintética com cultura local) | JN-04 | 1. Skill Persona Sintética com cliente ativo → 2. Biblioteca injeta referências culturais brasileiras + dados demográficos → 3. Output marcado como estímulo (RN-014) → 4. HITL | FA-03, FA-01, FA-11 | BR-006, BR-011, BR-015; RN-014, RN-021 | Protótipo |
-| JTBD-22 (insight → território criativo) | JN-04 → JN-02 | 1. PX-04 inicia Análise de Mercado → 2. Captura insight → 3. Aciona Shoot for the Moon em modo "começando uma ideia" (RN-017) → 4. Recebe Faíscas ponte → 5. Briefa PX-02 | FA-03, FA-02, FA-04 | BR-001, BR-011; RN-001, RN-014, RN-017 | Protótipo |
+| JTBD-22 (insight → território criativo) | JN-04 → JN-02 | 1. PX-04 inicia Análise de Mercado → 2. Captura insight → 3. Aciona Moon Shot em modo "começando uma ideia" (RN-017) → 4. Recebe Faíscas ponte → 5. Briefa PX-02 | FA-03, FA-02, FA-04 | BR-001, BR-011; RN-001, RN-014, RN-017 | Protótipo |
 | JTBD-23 (Brief Builder estratégico) | JN-04 | 1. Skill Brief Builder com cliente ativo → 2. Biblioteca injeta briefings históricos + tom de voz → 3. Draft de briefing → 4. HITL | FA-03, FA-01 | BR-002, BR-006, BR-015; RN-021 | Protótipo |
 | JTBD-24 (custo evitado da pesquisa) | JN-08 (consumo indireto) | 1. Workflow Pesquisa registra tempo → 2. RN-018 calcula custo evitado → 3. Dashboard reflete | FA-10, FA-05 | BR-013; RN-018 | Piloto |
 
@@ -210,7 +210,7 @@ As 10 jornadas formam três anéis funcionais que espelham os anéis de Features
 
 #### Descrição
 
-Jornada **fundacional** do sunOS — sem ela, todas as outras jornadas operam descontextualizadas. O Líder/Curador (PX-01) ingere conteúdo institucional (referências, cases, briefings, guidelines, contexto de mercado, regras de negócio do cliente) na Biblioteca via Admin (`/biblioteca`), preenchendo metadados obrigatórios (RN-006). O sistema executa indexação dual (vetorial + grafo) em background. O resultado é **invisível para Operacionais** (Caixa-preta, RN-011) mas alimenta automaticamente Skills processuais (FA-03) e Shoot for the Moon (FA-02).
+Jornada **fundacional** do sunOS — sem ela, todas as outras jornadas operam descontextualizadas. O Líder/Curador (PX-01) ingere conteúdo institucional (referências, cases, briefings, guidelines, contexto de mercado, regras de negócio do cliente) na Biblioteca via Admin (`/biblioteca`), preenchendo metadados obrigatórios (RN-006). O sistema executa indexação dual (vetorial + grafo) em background. O resultado é **invisível para Operacionais** (Caixa-preta, RN-011) mas alimenta automaticamente Skills processuais (FA-03) e Moon Shot (FA-02).
 
 A jornada é contínua (não evento único): a meta MVP é ≥500 itens curados, com curadoria sustentada pós-Piloto. O critério-chave é **zero conhecimento crítico vivendo apenas em uma cabeça** (BR-004, BR-005).
 
@@ -236,7 +236,7 @@ A jornada é contínua (não evento único): a meta MVP é ≥500 itens curados,
 [5. Indexação dual (vetorial pgvector + grafo) em background]
         │
         ▼
-[6. Conteúdo disponível para retrieval por Skills (FA-03) e Shoot for the Moon (FA-02)]
+[6. Conteúdo disponível para retrieval por Skills (FA-03) e Moon Shot (FA-02)]
         │
         ▼
 [7. AccessLog grava para detecção futura de "conhecimento em risco" (RN-008)]
@@ -258,7 +258,7 @@ A jornada é contínua (não evento único): a meta MVP é ≥500 itens curados,
 
 #### Momento Crítico
 
-**Validação dos metadados** (passo 3-4): se Líder consegue ingerir conteúdo sem metadados completos, retrieval divergente do Shoot for the Moon não funciona; se validação é fricativa demais, curadoria não escala (`<5min/item` é meta — BR-004).
+**Validação dos metadados** (passo 3-4): se Líder consegue ingerir conteúdo sem metadados completos, retrieval divergente do Moon Shot não funciona; se validação é fricativa demais, curadoria não escala (`<5min/item` é meta — BR-004).
 
 #### Dores no Estado Atual
 
@@ -310,11 +310,11 @@ A jornada é contínua (não evento único): a meta MVP é ≥500 itens curados,
 
 ---
 
-### JN-02 — Ideação Criativa com Shoot for the Moon
+### JN-02 — Ideação Criativa com Moon Shot
 
 #### Descrição
 
-Jornada **diferenciadora** do sunOS, detalhada também no FRD Shoot for the Moon (referenciado). O Creator (PX-02 sênior, PX-04 planner ou PX-05 junior em track adaptado) está em contexto de Cliente ativo com briefing/tema em mãos. Aciona o **Shoot for the Moon** em ≤3 cliques (RN-003), o motor Devora o briefing e Provoca Faíscas via loop multi-agente Explorer↔Crítico (FA-02), filtradas pela zona Sweet Spot de bisociação (cosseno 0.5–0.85, RN-001). O Creator estrela as Faíscas úteis; após N stars (5 default, 3 para junior — RN-015), o sistema **interrompe com forced reflection** ("Por que essas? Que padrão você vê?").
+Jornada **diferenciadora** do sunOS, detalhada também no FRD Moon Shot (referenciado). O Creator (PX-02 sênior, PX-04 planner ou PX-05 junior em track adaptado) está em contexto de Cliente ativo com briefing/tema em mãos. Aciona o **Moon Shot** em ≤3 cliques (RN-003), o motor Devora o briefing e Provoca Faíscas via loop multi-agente Explorer↔Crítico (FA-02), filtradas pela zona Sweet Spot de bisociação (cosseno 0.5–0.85, RN-001). O Creator estrela as Faíscas úteis; após N stars (5 default, 3 para junior — RN-015), o sistema **interrompe com forced reflection** ("Por que essas? Que padrão você vê?").
 
 Toda Faísca é marcada visualmente como **estímulo/provocação** (RN-014) — nunca peça final. O Creator decide promover, refinar ou descartar. A jornada **protege ownership autoral** e mitiga homogeneização criativa coletiva.
 
@@ -332,7 +332,7 @@ Variante junior (PX-05): track "Estou começando uma ideia" (divergente, abundan
 [2. Devora briefing no Chat (FA-04) — texto, imagem ou áudio (FA-08)]
         │
         ▼
-[3. Aciona Shoot for the Moon — botão sempre presente (≤3 cliques, RN-003)]
+[3. Aciona Moon Shot — botão sempre presente (≤3 cliques, RN-003)]
         │
         ▼
 [4. Sistema executa pipeline Explorer↔Crítico (FA-02):
@@ -371,7 +371,7 @@ Variante junior (PX-05): track "Estou começando uma ideia" (divergente, abundan
 
 - Sistema Solar (Sun → Planeta → Órbita)
 - Chat com PromptTemplateBar (Moon chips)
-- Botão Shoot for the Moon (no Chat)
+- Botão Moon Shot (no Chat)
 - Faísca cards (com estrela, comentário, variação, descartar)
 - Modal de forced reflection
 - Persona selector dos agentes
@@ -400,7 +400,7 @@ Variante junior (PX-05): track "Estou começando uma ideia" (divergente, abundan
 
 | Feature | Papel na Jornada |
 |---------|------------------|
-| FA-02 Shoot for the Moon | Motor central — pipeline Explorer↔Crítico, zonas, modos, marcação |
+| FA-02 Moon Shot | Motor central — pipeline Explorer↔Crítico, zonas, modos, marcação |
 | FA-04 Chat | Interface conversacional onde a jornada acontece |
 | FA-06 Sistema Solar | Acionamento contextual (≤3 cliques) |
 | FA-01 Biblioteca | Devora contexto do cliente para Provocar |
@@ -573,7 +573,7 @@ Output marcado como estímulo (RN-014). Operador refina via Chat (variações, e
 
 #### Descrição
 
-Jornada do **Planejamento Estratégico** (PX-04). Combina Skills processuais convergentes (Análise de Mercado, Persona Sintética, Brief Builder) com Shoot for the Moon divergente para conectar **dados de mercado a território criativo não-óbvio**. PX-04 inicia em modo Skill (FA-03), recebe análise estruturada com contexto histórico do cliente injetado, captura insight, e opcionalmente aciona Shoot for the Moon em modo "Estou começando uma ideia" (RN-017) para Provocar Faíscas que combinam o insight com domínios distantes. Output briefa PX-02 (Criativo Sênior) com insumo rico não-genérico.
+Jornada do **Planejamento Estratégico** (PX-04). Combina Skills processuais convergentes (Análise de Mercado, Persona Sintética, Brief Builder) com Moon Shot divergente para conectar **dados de mercado a território criativo não-óbvio**. PX-04 inicia em modo Skill (FA-03), recebe análise estruturada com contexto histórico do cliente injetado, captura insight, e opcionalmente aciona Moon Shot em modo "Estou começando uma ideia" (RN-017) para Provocar Faíscas que combinam o insight com domínios distantes. Output briefa PX-02 (Criativo Sênior) com insumo rico não-genérico.
 
 A jornada também atende **Workflow Pesquisa de Mercado** (FA-05) para new business pitches — quando recorrente ou complexa, vira JN-07.
 
@@ -598,7 +598,7 @@ A jornada também atende **Workflow Pesquisa de Mercado** (FA-05) para new busin
 [5. PX-04 captura insight central (estrela, copia, comenta)]
         │
         ▼
-[6. (Opcional) Aciona Shoot for the Moon (FA-02) com insight como input → Faíscas combinam insight + domínios distantes]
+[6. (Opcional) Aciona Moon Shot (FA-02) com insight como input → Faíscas combinam insight + domínios distantes]
         │
         ▼
 [7. PX-04 estrela Faíscas relevantes → forced reflection após N stars (RN-015)]
@@ -622,11 +622,11 @@ A jornada também atende **Workflow Pesquisa de Mercado** (FA-05) para new busin
 
 - Sistema Solar
 - Chat (FA-04) com Skills FA-03 (Análise / Persona Sintética / Brief Builder)
-- Botão Shoot for the Moon (transição para JN-02)
+- Botão Moon Shot (transição para JN-02)
 
 #### Momento Crítico
 
-**Passo 6 (transição Skill → Shoot for the Moon)**: ponto onde a jornada deixa o modo convergente e entra no divergente. Se a transição é fricativa, Planner não rompe o óbvio. Se Shoot for the Moon não consome o insight como input, a Faísca é genérica.
+**Passo 6 (transição Skill → Moon Shot)**: ponto onde a jornada deixa o modo convergente e entra no divergente. Se a transição é fricativa, Planner não rompe o óbvio. Se Moon Shot não consome o insight como input, a Faísca é genérica.
 
 #### Dores no Estado Atual
 
@@ -638,7 +638,7 @@ A jornada também atende **Workflow Pesquisa de Mercado** (FA-05) para new busin
 #### Oportunidades de IA
 
 - **Skills com contexto histórico injetado** — análises ricas desde a v1
-- **Ponte Skill → Shoot for the Moon** — divergência guiada por insight estruturado
+- **Ponte Skill → Moon Shot** — divergência guiada por insight estruturado
 - **Cultura brasileira** nas Skills (RN-016, FA-11)
 - **Sub-workflow Pesquisa de Mercado** (FA-05) quando demanda é recorrente
 
@@ -647,7 +647,7 @@ A jornada também atende **Workflow Pesquisa de Mercado** (FA-05) para new busin
 | Feature | Papel na Jornada |
 |---------|------------------|
 | FA-03 Skills (Análise, Persona, Brief Builder) | Motor convergente |
-| FA-02 Shoot for the Moon | Motor divergente (transição opcional) |
+| FA-02 Moon Shot | Motor divergente (transição opcional) |
 | FA-04 Chat | Interface |
 | FA-01 Biblioteca | Contexto histórico do cliente |
 | FA-11 Safety cultural | Marcação, forced reflection |
@@ -666,7 +666,7 @@ A jornada também atende **Workflow Pesquisa de Mercado** (FA-05) para new busin
 | Métrica | Meta | Como medir |
 |---------|------|------------|
 | Tempo médio Análise/Persona/Brief | ≤70% do baseline pré-sunOS | RN-018 |
-| Insights de Shoot for the Moon classificados como úteis | ≥60% | HITL |
+| Insights de Moon Shot classificados como úteis | ≥60% | HITL |
 | Win rate em new business pitches | Mantém ou melhora pós-sunOS | KPI BR-013 |
 | Brief Builder reduz iteração com PX-02 | ≥30% | Pesquisa qualitativa |
 
@@ -786,7 +786,7 @@ Meta: substituto re-onboarda em ≤70% do tempo histórico, ≥80% das contas cr
 
 #### Descrição
 
-Variante **senior-leaning** do Shoot for the Moon. Em vez de divergir a partir de briefing aberto (JN-02 modo "começando uma ideia"), o sênior **já tem ideia formada** e pede ao agente para **stress-testar** — argumentar contra, encontrar furos, propor contra-ângulos. Modo aciona track sênior do RN-017, que reduz fricção (devil's advocate é stress-test rápido) e ativa visible reasoning hidden by default (BR-012).
+Variante **senior-leaning** do Moon Shot. Em vez de divergir a partir de briefing aberto (JN-02 modo "começando uma ideia"), o sênior **já tem ideia formada** e pede ao agente para **stress-testar** — argumentar contra, encontrar furos, propor contra-ângulos. Modo aciona track sênior do RN-017, que reduz fricção (devil's advocate é stress-test rápido) e ativa visible reasoning hidden by default (BR-012).
 
 Diferença-chave de JN-02: input é uma ideia consolidada; output são contra-argumentos estruturados que o Creator decide aceitar/rejeitar. Marcação como estímulo (RN-014) preserva ownership.
 
@@ -799,7 +799,7 @@ Diferença-chave de JN-02: input é uma ideia consolidada; output são contra-ar
 [1. Sênior no Chat (FA-04) com Cliente ativo]
         │
         ▼
-[2. Aciona Shoot for the Moon em modo "Tenho uma ideia, me prova que tá errada" (RN-017 sênior)]
+[2. Aciona Moon Shot em modo "Tenho uma ideia, me prova que tá errada" (RN-017 sênior)]
         │
         ▼
 [3. Apresenta a ideia (texto/imagem)]
@@ -859,7 +859,7 @@ Diferença-chave de JN-02: input é uma ideia consolidada; output são contra-ar
 
 | Feature | Papel na Jornada |
 |---------|------------------|
-| FA-02 Shoot for the Moon (modo sênior) | Motor — pipeline Crítico-driven |
+| FA-02 Moon Shot (modo sênior) | Motor — pipeline Crítico-driven |
 | FA-04 Chat | Interface |
 | FA-11 Safety cultural | Marcação, forced reflection, track sênior |
 | FA-07 HITL | Stars + comentários |
@@ -1173,7 +1173,7 @@ Forced reflection adaptado: N=3 para junior (mais protetivo que N=5 sênior — 
     - Vocabulário Suno: Devorar, Provocar, Faísca, Brasa]
         │
         ▼
-[5. Tutorial sessão 2 — Shoot for the Moon (modo divergente):
+[5. Tutorial sessão 2 — Moon Shot (modo divergente):
     - Acionamento de Faísca
     - Marcação como estímulo (RN-014)
     - Forced reflection N=3 explicada antes de aparecer]
@@ -1231,7 +1231,7 @@ Forced reflection adaptado: N=3 para junior (mais protetivo que N=5 sênior — 
 | Feature | Papel na Jornada |
 |---------|------------------|
 | FA-11 Safety cultural | Track, forced reflection, marcação, personas, manifesto |
-| FA-02 Shoot for the Moon | Modo "começando uma ideia" (junior) |
+| FA-02 Moon Shot | Modo "começando uma ideia" (junior) |
 | FA-04 Chat | Interface |
 | FA-01 Biblioteca | Cases curados via Caixa-preta |
 | FA-03 Skills | Aprendizado processual |
@@ -1385,7 +1385,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | Feature | Jornadas onde aparece | Papel transversal |
 |---------|----------------------|-------------------|
 | FA-01 Biblioteca | JN-01 (curadoria), JN-02, JN-03, JN-04, JN-05, JN-09 (Caixa-preta) | Infraestrutura de conhecimento — invisível mas alimenta tudo |
-| FA-02 Shoot for the Moon | JN-02 (primária), JN-04 (transição), JN-06, JN-09 (track junior) | Motor divergente |
+| FA-02 Moon Shot | JN-02 (primária), JN-04 (transição), JN-06, JN-09 (track junior) | Motor divergente |
 | FA-03 Skills processuais | JN-03 (primária), JN-04, JN-07, JN-09, JN-10 | Motor convergente |
 | FA-04 Chat | JN-02, JN-03, JN-04, JN-06, JN-09 | Interface conversacional |
 | FA-05 Workflows | JN-07 (primária); automatiza JN-03 e JN-04 quando recorrente | Engine de automação |
@@ -1401,7 +1401,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 
 | Fase | Jornadas Completas | Jornadas Parciais | Jornadas Futuras |
 |------|--------------------|-------------------|------------------|
-| **POC** | JN-02 (Shoot for the Moon — pipeline mínimo) | — | JN-01, JN-03 a JN-10 |
+| **POC** | JN-02 (Moon Shot — pipeline mínimo) | — | JN-01, JN-03 a JN-10 |
 | **Protótipo** | JN-01, JN-02 (UX completa), JN-03, JN-04, JN-10 | — | JN-05 a JN-09 |
 | **Piloto** | JN-01 a JN-09 (todas operacionais) | JN-10 (refinamento contínuo) | — |
 | **MVP** | Todas as 10 em produção contínua | — | — |
@@ -1452,7 +1452,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 
 | Relação | Fonte de Inferência | Confiança | Status |
 |---------|---------------------|-----------|--------|
-| JN-04 transita para JN-02 (Skill → Shoot for the Moon) | Inferido da Parte 2 §3.4 (PX-04 transita entre divergente e convergente) | Alta | A validar com Sergio Katz |
+| JN-04 transita para JN-02 (Skill → Moon Shot) | Inferido da Parte 2 §3.4 (PX-04 transita entre divergente e convergente) | Alta | A validar com Sergio Katz |
 | JN-09 inclui modo Antropófaga/Carnavalesco/Anciã | Inferido da Parte 2 §3.5 (PX-05 JTBD-29) + ASS-05 da Parte 1 | Média | A validar com Bruno Prosperi |
 | JN-05 (captura pré-saída) tem detecção automática (RN-008) | Inferido do BRD Parte 4 + Parte 1 PA-08 (calibração de "crítico" pendente) | Média | A validar com Heitor + sócios |
 | JN-08 inclui revisão mensal de Skills com redução < 30% (RN-004) | Inferido da Parte 1 ROI mensuração | Alta | A validar |
@@ -1464,7 +1464,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 |---------|-------------|------------|
 | JN-02 (POC) | Configuração concreta de zona Sweet Spot por tipo de briefing (Vivo vs. Americanas vs. Sicredi) | Testes blind com 3+ seniores em POC |
 | JN-05 | Calibração de thresholds RN-008 ("conhecimento crítico", "long-tenure") | PA-08 com Heitor + sócios |
-| JN-06 | Pipeline Crítico-driven é variante do Explorer-driven? Spec ainda não detalhou | FRD Shoot for the Moon §FR-009 (a refinar) |
+| JN-06 | Pipeline Crítico-driven é variante do Explorer-driven? Spec ainda não detalhou | FRD Moon Shot §FR-009 (a refinar) |
 | JN-07 | Lista atualizada de ferramentas adotadas para guardar contra duplicidade (RN-022) | PA-11 com Diretoria |
 | JN-08 | Formato exato do dashboard executivo (visualização, KPIs específicos) | PA-05 com Heitor + Guga |
 | JN-09 | Definições por área de júnior/pleno/sênior | PA-09 com Bruno Prosperi (criação), Takai (mídia) |
@@ -1593,5 +1593,5 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **10 Jornadas (JN-01 a JN-10)** cruzando 5 Personas (PX-01 a PX-05) × 29 JTBDs × 12 Features (FA-01 a FA-12) × 16 BRs × 22 RNs. Estrutura em 3 anéis funcionais (Curadoria, Uso, Operação Recorrente & Governança). Cobertura completa: cada um dos 16 BRs tem ≥1 jornada. JN-02 detalhada referencia FRD Shoot for the Moon. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma); anti-patterns evitados. Cada jornada com fluxo, telas tocadas, momento crítico, dores, oportunidades de IA, features, BRs/RNs, JTBDs e critério de sucesso. **Koro sempre com K** |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **10 Jornadas (JN-01 a JN-10)** cruzando 5 Personas (PX-01 a PX-05) × 29 JTBDs × 12 Features (FA-01 a FA-12) × 16 BRs × 22 RNs. Estrutura em 3 anéis funcionais (Curadoria, Uso, Operação Recorrente & Governança). Cobertura completa: cada um dos 16 BRs tem ≥1 jornada. JN-02 detalhada referencia FRD Moon Shot. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma); anti-patterns evitados. Cada jornada com fluxo, telas tocadas, momento crítico, dores, oportunidades de IA, features, BRs/RNs, JTBDs e critério de sucesso. **Koro sempre com K** |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude (assistido) | **+2 Jornadas**: JN-11 Submissão para Aprovação Hierárquica (atende PX-06 + PX-02/03/05) e JN-12 Curadoria do Drive Assistida (atende PX-01). Pedido Guga + Bruno Prosperi. Total agora: **12 Jornadas / 6 Personas / 14 Features / 18 BRs / 30 RNs** |

@@ -1,6 +1,6 @@
 ---
 spec-id: SPEC-004
-slug: shoot-for-the-moon
+slug: moon-shot
 artefato: constitution
 atualizada: 2026-04-28
 versao: 1.0
@@ -13,11 +13,11 @@ escopo:
   contexto: Motor de serendipidade criativa + Biblioteca de conhecimento + Skills processuais (rascunho original do Guga, materializado)
 ---
 
-# Constitution — Shoot for the Moon (SPEC-004)
+# Constitution — Moon Shot (SPEC-004)
 
-Princípios imutáveis que governam a feature **Shoot for the Moon** — motor de serendipidade criativa do sunOS — e suas dependências (Biblioteca de Conhecimento, Skills processuais com context injection).
+Princípios imutáveis que governam a feature **Moon Shot** — motor de serendipidade criativa do sunOS — e suas dependências (Biblioteca de Conhecimento, Skills processuais com context injection).
 
-Esta constitution **complementa** SPEC-001 (sunohub-tools-integration). Onde houver conflito, ela prevalece para escopo Shoot for the Moon.
+Esta constitution **complementa** SPEC-001 (sunohub-tools-integration). Onde houver conflito, ela prevalece para escopo Moon Shot.
 
 ## Princípios de Arquitetura
 
@@ -33,7 +33,7 @@ Esta constitution **complementa** SPEC-001 (sunohub-tools-integration). Onde hou
 
 6. **Tripartite embedding** — Cada item da Biblioteca tem 3 embeddings (purpose, mechanism, surface) seguindo Hope/Chan/Kittur/Shahaf 2017. Surface variety NÃO substitui structural alignment.
 
-7. **Mesma Biblioteca, dois modos de retrieval** — Skills processuais usam retrieval convergente (precisão, λ alto); Shoot for the Moon usa divergente (diversidade, MMR λ=0.3-0.5 + graph traverse 2+ hops).
+7. **Mesma Biblioteca, dois modos de retrieval** — Skills processuais usam retrieval convergente (precisão, λ alto); Moon Shot usa divergente (diversidade, MMR λ=0.3-0.5 + graph traverse 2+ hops).
 
 8. **Backward compatible** — Não quebra Skills existentes nem o Sistema Solar. Integra-se via context injection transparente.
 
@@ -59,7 +59,7 @@ Esta constitution **complementa** SPEC-001 (sunohub-tools-integration). Onde hou
 ## Padrões Obrigatórios
 
 ### Frontend
-- Componentes em `components/shoot-for-the-moon/`
+- Componentes em `components/moon-shot/`
 - Inline styles + CSS variables (`--void`, `--sun`, `--nebula`)
 - Lucide icons size 14, strokeWidth 1.5
 - Animação "Devorando" em globals.css com `prefers-reduced-motion` respeitado

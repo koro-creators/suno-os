@@ -17,7 +17,7 @@ aprovacoes:
     aprovador: Heitor Miranda
     data: 2026-04-28
     status: Pendente
-fonte_principal: Parte 1 (Contexto) + Parte 2 (Glossário) + FRD Shoot for the Moon + Research foundation engineering serendipity
+fonte_principal: Parte 1 (Contexto) + Parte 2 (Glossário) + FRD Moon Shot + Research foundation engineering serendipity
 ---
 
 # BRD Parte 3 — Requisitos de Negócio
@@ -31,7 +31,7 @@ Esta parte traduz os **5 Objetivos de Negócio** da Parte 1 e as **7 Capacidades
 - BRs estão organizados em **6 categorias temáticas** que correspondem a frentes de valor do projeto
 - Cada BR tem ID sequencial (BR-001 a BR-016), prioridade, stakeholder demandante, critérios de aceite e dependências
 - **BR ≠ FR (Functional Requirement)**: BR descreve a necessidade; FR descreve a solução. FRs vivem em PRDs/FRDs separados
-- **Quando uma feature já tem FRD próprio (ex: Shoot for the Moon), o BR aponta para ele** — nunca duplica
+- **Quando uma feature já tem FRD próprio (ex: Moon Shot), o BR aponta para ele** — nunca duplica
 - Critérios de aceite são **verificáveis**, não desejos vagos
 
 ## Sumário Executivo (16 BRs)
@@ -75,7 +75,7 @@ Os três requisitos centrais que justificam a existência do projeto: provocar c
 
 **Critérios de Aceite**:
 - [ ] Em testes blind, **≥60% das provocações** classificadas como "úteis" por 3+ creators seniores (POC)
-- [ ] Score de bisociação médio das provocações aprovadas dentro da **zona Sweet Spot** (cosseno 0.5–0.85) — ver FRD Shoot for the Moon §FR-011
+- [ ] Score de bisociação médio das provocações aprovadas dentro da **zona Sweet Spot** (cosseno 0.5–0.85) — ver FRD Moon Shot §FR-011
 - [ ] Sistema rejeita provocações nas zonas "óbvio demais" e "incoerente demais" automaticamente (≥90% de filtragem efetiva)
 - [ ] Em uso real (Piloto), ≥70% de aprovação por creators
 - [ ] Capacidade acessível em **≤3 cliques** a partir do contexto de qualquer cliente
@@ -83,7 +83,7 @@ Os três requisitos centrais que justificam a existência do projeto: provocar c
 **Dependências**: BR-004 (Biblioteca), BR-007 (Proteção de IP), BR-014 (Detecção de homogeneização)
 
 **Fonte**:
-- FRD Shoot for the Moon §FA-02
+- FRD Moon Shot §FA-02
 - Research foundation: Doshi & Hauser (Science Advances 2024), Padmakumar & He (ICLR 2024) — leveling-up illusion
 - OBJ-02, OBJ-05 (Parte 1)
 - Transcrição reunião Guga + Heitor + Bruno Prosperi
@@ -110,7 +110,7 @@ Os três requisitos centrais que justificam a existência do projeto: provocar c
 **Fonte**:
 - OBJ-01 (Reduzir custo operacional via automação)
 - OBJ-02 (Liberar talento criativo)
-- FRD Shoot for the Moon §FA-03
+- FRD Moon Shot §FA-03
 - Transcrição Heitor + William
 
 ---
@@ -126,7 +126,7 @@ Os três requisitos centrais que justificam a existência do projeto: provocar c
 **Critérios de Aceite**:
 - [ ] **Business case completo** apresentado e aprovado pela Diretoria até **Q3 2026** (cobre ≥80% das 136 atividades catalogadas)
 - [ ] **Dashboard executivo** disponível mensalmente com tendência de tempo economizado, custo evitado e adoção
-- [ ] **≥3 cases internos documentados por trimestre** com impacto atribuível ao sunOS (ex: campanha que usou Shoot for the Moon, tarefa cuja execução foi acelerada)
+- [ ] **≥3 cases internos documentados por trimestre** com impacto atribuível ao sunOS (ex: campanha que usou Moon Shot, tarefa cuja execução foi acelerada)
 - [ ] Reporting do dashboard apresentado nas reuniões semanais de terça com Guga
 - [ ] Indicadores triangulam mensuração técnica (KPIs do produto) com mensuração financeira (KPIs do CFO)
 
@@ -148,7 +148,7 @@ Como o sunOS transforma conhecimento individual disperso em patrimônio comparti
 
 ### BR-004 — Repositório institucional unificado (Biblioteca)
 
-**Descrição**: O sunOS deve manter uma **base de conhecimento centralizada (Biblioteca)** que consolida referências culturais, cases de clientes, briefings, guidelines de marca, contexto de mercado, metodologias proprietárias e histórico de campanhas — disponível como infraestrutura única para skills processuais e Shoot for the Moon, sem duplicação. A Biblioteca é **invisível para perfis operacionais**: líderes curam, plataforma consome.
+**Descrição**: O sunOS deve manter uma **base de conhecimento centralizada (Biblioteca)** que consolida referências culturais, cases de clientes, briefings, guidelines de marca, contexto de mercado, metodologias proprietárias e histórico de campanhas — disponível como infraestrutura única para skills processuais e Moon Shot, sem duplicação. A Biblioteca é **invisível para perfis operacionais**: líderes curam, plataforma consome.
 
 **Prioridade**: Alta
 
@@ -158,13 +158,13 @@ Como o sunOS transforma conhecimento individual disperso em patrimônio comparti
 - [ ] Biblioteca com **≥500 itens curados** até final do Piloto (ver FRD §FA-01)
 - [ ] Líderes conseguem curar conteúdo em **<5 minutos por item** com metadados obrigatórios completos
 - [ ] **Zero conhecimento crítico de cliente** vivendo apenas em cabeças individuais (auditável: cada conta ativa com contexto-mínimo documentado)
-- [ ] Biblioteca alimenta **simultaneamente** skills processuais (modo convergente) e Shoot for the Moon (modo divergente)
+- [ ] Biblioteca alimenta **simultaneamente** skills processuais (modo convergente) e Moon Shot (modo divergente)
 - [ ] Curadoria contínua sustentada (≥X itens novos/semana após Piloto — definir baseline durante Protótipo)
 
 **Dependências**: BR-007 (governança), BR-005 (captura de turnover)
 
 **Fonte**:
-- FRD Shoot for the Moon §FA-01
+- FRD Moon Shot §FA-01
 - Glossário §1 (Inteligência Coletiva)
 - OBJ-02 (liberar talento), OBJ-03 (centralizar governança)
 - Transcrição reunião sobre sunOS
@@ -225,7 +225,7 @@ Como o sunOS protege o que torna a Suno competitiva.
 
 ### BR-007 — Proteção do IP proprietário da Suno
 
-**Descrição**: O sunOS deve preservar o **IP estratégico da Suno** (skills, system prompts, lógica do Shoot for the Moon, knowledge curado, lógica de avaliação) através de controles que previnem exposição interna ou externa não autorizada. Refletindo o princípio do sponsor: *"Vendemos ideias na essência."* Aplicação prática da metáfora do **Caixa-preta** (Glossário §1).
+**Descrição**: O sunOS deve preservar o **IP estratégico da Suno** (skills, system prompts, lógica do Moon Shot, knowledge curado, lógica de avaliação) através de controles que previnem exposição interna ou externa não autorizada. Refletindo o princípio do sponsor: *"Vendemos ideias na essência."* Aplicação prática da metáfora do **Caixa-preta** (Glossário §1).
 
 **Prioridade**: Alta
 
@@ -433,7 +433,7 @@ Como o sunOS se acomoda ao ecossistema técnico e organizacional existente.
 
 ### BR-015 — Integração com Skills existentes do sunOS
 
-**Descrição**: A Biblioteca e o Shoot for the Moon devem se **integrar com o ecossistema atual de Skills do sunOS** sem fragmentar a experiência ou exigir migração de funcionalidades existentes. Skills atuais (Copy Social, Plano de Mídia, Roteiro de Vídeo, etc.) consomem Biblioteca via context injection transparente; o Shoot for the Moon é acessível como atalho de qualquer tela de skill/cliente.
+**Descrição**: A Biblioteca e o Moon Shot devem se **integrar com o ecossistema atual de Skills do sunOS** sem fragmentar a experiência ou exigir migração de funcionalidades existentes. Skills atuais (Copy Social, Plano de Mídia, Roteiro de Vídeo, etc.) consomem Biblioteca via context injection transparente; o Moon Shot é acessível como atalho de qualquer tela de skill/cliente.
 
 **Prioridade**: Alta
 
@@ -441,12 +441,12 @@ Como o sunOS se acomoda ao ecossistema técnico e organizacional existente.
 
 **Critérios de Aceite**:
 - [ ] **Skills existentes** (Copy Social, Plano de Mídia, etc.) consomem Biblioteca via context injection **sem refatoração** dos prompts originais
-- [ ] **Botão Shoot for the Moon acessível em qualquer tela** de skill/cliente do sunOS
-- [ ] **Zero downtime** das Skills existentes durante deploy da Biblioteca e do Shoot for the Moon
+- [ ] **Botão Moon Shot acessível em qualquer tela** de skill/cliente do sunOS
+- [ ] **Zero downtime** das Skills existentes durante deploy da Biblioteca e do Moon Shot
 - [ ] **Performance** das Skills existentes não regrida em mais de 10% (latência) após integração
 - [ ] **Compatibilidade** mantida com Skills criadas por usuários no admin (sem quebra)
 
-**Dependências**: BR-004 (Biblioteca), BR-001 (Shoot for the Moon)
+**Dependências**: BR-004 (Biblioteca), BR-001 (Moon Shot)
 
 **Fonte**:
 - FRD §FA-03
@@ -559,7 +559,7 @@ Cada BR deve cobrir pelo menos um Objetivo da Parte 1. Matriz garante que nenhum
 
 ---
 
-## Matriz de Rastreabilidade — BR ↔ Personas (do FRD Shoot for the Moon)
+## Matriz de Rastreabilidade — BR ↔ Personas (do FRD Moon Shot)
 
 Liga os BRs do BRD com as personas detalhadas no FRD para coerência cross-document.
 
@@ -592,7 +592,7 @@ A Parte 3 **fornece a baseline de necessidade** que será desdobrada em outros a
 |----------|---------------------|
 | **PRD (Product Requirements Document)** | Cada BR vira ≥1 Feature (FA-XX) no Feature Map; BRs viram Jobs-to-be-Done por Persona; critérios de aceite de BRs alimentam testes de aceitação de PRD |
 | **SRD (Solution Requirements Document)** | BRs de governança (BR-007 a BR-009) viram NFRs ISO 25010 (Security, Maintainability); BR-013/014 viram requisitos de observabilidade; BRs de integração (BR-015) viram especificações de API/integração |
-| **FRD (Feature Requirement Document)** | Já existe FRD para Shoot for the Moon — alinhado com BR-001, BR-004, BR-006, BR-007, BR-010. **FRD é tradução técnica dos BRs**: o que um BR diz como "necessidade", o FRD diz como "FR-XXX" |
+| **FRD (Feature Requirement Document)** | Já existe FRD para Moon Shot — alinhado com BR-001, BR-004, BR-006, BR-007, BR-010. **FRD é tradução técnica dos BRs**: o que um BR diz como "necessidade", o FRD diz como "FR-XXX" |
 | **UX Specs** | BR-010 (ownership), BR-011 (cultura), BR-012 (career stage) são guidelines diretos para UI/UX |
 
 **Regra de consistência**: nenhum FR/feature em PRD ou FRD deve existir sem rastreabilidade a um BR. Se aparecer, ou precisamos adicionar BR aqui (negócio justifica), ou cortar do PRD/FRD (sem justificativa de negócio).
@@ -615,7 +615,7 @@ A Parte 3 **fornece a baseline de necessidade** que será desdobrada em outros a
 
 | Versão | Data | Mudança |
 |--------|------|---------|
-| 1.0 | 2026-04-28 | Versão inicial. **16 BRs** organizados em 6 categorias (Valor primário, Conhecimento, Governança, Adoção/Cultura, Mensuração, Integração). Derivados dos 5 OBJ da Parte 1 + 7 capacidades de negócio §4.2 + FRD Shoot for the Moon + research foundation engineering serendipity. Matrizes de rastreabilidade BR↔OBJ e BR↔Personas. Cada BR tem critérios de aceite verificáveis e fonte rastreável. Referências ao FRD onde aplicável (sem duplicação) |
+| 1.0 | 2026-04-28 | Versão inicial. **16 BRs** organizados em 6 categorias (Valor primário, Conhecimento, Governança, Adoção/Cultura, Mensuração, Integração). Derivados dos 5 OBJ da Parte 1 + 7 capacidades de negócio §4.2 + FRD Moon Shot + research foundation engineering serendipity. Matrizes de rastreabilidade BR↔OBJ e BR↔Personas. Cada BR tem critérios de aceite verificáveis e fonte rastreável. Referências ao FRD onde aplicável (sem duplicação) |
 | 1.1 | 2026-04-28 | **+2 BRs** (BR-017 Aprovação hierárquica · BR-018 Google Drive como fonte) na nova **Categoria G — Workflow & Governança**. Pedido formal de Guga + Bruno Prosperi. Versão ajustada do Drive (read-only + curadoria sugestiva) vs. pedido literal (espelho bidirecional) — ajuste justificado por riscos LGPD/ACL/IP/RN-011 |
 
 ---
@@ -627,4 +627,4 @@ A Parte 3 **fornece a baseline de necessidade** que será desdobrada em outros a
 2. Validar BRs com sponsor (Guga) e patrocinadores sócio
 3. Ajustar critérios de aceite quantitativos antes que virem compromissos formais
 4. Iniciar **Parte 4 — Regras de Negócio (RN-XXX)** com lógica SE/ENTÃO/SENÃO derivada dos BRs (especialmente BR-001, BR-006, BR-007, BR-008, BR-014)
-5. Em paralelo: revisar **FRD Shoot for the Moon** para garantir que cada FR está rastreável a um BR aprovado aqui
+5. Em paralelo: revisar **FRD Moon Shot** para garantir que cada FR está rastreável a um BR aprovado aqui

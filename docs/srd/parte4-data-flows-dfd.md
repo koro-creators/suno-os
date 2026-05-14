@@ -27,7 +27,7 @@ Este documento mapeia os **Fluxos de Dados (Data Flows)** críticos do sunOS em 
 - **DFD Nível 1** — Macroprocessos por Bounded Context (BC-01..BC-06)
 - **DFD Nível 2** — 7 fluxos críticos de detalhe:
   1. **DFL-01** — Chat com agente (mensagem → LangGraph → LLM → Eval → Resposta)
-  2. **DFL-02** — Shoot for the Moon (briefing → retrieval divergente → Explorer → Crítico → bisociação → cards)
+  2. **DFL-02** — Moon Shot (briefing → retrieval divergente → Explorer → Crítico → bisociação → cards)
   3. **DFL-03** — Ingestão na Biblioteca (upload → processamento multimodal → embeddings → vector store + KG)
   4. **DFL-04** — Skill processual com context injection (Skill ativa → retrieval convergente → ReAct → output)
   5. **DFL-05** — Workflow agendado (Cloud Scheduler → executor → steps → SSE/persistência)
@@ -104,7 +104,7 @@ Visão macro do sunOS como **um único processo central (P0 — sunOS)** mostran
 | DF-003 | Streams SSE | sunOS | EXT-01 | event: text/sources/tool_call/done/error | Saída |
 | DF-004 | Upload Biblioteca | EXT-02 | sunOS | multipart file + tags + scope | Entrada |
 | DF-005 | Curadoria CRUD | EXT-02/03 | sunOS | Skill / Bib / Workflow CRUD | Entrada |
-| DF-006 | Brief para Shoot for the Moon | EXT-01 | sunOS | brief text + intensity + client | Entrada |
+| DF-006 | Brief para Moon Shot | EXT-01 | sunOS | brief text + intensity + client | Entrada |
 | DF-007 | Faíscas (Sparks) | sunOS | EXT-01 | provocation_text + scores + bisociation_zone | Saída |
 | DF-008 | Verificação JWT | sunOS | EXT-05 | id_token | Bidirecional |
 | DF-009 | Chamada LLM | sunOS | EXT-06/07 | prompt + params | Bidirecional |
@@ -377,9 +377,9 @@ sequenceDiagram
 
 ---
 
-### 4.2. DFL-02 — Shoot for the Moon (briefing → divergente → Explorer ↔ Crítico → Sparks)
+### 4.2. DFL-02 — Moon Shot (briefing → divergente → Explorer ↔ Crítico → Sparks)
 
-**Features**: FA-02 (Shoot for the Moon)
+**Features**: FA-02 (Moon Shot)
 **FRs**: FR-001..018 (FRD externo), FR-152 (mark visual)
 **RNs**: RN-001 (zonas bisociação), RN-002 (convergência ≥8 + dim ≥5), RN-003 (acionamento), RN-014 (mark)
 **NFRs**: NFR-024 (filtragem zonas), NFR-001 (latência first-token)
@@ -444,7 +444,7 @@ flowchart TB
     mlf[MLflow]
 
     creator -->|brief text + intensity + client| fe
-    fe -->|POST /chat/shoot-for-the-moon| ag1
+    fe -->|POST /chat/moon-shot| ag1
     ag1 --> mt1
     mt1 -->|principal + client_id| P41
 
@@ -1214,7 +1214,7 @@ flowchart LR
 | ID | Nome | Origem | Destino | DS principal | Granularidade | Frequência | DFL |
 |----|------|--------|---------|--------------|---------------|------------|-----|
 | DF-01.x | Chat com agente | Creator | Creator (SSE) | DS-06, DS-08 | Por turn | Síncrono per-request | DFL-01 |
-| DF-02.x | Shoot for the Moon | Creator | Creator (Sparks) | DS-07, DS-03 | Por brief | Síncrono | DFL-02 |
+| DF-02.x | Moon Shot | Creator | Creator (Sparks) | DS-07, DS-03 | Por brief | Síncrono | DFL-02 |
 | DF-03.x | Ingestão Biblioteca | Líder | Storage + Vector | DS-03, DS-09 | Por documento | Sob demanda + async | DFL-03 |
 | DF-04.x | Skill processual | Operacional | SSE | DS-03, DS-04, DS-06 | Por turn | Síncrono | DFL-04 |
 | DF-05.x | Workflow agendado | Cloud Scheduler | SSE / persistência | DS-05, DS-08 | Por run | Cron + manual | DFL-05 |
@@ -1322,5 +1322,5 @@ flowchart LR
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. **DFD Nível 0** (Context com 14 entidades externas + 9 data stores macro + 16 fluxos macro). **DFD Nível 1** com 7 macroprocessos (BC-01..BC-06 + Safety transversal). **DFD Nível 2** detalhando 7 fluxos críticos: DFL-01 Chat (sequenceDiagram), DFL-02 Shoot for the Moon (flowchart Explorer↔Crítico + bisociação), DFL-03 Ingestão multimodal + DLQ + RiskFlag, DFL-04 Skill processual com truncamento RN-021, DFL-05 Workflow agendado (sequenceDiagram com HITL gate), DFL-06 Detecção de homogeneização + ExecutiveReport + RetentionJob, DFL-07 Auditoria admin + anomaly 3σ. Rastreabilidade completa Fluxo ↔ Aggregates ↔ Entidades ERD ↔ NFRs ↔ FRs ↔ RNs. 27 Domain Events mapeados aos fluxos. 6 assunções + 7 lacunas (TODO-DF-01 a 07). Status: Rascunho aguardando revisão de Eng. |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. **DFD Nível 0** (Context com 14 entidades externas + 9 data stores macro + 16 fluxos macro). **DFD Nível 1** com 7 macroprocessos (BC-01..BC-06 + Safety transversal). **DFD Nível 2** detalhando 7 fluxos críticos: DFL-01 Chat (sequenceDiagram), DFL-02 Moon Shot (flowchart Explorer↔Crítico + bisociação), DFL-03 Ingestão multimodal + DLQ + RiskFlag, DFL-04 Skill processual com truncamento RN-021, DFL-05 Workflow agendado (sequenceDiagram com HITL gate), DFL-06 Detecção de homogeneização + ExecutiveReport + RetentionJob, DFL-07 Auditoria admin + anomaly 3σ. Rastreabilidade completa Fluxo ↔ Aggregates ↔ Entidades ERD ↔ NFRs ↔ FRs ↔ RNs. 27 Domain Events mapeados aos fluxos. 6 assunções + 7 lacunas (TODO-DF-01 a 07). Status: Rascunho aguardando revisão de Eng. |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude | Adicionados **DFL-08 (Submissão para aprovação hierárquica — FA-13)** e **DFL-09 (Sync Google Drive read-only + curadoria — FA-14)**. DFL-08 modela: Submitter → Approval Engine → fan-out paralelo (BrandValidatorAgent + PortuguêsValidatorAgent) → ValidationReport → ChainRouter → Aprovador → ApprovalDecision imutável → ValidatedStamp; cobre RN-023 (validators paralelos), RN-024 (humano obrigatório), RN-025 (limite 3 rodadas), RN-026 (chain configurável). DFL-09 modela: Cloud Scheduler (RN-030) + Drive Push → ListChanges (KMS-decrypt OAuth, escopo readonly RN-027) → Differ → Curator → CurationSuggestion (sempre sugestiva — RN-029) → Cleanup → DriveCleanupReport (apenas relatório, sem ação destrutiva); IMPORT_TO_LIBRARY aceito reusa pipeline DFL-03 com `provenance.drive_document_id`; ACL Drive ∩ RBAC sunOS (RN-028). Inventário consolidado, rastreabilidade Fluxo↔Entidades↔NFRs e mapa de Domain Events estendidos com EV-28 a EV-41. +3 assunções (ASS-DF-07/08/09) e +6 TODOs (TODO-DF-08 a 13). Status: Rascunho aguardando revisão de Eng. |

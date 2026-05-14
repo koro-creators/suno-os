@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ShootForTheMoonModal — modal principal do motor de serendipidade.
+ * MoonShotModal — modal principal do motor de serendipidade.
  *
  * Atende SPEC-004 §FR-008 (acionamento em ≤3 cliques) e §FR-009 (Explorer pipeline).
  *
@@ -19,7 +19,7 @@ import { Sparkles, X, Send, AlertCircle } from 'lucide-react';
 import FaiscaPanel, { type IntensityMode } from './FaiscaPanel';
 import { type FaiscaData } from './FaiscaCard';
 
-interface ShootForTheMoonModalProps {
+interface MoonShotModalProps {
   open: boolean;
   onClose: () => void;
   clientName?: string;
@@ -30,13 +30,13 @@ interface ShootForTheMoonModalProps {
 
 type State = 'idle' | 'processando' | 'resultado' | 'error';
 
-export default function ShootForTheMoonModal({
+export default function MoonShotModal({
   open,
   onClose,
   clientName,
   initialBriefing = '',
   onShoot,
-}: ShootForTheMoonModalProps) {
+}: MoonShotModalProps) {
   const [briefing, setBriefing] = useState(initialBriefing);
   const [intensity, setIntensity] = useState<IntensityMode>('equilibrado');
   const [state, setState] = useState<State>('idle');
@@ -86,7 +86,7 @@ export default function ShootForTheMoonModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Shoot for the Moon"
+      aria-label="Moon Shot"
       style={{
         position: 'fixed',
         inset: 0,
@@ -136,7 +136,7 @@ export default function ShootForTheMoonModal({
                 margin: 0,
               }}
             >
-              Shoot for the Moon
+              Moon Shot
               {clientName && (
                 <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8, fontSize: 14 }}>
                   · {clientName}

@@ -177,7 +177,7 @@ O endpoint `POST /api/chat/stream` MUST emitir o primeiro evento SSE `text` (tok
 | Tipo | IDs |
 |------|-----|
 | BRs | BR-002 (Aceleração operacional) |
-| RNs | RN-003 (Acionamento Shoot for the Moon — princípio "3 cliques até o valor") |
+| RNs | RN-003 (Acionamento Moon Shot — princípio "3 cliques até o valor") |
 
 **Fase**: Protótipo | **Prioridade**: Alta | **Status**: Proposed
 
@@ -292,7 +292,7 @@ O endpoint `POST /api/chat/stream` MUST manter disponibilidade conforme SLO, con
 | Resposta | Re-spin automático de instância; load balancer remove faulty |
 | Medida | Uptime mensal ≥ 99.0% (Piloto) |
 
-**Rastreabilidade**: BR-002, BR-015 (zero downtime durante deploy de Biblioteca/Shoot for the Moon).
+**Rastreabilidade**: BR-002, BR-015 (zero downtime durante deploy de Biblioteca/Moon Shot).
 
 **Fase**: Piloto | **Prioridade**: Alta | **Status**: Proposed
 
@@ -619,7 +619,7 @@ O frontend MUST funcionar em Chrome, Edge, Safari e Firefox nas últimas 2 vers�
 
 **Descrição**
 
-Qualquer creator com sessão ativa MUST conseguir iniciar uma execução de skill (ou Shoot for the Moon) em ≤ 3 cliques a partir da home do Sistema Solar.
+Qualquer creator com sessão ativa MUST conseguir iniciar uma execução de skill (ou Moon Shot) em ≤ 3 cliques a partir da home do Sistema Solar.
 
 **Métrica-alvo**
 
@@ -721,7 +721,7 @@ A camada de persistência SHOULD usar PostgreSQL standard + extensão pgvector �
 
 **Descrição**
 
-O pipeline Shoot for the Moon MUST filtrar provocações por zona semântica (cosseno briefing↔provocação): descartar zona "óbvio" (< 0.5) e zona "incoerente" (> 0.85), priorizar Sweet Spot (0.5–0.85).
+O pipeline Moon Shot MUST filtrar provocações por zona semântica (cosseno briefing↔provocação): descartar zona "óbvio" (< 0.5) e zona "incoerente" (> 0.85), priorizar Sweet Spot (0.5–0.85).
 
 **Métrica-alvo**
 
