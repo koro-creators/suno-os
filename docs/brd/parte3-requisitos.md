@@ -29,37 +29,37 @@ Esta parte traduz os **5 Objetivos de Negócio** da Parte 1 e as **7 Capacidades
 ## Como Usar
 
 - BRs estão organizados em **6 categorias temáticas** que correspondem a frentes de valor do projeto
-- Cada BR tem ID sequencial (BR-001 a BR-022, com BR-021 como placeholder), prioridade, stakeholder demandante, critérios de aceite e dependências
+- Cada BR tem ID sequencial (BR-001 a BR-022), prioridade, stakeholder demandante, critérios de aceite e dependências
 - **BR ≠ FR (Functional Requirement)**: BR descreve a necessidade; FR descreve a solução. FRs vivem em PRDs/FRDs separados
 - **Quando uma feature já tem FRD próprio (ex: Moon Shot), o BR aponta para ele** — nunca duplica
 - Critérios de aceite são **verificáveis**, não desejos vagos
 
 ## Sumário Executivo (21 BRs)
 
-| ID | Título resumido | Prioridade | Categoria |
-|----|----------------|:----------:|----------|
-| **BR-001** | Provocação criativa contra homogeneização | Alta | A — Valor primário |
-| **BR-002** | Aceleração operacional via automação inteligente | Alta | A — Valor primário |
-| **BR-003** | Demonstração contínua de ROI ao sponsor e Diretoria | Alta | A — Valor primário |
-| **BR-004** | Repositório institucional unificado (Biblioteca) | Alta | B — Conhecimento |
-| **BR-005** | Continuidade do repertório frente a turnover | Média | B — Conhecimento |
-| **BR-006** | Acesso democrático ao conhecimento coletivo | Alta | B — Conhecimento |
-| **BR-007** | Proteção do IP proprietário (caixa-preta) | Alta | C — Governança |
-| **BR-008** | Privacidade de dados de clientes da Suno | Alta | C — Governança |
-| **BR-009** | Auditabilidade de operações de IA | Média | C — Governança |
-| **BR-010** | Preservação do ownership criativo | Alta | D — Adoção e Cultura |
-| **BR-011** | Respeito à cultura criativa brasileira e da Suno | Média | D — Adoção e Cultura |
-| **BR-012** | Diferenciação de UX por estágio de carreira | Média | D — Adoção e Cultura |
-| **BR-013** | Mensuração de custo evitado e impacto operacional | Alta | E — Mensuração |
-| **BR-014** | Detecção de homogeneização criativa em nível coletivo | Alta | E — Mensuração |
-| **BR-015** | Integração com Skills existentes do sunOS | Alta | F — Integração |
-| **BR-016** | Não substituir ferramentas de mercado adotadas | Média | F — Integração |
-| **BR-017** | Fluxo de aprovação hierárquica com pré-validação por agentes | Alta | G — Workflow & Governança |
-| **BR-018** | Drive interno da Suno como fonte curada da Biblioteca e da Wiki Ontológica (v2) | Alta | G — Workflow & Governança |
-| **BR-019** | Princípio de UX operacional estruturada (software, não chat livre) | Alta | H — Princípios de Experiência |
-| **BR-020** | Captura seletiva de inputs operacionais via gravação assistida | Média | G — Workflow & Governança |
-| **BR-021** | (Placeholder — Wiki Ontológica) | A definir | G — Workflow & Governança |
-| **BR-022** | Onboarding automatizado de cliente com Oráculo do Cliente | Alta | G — Workflow & Governança |
+| ID | Título resumido | Prioridade | Categoria | Fase |
+|----|----------------|:----------:|----------|----|
+| **BR-001** | Provocação criativa contra homogeneização | Alta | A — Valor primário | Momento 2 |
+| **BR-002** | Aceleração operacional via automação inteligente | Alta | A — Valor primário | Piloto |
+| **BR-003** | Demonstração contínua de ROI ao sponsor e Diretoria | Alta | A — Valor primário | Piloto |
+| **BR-004** | Repositório institucional unificado (Biblioteca) | Alta | B — Conhecimento | Piloto |
+| **BR-005** | Continuidade do repertório frente a turnover | Média | B — Conhecimento | Piloto |
+| **BR-006** | Acesso democrático ao conhecimento coletivo | Alta | B — Conhecimento | Piloto |
+| **BR-007** | Proteção do IP proprietário (caixa-preta) | Alta | C — Governança | Piloto |
+| **BR-008** | Privacidade de dados de clientes da Suno | Alta | C — Governança | Piloto |
+| **BR-009** | Auditabilidade de operações de IA | Média | C — Governança | Piloto |
+| **BR-010** | Preservação do ownership criativo | Alta | D — Adoção e Cultura | Piloto |
+| **BR-011** | Respeito à cultura criativa brasileira e da Suno | Média | D — Adoção e Cultura | Piloto |
+| **BR-012** | Diferenciação de UX por estágio de carreira | Média | D — Adoção e Cultura | Piloto |
+| **BR-013** | Mensuração de custo evitado e impacto operacional | Alta | E — Mensuração | Piloto |
+| **BR-014** | Detecção de homogeneização criativa em nível coletivo | Alta | E — Mensuração | Momento 2 |
+| **BR-015** | Integração com Skills existentes do sunOS | Alta | F — Integração | Piloto |
+| **BR-016** | Não substituir ferramentas de mercado adotadas | Média | F — Integração | Piloto |
+| **BR-017** | Fluxo de aprovação hierárquica com pré-validação por agentes | Alta | G — Workflow & Governança | Momento 2 |
+| **BR-018** | Drive interno da Suno como fonte curada da Biblioteca e da Wiki Ontológica (v2) | Alta | G — Workflow & Governança | Piloto |
+| **BR-019** | Princípio de UX operacional estruturada (software, não chat livre) | Alta | H — Princípios de Experiência | Piloto |
+| **BR-020** | Captura seletiva de inputs operacionais via gravação assistida | Média | G — Workflow & Governança | Momento 2 |
+| **BR-021** | Wiki Ontológica — repositório de entidades estruturadas por cliente | Alta | G — Workflow & Governança | Piloto |
+| **BR-022** | Onboarding automatizado de cliente com Oráculo do Cliente | Alta | G — Workflow & Governança | Piloto |
 
 ---
 
@@ -73,7 +73,7 @@ Os três requisitos centrais que justificam a existência do projeto: provocar c
 
 **Descrição**: O sunOS deve oferecer capacidade que **provoque** ideias inesperadas em creators (especialmente seniores), combinando conceitos de domínios distantes para combater a tendência observada de **homogeneização criativa coletiva** quando profissionais usam ferramentas de IA generativas. A capacidade deve **provocar, não gerar** — outputs são estímulo para o creator, não peças finais.
 
-**Prioridade**: Alta
+**Prioridade**: Alta *(dentro do Momento 2 — ver coluna Fase no sumário)*
 
 **Stakeholders demandantes**: Bruno Prosperi (Sócio Criação), Sergio Katz (CSO/Planejamento), Guga (Sponsor)
 
@@ -564,6 +564,32 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 
 ---
 
+### BR-021 — Wiki Ontológica — repositório de entidades estruturadas por cliente
+
+**Descrição**: O sunOS deve manter uma **Wiki Ontológica** por cliente — repositório estruturado de entidades de negócio que qualificam o cliente em profundidade para todos os agentes da plataforma. A Wiki é o "estado de verdade" do cliente: cada entidade (pessoa-chave, sistema, objetivo de negócio, contrato vigente, jornada-foco, brand voice) tem tipo, valor, fonte, data de validação e responsável humano. A Wiki é alimentada continuamente por três fluxos: onboarding automatizado (BR-022 / FA-15), sync do Drive corporativo da Suno (BR-018), e captura seletiva de reuniões (BR-020 / FA-16). Cada entidade exige validação humana antes de se tornar oficial (RN-032). Skills processuais do sunOS consultam a Wiki via RAG ontológico antes de gerar outputs.
+
+**Prioridade**: Alta
+
+**Stakeholders demandantes**: Elton (Operações — dono do fluxo), Cíntia (Planejamento — consumidor primário), Heitor (tutela técnica), Guga (sponsor)
+
+**Critérios de Aceite**:
+- [ ] Wiki Ontológica existe por cliente, acessível em `/clientes/:slug/wiki`
+- [ ] Suporta no mínimo 6 tipos de entidade core: `pessoa-chave`, `sistema`, `objetivo-de-negocio`, `contrato-vigente`, `jornada-foco`, `brand-voice`
+- [ ] Cada entidade tem campos: tipo, valor, fonte (Drive / reunião / onboarding / manual), data de validação, responsável (Builder ou Sponsor), status (`PENDING_REVIEW | ACTIVE | ARCHIVED`)
+- [ ] Entidade só vira `ACTIVE` após validação humana explícita (HITL obrigatório — RN-032)
+- [ ] Cliente permanece `PRE_ACTIVE` até no mínimo as 6 entidades core terem status `ACTIVE`
+- [ ] Skills processuais consultam automaticamente a Wiki do cliente ativo antes de gerar output — sem ação do operador
+- [ ] Wiki é caixa-preta para perfis operacionais: conteúdo não exibido diretamente, consumido apenas via Skills (RN-011)
+- [ ] Audit log de cada entidade: quem criou, quem aprovou, de que fonte veio, histórico de edições
+- [ ] Wiki admite atualização incremental: nova entidade ou edição não invalida as já aprovadas
+- [ ] Proveniência rastreável: cada entidade indica a fonte específica (nome do arquivo no Drive, timestamp da reunião, etc.)
+
+**Dependências**: BR-018 (Drive como fonte de seed), BR-022 (Onboarding Oráculo como fluxo de criação), BR-020 (Captura Seletiva como fonte contínua), BR-007 (RBAC / caixa-preta), BR-009 (Auditabilidade)
+
+**Fonte**: Reunião 13/05/2026 (Heitor: *"esse DP agent aqui pra descobrir, seria um oráculo do cliente, ele teria todas as informações do cliente"*). Reunião 07/05/2026 (Guga sobre Drive: *"qualquer documento que entra no drive de MRV ele atualiza a WIKI automaticamente"*). Consolidação 14/05/2026 como entidade central que BR-018, BR-020 e BR-022 alimentam.
+
+---
+
 ### BR-022 — Onboarding automatizado de cliente com "Oráculo do Cliente"
 
 **Descrição**: O sunOS deve oferecer fluxo de onboarding de cliente automatizado que combina cadastro inicial, sync com pastas do Drive da Suno, geração automática de ontologia sugerida (Oráculo do Cliente) e validação humana via Time de Operações. O Discovery automatizado consulta as fontes disponíveis (Drive da Suno, briefing inicial do atendimento, pesquisa web em fontes públicas) para propor uma seed inicial de entidades (pessoas-chave, sistemas, objetivos de negócio, contratos vigentes, jornadas-foco, brand voice) que o humano valida antes de virar parte definitiva da Wiki Ontológica. Implementa o conceito de "oráculo do cliente" levantado na reunião de 13/05/2026 por Heitor: "a gente vai ter tipo um oráculo, esse DP agent aqui pra descobrir, seria um oráculo do cliente, ele teria todas as informações do cliente, e os outros agentes vão plugar lá aqui e escolher ele".
@@ -585,7 +611,7 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 - [ ] Cliente fica em status `PRE-ACTIVE` até validação humana da ontologia mínima ser concluída. Skills processuais não acessam cliente em `PRE-ACTIVE`
 - [ ] Onboarding deve ser idempotente: re-execução em cliente existente atualiza ontologia sem duplicar entidades
 
-**Dependências**: BR-018 v2 (Drive Suno), BR-021 (Wiki Ontológica, placeholder a criar em iteração futura), BR-007 (RBAC), BR-009 (Auditabilidade), BR-008 (privacidade cliente)
+**Dependências**: BR-018 v2 (Drive Suno), BR-021 (Wiki Ontológica), BR-007 (RBAC), BR-009 (Auditabilidade), BR-008 (privacidade cliente)
 
 **Fonte**: Reunião 13/05/2026 (Heitor descrevendo o "oráculo do cliente"). Decisão de design 14/05/2026 (Heitor + Elton sobre dono do fluxo no MVP).
 
@@ -658,11 +684,27 @@ Cada BR deve cobrir pelo menos um Objetivo da Parte 1. Matriz garante que nenhum
 | BR-018 — Drive interno da Suno | ✓ | ✓ | ✓ | | |
 | BR-019 — UX operacional estruturada | | ✓ | | | ✓ |
 | BR-020 — Captura seletiva | | ✓ | ✓ | ✓ | |
+| BR-021 — Wiki Ontológica | ✓ | ✓ | ✓ | ✓ | |
 | BR-022 — Onboarding Oráculo do Cliente | ✓ | ✓ | ✓ | ✓ | |
 
 **Cobertura**: cada um dos 5 OBJ tem ≥3 BRs associados — boa redundância sem inflação.
+**Nota**: BR-021 adicionado na v1.3 com linha na rastreabilidade: BR-021 cobre OBJ-01, OBJ-02, OBJ-03, OBJ-04.
 
 
 ---
 
 ## Matriz de Rastreabilidade — BR ↔ Personas
+
+> Esta seção está reservada para a próxima iteração de documentação — mapeamento será feito junto à revisão de personas PX-01 a PX-08.
+
+---
+
+## Changelog
+
+| Versão | Data | Mudança |
+|--------|------|---------|
+| 1.0 | 2026-04-28 | Versão inicial. 16 BRs em 6 categorias temáticas com critérios de aceite verificáveis e rastreabilidade a OBJs. |
+| 1.1 | 2026-04-28 | +BR-017 (Aprovação Hierárquica) e +BR-018 (Drive interno Suno). Nova Categoria G. |
+| 1.2 | 2026-05-14 | +BR-019 (UX estruturada — Categoria H), +BR-020 (Captura Seletiva), +BR-022 (Onboarding Oráculo do Cliente). BR-018 atualizado para v2 (Drive limitado ao Drive interno da Suno). Matriz BR ↔ OBJ atualizada. |
+| 1.4 | 2026-05-15 | **Ponto 9 resolvido**: BR-001 mantém prioridade **Alta** — explicitada como Alta *dentro do Momento 2*. |
+| 1.3 | 2026-05-14 | **+BR-021** (Wiki Ontológica — repositório de entidades estruturadas por cliente). Sumário expandido com coluna **Fase** (Piloto / Momento 2) para cada BR. BR-017, BR-020 marcados como Momento 2 (FA-13, FA-16 movidas). BR-001, BR-014 marcados como Momento 2 (Moon Shot pós-Piloto). Matriz BR ↔ OBJ: BR-021 adicionado. |

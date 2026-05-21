@@ -1,4 +1,4 @@
-# ADR-003: RAG com AlloyDB + pgvector — Biblioteca Semântica do sunOS
+# ADR-008: RAG com AlloyDB + pgvector — Biblioteca Semântica do sunOS
 
 **Status:** Aceito
 **Data:** 2026-05-14

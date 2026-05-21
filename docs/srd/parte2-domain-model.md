@@ -10,7 +10,7 @@ status: Rascunho
 fonte_brd: docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_prd: docs/prd/parte1-feature-map.md, docs/prd/parte2-personas-jtbd.md
 fonte_srd: docs/srd/parte1-NFRs.md, docs/srd/parte5-arch-as-is.md, docs/srd/parte7-ADRs.md
-total_objetos: 53 (Aggregates + Entities + Value Objects)
+total_objetos: 60 (Aggregates + Entities + Value Objects)
 total_bounded_contexts: 7
 ---
 
@@ -170,7 +170,7 @@ flowchart LR
 
 ## 3. Catálogo de Objetos de Domínio
 
-### 3.1. Tabela Consolidada (38 objetos)
+### 3.1. Tabela Consolidada (60 objetos)
 
 | ID | Nome | Tipo | Bounded Context | Descrição | Features | BRs/RNs |
 |----|------|------|-----------------|-----------|----------|---------|
@@ -229,8 +229,13 @@ flowchart LR
 | DO-53 | CurationSuggestion | Entity (AR) | BC-07 | Sugestão de curadoria (mover, renomear, taggear) gerada por agente sobre DriveDocument | FA-14 | BR-018, RN-029 |
 | DO-54 | DriveCleanupReport | Entity (AR) | BC-07 | Relatório periódico de duplicatas, órfãos e candidatos a arquivamento no Drive | FA-14 | BR-018, RN-029 |
 | DO-55 | ValidatedStamp | VO | BC-03/04 | Carimbo "Validado" anexado a Spark/Turn após ValidationReport sem erros bloqueantes | FA-13 | BR-017, RN-023 |
+| DO-56 | WikiEntity | Entity (AR) | BC-07 | Entidade ontológica do cliente gerada pelo Oráculo e validada por HITL (PROFILE, MARKET, COMPETITORS, TARGET_PERSONAS, CAMPAIGN_HISTORY, LEGAL_CONSTRAINTS) | FA-15 | BR-021, RN-032 |
+| DO-57 | EntityHITLEvent | Entity | BC-07 | Registro imutável de ação HITL sobre WikiEntity (accept/edit_accept/reject_regenerate) — audit log append-only | FA-15 | BR-021, RN-032 |
+| DO-58 | OnboardingJob | Entity | BC-06 | Estado do job assíncrono do Oráculo — rastreia progresso de drive sync + geração de entidades com checkpoint por entidade | FA-15 | BR-021 |
+| DO-59 | MeetingCapture | Entity (AR) | BC-02 | Sessão de reunião capturada seletivamente para processamento em conhecimento — consentimento LGPD obrigatório | FA-16 | BR-020, RN-033 (previsto) |
+| DO-60 | MeetingTranscript | Entity | BC-02 | Transcrição processada de MeetingCapture com segmentação por speaker e resumo gerado | FA-16 | BR-020 |
 
-> Total: **55 objetos** distribuídos em 7 Bounded Contexts. **20 Aggregates Roots** consolidam invariantes; demais são entities/VOs internos a aggregates.
+> Total: **60 objetos** distribuídos em 7 Bounded Contexts. **23 Aggregate Roots** consolidam invariantes; demais são entities/VOs internos a aggregates.
 
 ---
 
@@ -964,6 +969,179 @@ Proposta gerada por agente curador sobre um `DriveDocument` (mover/renomear/tagg
 
 ---
 
+### 4.8. BC-07 Approval & Validation — FA-15 Extensão (Oráculo do Cliente)
+
+#### DO-56 — WikiEntity (Aggregate Root)
+
+**Descrição de Negócio**
+
+Uma das **6 entidades ontológicas** geradas pelo Oráculo do Cliente para um `Client` durante o onboarding (FA-15). Cada entidade representa um aspecto estratégico do cliente: perfil, mercado, concorrentes, personas-alvo, histórico de campanhas e restrições legais. Gerada automaticamente pelo agente LangGraph (Oráculo) a partir de documentos do Drive + pesquisa web allow-list; validada por HITL obrigatório (RN-032). Visível somente para Admin/Curador (Wiki Ontológica T-39) — **caixa-preta para Operacional** (RN-011 pattern: 404, não 403).
+
+**Atributos Principais**
+
+| Atributo | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `entity_id` | UUID | Sim |
+| `client_id` | FK → Client | Sim |
+| `entity_type` | `PROFILE` / `MARKET` / `COMPETITORS` / `TARGET_PERSONAS` / `CAMPAIGN_HISTORY` / `LEGAL_CONSTRAINTS` | Sim |
+| `content` | Texto mínimo 100 palavras gerado pelo Oráculo | Sim |
+| `provenance` | `ProvenanceEntry[]` — fontes (drive_file_id, web_url, snippet) | Sim |
+| `status` | `pending` / `generated` / `accepted` / `regenerating` | Sim |
+| `badge` | `seed_auto` / `hitl_accepted` / `hitl_edited` / `capture` | Sim |
+| `updated_by` | FK → User (último editor HITL) | Não |
+| `created_at`, `updated_at` | Timestamps | Sim |
+
+**Invariantes (Aggregate)**
+
+1. Cada `client_id` tem exatamente **1 WikiEntity por entity_type** (UNIQUE constraint)
+2. `content` deve ter ≥ 100 palavras — validado pelo Oráculo pós-geração (CA-09 da SPEC-015)
+3. Transição para `accepted` só ocorre via ação HITL explícita — nunca automática (RN-032)
+4. `badge` reflete a história: `seed_auto` → gerado pelo Oráculo; `hitl_edited` → conteúdo alterado pelo curador
+5. WikiEntity de client em status `DRAFT` / `PRE_ACTIVE` visível apenas a Admin/Curador (CA-15 da SPEC-015)
+
+**Domain Events Emitidos**
+
+| Evento | Quando |
+|--------|--------|
+| `EV-43 EntityGenerated` | Oráculo concluiu geração de uma entidade |
+| `EV-44 EntityValidated` | HITL aceitou ou editou a entidade |
+
+**Rastreabilidade**
+
+| Tipo | IDs |
+|------|-----|
+| Features | FA-15 |
+| BRs | BR-021 |
+| RNs | RN-032 |
+| NFRs | NFR-009 (RBAC), NFR-010 (cross-client), NFR-011 (caixa-preta) |
+| SPEC | SPEC-015 |
+
+---
+
+#### DO-57 — EntityHITLEvent (Entity, append-only)
+
+**Descrição de Negócio**
+
+Registro **imutável** de uma ação de validação humana (HITL) sobre uma `WikiEntity`. Forma o audit trail completo das decisões do curador durante o gate PRE_ACTIVE → ACTIVE (RN-032). Armazenado em tabela append-only sem DELETE — atende requisito de auditabilidade (NFR-007).
+
+**Atributos Principais**
+
+| Atributo | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `event_id` | UUID | Sim |
+| `client_id` | FK → Client (desnormalizado para cross-client guard) | Sim |
+| `entity_type` | Tipo de entidade afetada | Sim |
+| `action` | `accept` / `edit_accept` / `reject_regenerate` | Sim |
+| `before_content` | Conteúdo antes da ação (null se accept sem edição) | Não |
+| `after_content` | Conteúdo após edição (null se accept ou reject) | Não |
+| `user_id` | FK → User (curador que executou a ação) | Sim |
+| `timestamp_utc` | UTC timestamp da ação | Sim |
+
+**Invariantes**
+
+1. Imutável após criação — **sem UPDATE, sem DELETE** (audit log puro)
+2. `client_id` desnormalizado no registro para cross-client guard em queries de auditoria (RN-010)
+3. `action = reject_regenerate` implica re-disparo do Oráculo para aquela entidade (CA-10 da SPEC-015)
+
+**Rastreabilidade**: BR-021; RN-032; FA-15; SPEC-015.
+
+---
+
+#### DO-58 — OnboardingJob (Entity)
+
+**Descrição de Negócio**
+
+Rastreia o estado assíncrono do job do Oráculo para um cliente específico. Serve como **checkpoint** para retomada em caso de reinício de instância (Cloud Run / BackgroundTasks — ADR-LOCAL-02 da SPEC-015). O campo `current_entity` indica onde o Oráculo parou, permitindo recomeço sem reprocessar entidades já concluídas.
+
+**Atributos Principais**
+
+| Atributo | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `job_id` | UUID | Sim |
+| `client_id` | FK → Client (UNIQUE — um job por cliente) | Sim |
+| `drive_sync_status` | `pending` / `running` / `done` / `error` | Sim |
+| `oracle_status` | `pending` / `running` / `done` / `error` | Sim |
+| `current_entity` | Entidade sendo processada no momento (checkpoint) | Não |
+| `entities_done` | Contagem de entidades concluídas (0–6) | Sim |
+| `error_detail` | Mensagem de erro se status = `error` | Não |
+| `started_at`, `completed_at` | Timestamps | Não |
+| `eta_hours` | Estimativa de conclusão em horas (default 24) | Sim |
+
+**Invariantes**
+
+1. Exatamente **1 OnboardingJob por Client** (UNIQUE em `client_id`)
+2. `entities_done` cresce monotonicamente de 0 a 6 — nunca regride
+3. Client só transita para `ACTIVE` quando `oracle_status = done` E todos WikiEntity `status = accepted` (RN-032)
+
+**Rastreabilidade**: BR-021; FA-15; ADR-LOCAL-02 (SPEC-015).
+
+---
+
+### 4.9. BC-02 Content & Knowledge — FA-16 Extensão (Captura de Reuniões)
+
+#### DO-59 — MeetingCapture (Aggregate Root)
+
+**Descrição de Negócio**
+
+Sessão de reunião **capturada seletivamente** pelo Creator para processamento em conhecimento sunOS (FA-16, Captura Seletiva de Reuniões). Consentimento explícito dos participantes é pré-condição legal (LGPD Art. 7 — PRE-03b da SPEC-016 futura). Após processamento, gera `MeetingTranscript` e potenciais `KnowledgeItem`s na Biblioteca do cliente.
+
+**Atributos Principais**
+
+| Atributo | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `capture_id` | UUID | Sim |
+| `client_id` | FK → Client | Sim |
+| `title` | Título da reunião | Sim |
+| `participants` | Lista de participantes (nome + email) | Sim |
+| `recorded_at` | Timestamp da gravação | Sim |
+| `source_type` | `UPLOAD` / `GMEET_BOT` / `TEAMS_BOT` | Sim |
+| `consent_confirmed` | Boolean — obrigatório true para processar | Sim |
+| `status` | `PENDING` / `PROCESSING` / `DONE` / `ERROR` | Sim |
+| `duration_seconds` | Duração da gravação em segundos | Não |
+
+**Invariantes**
+
+1. `consent_confirmed = true` obrigatório antes de qualquer processamento (LGPD Art. 7)
+2. `client_id` garante escopo — gravação de cliente A nunca visível a cliente B (RN-010)
+
+**Domain Events Emitidos**
+
+| Evento | Quando |
+|--------|--------|
+| `EV-46 MeetingCaptured` | Nova captura criada com consentimento confirmado |
+
+**Rastreabilidade**: BR-020; FA-16 (planejada — FRs FR-190 a FR-195); SPEC-016 (a criar).
+
+---
+
+#### DO-60 — MeetingTranscript (Entity)
+
+**Descrição de Negócio**
+
+Transcrição processada de uma `MeetingCapture`. Contém segmentação por speaker, resumo gerado por LLM e referências aos `KnowledgeItem`s criados a partir do conteúdo da reunião. Entidade interna ao aggregate `MeetingCapture`.
+
+**Atributos Principais**
+
+| Atributo | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `transcript_id` | UUID | Sim |
+| `capture_id` | FK → MeetingCapture | Sim |
+| `client_id` | Desnormalizado para cross-client guard | Sim |
+| `content_text` | Texto completo da transcrição | Sim |
+| `speaker_segments` | `SpeakerSegment[]` (speaker, start_ms, end_ms, text) | Sim |
+| `summary` | Resumo LLM (tópicos, decisões, action items) | Não |
+| `knowledge_items_generated` | `UUID[]` — IDs dos KnowledgeItems criados | Não |
+| `processed_at` | Timestamp do processamento | Não |
+
+**Invariantes**
+
+1. `client_id` desnormalizado para cross-client guard (RN-010)
+2. Transcript criado somente após `MeetingCapture.status = DONE`
+
+**Rastreabilidade**: BR-020; FA-16 (planejada); SPEC-016 (a criar).
+
+---
+
 Eventos são **fatos** publicados por aggregates e consumidos por outros contextos via Published Language.
 
 | ID | Evento | Origem | Consumidores | Carga útil |
@@ -1009,6 +1187,11 @@ Eventos são **fatos** publicados por aggregates e consumidos por outros context
 | EV-39 | CurationSuggestionAccepted | BC-07 | BC-02, BC-05 | suggestion_id, knowledge_item_id |
 | EV-40 | CleanupReportGenerated | BC-07 | BC-05 | report_id, duplicates, orphans |
 | EV-41 | OAuthExpired | BC-07 | BC-05 (alert) | credential_id, client_id |
+| EV-42 | OnboardingStarted | BC-06 | BC-07 (Oráculo job), BC-05 | client_id, job_id, status=PRE_ACTIVE |
+| EV-43 | EntityGenerated | BC-07 | BC-06 (job checkpoint), BC-05 | client_id, entity_type, job_id |
+| EV-44 | EntityValidated | BC-07 | BC-06 (gate check), BC-05 | client_id, entity_type, action, user_id |
+| EV-45 | ClientActivated | BC-06 | BC-02, BC-03, BC-05 | client_id, activated_by, activated_at |
+| EV-46 | MeetingCaptured | BC-02 | BC-05 | capture_id, client_id, source_type |
 
 ---
 
@@ -1220,6 +1403,9 @@ classDiagram
 | **DriveSync Aggregate** | DriveSync | OAuthCredential, DriveDocument | Read-only (RN-027, ADR-009); ACL Drive ∩ RBAC sunOS (RN-028) |
 | **CurationSuggestion Aggregate** | CurationSuggestion | — | Sempre sugestiva (RN-029); aceitar cria KnowledgeItem em BC-02 |
 | **DriveCleanupReport Aggregate** | DriveCleanupReport | — | Apenas relatório; nenhuma ação destrutiva no Drive (RN-027, RN-029) |
+| **WikiEntity Aggregate** | WikiEntity | EntityHITLEvent | UNIQUE(client_id, entity_type); content ≥ 100 palavras; aceite somente via HITL (RN-032) |
+| **OnboardingJob Aggregate** | OnboardingJob | — | UNIQUE(client_id); entities_done monotônico; Client→ACTIVE só quando job done + todos WikiEntity accepted (RN-032) |
+| **MeetingCapture Aggregate** | MeetingCapture | MeetingTranscript | consent_confirmed obrigatório (LGPD Art. 7); cross-client guard via client_id (RN-010) |
 
 ---
 
@@ -1228,12 +1414,12 @@ classDiagram
 | Bounded Context | Features (PRD) | Containers (Arch To-Be — Parte 6) | ADRs Aplicáveis |
 |-----------------|----------------|-----------------------------------|-----------------|
 | BC-01 Identity & Access | FA-09, FA-12 | Backend API (módulo `auth`), Firebase Auth (externo) | ADR-006 |
-| BC-02 Content & Knowledge | FA-01, FA-03, FA-05 | Backend API (`chat/knowledge`, `chat/skills`, `workflows`), pgvector + GCS | ADR-001, ADR-003, ADR-007 |
+| BC-02 Content & Knowledge | FA-01, FA-03, FA-05, FA-16 | Backend API (`chat/knowledge`, `chat/skills`, `workflows`), pgvector + GCS | ADR-001, ADR-003, ADR-007 |
 | BC-03 Conversation & Inference | FA-04, FA-07, FA-08 | Backend API (`chat/graph`, `chat/agents`, `chat/tools`), LLM providers | ADR-002, ADR-004, ADR-005 |
 | BC-04 Insight & Provocation | FA-02 | **Provocation Engine** (novo container/módulo To-Be), pgvector grafo | ADR-005, ADR-008 (proposto) |
 | BC-05 Measurement & Observability | FA-10, FA-11 | **Measurement Service** (novo módulo To-Be), MLflow, scheduler de métricas | ADR-009 (proposto) |
 | BC-06 Multi-tenant (Sistema Solar) | FA-06 | Frontend (`components/solar`), Backend API (módulo `clients`) | — |
-| BC-07 Approval & Validation (External Sources) | FA-13, FA-14 | **Approval Engine** (CTM-08 — novo container Cloud Run) + **Drive Connector** (CTM-09 — novo container Cloud Run) | ADR-008, ADR-009, ADR-010 |
+| BC-07 Approval & Validation (External Sources) | FA-13, FA-14, FA-15 | **Approval Engine** (CTM-08 — novo container Cloud Run) + **Drive Connector** (CTM-09 — novo container Cloud Run) + **Onboarding Oráculo** (CTM-10 — extensão do Backend API) | ADR-008, ADR-009, ADR-010 |
 
 ---
 
@@ -1298,4 +1484,5 @@ classDiagram
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
 | 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. **6 Bounded Contexts** (Identity & Access, Content & Knowledge, Conversation & Inference, Insight & Provocation, Measurement & Observability, Multi-tenant Sistema Solar) com **15 Aggregates Roots** e ~42 objetos de domínio totais (entities + VOs). **27 Domain Events** catalogados. Linguagem ubíqua derivada do Glossário do BRD (Devorar, Provocar, Faísca, Brasa, Bioma, Skill, Moon, Biblioteca, Caixa-preta, Sistema Solar). Diagramas Mermaid de Context Map, hierarquia conceitual e Class Diagram. Rastreabilidade completa a BRs/RNs (Parte 3/4 do BRD), NFRs (Parte 1 do SRD) e Features (Parte 1 do PRD). Status: Rascunho aguardando revisão técnica. |
+| 1.2 | 2026-05-15 | Heitor Miranda + Claude | Adicionado **5 Domain Objects** (DO-56 a DO-60) para FA-15 (Onboarding com Oráculo do Cliente) e FA-16 (Captura Seletiva de Reuniões). +3 Aggregate Roots (WikiEntity, OnboardingJob, MeetingCapture), +5 Domain Events (EV-42 a EV-46). WikiEntity e EntityHITLEvent estendem BC-07 (Approval & Validation) com HITL gate de onboarding; OnboardingJob estende BC-06 (Multi-tenant); MeetingCapture e MeetingTranscript estendem BC-02 (Content & Knowledge). Atualizado BC↔Features (FA-15→BC-07, FA-16→BC-02). Total: 60 objetos, 46 eventos. |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude | Adicionado **BC-07 Approval & Validation (External Sources)** para FA-13 (Aprovação Hierárquica) + FA-14 (Google Drive como Fonte). +13 objetos de domínio (DO-43 a DO-55), +5 Aggregate Roots (ApprovalRequest, ValidationReport, DriveSync, CurationSuggestion, DriveCleanupReport), +14 Domain Events (EV-28 a EV-41). Atualizados Context Map (relacionamentos com BC-01/02/03/04/05/06), tabela BC↔Containers (CTM-08 Approval Engine, CTM-09 Drive Connector), mapeamento NFR↔Aggregates, assunções (ASS-DM-06/07/08), TODOs (TODO-DM-07 a TODO-DM-10). Vocabulário ubíquo expandido com `Validado`, `Aprovador`, `Drive Sync`, `Curadoria Sugestiva`. Rastreabilidade a BR-017/018, RN-023 a RN-030, ADR-008/009/010. |

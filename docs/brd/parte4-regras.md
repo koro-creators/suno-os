@@ -3,7 +3,7 @@ documento: BRD Parte 4 — Regras de Negócio (RN-XXX)
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.2
 data_criacao: 2026-04-28
 ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
@@ -36,7 +36,7 @@ Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **re
 - KPIs ligam a regra a métricas de sucesso da Parte 3
 - **Confiabilidade** sinaliza a robustez da fonte: Alta (fonte oficial direta), Média (fonte única ou inferência baseada em pesquisa), Baixa (proposta a validar)
 
-## Sumário Executivo (22 RNs)
+## Sumário Executivo (34 RNs)
 
 | ID | Título resumido | BR(s) | Categoria | Confiabilidade |
 |----|----------------|-------|-----------|:--------------:|
@@ -70,6 +70,10 @@ Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **re
 | **RN-028** | Intersecção ACL Drive × RBAC sunOS — default deny | BR-018, BR-007 | Drive/Acesso | Alta |
 | **RN-029** | Curadoria do Drive por agente é **sugestiva**; humano executa | BR-018, BR-010 | Drive/Cultura | Alta |
 | **RN-030** | Re-sync periódico (24h) + webhook para mudanças críticas | BR-018 | Drive/Reliability | Média |
+| **RN-031** | Acionamento opt-in obrigatório para captura de reuniões | BR-020 | Captura/Privacidade | Alta |
+| **RN-032** | HITL obrigatório no seed ontológico inicial | BR-022 | Onboarding/HITL | Alta |
+| **RN-033** | Allow-list para pesquisa web no onboarding | BR-022 | Onboarding/Governança | Média |
+| **RN-034** | Bloqueio de chat livre em Skills processuais | BR-019 | UX/Estruturação | Alta |
 
 ---
 
@@ -671,9 +675,10 @@ Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **re
 | BR-018 (Drive interno da Suno) | RN-027, RN-028, RN-029, RN-030 |
 | BR-019 (UX estruturada) | RN-034 |
 | BR-020 (Captura seletiva) | RN-031 |
+| BR-021 (Wiki Ontológica) | RN-032, RN-033 |
 | BR-022 (Onboarding Oráculo) | RN-032, RN-033 |
 
-**Cobertura completa**: cada um dos 19+ BRs (BR-001 a BR-022, exceto placeholders) tem ≥1 RN. BRs prioritários (Alta) têm 1-3 RNs cada.
+**Cobertura completa**: cada um dos 22 BRs (BR-001 a BR-022) tem ≥1 RN. BRs prioritários (Alta) têm 1-3 RNs cada. BR-021 (Wiki Ontológica) é coberto via RN-032 (HITL no seed) e RN-033 (allow-list).
 
 ---
 
@@ -681,8 +686,8 @@ Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **re
 
 | Confiabilidade | Quantidade | RNs |
 |---------------|:----------:|-----|
-| **Alta** | 12 | RN-001, RN-002, RN-003, RN-006, RN-007, RN-009, RN-010, RN-011, RN-014, RN-018, RN-019, RN-020, RN-021 |
-| **Média** | 9 | RN-004, RN-005, RN-008, RN-012, RN-013, RN-015, RN-016, RN-022 |
+| **Alta** | 22 | RN-001, RN-002, RN-003, RN-006, RN-007, RN-009, RN-010, RN-011, RN-014, RN-018, RN-019, RN-020, RN-021, RN-023, RN-024, RN-025, RN-027, RN-028, RN-029, RN-031, RN-032, RN-034 |
+| **Média** | 11 | RN-004, RN-005, RN-008, RN-012, RN-013, RN-015, RN-016, RN-022, RN-026, RN-030, RN-033 |
 | **Baixa** | 1 | RN-017 |
 
 RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de virarem código ou guideline operacional.
@@ -720,6 +725,7 @@ RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de vir
 |--------|------|---------|
 | 1.0 | 2026-04-28 | Versão inicial. **22 RNs** organizadas em 6 categorias (espelhando a Parte 3). 12 Alta confiabilidade, 9 Média, 1 Baixa. Cobertura completa de todos os 16 BRs. Toda RN com lógica SE/ENTÃO/SENÃO formal, KPIs verificáveis e fonte rastreável. RNs críticas: RN-009 (RBAC), RN-010 (isolamento clientes), RN-011 (caixa-preta da Biblioteca), RN-019 e RN-020 (safety contra homogeneização) |
 | 1.1 | 2026-04-28 | **+8 RNs** (RN-023 a RN-030) na nova **Categoria G — Aprovação & Drive**. Cobre BR-017 (4 RNs sobre validators paralelos, aprovador humano, anti-loop, hierarquia configurável) e BR-018 (4 RNs sobre read-only, intersecção ACL/RBAC, curadoria sugestiva, sync periódico+webhook). Todas Alta confiabilidade exceto RN-026 e RN-030 (Média) |
+| 1.3 | 2026-05-14 | **Correções documentais**: frontmatter `versao` corrigido para 1.2 real. Sumário atualizado de "(22 RNs)" para "(34 RNs)". RN-031 a RN-034 adicionados à tabela do sumário (estavam no corpo mas ausentes da tabela). Matriz de Confiabilidade corrigida: Alta 12→22, Média 9→11 (somavam 22, agora somam 34). BR-021 adicionado à Matriz de Cobertura. |
 | 1.2 | 2026-05-14 | **+4 RNs** (RN-031 a RN-034). RN-031: opt-in obrigatório para captura de reuniões (BR-020). RN-032: HITL obrigatório no seed ontológico (BR-022). RN-033: allow-list para pesquisa web no onboarding (BR-022). RN-034: bloqueio de chat livre em Skills processuais (BR-019, ADR-003). Matriz RN x BR atualizada com novos BRs. |
 
 ---

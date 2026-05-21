@@ -5,8 +5,9 @@ artefato: spec
 nivel-sdd: spec-anchored
 tamanho: large
 status: rascunho
+fase: Momento 2
 criada: 2026-04-30
-atualizada: 2026-04-30
+atualizada: 2026-05-15
 versao: 1.0
 escopo:
   projeto: sunos

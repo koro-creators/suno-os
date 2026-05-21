@@ -1,14 +1,19 @@
 ---
-spec-id: SPEC-004
+spec-id: SPEC-010
 slug: moon-shot
 artefato: spec
 nivel-sdd: spec-anchored
 tamanho: large
 status: rascunho
 criada: 2026-04-28
-atualizada: 2026-04-28
+atualizada: 2026-05-15
 versao: 1.0
+fase: Momento 2
 ---
+
+> ⚠️ **Fase: Momento 2** — BR-001 (Moon Shot) é Momento 2 (pós-Piloto). Esta SPEC não entra no Piloto.
+> ⚠️ **Nota SPEC-007** — a navegação de Moon foi alterada por SPEC-007 (nav-simplification): Moons não têm página dedicada; são chips no chat da Skill page. O comportamento especificado nesta SPEC deve ser revisado à luz de SPEC-007 antes de implementar.
+
 
 # Especificação — Moon Shot
 

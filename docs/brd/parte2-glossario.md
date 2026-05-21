@@ -3,9 +3,9 @@ documento: BRD Parte 2 — Glossário (Business Vocabulary)
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.5
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-18
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -77,13 +77,13 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | Sistema Solar | 3 |
 | Skill | 3 |
 | Smart Growth | 1 |
-| Sponsor | 4 |
+| Sponsor Executivo | 4 |
+| Sponsor de Área | 12 |
 | SSE (Server-Sent Events) | 5 |
 | Sun (o Sol) | 3 |
 | Suno (empresa) | 2 |
 | sunOS | 3 |
 | System Prompt | 5 |
-| Toolbox | 2 |
 | Tutela técnica | 4 |
 | United Creators (holding) | 2 |
 | Vertex AI | 7 |
@@ -125,7 +125,6 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | **Revo** | Empresa do grupo United Creators, distinta da Paim. Escopo, posicionamento e clientes específicos `[A validar com Heitor]` | Necessária definição precisa para diferenciá-la da Paim | Confirmação Heitor (briefing) |
 | **Koro Creators** | Empresa operacional do grupo dedicada a **martech, dados e inteligência artificial**. Fundada em 19 de julho de 2023. Slogan interno: *"Ferrari na garagem"*. **Não confundir** com a tutela técnica do sunOS — a Koro é uma empresa de serviços ao mercado; o sunOS é um produto interno tutelado pela área de Tecnologia e Dados para Marketing (que tem sobreposição de pessoas com a Koro). **Sempre escrever Koro com K, nunca Coro** | Comercialização de serviços de martech para clientes do grupo, contratação direta para projetos de dados | Site institucional Koro Creators, Q6, transcrições |
 | **Ludi** | Empresa operacional do grupo dedicada a **comunicação para o mercado de games (gaming)** | Atendimento de marcas/produtos de games | Dossiê executivo |
-| **Toolbox** | **Produto SaaS** do grupo United Creators, sob responsabilidade do sócio Leonardo Yukio Takai. Comercializa **análises avançadas (martech, dados, BI)** para clientes externos — atende tanto **grandes empresas** quanto **SMBs**. **Separado do sunOS**: o Toolbox é externo (vendido para o mercado); o sunOS é interno (uso exclusivo do grupo). Roadmap, escopo e modelo de negócio são independentes — possíveis sinergias tecnológicas futuras serão tratadas caso a caso | Importante para evitar confusão de escopo: produto vendido a clientes externos é Toolbox, **não** sunOS | Confirmação Heitor do briefing |
 
 ## 3. Produto sunOS — Entidades Centrais
 
@@ -145,7 +144,7 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 
 | Termo | Definição | Contexto de Uso | Fonte |
 |-------|-----------|-----------------|-------|
-| **Sponsor** | **Patrocinador executivo único** do projeto sunOS. No caso, **José Augusto "Guga" Ketzer** (Fundador e Presidente da Suno United Creators). Detém a autoridade final sobre direção, orçamento e continuidade do projeto. Reúne-se semanalmente (terças) com Heitor Miranda | Decisões estratégicas, aprovações de orçamento, mudanças de escopo grandes | Q14, Parte 1 §3.1.1 |
+| **Sponsor Executivo** | **Patrocinador executivo único** do projeto sunOS. No caso, **José Augusto "Guga" Ketzer** (Fundador e Presidente da Suno United Creators). Detém a autoridade final sobre direção, orçamento e continuidade do projeto. Reúne-se semanalmente (terças) com Heitor Miranda. **Não confundir** com Sponsor de Área (§12) — papel distribuído por área formalizado em 14/05/2026 | Decisões estratégicas, aprovações de orçamento, mudanças de escopo grandes | Q14, Parte 1 §3.1.1 |
 | **Tutela técnica** | Responsabilidade pela **arquitetura, decisão técnica e direção estratégica** do projeto sunOS. Atribuída a **Heitor Miranda** (Diretor Executivo, Tecnologia e Dados para Marketing). Mandato formalizado em 24/02/2026 | Lidera time de desenvolvimento, escreve specs, conduz roadmap, presta contas ao sponsor | Q5, Q6, Q7a, Parte 1 §3.1.1 |
 | **Patrocinador Sócio** | Sócio do grupo Suno United Creators que **patrocina o projeto sunOS sem atuação operacional**. Provê voz da sua área (Criação, Mídia, Financeiro) na evolução do produto, mas não executa entregas. Atualmente: Bruno Prosperi (Criação), Leonardo Yukio Takai (Mídia), Ronaldo Severino (CFO) | Validação estratégica, garantia de patrocínio cross-grupo | Confirmação ajustada Q19, Parte 1 §3.1.3 |
 | **Builder** | Profissional embarcado em uma área de negócio (Criação, Mídia, Planejamento, etc.) que **direciona demandas, valida soluções e dissemina o uso do sunOS** dentro de sua área. Não é cargo técnico — é papel cultural. Necessário 1+ builder por área para escalar adoção sem sobrecarregar o time central | Identificação de oportunidades de Skills/Workflows, feedback de uso, treinamento informal | Transcrição reunião sobre sunOS (Heitor: *"tem que ter um builder em cada área"*), Parte 1 §3.1.4 |
@@ -177,7 +176,7 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | **SRD (Solution Requirements Document)** | **Documento de Requisitos de Solução**. Detalha NFRs (ISO 25010), Domain Model, Data Model, Arquitetura As-Is e To-Be (C4), ADRs, APIs. **Toda discussão de stack, infraestrutura e tecnologia vai aqui — não no BRD** | Camada técnica/arquitetural | Skill `srd-koro`, instrução do briefing |
 | **UX (Documentação de UX Koro)** | Quinto pilar do pipeline. Mapeia Inventário de Telas (T-XX), Arquitetura da Informação, Screen Specs, Design System e UI Specs | Camada de design e interface | Skill `ux-koro` |
 | **SDD (Spec-Driven Development)** | **Metodologia de desenvolvimento orientado por especificações** já em uso ativo no projeto sunOS. Para cada feature significativa, gera 5 artefatos (Constitution, Spec, Design, Plan, Tasks) antes da implementação. Atualmente o sunOS tem 7 SPECs (SPEC-001 a SPEC-007) e mais 2 em rascunho (SPEC-002 video-generation e SPEC-003 image-editor) | Toda nova feature do sunOS deve passar por SDD antes de codificação | Skill `sdd-koro`, `docs/specs/` |
-| **ADR (Architecture Decision Record)** | **Registro de Decisão Arquitetural**. Documenta uma decisão técnica significativa, suas alternativas avaliadas e consequências. O sunOS tem 2 ADRs aprovados (ADR-001 e ADR-002) | Documentação de decisões irreversíveis ou de alto impacto | `docs/adr/`, skill `adr-creator` |
+| **ADR (Architecture Decision Record)** | **Registro de Decisão Arquitetural**. Documenta uma decisão técnica significativa, suas alternativas avaliadas e consequências. O sunOS tem **12 ADRs** documentados (ADR-001 a ADR-012; ADR-001 superseded por ADR-003 em 14/05/2026; ADR-009 a ADR-012 promovidos em 15/05/2026) | Documentação de decisões irreversíveis ou de alto impacto | `docs/adr/`, skill `adr-creator` |
 
 ## 7. Parceiros, Clientes e Tecnologias Externas
 
@@ -236,7 +235,7 @@ O glossário foi organizado em **seções temáticas** (não puramente alfabéti
 | **ROI** | Return on Investment | Retorno sobre investimento. Justificativa central do sunOS | Generalidade |
 | **SaaS** | Software as a Service | Modelo de software como serviço. **Não-escopo** do sunOS (uso interno) | Generalidade |
 | **SDD** | Spec-Driven Development | Ver §6 | Skill `sdd-koro` |
-| **SMB** | Small and Medium Businesses | Pequenas e médias empresas. Mercado-alvo do **Toolbox**, não do sunOS | Setor |
+| **SMB** | Small and Medium Businesses | Pequenas e médias empresas. Fora do escopo do sunOS (uso 100% interno) | Setor |
 | **SRD** | Solution Requirements Document | Ver §6 | Skill `srd-koro` |
 | **SSE** | Server-Sent Events | Ver §5 | Web/HTTP |
 
@@ -261,11 +260,11 @@ Esta seção registra **termos que devem ser evitados** dentro do projeto sunOS,
 | AI agency / agência AI-native | **Agência ambidestra** | Posicionamento Guga: lado esquerdo (criatividade) + lado direito (tech) |
 
 
-## 10. Governança e Estrutura Operacional
+## 12. Governança e Estrutura Operacional
 
 | Termo | Definição | Contexto de Uso | Fonte |
 |-------|-----------|-----------------|-------|
-| **Sponsor** | Sócio responsável por desenhar a arquitetura de automações na sua área e cobrado pelo Guga sobre resultado. Não é executor. Modelo formalizado em 14/05/2026 | Estrutura de governança do sunOS | BRD Parte 1 §3.1.1 |
+| **Sponsor de Área** | Sócio responsável por desenhar a arquitetura de automações na sua área e cobrado pelo Guga sobre resultado. Não é executor. Modelo formalizado em 14/05/2026. **Não confundir** com Sponsor Executivo (§4), que é Guga | Estrutura de governança do sunOS | BRD Parte 1 §3.1.1 |
 | **Builder** | Profissional sênior ou pleno que executa fluxos desenhados pelo Sponsor e dá feedback ao Time Central. Cada área tem 1 a 4 | Estrutura de governança | BRD Parte 1 §3.1.2 |
 | **Time Central** | Time técnico liderado por Heitor que provê infra, componentes reutilizáveis e governança técnica. Não constrói automações setoriais sob demanda | Estrutura de governança | BRD Parte 1 §3.1.3 |
 | **Captura Seletiva** | Gravação opt-in de reuniões operacionais críticas (entrada de job, status semanal/mensal, comitês). Não grava conversas casuais | BR-020, FA-16 | Reunião 07/05/2026 |
@@ -286,7 +285,10 @@ Esta seção registra **termos que devem ser evitados** dentro do projeto sunOS,
 |--------|------|---------|
 | 1.0 | 2026-04-28 | Versão inicial. ~50 termos organizados em 7 seções temáticas + acrônimos + termos a evitar. Vocabulário proprietário Suno (Smart Growth, Bioma Zero/Job/Agenting, Inteligência Natural, Caixa-preta) catalogado com fonte. Estrutura do grupo (6 empresas) clarificada. Toolbox isolado como produto separado. **Koro** sempre com K (regra explícita) |
 | 1.1 | 2026-04-28 | Correções de revisão do Heitor: (a) **Bioma Agenting → Bioma Agentic** em todo o documento (índice + §1); (b) **Inteligência Natural removida** do glossário; (c) **Ferrari na garagem movida** de §2 para §1 (vocabulário proprietário); (d) **Caixa-preta** redefinida como expressão informal do Guga, útil para tradução comunicacional (não como princípio rígido de arquitetura); (e) **SUP e SUPA removidas** do glossário; (f) **Paim e Revo separadas** em duas entradas distintas (eram tratadas como sinônimos por engano) — Revo marcada `[A validar]` por falta de definição precisa; (g) **Toolbox redefinido**: SaaS para clientes externos (grandes empresas + SMBs) com análises avançadas em martech/dados/BI — não é exclusivo de SMB |
+| 1.3 | 2026-05-14 | **Correções estruturais**: frontmatter `versao` e `ultima_atualizacao` corrigidos para v1.2 real. §10 duplicada resolvida — segundo "§10 Governança e Estrutura Operacional" renomeado para **§12**. "Sponsor" em §4 renomeado para "**Sponsor Executivo**" (= Guga), com cross-ref para "**Sponsor de Área**" em §12 — elimina ambiguidade de dois significados no mesmo termo. ADR count atualizado: 2 → 8 ADRs (ADR-001 a ADR-008). Source path de ADRs corrigido para `docs/srd/parte7-ADRs.md`. Índice atualizado. |
+| 1.4 | 2026-05-15 | **ADR catalog migrado para `docs/adr/`**: 4 decisões promovidas do SRD parte7 para ADRs canônicos — ADR-009 (Gemini Flash), ADR-010 (LangGraph), ADR-011 (Firebase Auth), ADR-012 (deepagents). 2 decisões demovidas para ADR-LOCAL em SPEC-004 (validators paralelos → ADR-LOCAL-05; hierarquia aprovação → ADR-LOCAL-06). `docs/srd/parte7-ADRs.md` reescrito como índice de redirecionamento. ADR count atualizado: 8 → 12. Source path corrigido para `docs/adr/`. |
 | 1.2 | 2026-04-28 | **+10 termos** na nova **§10 Workflow & Governança** cobrindo features Aprovação (Aprovação Hierárquica, Submissão, Pré-validação, Validation Report, Brand Validator, Português Validator, Aprovador) e Drive (Drive Sync, Drive Cleanup Report) + anti-pattern Rubber-stamping. Pedido Guga + Bruno Prosperi |
+| **1.5** | **2026-05-18** | **§2 + Índice + §8**: todas as menções ao Toolbox removidas por decisão do Heitor Miranda. |
 
 ---
 

@@ -2,7 +2,9 @@
 spec-id: SPEC-004
 slug: approval-hierarchy
 artefato: design
-atualizada: 2026-04-30
+atualizada: 2026-05-15
+status: rascunho
+fase: Momento 2
 versao: 1.0
 ---
 
@@ -559,7 +561,39 @@ ADRs canônicos do projeto (ADR-008/010/011) cobrem decisões de produto. Esta s
   - ❌ Nova coluna em `approval_requests` (`requires_admin_attention BOOLEAN DEFAULT FALSE`).
   - ⚠️ T-29 pode mostrar request "órfã" para admins quando flag set; comportamento documentado em CA-34.
 
-<!-- REVIEW: As 4 decisões locais (outbox, polling, deepagents-compat, approver-fallback) cobrem os trade-offs principais? Falta alguma decisão arquitetural não-óbvia? -->
+
+### ADR-LOCAL-05 — Pré-validação via agentes especializados em paralelo (não LLM genérico)
+
+- **Status:** Aceita.
+- **Contexto:** BR-017 requer pré-validação de assets antes do aprovador humano. Três abordagens possíveis: (a) único LLM genérico que avalia tudo, (b) agentes especializados em paralelo (BrandValidator, PortuguêsValidator), (c) linters determinísticos puros.
+- **Decisão:** Adotar **agentes especializados em paralelo** via `asyncio.gather` com timeout 60s/agent. Cada validator tem prompt, tools e context-window próprios. Output consolidado em `ValidationReport` estruturado. Implementação de referência: ADR-012 (`deepagents` como harness para os sub-agents quando PoC concluir; enquanto isso, LangGraph nativo com `BaseValidator` ABC — ver ADR-LOCAL-03).
+- **Alternativas consideradas:**
+  1. LLM genérico único — rejeitado: dilui responsabilidade de cada dimensão; difícil debugar ou calibrar individualmente.
+  2. Linters determinísticos puros — rejeitado para Brand; aceito como **complemento** para Português.
+  3. Pipeline sequencial (A → B) — rejeitado: latência total = soma; paralelo permite latência ≈ max(validators).
+- **Consequências:**
+  - ✅ Cada validator evoluível independentemente (A/B test, troca de modelo).
+  - ✅ Latência paralela: P95 ≈ 60s (vs. ≥10min sequencial).
+  - ✅ `ValidationReport` estruturado por dimensão facilita UX (FindingHighlight por categoria).
+  - ⚠️ Custo de LLM = N validators por submissão — mitigação: Gemini Flash (ADR-009) + prompt caching.
+  - ⚠️ Novo validator = novo agente — mitigação: `BaseValidator` ABC reutilizável.
+
+### ADR-LOCAL-06 — Hierarquia de aprovação configurável manualmente (não hardcoded nem sync RH)
+
+- **Status:** Aceita.
+- **Contexto:** BR-017 requer encaminhamento ao aprovador correto. Hierarquia da Suno é dinâmica. Três abordagens possíveis: (a) hardcoded em código, (b) configuração admin manual em tabela, (c) sync com sistema de RH externo.
+- **Decisão:** **Configuração admin manual** no MVP. Mapa área/cliente → aprovador mantido em `approval_chain` + `approval_chain_levels`. Suporta fallback (ver ADR-LOCAL-04). **Futuro (post-MVP):** avaliar sync com RH se mantida fricção operacional.
+- **Alternativas consideradas:**
+  1. Hardcoded em código — rejeitado: hierarquia muda toda semana; deploy desnecessário.
+  2. Sync com RH externo — postergado: sem API estável no sistema de RH atual; risco de bloqueio externo.
+  3. Aprovação multi-nível obrigatória (sócio → diretor → CEO) — postergado: MVP usa 1 nível; adicionar pós-Piloto se necessário.
+- **Consequências:**
+  - ✅ Time mantém controle total; mudanças refletem em < 5min sem deploy.
+  - ✅ UI de configuração via `/aprovacoes/configuracao/[clientSlug]`.
+  - ⚠️ Dependência de processo admin estar mantido — mitigação: alerta se aprovador inativo > 30 dias.
+  - ⚠️ Auditoria de mudanças obrigatória (RN-026 + RN-012) — implementada via `api/core/audit.py`.
+
+<!-- REVIEW: As 6 decisões locais (outbox, polling, deepagents-compat, approver-fallback, validators-paralelos, hierarquia-configurável) cobrem os trade-offs principais? Falta alguma decisão arquitetural não-óbvia? -->
 
 ## 6. Estratégia de Testes
 

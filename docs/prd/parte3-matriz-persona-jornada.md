@@ -3,9 +3,9 @@ documento: PRD Parte 3 — Matriz Persona × Objetivo × Jornada
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.2
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -20,7 +20,7 @@ aprovacoes:
 fonte_brd: docs/brd/parte1-contexto.md, docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_prd: docs/prd/parte1-feature-map.md, docs/prd/parte2-personas-jtbd.md
 fonte_frd: FRD Moon Shot (referenciado nos BRDs Parte 3 e 4)
-total_jornadas: 10 (JN-01 a JN-10)
+total_jornadas: 17 (JN-01 a JN-17)
 ---
 
 # PRD Parte 3 — Matriz Persona × Objetivo × Jornada
@@ -31,11 +31,11 @@ total_jornadas: 10 (JN-01 a JN-10)
 
 Este documento cria a **visão matricial operacional** do sunOS, conectando:
 
-- **Personas** (PX-01 a PX-05, definidas na Parte 2)
-- **Objetivos / Jobs-to-be-done** (JTBD-01 a JTBD-29, definidos na Parte 2)
-- **Jornadas** (JN-01 a JN-10) — fluxos de uso reais, com começo, meio e fim
-- **Features** (FA-01 a FA-12, definidas na Parte 1)
-- **Requisitos de Negócio** (BR-001 a BR-016, BRD Parte 3) e **Regras de Negócio** (RN-001 a RN-022, BRD Parte 4)
+- **Personas** (PX-01 a PX-08, definidas na Parte 2)
+- **Objetivos / Jobs-to-be-done** (JTBD-01 a JTBD-42, definidos na Parte 2)
+- **Jornadas** (JN-01 a JN-17) — fluxos de uso reais, com começo, meio e fim
+- **Features** (FA-01 a FA-16, definidas na Parte 1)
+- **Requisitos de Negócio** (BR-001 a BR-022, BRD Parte 3) e **Regras de Negócio** (RN-001 a RN-034, BRD Parte 4)
 
 Serve como base direta para:
 
@@ -74,10 +74,10 @@ Aplicam-se a **toda** jornada:
 
 | Artefato | Relação |
 |----------|---------|
-| BRD Parte 3 (BR-001 a BR-016) | Toda jornada serve ≥1 BR; matriz de cobertura no §5.4 |
-| BRD Parte 4 (RN-001 a RN-022) | RNs entram nos passos como gates ou comportamentos automatizados |
-| PRD Parte 1 (FA-01 a FA-12) | Features aparecem nas jornadas (matriz §5.1) |
-| PRD Parte 2 (PX-01 a PX-05, JTBD-01 a JTBD-29) | Cada jornada é executada por ≥1 Persona e cumpre ≥1 JTBD |
+| BRD Parte 3 (BR-001 a BR-022) | Toda jornada serve ≥1 BR; matriz de cobertura no §5.4 |
+| BRD Parte 4 (RN-001 a RN-034) | RNs entram nos passos como gates ou comportamentos automatizados |
+| PRD Parte 1 (FA-01 a FA-16) | Features aparecem nas jornadas (matriz §5.1) |
+| PRD Parte 2 (PX-01 a PX-08, JTBD-01 a JTBD-42) | Cada jornada é executada por ≥1 Persona e cumpre ≥1 JTBD |
 | PRD Parte 4 (FRs FR-XXX) | Passos críticos de jornada viram FRs |
 | PRD Parte 5 (Roadmap) | Jornadas distribuídas por fase POC → Protótipo → Piloto → MVP |
 | FRD Moon Shot | JN-02 e JN-06 são detalhadas no FRD; este documento referencia |
@@ -100,28 +100,36 @@ Aplicam-se a **toda** jornada:
 | **JN-08** | Governança executiva e Mensuração mensal | Líder consome dashboard executivo, audita acessos, monitora homogeneização coletiva | PX-01 | FA-10, FA-09, FA-11, FA-12 | Piloto |
 | **JN-09** | Onboarding de Creator Junior | Junior escolhe track de onboarding e aprende vocabulário/cultura via Biblioteca + Skills | PX-05 | FA-11, FA-02, FA-01, FA-04 | Piloto |
 | **JN-10** | Configuração de nova Skill (sem código) | Líder cadastra Skill nova via Admin, define system prompt, Moons, clientes | PX-01 | FA-12, FA-03, FA-09 | Protótipo |
+| **JN-11** | Submissão para Aprovação Hierárquica | Creator submete asset para validators paralelos + decisão humana do Aprovador | PX-02, PX-03, PX-05 (submetem) · PX-06 (decide) | FA-13, FA-01, FA-09, FA-07 | Piloto |
+| **JN-12** | Curadoria do Drive Suno Assistida por Agentes | Líder recebe Drive Cleanup Report do Drive Suno interno e decide item-a-item o que ingerir | PX-01 | FA-14, FA-01, FA-09, FA-12 | Piloto |
+| **JN-13** | Onboarding de Cliente com Oráculo | PX-01 guia wizard 4 passos e valida 6 entidades geradas pelo Oráculo antes de ativar cliente | PX-01 | FA-15, FA-14, FA-12 | Piloto |
+| **JN-14** | Captura Seletiva de Reunião Operacional | PX-03 aciona opt-in de captura e alimenta Wiki Ontológica com decisões e próximos passos | PX-03, PX-01 | FA-16, FA-01, FA-09 | Piloto |
+| **JN-15** | Sponsor desenhando arquitetura setorial | Sponsor de Área mapeia blueprint de Workflow com Time Central antes de Builder construir | PX-07, Time Central | FA-05, FA-12, FA-09 | Piloto |
+| **JN-16** | Builder construindo Workflow visual | Builder implementa Workflow via canvas drag-and-drop (ADR-003) a partir de blueprint do Sponsor | PX-08, PX-07 | FA-05, FA-03, FA-07 | Piloto |
+| **JN-17** | Builder Sync semanal com Time Central | Builder apresenta progresso, recebe suporte técnico e alinha breaking changes de primitivas | PX-08, Time Central | FA-05, FA-10, FA-12 | Piloto |
 
 ### 2.2. Jornadas Críticas por Fase
 
 | Fase | Jornadas Core (validação obrigatória) | Jornadas Suportadas | Jornadas Futuras |
 |------|---------------------------------------|---------------------|------------------|
-| **POC** | JN-02 (Moon Shot, blind tests com seniores) | — | JN-01, JN-03 a JN-10 |
-| **Protótipo** | JN-01, JN-02, JN-03, JN-04, JN-10 | — | JN-05 a JN-09 |
-| **Piloto** | JN-01, JN-02, JN-03, JN-04, JN-05, JN-06, JN-07, JN-08, JN-09 | JN-10 (refinamento) | — |
-| **MVP** | Todas as 10 jornadas em produção contínua | — | — |
+| **POC** | JN-02 (Moon Shot, blind tests com seniores) | — | JN-01, JN-03 a JN-17 |
+| **Protótipo** | JN-01, JN-02, JN-03, JN-04, JN-10 | — | JN-05 a JN-09, JN-11 a JN-17 |
+| **Piloto** | JN-01 a JN-09, JN-11 a JN-17 | JN-10 (refinamento) | — |
+| **MVP** | Todas as 17 jornadas em produção contínua | — | — |
 
 ### 2.3. Encadeamento das Jornadas
 
-As 10 jornadas formam três anéis funcionais que espelham os anéis de Features (Parte 1 §2.3):
+As 17 jornadas formam quatro anéis funcionais que espelham os anéis de Features (Parte 1 §2.3):
 
-- **Anel de Curadoria** — JN-01 (curadoria contínua), JN-05 (captura pré-saída), JN-10 (config de Skill). Executadas pelo PX-01 (Líder), alimentam infraestrutura de conhecimento e configuração que todas as outras jornadas consomem invisivelmente.
+- **Anel de Curadoria** — JN-01 (curadoria contínua), JN-05 (captura pré-saída), JN-10 (config de Skill), JN-12 (Drive Suno), JN-13 (Onboarding Oráculo), JN-14 (Captura Seletiva). Executadas pelo PX-01 (Líder) e PX-03 (opt-in de captura), alimentam infraestrutura de conhecimento que todas as outras jornadas consomem invisivelmente.
 - **Anel de Uso (Bioma Job)** — JN-02 (ideação), JN-03 (execução processual), JN-04 (análise estratégica), JN-06 (devil's advocate), JN-09 (onboarding). Executadas por PX-02/03/04/05, consomem o que PX-01 curou.
-- **Anel de Operação Recorrente e Governança** — JN-07 (Workflows agendados), JN-08 (Mensuração e dashboard). Costuram tudo: Workflows automatizam JN-03 e JN-04 quando recorrentes; dashboard fecha o loop mensal de Mensuração + safety cultural.
+- **Anel de Operação Recorrente e Governança** — JN-07 (Workflows agendados), JN-08 (Mensuração e dashboard), JN-11 (Aprovação Hierárquica). Costuram tudo: Workflows automatizam JN-03 e JN-04 quando recorrentes; dashboard fecha o loop mensal.
+- **Anel de Governança Setorial** — JN-15 (Sponsor arquiteta), JN-16 (Builder constrói), JN-17 (Builder Sync). Exclusivo de PX-07 e PX-08 — garante que automações setoriais seguem o modelo Sponsor-Builder-Time Central (BR-022) com rastreabilidade e sem dependência de eng.
 
 ```
             ┌──────────────────── ANEL DE CURADORIA ────────────────────┐
-            │  JN-01 Curadoria     JN-05 Captura       JN-10 Config     │
-            │   (Biblioteca)        pré-saída            de Skill       │
+            │  JN-01 Curadoria    JN-05 pré-saída    JN-10 Config       │
+            │  JN-12 Drive Suno   JN-13 Onboarding   JN-14 Captura      │
             └──────────────────────────┬────────────────────────────────┘
                                        │
                              alimenta de forma invisível
@@ -139,7 +147,14 @@ As 10 jornadas formam três anéis funcionais que espelham os anéis de Features
                                        │
             ┌────────── ANEL DE OPERAÇÃO RECORRENTE & GOVERNANÇA ───────┐
             │  JN-07 Workflows agendados      JN-08 Mensuração mensal   │
-            │  (automatiza JN-03/JN-04)        (dashboard, alertas)     │
+            │  JN-11 Aprovação Hierárquica      (dashboard, alertas)    │
+            └──────────────────────────┬────────────────────────────────┘
+                                       │
+                         define arquitetura + constrói + itera
+                                       │
+            ┌────────── ANEL DE GOVERNANÇA SETORIAL ────────────────────┐
+            │  JN-15 Sponsor arquiteta    JN-16 Builder constrói        │
+            │  JN-17 Builder Sync com Time Central (PX-07 + PX-08)      │
             └────────────────────────────────────────────────────────────┘
 ```
 
@@ -201,6 +216,24 @@ As 10 jornadas formam três anéis funcionais que espelham os anéis de Features
 | JTBD-27 (referência via Biblioteca, sem ver) | JN-09 → JN-03 | 1. Junior usa Skill processual com supervisão → 2. Skill puxa cases curados da Biblioteca via context injection → 3. Junior nunca vê /biblioteca (RN-011) | FA-01, FA-03, FA-09 | BR-006, BR-007; RN-011, RN-021 | Piloto |
 | JTBD-28 (princípio AI Provoca) | JN-09 (transversal) | 1. Todo output IA marcado como estímulo/Faísca → 2. Junior aprende desde o primeiro dia que IA Provoca, humano cria | FA-11, FA-04 | BR-010, BR-012; RN-014 | Piloto |
 | JTBD-29 (mentor virtual brasileiro) | JN-09, JN-02 | 1. Junior aciona agente em modo Antropófaga/Carnavalesco/Anciã → 2. Agente responde com vetor cultural brasileiro → 3. Marca cultura desde o início | FA-02, FA-04, FA-11 | BR-011, BR-012; RN-014 | Piloto |
+
+### 3.6. PX-07 — Sponsor de Área
+
+| Objetivo / JTBD | Jornada | Passos-Chave | Features | BRs / RNs | Fase |
+|-----------------|---------|--------------|----------|-----------|------|
+| JTBD-35 (arquitetura de automação setorial) | JN-15 | 1. Identifica necessidade → 2. Cria blueprint no canvas → 3. Documenta propósito e KPIs → 4. Time Central valida → 5. Blueprint aprovado → 6. Briefa Builder | FA-05, FA-12 | BR-022, BR-002, BR-019; RN-034 | Piloto |
+| JTBD-36 (garantir coerência estratégica) | JN-15, JN-16 (revisão) | 1. Acompanha construção do Builder → 2. Revisa canvas → 3. Valida que implementação reflete blueprint → 4. Aprova ativação | FA-05, FA-09 | BR-022; RN-034 | Piloto |
+| JTBD-37 (alinhar área ao modelo Suno) | JN-15, JN-17 | 1. Sync semanal com Time Central → 2. Garante que automações da área respeitam padrões Suno → 3. Comunica atualizações de primitivas à equipe | FA-05, FA-12, FA-10 | BR-022, BR-013; RN-034 | Piloto |
+| JTBD-38 (mensurar impacto das automações da área) | JN-08 (sub-fluxo) | 1. Consume dashboard executivo → 2. Triangula custo evitado por Workflow da área → 3. Reporta à Diretoria | FA-10, FA-05 | BR-013, BR-003; RN-018 | Piloto |
+
+### 3.7. PX-08 — Builder de Área
+
+| Objetivo / JTBD | Jornada | Passos-Chave | Features | BRs / RNs | Fase |
+|-----------------|---------|--------------|----------|-----------|------|
+| JTBD-39 (construir Workflow sem dependência de eng) | JN-16 | 1. Recebe blueprint aprovado → 2. Abre canvas drag-and-drop → 3. Arrasta nodes → 4. Configura parâmetros → 5. Conecta handles corretos → 6. Valida inline → 7. Ativa | FA-05 (ADR-003) | BR-002, BR-022; RN-034, ADR-003 | Piloto |
+| JTBD-40 (iterar Workflow com base em execuções reais) | JN-16, JN-17 | 1. Verifica timeline de execuções (FA-10) → 2. Identifica steps com erro ou baixo score HITL → 3. Ajusta nodes afetados → 4. Re-ativa | FA-05, FA-10, FA-07 | BR-013; RN-018 | Piloto |
+| JTBD-41 (sync semanal com Time Central para desbloquear) | JN-17 | 1. Prepara lista de bloqueantes → 2. Apresenta canvas ao Time Central → 3. Recebe suporte técnico → 4. Implementa correção | FA-05, FA-12 | BR-022; RN-034 | Piloto |
+| JTBD-42 (documentar Workflows da área) | JN-16, JN-17 | 1. Adiciona descrição estratégica a cada Workflow → 2. Documenta handles e steps no canvas → 3. Rastreabilidade para próximos Builders | FA-05, FA-12 | BR-002, BR-022; RN-022 | Piloto |
 
 ---
 
@@ -545,7 +578,7 @@ Output marcado como estímulo (RN-014). Operador refina via Chat (variações, e
 
 | Tipo | IDs | Relevância |
 |------|-----|------------|
-| **BRs** | BR-002 (primário), BR-006, BR-008, BR-013, BR-015 | Aceleração operacional, acesso democrático mediado, privacidade clientes, mensuração custo, integração Skills |
+| **BRs** | BR-002 (primário), BR-006, BR-008, BR-013, BR-015, BR-019 | Aceleração operacional, acesso democrático mediado, privacidade clientes, mensuração custo, integração Skills; BR-019: paradigma Skill + Moon + Chat — software estruturado, não chat livre |
 | **RNs** | RN-004, RN-010, RN-011, RN-014, RN-018, RN-021 | Avaliação mensal redução tempo, isolamento clientes, Caixa-preta, marcação visual, custo evitado, hierarquia truncamento |
 | **JTBDs** | JTBD-14, JTBD-16, JTBD-19 (PX-03), JTBD-11 (PX-02), JTBD-23 (PX-04) | — |
 
@@ -895,7 +928,7 @@ Diferença-chave de JN-02: input é uma ideia consolidada; output são contra-ar
 
 #### Descrição
 
-Jornada de **automação sem código**. Líder/Operador configura Workflow recorrente (Report Mensal, Plano de Mídia, Monitor de Anomalias, Pesquisa de Mercado) via Admin (`/workflows`) compondo steps (tool, LLM, condição, ação, HITL gate). Define **schedule humanizado** ("Toda segunda às 9h"), atribui clientes/Skills, ativa. Cloud Scheduler dispara conforme cron; LangGraph StateGraph executa; HITL gates pausam para revisão humana em decisões críticas. Histórico de execuções em timeline.
+Jornada de **automação sem código**. Líder/Operador configura Workflow recorrente (Report Mensal, Plano de Mídia, Monitor de Anomalias, Pesquisa de Mercado) via Admin (`/workflows`) compondo steps no **canvas drag-and-drop** (FA-05, ADR-003): tool, LLM, condição, ação, HITL gate, merge. Define **schedule humanizado** ("Toda segunda às 9h"), atribui clientes/Skills, ativa. Cloud Scheduler dispara conforme cron; LangGraph StateGraph executa; HITL gates pausam para revisão humana em decisões críticas. Histórico de execuções em timeline.
 
 Endereça gargalo de **time de 4 devs não escala** (BR-002): builders e analistas configuram suas próprias automações sem fila de eng.
 
@@ -911,12 +944,13 @@ Endereça gargalo de **time de 4 devs não escala** (BR-002): builders e analist
 [2. Cria Workflow novo: nome + descrição + cliente]
         │
         ▼
-[3. Compõe steps em sequência:
-    - Tool (search_knowledge, call_api, send_webhook, etc.)
-    - LLM (executa Skill com prompt parametrizado)
-    - Condição (branch SE/ENTÃO)
-    - Ação (publica, notifica, salva)
-    - HITL gate (pausa para revisão humana)]
+[3. Compõe steps no canvas drag-and-drop (FA-05, ADR-003):
+    - Tool (search_knowledge, call_api, send_webhook, etc.) — handles: out/error
+    - LLM (executa Skill com prompt parametrizado) — handles: out/error
+    - Condição (branch SE/ENTÃO) — handles: then/else
+    - Ação (publica, notifica, salva) — handle: out
+    - HITL gate (pausa para revisão humana) — handles: approved/rejected/modified
+    - Merge (converge múltiplas branches) — handle: out]
         │
         ▼
 [4. Define schedule humanizado ("Toda segunda às 9h", "Dia 1 às 8h")]
@@ -957,11 +991,14 @@ Endereça gargalo de **time de 4 devs não escala** (BR-002): builders e analist
 | PX-01 Líder | Configurador (primária) | Automação sem código, sem dependência de eng |
 | PX-03 Operador | Configurador secundário e revisor de HITL gate | Tarefas recorrentes automatizadas |
 | PX-04 Planner | Configurador de Pesquisa de Mercado / Análise recorrente | Automação de pesquisa para new business |
+| PX-07 Sponsor de Área | Definidor de arquitetura dos Workflows da área | Garantir que automações respeitam estratégia setorial |
+| PX-08 Builder de Área | Construtor via canvas drag-and-drop | Implementar Workflows sem dependência de eng |
 
 #### Telas Tocadas
 
 - /workflows (catálogo)
-- Editor de Workflow (steps, schedule, HITL config)
+- Canvas drag-and-drop (FA-05, ADR-003): editor visual com nodes e handles
+- Editor de Workflow (schedule, HITL config)
 - Histórico de execuções (timeline)
 - Drawer de execução individual
 
@@ -1314,7 +1351,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | Persona | Papel na Jornada | Objetivo Específico |
 |---------|------------------|---------------------|
 | PX-01 Líder/Curador (primária) | Configurador | Empoderar área sem fila de eng |
-| Builders (Gus/Teda/Le) | Co-configuradores | Iterar Skills da própria área |
+| Builders de Área (PX-08) | Co-configuradores | Iterar Skills e Workflows da própria área |
 | PX-02/03/04/05 | Beneficiários downstream | Recebem novas Skills |
 
 #### Telas Tocadas
@@ -1384,27 +1421,31 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 
 | Feature | Jornadas onde aparece | Papel transversal |
 |---------|----------------------|-------------------|
-| FA-01 Biblioteca | JN-01 (curadoria), JN-02, JN-03, JN-04, JN-05, JN-09 (Caixa-preta) | Infraestrutura de conhecimento — invisível mas alimenta tudo |
+| FA-01 Biblioteca | JN-01 (curadoria), JN-02, JN-03, JN-04, JN-05, JN-09 (Caixa-preta), JN-12, JN-13, JN-14 | Infraestrutura de conhecimento — invisível mas alimenta tudo |
 | FA-02 Moon Shot | JN-02 (primária), JN-04 (transição), JN-06, JN-09 (track junior) | Motor divergente |
 | FA-03 Skills processuais | JN-03 (primária), JN-04, JN-07, JN-09, JN-10 | Motor convergente |
 | FA-04 Chat | JN-02, JN-03, JN-04, JN-06, JN-09 | Interface conversacional |
-| FA-05 Workflows | JN-07 (primária); automatiza JN-03 e JN-04 quando recorrente | Engine de automação |
+| FA-05 Workflows | JN-07 (primária), JN-15, JN-16, JN-17; automatiza JN-03 e JN-04 quando recorrente | Engine de automação + Builder Visual (ADR-003) |
 | FA-06 Sistema Solar | JN-02, JN-03, JN-04, JN-09 (entrada de jornadas) | Navegação |
-| FA-07 HITL | JN-02, JN-03, JN-04, JN-06, JN-07, JN-09 (transversal) | Curadoria contínua |
+| FA-07 HITL | JN-02, JN-03, JN-04, JN-06, JN-07, JN-09, JN-11, JN-16 (transversal) | Curadoria contínua |
 | FA-08 Multimodal | JN-02 (Faísca visual), JN-03 (Copy Social Preview), JN-05 (transcrição) | Output visual |
-| FA-09 Governança/RBAC | JN-01, JN-03, JN-05, JN-08, JN-10 (transversal) | Segurança e Caixa-preta |
+| FA-09 Governança/RBAC | JN-01, JN-03, JN-05, JN-08, JN-10, JN-11, JN-12, JN-13, JN-14, JN-15, JN-16 (transversal) | Segurança e Caixa-preta |
 | FA-10 Mensuração | JN-08 (primária); transversal a todas as jornadas (trace) | Observabilidade |
 | FA-11 Safety cultural | JN-02, JN-06, JN-08, JN-09 (transversal) | Padrão cultural |
-| FA-12 Admin areas | JN-01, JN-05, JN-07, JN-08, JN-10 | UX administrativa |
+| FA-12 Admin areas | JN-01, JN-05, JN-07, JN-08, JN-10, JN-12, JN-13, JN-15, JN-17 | UX administrativa |
+| FA-13 Aprovação Hierárquica | JN-11 (primária) | Validators paralelos + aprovação humana + auditoria |
+| FA-14 Drive Read-Only | JN-12 (primária), JN-13 (sync inicial) | Curadoria do Drive Suno interno assistida por agentes |
+| FA-15 Onboarding com Oráculo | JN-13 (primária) | Wizard de cadastro + seed ontológico + HITL gate |
+| FA-16 Captura Seletiva de Reuniões | JN-14 (primária) | Opt-in de transcrição + extração estruturada → Wiki Ontológica |
 
 ### 5.2. Jornadas por Fase
 
 | Fase | Jornadas Completas | Jornadas Parciais | Jornadas Futuras |
 |------|--------------------|-------------------|------------------|
-| **POC** | JN-02 (Moon Shot — pipeline mínimo) | — | JN-01, JN-03 a JN-10 |
-| **Protótipo** | JN-01, JN-02 (UX completa), JN-03, JN-04, JN-10 | — | JN-05 a JN-09 |
-| **Piloto** | JN-01 a JN-09 (todas operacionais) | JN-10 (refinamento contínuo) | — |
-| **MVP** | Todas as 10 em produção contínua | — | — |
+| **POC** | JN-02 (Moon Shot — pipeline mínimo) | — | JN-01, JN-03 a JN-17 |
+| **Protótipo** | JN-01, JN-02 (UX completa), JN-03, JN-04, JN-10 | — | JN-05 a JN-09, JN-11 a JN-17 |
+| **Piloto** | JN-01 a JN-09, JN-11 a JN-17 (todas operacionais) | JN-10 (refinamento contínuo) | — |
+| **MVP** | Todas as 17 em produção contínua | — | — |
 
 ### 5.3. Critérios de Sucesso por Jornada
 
@@ -1420,6 +1461,13 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | JN-08 | Dashboard até dia 5 (100%); ≥3 KPIs negócio; mensuração homogeneização (100%); zero relatório isolado | Conteúdo dashboard + RN-019/020 |
 | JN-09 | -40% curva aprendizado; NPS junior ≥ NPS sênior; skip reflection <30% | Pesquisa qualitativa |
 | JN-10 | Config ≤5min/Skill; versionamento 100%; zero exposição system prompts | Tracking + auditoria |
+| JN-11 | ≥80% aprovações em ≤24h; ≥80% revisões evitáveis corrigidas por validators; zero aprovações automáticas | Approval Inbox + HITL + pesquisa |
+| JN-12 | Zero violações ACL; ≥50% sugestões adotadas; -30% curadoria manual; sync ≤24h | Auditoria + AccessLog |
+| JN-13 | Wizard em ≤5min; 100% HITL gate (RN-032); seed ≥4/6 entidades sem intervenção; onboarding ≤24h | RN-032 auditável + Oráculo trace |
+| JN-14 | 100% notificação participantes (RN-031); extração útil ≥70%; zero incidentes LGPD | Auditoria + HITL |
+| JN-15 | 100% Workflows com blueprint aprovado antes da construção; blueprint em ≤2 rounds | Catálogo Workflows + governança |
+| JN-16 | Builder constrói em ≤2h sem eng; ≥90% passam validator na 1ª tentativa; Sponsor aprova em ≥80% | Trace + validator + pesquisa |
+| JN-17 | Sync em ≥80% das semanas; ≥80% bloqueantes resolvidos em ≤1 semana; zero breaking changes sem aviso | Tracking + governance log |
 
 ### 5.4. Cobertura BR ↔ Jornada
 
@@ -1440,9 +1488,15 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | BR-013 (Mensuração custo) | JN-03, JN-07, JN-08 | OK |
 | BR-014 (Detecção homogeneização) | JN-02, JN-08 | OK |
 | BR-015 (Integração Skills) | JN-03, JN-04, JN-10 | OK |
-| BR-016 (Coexistência ferramentas) | JN-07 (RN-022) | OK |
+| BR-016 (Coexistência ferramentas) | JN-07, JN-16 (RN-022) | OK |
+| BR-017 (Aprovação Hierárquica) | JN-11 | OK |
+| BR-018 (Drive Suno Read-Only) | JN-12 | OK |
+| BR-019 (Software estruturado, não chat livre) | JN-03, JN-07, JN-15, JN-16 (transversal) | OK |
+| BR-020 (Captura Seletiva de Reuniões) | JN-14 | OK |
+| BR-021 | — (placeholder) | Pendente |
+| BR-022 (Modelo de governança Sponsor-Builder-Time Central) | JN-15, JN-16, JN-17 | OK |
 
-**Cobertura completa**: cada um dos 16 BRs tem ≥1 jornada associada.
+**Cobertura completa**: cada um dos 22 BRs tem ≥1 jornada associada (exceto BR-021 — placeholder).
 
 ---
 
@@ -1478,7 +1532,7 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 | Aprovar política específica de retenção de dados pessoais (PA-07) | RN-013 fica subespecificada para JN-08 (auditoria) | Diretoria + Heitor | Antes do Piloto |
 | Decidir se FA-12-08 (validação automática de vocabulário) é gate Piloto ou MVP | Afeta JN-01, JN-10 (cultura UX) | Heitor + time dev | Junho 2026 |
 | Validar critérios quantitativos das jornadas antes de virarem compromissos | -30%, ≥60%, ≥70% etc. | Heitor + Guga | Maio 2026 |
-| Confirmar builders (Gus/Teda/Le) como sub-papel de PX-01 ou persona separada (ASS-PX-02) | Pode demandar JN-11 dedicada de "Builder ativando área" | Heitor + Yuri | Maio 2026 |
+| ~~Confirmar builders como sub-papel de PX-01~~ → **RESOLVIDO**: PX-08 é persona separada (14/05/2026). Builders confirmados em 8 de 10 áreas. Criação e Produção pendentes (Junho/2026). | — | — | Resolvido |
 
 ### 6.4. Riscos Identificados
 
@@ -1540,14 +1594,14 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 
 ---
 
-### JN-12 — Curadoria do Drive Assistida por Agentes (NOVA — pedido Guga, versão ajustada)
+### JN-12 — Curadoria do Drive Suno Assistida por Agentes (NOVA — FA-14 v2, Drive interno apenas)
 
 **Personas envolvidas**: PX-01 Líder/Curador (primário — executa curadoria) · agentes (geram Drive Cleanup Report) · PX-03 Operador (beneficiário indireto via Skills com contexto vindo do Drive)
 
 **Anel funcional**: Curadoria
 
 **Fluxo (8 passos)**:
-1. Líder conecta uma pasta autorizada do Drive ao sunOS via OAuth Google (FA-14-01) — escopo `drive.readonly`
+1. Líder conecta pasta autorizada do **Drive Suno interno** ao sunOS via OAuth Google (FA-14-01, ADR-006) — escopo `drive.readonly`; Drive de clientes externos fora do escopo (REST-08 v2 — Drive só interno da Suno)
 2. Sync Drive → sunOS dispara (FA-14-02) — incremental via `changes.list`
 3. Intersecção ACL Drive × RBAC sunOS aplicada (FA-14-03) — usuário só vê o que pode em ambos
 4. Agentes analisam estrutura semanalmente e geram **Drive Cleanup Report** (FA-14-04): duplicatas, órfãos (sem acesso 180+ dias), candidatos à curadoria, nomenclatura inconsistente
@@ -1589,9 +1643,250 @@ Endereça gargalo de "time de 4 devs não escala" (BR-002) e protege IP (BR-007 
 
 ---
 
+### JN-13 — Onboarding de Cliente com Oráculo do Cliente (NOVA — FA-15)
+
+**Personas envolvidas**: PX-01 Líder/Curador (executa onboarding) · sistema Oráculo do Cliente (agente seed)
+
+**Anel funcional**: Curadoria
+
+**Fluxo (10 passos)**:
+1. Novo cliente aprovado → PX-01 acessa `/clientes` → inicia wizard de cadastro de 4 passos (FA-15-01)
+2. Wizard passo 1: metadados básicos (nome, setor, porte, website)
+3. Wizard passo 2: conecta pasta do Drive Suno atribuída ao cliente (FA-15-02, sync `drive.readonly`)
+4. Wizard passo 3: configura parâmetros do Oráculo (profundidade de pesquisa, escopo de allow-list, RN-033)
+5. Wizard passo 4: confirma e dispara — Oráculo inicia seed das 6 entidades ontológicas (FA-15-03): Perfil do Cliente, Mercado e Setor, Concorrentes Diretos, Personas-Alvo, Histórico de Campanhas, Restrições Legais e Contratuais
+6. Oráculo executa pesquisa web nos domínios da allow-list para enriquecer entidades (FA-15-04, RN-033)
+7. Sistema apresenta entidades geradas — cliente em estado PRE_ACTIVE, bloqueado para uso
+8. PX-01 valida entidade-a-entidade via UI dedicada (FA-15-05): aceitar / editar inline / rejeitar e solicitar refazer
+9. HITL gate obrigatório (RN-032): cliente só avança para ACTIVE após PX-01 aprovar **todas** as entidades
+10. Ativação automática (PRE_ACTIVE → ACTIVE, FA-15-07) — cliente aparece no Sistema Solar, Skills e Moons disponíveis
+
+**Telas tocadas**: T-40 Wizard cadastro 4 passos · T-41 Progress de seed do Oráculo · T-42 Validação entidade-a-entidade · T-12 Sistema Solar (pós-ativação)
+
+**Momento crítico**: HITL gate (passo 9 / RN-032). PX-01 não pode avançar sem validar todas as entidades — gateway que garante qualidade do contexto inicial que alimentará todas as Skills. Se entidade-chave (ex.: Restrições Legais) for aceita sem revisão, erros de brand safety surgem nas primeiras execuções.
+
+**Dores endereçadas**:
+- Onboarding de cliente demora dias (coleta manual de contexto disperso)
+- Sem padronização ontológica — cada área tem "briefing de cliente" diferente
+- Dependência de eng para configurar novo cliente no sistema
+- Histórico de campanhas e restrições legais raramente documentados estruturalmente
+
+**Oportunidades de IA**:
+- Oráculo gera seed das 6 entidades em minutos via Deep Agent (FA-15-03)
+- Pesquisa web em allow-list garante dados atualizados de mercado e concorrência (FA-15-04, RN-033)
+- UI de validação entidade-a-entidade torna revisão explícita e rápida (FA-15-05)
+- Idempotência permite re-execução parcial sem perder entidades já validadas (FA-15-08)
+- Auditoria completa documenta qual PX-01 validou o quê e quando (FA-15-09)
+
+**Features envolvidas**: FA-15 Onboarding com Oráculo (primário) · FA-14 Drive Read-Only (sync inicial) · FA-12 Admin (wizard de cadastro) · FA-09 RBAC (gate de ativação)
+
+**BRs**: BR-022 (primário), BR-004 (base de conhecimento estruturada desde o onboarding), BR-007 (proteção IP do cliente)
+
+**RNs**: RN-032 (HITL gate obrigatório no seed), RN-033 (allow-list pesquisa web), RN-006 (metadados obrigatórios), RN-012 (auditoria de acesso)
+
+**JTBDs**: JTBD-01 a JTBD-04 (PX-01 expandidos — onboarding)
+
+**Critério de sucesso**:
+- Wizard concluído em ≤5 min de input humano ativo
+- 100% dos clientes ativados passam por HITL gate (RN-032 auditável)
+- Seed gera ≥4 das 6 entidades com conteúdo substancial (≥100 palavras cada) sem intervenção manual
+- Tempo total de onboarding (disparo → ACTIVE) ≤ 24h
+- Zero clientes com estado PRE_ACTIVE por > 72h (alerta automático)
+
+---
+
+### JN-14 — Captura Seletiva de Reunião Operacional (NOVA — FA-16)
+
+**Personas envolvidas**: PX-03 Operador Processual (primária — aciona opt-in) · PX-01 Líder/Curador (beneficiário — revisa Wiki Ontológica) · PX-07 Sponsor de Área (co-beneficiário em reuniões estratégicas)
+
+**Anel funcional**: Curadoria
+
+**Fluxo (8 passos)**:
+1. PX-03 recebe convite de reunião com cliente ou reunião operacional interna relevante → acessa opt-in de captura no sunOS (FA-16-01)
+2. Sistema verifica tipo de reunião contra allow-list configurada (FA-16-03, RN-031) — tipos não permitidos são bloqueados antes do opt-in ser confirmado
+3. Sistema envia notificação obrigatória a **todos** os participantes identificados: "Esta reunião será transcrita pelo sunOS para fins de conhecimento institucional" (FA-16-02, RN-031 — sem exceção)
+4. Reunião acontece — transcrição automática roda em background (FA-16-04, ≤1h de gravação)
+5. Pós-reunião: agente executa extração estruturada (FA-16-05): decisões formalizadas, próximos passos com responsáveis e prazos, entidades mencionadas (clientes, concorrentes, produtos, personas)
+6. Conteúdo extraído alimenta a Wiki Ontológica do cliente com atribuição de proveniência (FA-16-06): data, participantes, link da transcrição original
+7. PX-01 (e PX-07 se reunião estratégica) revisam capturas via interface da Wiki Ontológica; RBAC restringe quem vê transcrição completa (FA-16-07)
+8. Audit log registra: quem solicitou captura, quem participou, o que foi extraído, quem revisou (FA-16-08)
+
+**Telas tocadas**: T-43 Modal "Iniciar Captura" (opt-in) · T-44 Revisão de Transcrição (pós-reunião) · T-13 Biblioteca / Wiki Ontológica (destino) · notificação in-app
+
+**Momento crítico**: Notificação aos participantes (passo 3 / RN-031). Requisito inegociável: nenhuma gravação sem consentimento explícito. Falha aqui é risco legal LGPD (RN-013). Sistema bloqueia transcrição se notificação não for confirmada em ≤5 min do início da reunião.
+
+**Dores endereçadas**:
+- Decisões de reunião perdidas — ninguém anota ou anota diferente
+- Próximos passos não rastreados → itens caem no esquecimento
+- Contexto de cliente disperso em memórias individuais
+- Risco de conflito sobre "o que foi decidido" sem registro
+
+**Oportunidades de IA**:
+- Extração automática de decisões, próximos passos e entidades (FA-16-05) elimina ata manual
+- Alimentação direta da Wiki Ontológica mantém contexto de cliente atualizado sem curadoria extra
+- Proveniência automática (data, participantes) torna conhecimento auditável
+- RBAC inteligente garante que transcrição bruta fique restrita enquanto extrações fluem para a Biblioteca
+
+**Features envolvidas**: FA-16 Captura Seletiva de Reuniões (primário) · FA-01 Biblioteca/Wiki Ontológica (destino da extração) · FA-09 RBAC (acesso à transcrição) · FA-12 Admin (configuração de allow-list)
+
+**BRs**: BR-020 (primário), BR-007 (proteção IP e confidencialidade), BR-008 (privacidade de clientes), BR-004 (base de conhecimento estruturada)
+
+**RNs**: RN-031 (opt-in + notificação obrigatória), RN-013 (retenção LGPD), RN-012 (auditoria de acesso), RN-009 (RBAC)
+
+**JTBDs**: JTBD-14 a JTBD-19 (PX-03 expandidos — captura de contexto operacional)
+
+**Critério de sucesso**:
+- 100% das capturas precedidas de notificação a participantes (RN-031 auditável)
+- Extração estruturada avaliada como "útil" por PX-01 em ≥70% das sessões (HITL)
+- Tempo de extração pós-reunião ≤ 30 min
+- Zero incidentes LGPD relacionados à captura durante o Piloto
+- ≥80% das decisões extraídas têm responsável identificado (qualidade da extração)
+
+---
+
+### JN-15 — Sponsor de Área Desenhando Arquitetura Setorial (NOVA — PX-07)
+
+**Personas envolvidas**: PX-07 Sponsor de Área (primária — arquiteta) · Time Central (Heitor/William — valida) · PX-08 Builder de Área (beneficiário — executa)
+
+**Anel funcional**: Governança Setorial
+
+**Fluxo (7 passos)**:
+1. PX-07 identifica necessidade de automação na área (ex.: Plano de Mídia automatizado, Report de Performance semanal, Pesquisa Competitiva recorrente)
+2. PX-07 acessa `/workflows` com escopo da área → cria blueprint de Workflow novo com nome e objetivo estratégico
+3. PX-07 mapeia os componentes necessários: quais Skills existentes usar, quais HITL gates incluir, quais integrações externas (Drive, CRM, APIs)
+4. PX-07 documenta no Workflow: propósito estratégico, personas beneficiadas, KPIs esperados, restrições (RN-022: não duplicar ferramentas já adotadas)
+5. Time Central (Heitor + William) revisa blueprint: valida viabilidade técnica, aponta dependências, sugere primitivas existentes reutilizáveis
+6. PX-07 incorpora feedback e finaliza blueprint com arquitetura aprovada
+7. PX-07 compartilha blueprint com PX-08 Builder → PX-08 começa construção visual com escopo claro (JN-16 dispara)
+
+**Telas tocadas**: T-21 Canvas do Workflow Builder (modo blueprinting) · T-28 Catálogo de Workflows · painel de comentários e anotações no Workflow
+
+**Momento crítico**: Revisão do Time Central (passo 5). Se o Sponsor define arquitetura tecnicamente inviável sem validação prévia, Builder perde tempo construindo algo que precisa ser refeito. Time Central como portão de viabilidade é o mecanismo de proteção.
+
+**Dores endereçadas**:
+- Sponsors sem canal formal para definir escopo de automação → Builder recebia demanda vaga
+- Time Central recebia solicitações ad-hoc inconsistentes
+- Builder precisava interpretar objetivo estratégico sem briefing estruturado
+- Nenhum registro de "o porquê" de um Workflow (só o "o quê")
+
+**Oportunidades de IA**:
+- Canvas de Workflow como artefato de blueprinting (não só de execução)
+- Sugestão automática de Skills compatíveis com o objetivo descrito (futuro)
+- Histórico de arquiteturas por área (aprendizado organizacional)
+
+**Features envolvidas**: FA-05 Workflows Builder Visual (canvas para blueprinting) · FA-12 Admin (gestão de Workflows por área) · FA-09 RBAC (escopo por área)
+
+**BRs**: BR-022 (modelo Sponsor-Builder-Time Central, primário), BR-002 (aceleração sem dependência de eng), BR-013 (mensuração de impacto), BR-019 (software estruturado, não chat livre)
+
+**RNs**: RN-034 (papéis de governança: Sponsor arquiteta, Time Central valida, Builder constrói), RN-022 (non-duplication de ferramentas)
+
+**JTBDs**: JTBD-35, JTBD-36, JTBD-37, JTBD-38 (PX-07)
+
+**Critério de sucesso**:
+- 100% dos Workflows construídos por PX-08 têm blueprint aprovado por Sponsor + Time Central antes do início
+- Blueprint aprovado em ≤ 2 rounds de revisão
+- Tempo entre detecção de necessidade e blueprint aprovado ≤ 1 semana
+- Zero Workflows órfãos (sem Sponsor identificado) em produção
+
+---
+
+### JN-16 — Builder Construindo Workflow Visual (NOVA — PX-08)
+
+**Personas envolvidas**: PX-08 Builder de Área (primária — constrói) · PX-07 Sponsor de Área (valida arquitetura) · Time Central (suporte técnico)
+
+**Anel funcional**: Governança Setorial
+
+**Fluxo (9 passos)**:
+1. PX-08 recebe blueprint aprovado do Sponsor → acessa `/workflows` → abre canvas do Workflow Builder Visual (FA-05, ADR-003)
+2. PX-08 arrasta node de início (trigger: manual ou Cloud Scheduler) para o canvas
+3. PX-08 arrasta nodes de tipo correto por step: tool, llm, condition, hitl, merge, action, workflow
+4. Para cada node: configura parâmetros no painel lateral (system prompt, Skill associada, ferramenta, condições, destinatário do HITL gate)
+5. PX-08 conecta nodes pelos handles corretos: `out`/`error` para tool/llm/action; `then`/`else` para condition; `approved`/`rejected`/`modified` para hitl; `out` para merge (ADR-003 — handle vocabulary)
+6. Aciona auto-layout (dagre) para organizar canvas automaticamente
+7. Executa validação inline (validator de handle vocabulary + conectividade) — erros aparecem como markers vermelhos nos edges inválidos
+8. PX-07 Sponsor faz revisão final no canvas — navega pelo fluxo, confirma que a arquitetura foi implementada corretamente
+9. PX-08 ativa Workflow — define schedule se recorrente (ex.: "Toda segunda às 9h") ou deixa disponível para trigger manual; custo evitado começa a ser calculado a partir da primeira execução (RN-018)
+
+**Telas tocadas**: T-21 Canvas do Workflow Builder drag-and-drop (ADR-003) · T-28 Catálogo de Workflows · T-26 Histórico de execuções · painel lateral de configuração de node
+
+**Momento crítico**: Passo 5 (handles corretos). Conexão com handle errado (ex.: usar `success` em vez de `out`) é o erro mais comum — validator inline (passo 7) pega antes da execução. Segundo momento crítico: revisão do Sponsor (passo 8) — garante que implementação reflete o blueprint estratégico.
+
+**Dores endereçadas**:
+- Antes (ADR-001): Workflows só via JSON/código — barreira técnica alta para Builders
+- Sem feedback visual de erros de conexão → Workflows quebravam em runtime
+- Sponsor não tinha visibilidade de como o Workflow foi implementado até a primeira execução
+- Builder dependia de Time Central para qualquer mudança de lógica
+
+**Oportunidades de IA**:
+- Canvas visual drag-and-drop elimina barreira de código (ADR-003)
+- Auto-layout (dagre) organiza Workflows complexos automaticamente
+- Validator inline previne erros de handle antes de salvar
+- Visible reasoning: Builder vê o fluxo completo antes de ativar
+
+**Features envolvidas**: FA-05 Workflows Builder Visual (primário, ADR-003) · FA-03 Skills processuais (integradas nos nodes LLM) · FA-07 HITL (nodes de gate) · FA-09 RBAC (quem pode criar/editar) · FA-10 Mensuração (custo evitado por execução)
+
+**BRs**: BR-002 (aceleração sem dependência de eng), BR-013 (mensuração custo evitado), BR-016 (coexistência ferramentas), BR-019 (software estruturado), BR-022 (modelo Sponsor-Builder-Time Central)
+
+**RNs**: RN-022 (non-duplication de ferramentas), RN-018 (custo evitado), ADR-003 (handle vocabulary e drag-and-drop)
+
+**JTBDs**: JTBD-39, JTBD-40, JTBD-41, JTBD-42 (PX-08)
+
+**Critério de sucesso**:
+- Builder constrói Workflow funcional end-to-end em ≤ 2h sem suporte de eng
+- ≥ 90% dos Workflows passam na validação inline na primeira tentativa de ativação
+- Zero erros de handle em Workflows ativados (validator pega todos antes)
+- ≥ 5 Workflows ativos por área no Piloto
+- Sponsor aprova implementação sem solicitação de refactor em ≥ 80% dos casos
+
+---
+
+### JN-17 — Builder Sync Semanal com Time Central (NOVA — PX-08)
+
+**Personas envolvidas**: PX-08 Builder de Área (primária — reporta) · Time Central: Heitor, José Lucas, William, Mayra (suporte técnico e evolução de primitivas)
+
+**Anel funcional**: Governança Setorial
+
+**Fluxo (5 passos)**:
+1. PX-08 apresenta ao Time Central: Workflows em construção (com canvas aberto), execuções recentes (via timeline FA-05-06), bloqueantes técnicos, dúvidas de handle vocabulary ou configuração de nodes
+2. Time Central revisa bloqueantes: debug inline no canvas, ajusta configuração de node, clarifica dúvidas de FA-05/ADR-003
+3. Time Central comunica atualizações de primitivas: novas Skills disponíveis, mudanças em handles existentes, novos tipos de node planejados — PX-08 atualiza Workflows afetados
+4. PX-08 e Time Central alinham próxima semana: quais Workflows entrarão em teste, quais precisam de validação do Sponsor (JN-15 loop)
+5. Ciclo fecha: PX-08 documenta na descrição do Workflow o que foi alterado e por quê (rastreabilidade); na próxima semana reporta impacto das atualizações em métricas de execução (FA-10)
+
+**Telas tocadas**: T-21 Canvas do Workflow Builder (modo review) · T-26 Histórico de execuções · T-28 Catálogo de Workflows
+
+**Momento crítico**: Comunicação de breaking changes de primitivas (passo 3). Se Time Central muda handles ou depreca Skills sem avisar PX-08, Workflows em produção quebram. Protocolo: mudanças anunciadas ≥1 semana antes com migration path.
+
+**Dores endereçadas**:
+- Antes: sem ritual de sync → Builders bloqueados sem saber onde pedir ajuda
+- Time Central sem visibilidade do que Builders estavam construindo
+- Breaking changes de primitivas descobertos em produção (custo alto de rollback)
+
+**Oportunidades de IA**:
+- Timeline de execuções (FA-10) como artefato de conversa estruturada (não opinião)
+- Documentação automática de mudanças nos Workflows (futuro)
+
+**Features envolvidas**: FA-05 Workflows Builder Visual (FA-05-06 histórico de execuções) · FA-12 Admin (catálogo e visibilidade) · FA-10 Mensuração (métricas de execução como pauta)
+
+**BRs**: BR-022 (modelo de governança Sponsor-Builder-Time Central, primário), BR-002 (aceleração com suporte estruturado), BR-013 (mensuração contínua)
+
+**RNs**: RN-034 (papéis de governança), RN-018 (custo evitado como KPI do sync)
+
+**JTBDs**: JTBD-39 a JTBD-42 (PX-08 — variante de manutenção e evolução)
+
+**Critério de sucesso**:
+- Sync semanal acontece em ≥ 80% das semanas de Piloto
+- ≥ 80% dos bloqueantes reportados resolvidos em ≤ 1 semana após o sync
+- Zero breaking changes de primitivas sem anúncio prévio no sync
+- Custo evitado agregado dos Workflows de cada Builder cresce semana a semana (FA-10 dashboard)
+
+
+---
+
 ## Histórico de Versões
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
+| 1.2 | 2026-05-14 | Heitor Miranda + Claude (assistido) | +5 Jornadas novas: **JN-13** (Onboarding com Oráculo), **JN-14** (Captura Seletiva), **JN-15** (Sponsor arquiteta), **JN-16** (Builder constrói), **JN-17** (Builder Sync). +2 Personas: **§3.6 PX-07 Sponsor de Área** e **§3.7 PX-08 Builder de Área** com tabelas de JTBD. JN-03: +BR-019 (paradigma software estruturado). JN-07: canvas drag-and-drop ADR-003. JN-12: título e step 1 atualizados para Drive Suno interno (REST-08 v2). §5.1 a §5.4 matrices atualizadas (FA-13 a FA-16, BR-017 a BR-022). Total: **17 Jornadas / 8 Personas / 42 JTBDs / 16 Features / 22 BRs / 4 Anéis funcionais**. |
 | 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **10 Jornadas (JN-01 a JN-10)** cruzando 5 Personas (PX-01 a PX-05) × 29 JTBDs × 12 Features (FA-01 a FA-12) × 16 BRs × 22 RNs. Estrutura em 3 anéis funcionais (Curadoria, Uso, Operação Recorrente & Governança). Cobertura completa: cada um dos 16 BRs tem ≥1 jornada. JN-02 detalhada referencia FRD Moon Shot. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma); anti-patterns evitados. Cada jornada com fluxo, telas tocadas, momento crítico, dores, oportunidades de IA, features, BRs/RNs, JTBDs e critério de sucesso. **Koro sempre com K** |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude (assistido) | **+2 Jornadas**: JN-11 Submissão para Aprovação Hierárquica (atende PX-06 + PX-02/03/05) e JN-12 Curadoria do Drive Assistida (atende PX-01). Pedido Guga + Bruno Prosperi. Total agora: **12 Jornadas / 6 Personas / 14 Features / 18 BRs / 30 RNs** |

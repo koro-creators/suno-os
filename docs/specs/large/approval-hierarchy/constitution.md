@@ -2,7 +2,9 @@
 spec-id: SPEC-004
 slug: approval-hierarchy
 artefato: constitution
-atualizada: 2026-04-30
+atualizada: 2026-05-15
+status: rascunho
+fase: Momento 2
 versao: 1.0
 escopo:
   projeto: sunos
@@ -25,6 +27,9 @@ upstream:
   - docs/ux/parte1-inventario-telas.md (T-29, T-30, T-31, PX-06)
   - docs/ux/parte5-ui-specs.md (§4.10)
 ---
+
+> ⚠️ **Fase: Momento 2** — FA-13 (Aprovação Hierárquica) é Momento 2 conforme BR-017. Esta SPEC não entra no Piloto. Pre-conditions PRE-01 a PRE-04 são bloqueadores pós-Piloto.
+
 
 # Constitution — Aprovação Hierárquica (FA-13)
 

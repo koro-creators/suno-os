@@ -2,8 +2,10 @@
 spec-id: SPEC-006
 slug: drive-readonly-curation
 artefato: tasks
-atualizada: 2026-04-30
+atualizada: 2026-05-15
+status: rascunho
 versao: 1.0
+fase: Momento 2
 ---
 
 # Tasks — Drive Read-Only Curation (FA-14)

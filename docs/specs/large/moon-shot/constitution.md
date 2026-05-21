@@ -1,9 +1,11 @@
 ---
-spec-id: SPEC-004
+spec-id: SPEC-010
 slug: moon-shot
 artefato: constitution
-atualizada: 2026-04-28
+atualizada: 2026-05-15
+status: rascunho
 versao: 1.0
+fase: Momento 2
 escopo:
   projeto: sunOS
   stack: "Frontend: Next.js 14 + TS + Tailwind | Backend: FastAPI + LangGraph + Python 3.11"
@@ -12,8 +14,10 @@ escopo:
   branch: master
   contexto: Motor de serendipidade criativa + Biblioteca de conhecimento + Skills processuais (rascunho original do Guga, materializado)
 ---
+> ⚠️ **Fase: Momento 2** — BR-001 (Moon Shot) é Momento 2 (pós-Piloto). Esta SPEC não entra no Piloto.
+> ⚠️ **Nota SPEC-007** — a navegação de Moon foi alterada por SPEC-007 (nav-simplification): Moons não têm página dedicada; são chips no chat da Skill page. O comportamento especificado nesta SPEC deve ser revisado à luz de SPEC-007 antes de implementar.
 
-# Constitution — Moon Shot (SPEC-004)
+# Constitution — Moon Shot (SPEC-010)
 
 Princípios imutáveis que governam a feature **Moon Shot** — motor de serendipidade criativa do sunOS — e suas dependências (Biblioteca de Conhecimento, Skills processuais com context injection).
 

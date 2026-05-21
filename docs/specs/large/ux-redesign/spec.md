@@ -1,12 +1,12 @@
 ---
-spec-id: SPEC-005
+spec-id: SPEC-011
 slug: ux-redesign
 artefato: spec
 nivel-sdd: spec-anchored
 tamanho: large
 status: rascunho
 criada: 2026-04-16
-atualizada: 2026-04-16
+atualizada: 2026-05-15
 versao: 1.0
 escopo:
   projeto: sunos
