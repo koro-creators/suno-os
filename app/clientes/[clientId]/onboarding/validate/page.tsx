@@ -70,11 +70,12 @@ export default function OnboardingValidatePage() {
     }
   }, [jobStatus]);
 
-  // Load wiki entities on mount (to get actual content from API)
+  // Load wiki entities on mount — includeGenerated=true so validate page
+  // displays Oracle stub content (generated status) before HITL approval.
   useEffect(() => {
     if (!wikiLoaded) {
       setWikiLoaded(true);
-      loadWiki(clientId).then(() => {
+      loadWiki(clientId, true).then(() => {
         // handled by wikiEntities update below
       });
     }

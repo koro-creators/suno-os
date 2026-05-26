@@ -119,7 +119,14 @@ interface OnboardingOraculoContextValue {
 
   // Wiki
   wikiEntities: WikiEntity[];
-  loadWiki: (slug: string) => Promise<void>;
+  /**
+   * Load wiki entities for a client.
+   *
+   * includeGenerated=false (default): only accepted entities — Wiki page (T-39).
+   * includeGenerated=true: generated + accepted — HITL validate page (T-36)
+   * so users can read Oracle stub content before approving.
+   */
+  loadWiki: (slug: string, includeGenerated?: boolean) => Promise<void>;
 
   // Errors
   error: string | null;
@@ -474,21 +481,24 @@ export function OnboardingOraculoProvider({ children }: { children: ReactNode })
   // Wiki
   // ---------------------------------------------------------------------------
 
-  const loadWiki = useCallback(async (slug: string): Promise<void> => {
+  const loadWiki = useCallback(async (slug: string, includeGenerated = false): Promise<void> => {
     setError(null);
 
     if (!apiAvailable()) {
-      // Mock-mode: build wiki from mockEntitiesRef accepted entries
+      // Mock-mode: build wiki from mockEntitiesRef state
       const now = new Date().toISOString();
+      const visibleStatuses: EntityStatus[] = includeGenerated
+        ? ['generated', 'accepted']
+        : ['accepted'];
       const mockWiki: WikiEntity[] = ONTOLOGY_ENTITY_TYPES
-        .filter((t) => mockEntitiesRef.current[t] === 'accepted')
+        .filter((t) => visibleStatuses.includes(mockEntitiesRef.current[t]))
         .map((t) => ({
           id: `mock-${t}`,
           clientId: mockClientIdRef.current || 'mock',
           entityType: t,
-          content: `[Conteúdo mock para ${t}]`,
+          content: `[Conteúdo mock do Oráculo para ${t}]`,
           provenance: [{ source: 'Briefing', excerpt: `Dado de onboarding para ${t}` }],
-          status: 'accepted' as EntityStatus,
+          status: mockEntitiesRef.current[t],
           badge: 'seed_auto' as const,
           createdAt: now,
           updatedAt: now,
@@ -502,7 +512,11 @@ export function OnboardingOraculoProvider({ children }: { children: ReactNode })
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(getApiUrl(`/api/clients/${slug}/wiki`), { headers });
+      const url = includeGenerated
+        ? getApiUrl(`/api/clients/${slug}/wiki?include_generated=true`)
+        : getApiUrl(`/api/clients/${slug}/wiki`);
+
+      const res = await fetch(url, { headers });
       if (!res.ok) {
         if (res.status === 404) {
           // Caixa-preta: redirect to 404 (handled by caller)

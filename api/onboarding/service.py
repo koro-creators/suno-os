@@ -312,20 +312,29 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def get_wiki(slug: str) -> dict:
+def get_wiki(slug: str, include_generated: bool = False) -> dict:
     """
-    Returns approved wiki entities for a client.
+    Returns wiki entities for a client.
+
+    include_generated=False (default): only ``accepted`` entities — used by the
+    Wiki Ontológica page (T-39, caixa-preta view).
+    include_generated=True: ``generated`` + ``accepted`` entities — used by the
+    HITL validate page (T-36) so reviewers can read the Oracle stub content
+    before approving.
+
     Caixa-preta: caller (router) enforces 404 for unauthorized access.
     ADR-LOCAL-05: Wiki is a view of wiki_entities — not Biblioteca.
     """
     client = require_client_by_slug(slug)
     client_id = client["id"]
 
+    visible_statuses = {"accepted", "generated"} if include_generated else {"accepted"}
+
     entities = []
     for entity_type in ONTOLOGY_ENTITY_TYPES:
         key = f"{client_id}:{entity_type}"
         entity = _wiki_entities.get(key)
-        if entity and entity["status"] == "accepted":
+        if entity and entity["status"] in visible_statuses:
             entities.append(entity)
 
     return {

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from .schemas import (
     ClientCreate,
@@ -164,9 +164,23 @@ async def validate_entity_endpoint(
     "/clients/{slug}/wiki",
     response_model=WikiPageResponse,
 )
-async def get_wiki_endpoint(slug: str) -> WikiPageResponse:
+async def get_wiki_endpoint(
+    slug: str,
+    include_generated: bool = Query(
+        False,
+        description=(
+            "Set to true to include 'generated' (not yet accepted) entities. "
+            "Used by the HITL validate page so reviewers see Oracle stub content "
+            "before approving. Default (false) returns only 'accepted' entities "
+            "for the Wiki Ontológica page."
+        ),
+    ),
+) -> WikiPageResponse:
     """
-    Returns accepted wiki entities for the client.
+    Returns wiki entities for the client.
+
+    include_generated=false (default): only accepted entities — Wiki Ontológica (T-39).
+    include_generated=true: generated + accepted — HITL validate page (T-36).
 
     Caixa-preta (constitution §1.4, RN-011):
     - Operacional role → 404 (not 403). Caller must enforce role check here.
@@ -174,7 +188,7 @@ async def get_wiki_endpoint(slug: str) -> WikiPageResponse:
 
     TODO: enforce role check from JWT when Firebase auth is wired in.
     """
-    wiki = get_wiki(slug)
+    wiki = get_wiki(slug, include_generated=include_generated)
 
     entities = [
         WikiEntityResponse(
