@@ -1,5 +1,10 @@
 # sunOS — Roadmap
 
+> Última atualização: 2026-05-26. Alinhado com PRD Parte 5 (v1.2, 2026-05-14) e SPECs SDD existentes.
+> Fases de produto: **POC → Protótipo → Piloto → Momento 2 → MVP** (mapeamento em `docs/prd/parte5-roadmap-fases.md §1.4`).
+
+---
+
 ## Concluído
 
 ### Phase 1: Protótipo Base (2026-03-23)
@@ -79,57 +84,164 @@
 
 ## Em Progresso
 
-### Phase 11: Polish + Deploy
+### Phase 11: Polish + Deploy ← gate de saída do Protótipo
+> Fase de produto: **Protótipo → Piloto**
 - [ ] Error handling robusto no backend (timeout, rate limit, backoff)
 - [ ] CI/CD: GitHub Actions (lint, pytest, type-check, build)
 - [ ] Deploy staging em Cloud Run
-- [ ] Smoke test staging
+- [ ] Smoke test staging (5 dias consecutivos sem falha bloqueante)
 - [ ] Frontend: endpoints batch (TextGen, ImageGen panels)
-- [ ] Testes de integração com API keys reais
+- [ ] Persistência de conversas entre sessões (débito P1 — PRD §4.7)
+- [ ] Testes de integração com API keys reais (Gemini, Vertex AI)
 
 ---
 
-## Próximas Phases
+## Próximas Phases — Piloto
 
 ### Phase 12: Sidebar Recentes Dinâmico
+> Fase de produto: **MVP** (refinamento UX)
 - [ ] Rastrear navegação real do usuário
 - [ ] Mostrar últimos clientes/skills visitados
 - [ ] Persistir em sessionStorage
 
 ### Phase 13: Busca Global
+> Fase de produto: **MVP** (refinamento UX)
 - [ ] Barra de busca unificada (Cmd+K)
 - [ ] Busca cross-feature: skills, documentos, clientes
 - [ ] Resultados agrupados por tipo
 - [ ] Navegação direta do resultado
 
 ### Phase 14: Onboarding / Empty States
+> Fase de produto: **Piloto** (gate de adoção — PRD §5.7)
 - [ ] Welcome screen para primeiro uso
 - [ ] Empty states ricos em todas as páginas admin
 - [ ] Guia de getting started
 
-### Phase 15: Integração Solar ↔ Admin
-- [ ] Unificar `data/clients.ts` com ClientsContext
-- [ ] Skills reais derivados do SkillsContext
-- [ ] Sistema solar reflete mudanças do admin
+### Phase 15: Refinamentos Solar ↔ Admin
+> Fase de produto: **MVP** (refinamento visual — PRD §1.4)
+> ⚠️ `data/clients.ts` permanece estático (ADR-002). Sync é manual, documentado no runbook.
+- [ ] Sistema Solar reflete Skills e Moons reais do SkillsContext (leitura)
+- [ ] Moons do Chat carregam dinamicamente por Skill ativo
+- [ ] Polish visual: estados de loading, transições, empty states no solar
 
-### Phase 16: VideoGen + Editor
-- [ ] Integrar Vertex AI Veo 3.1 para geração de vídeo
-- [ ] Image editor com inpainting/outpainting
-- [ ] Image enhance (upscale x2/x4)
+### Phase 16: Multimodal — Image Editor + VideoGen
+> Fase de produto: **Piloto** (Image) + **MVP** (Video) — bloqueado por **DEC-06** (business case)
+> SPEC-008 (image-editor) + SPEC-009 (video-generation): rascunho
+- [ ] Image generation real: Vertex AI Imagen 4 / Nano Banana (sai do mock)
+- [ ] Image editor: inpainting / outpainting
+- [ ] Image enhance: upscale x2/x4
+- [ ] Video generation: Vertex AI Veo 3.1 ← requer DEC-06 aprovado
+
+### Phase 17: Workflow Builder Visual — Canvas Drag-and-Drop
+> Fase de produto: **Piloto** (ADR-003 — canvas para PX-07 Sponsor + PX-08 Builder de Área)
+> SPEC-005 (workflow-builder-canvas): **em-revisao** | SPEC-003 substituido por SPEC-005
+- [ ] Canvas drag-and-drop com React Flow + dagre auto-layout
+- [ ] 7 node types (tool, llm, action, condition, hitl, merge, workflow)
+- [ ] Edge handles com vocabulário paridade backend↔frontend
+- [ ] NodeShell pattern + ARIA + focus ring
+- [ ] Auto-save race-safety (`useWorkflowAutoSave`)
+- [ ] Validate endpoint (DFS para ciclos + fan-in sem merge)
+- [ ] Migration v1→v2 (JSONB steps → relational workflow_steps + edges)
+
+### Phase 18: Drive Suno como Fonte de Contexto
+> Fase de produto: **Protótipo** (base OAuth) → **Piloto** (cleanup reports + curadoria assistida)
+> Restrito ao Drive interno da Suno (REST-08 v2, 2026-05-14). Drive de clientes externos fora de escopo.
+> SPEC-006 (drive-readonly-curation): rascunho
+- [ ] Conexão OAuth Google Drive (contas @sunounited)
+- [ ] Sync incremental via Delta API (Google Drive Webhooks)
+- [ ] ACL∩RBAC — arquivo só ingerido se usuário tem acesso no Drive
+- [ ] Ingestão assíncrona com job queue
+- [ ] Cleanup Report: duplicatas, arquivos sem acesso, desatualizados
+- [ ] Sugestões de curadoria com aceite/rejeição manual pelo Líder
+
+### Phase 19: Onboarding com Oráculo do Cliente
+> Fase de produto: **Piloto** (wizard + seed + HITL gate PRE_ACTIVE→ACTIVE)
+> SPEC-015 (onboarding-oraculo-cliente): rascunho
+> Depende de: SPEC-018 status enum PRE_ACTIVE/ACTIVE/ARCHIVED em `clients`
+- [ ] Wizard 4 passos: Identidade → Contexto → Validação → Ativação
+- [ ] Seed ontológico: Deep Agent extrai 6 entidades (Posicionamento, Personas, Competidores, Produtos, Tom, Briefings)
+- [ ] HITL gate por entidade: aprovação manual pelo PX-07 Sponsor
+- [ ] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas
+- [ ] Alerta >= 72h se entidade pendente sem revisão (FR-185)
+
+### Phase 20: Aprovação Hierárquica
+> Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado por Guga + Bruno Prosperi (2026-04-28)
+> SPEC-004 (approval-hierarchy): rascunho
+- [ ] Submissão de conteúdo gerado para validação por Aprovador
+- [ ] Inbox do Aprovador com filtros por cliente/skill/urgência
+- [ ] Validation Report com comparação before/after + comentários inline
+- [ ] Notificação push/email ao Aprovador + ao Creator
+- [ ] Histórico de aprovações por cliente
+
+### Phase 21: Captura Seletiva de Reuniões
+> Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado em reunião 2026-05-14 (BR-020)
+> Base técnica: transcrições Gemini Meet já em uso na Suno
+> SPEC-016 (captura-seletiva-reunioes): rascunho
+- [ ] Opt-in por reunião (Creator decide o que capturar)
+- [ ] Transcrição via Gemini Meet com marcação de trechos relevantes
+- [ ] Wiki Ontológica com HITL: Creator revisa antes de persistir na Biblioteca
+- [ ] Integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto
 
 ---
 
-## Specs
+## SDD Specs
 
-| Spec | Tipo | Data |
-|------|------|------|
-| `2026-03-23-sunos-prototype-design.md` | Design | Protótipo base |
-| `2026-03-23-phase2-ai-ux-patterns-design.md` | Design | AI UX Patterns |
-| `2026-03-23-bioma-zero-design.md` | Design | Skills admin (original) |
-| `2026-03-24-biblioteca-design.md` | Design | Biblioteca |
-| `2026-03-24-hitl-feedback-design.md` | Design | Human in the Loop |
-| `2026-03-24-clientes-admin-design.md` | Design | Clientes admin |
-| `large/sunohub-tools-integration/` | SDD Large (5 artefatos) | Backend + Tools (SPEC-001 v2) |
+### Large Specs (5 artefatos cada)
+
+| ID | Slug | Feature | Status | Fase de Produto |
+|----|------|---------|:------:|----------------|
+| SPEC-001 | sunohub-tools-integration | FA-03 Skills + FA-04 Chat + Backend LangGraph | implementada | Protótipo (Phase 8) |
+| SPEC-002 | knowledge-biblioteca-v2 | FA-01 Biblioteca v2 — governança, pgvector, grafo | rascunho | Protótipo → Piloto |
+| SPEC-003 | workflow-builder | FA-05 Workflows base JSONB | **substituido** → SPEC-005 | — |
+| SPEC-004 | approval-hierarchy | FA-13 Aprovação Hierárquica | rascunho | Momento 2 (Phase 20) |
+| SPEC-005 | workflow-builder-canvas | FA-05 Workflows — canvas drag-and-drop (ADR-003) | **em-revisao** | Piloto (Phase 17) |
+| SPEC-006 | drive-readonly-curation | FA-14 Drive Suno como fonte read-only | rascunho | Protótipo → Piloto (Phase 18) |
+| SPEC-008 | image-editor | FA-08 Multimodal — Image gen + editor + enhance | rascunho | Piloto (Phase 16) — bloqueado DEC-06 |
+| SPEC-009 | video-generation | FA-08 Multimodal — Video Veo 3.1 | rascunho | MVP (Phase 16) — bloqueado DEC-06 |
+| SPEC-010 | moon-shot | FA-02 Moon Shot — pipeline Explorer↔Crítico | rascunho | POC → Piloto |
+| SPEC-011 | ux-redesign | FA-12 Admin UX redesign (pattern Model Repo) | rascunho | Protótipo (parcial) |
+| SPEC-015 | onboarding-oraculo-cliente | FA-15 Onboarding com Oráculo do Cliente | rascunho | Piloto (Phase 19) |
+| SPEC-016 | captura-seletiva-reunioes | FA-16 Captura Seletiva de Reuniões via Gemini Meet | rascunho | Momento 2 (Phase 21) |
+| SPEC-017 | skills-admin | FA-12-01 Skills Admin — CRUD DB + RBAC + audit | rascunho | Piloto |
+| SPEC-018 | clientes-admin | FA-12-03 Clientes Admin — status enum + junction skill_clients | rascunho | Piloto |
+
+> IDs reservados (não criados ainda): SPEC-007 (Solar System navigation), SPEC-012, SPEC-013, SPEC-014.
+
+### Legacy Design Specs (pré-SDD, sem artefato constitution)
+
+| Spec | Feature | Fase |
+|------|---------|------|
+| `2026-03-23-sunos-prototype-design.md` | Protótipo base | Phase 1 |
+| `2026-03-23-phase2-ai-ux-patterns-design.md` | AI UX Patterns | Phase 2 |
+| `2026-03-23-bioma-zero-design.md` | Skills admin (original, precede SPEC-017) | Phase 3 |
+| `2026-03-24-biblioteca-design.md` | Biblioteca | Phase 4 |
+| `2026-03-24-hitl-feedback-design.md` | Human in the Loop | Phase 5 |
+| `2026-03-24-clientes-admin-design.md` | Clientes admin (original, precede SPEC-018) | Phase 6 |
+
+---
+
+## Mapeamento Fase de Produto ↔ Phases Técnicas
+
+| Fase de Produto | Phases Técnicas | Status |
+|-----------------|-----------------|:------:|
+| **POC** | SPEC-010 (Moon Shot pipeline mínimo) | Em planejamento |
+| **Protótipo** | Phases 1–10 concluídas + Phase 11 (gate de saída) | 90% — Phase 11 em progresso |
+| **Piloto** | Phases 14, 16, 17, 18, 19 | Aguarda gate Phase 11 |
+| **Momento 2** | Phases 20, 21 | Pós-Piloto v1 |
+| **MVP** | Phases 12, 13, 15 + Phase 16 video + refinamentos | Q1 2027+ |
+
+---
+
+## Bloqueadores Ativos
+
+| ID | Bloqueador | Impacto |
+|----|-----------|---------|
+| **DEC-06** | Business case não aprovado (Guga + Ronaldo) | Bloqueia Phase 16 inteira (image editor real + video) |
+| **DEC-02** | Workflows (FA-05) entram no Piloto ou só MVP? | Condiciona priorização de Phase 17 |
+| **REST-01** | Time não-dedicado 100% | Buffer de 30% sobre todas as estimativas das SPECs |
+| **REST-08 v2** | Drive Suno restrito a @sunounited (acordado 2026-05-14) | Phase 18 descartou Drive de clientes externos |
+
+---
 
 ## SDD Usage Log
 
