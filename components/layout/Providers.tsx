@@ -7,6 +7,7 @@ import { SkillsProvider } from '@/contexts/SkillsContext';
 import { BibliotecaProvider } from '@/contexts/BibliotecaContext';
 import { ClientsProvider } from '@/contexts/ClientsContext';
 import { WorkflowsProvider } from '@/contexts/WorkflowsContext';
+import { OnboardingOraculoProvider } from '@/contexts/OnboardingOraculoContext';
 import AuthGuard from './AuthGuard';
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -18,7 +19,9 @@ export default function Providers({ children }: { children: ReactNode }) {
             <BibliotecaProvider>
               <ClientsProvider>
                 <WorkflowsProvider>
-                  {children}
+                  <OnboardingOraculoProvider>
+                    {children}
+                  </OnboardingOraculoProvider>
                 </WorkflowsProvider>
               </ClientsProvider>
             </BibliotecaProvider>

@@ -165,6 +165,11 @@ from chat.conversations.router import router as conversations_router
 
 app.include_router(conversations_router, prefix=settings.API_PREFIX)
 
+# Mount onboarding router (Phase 19 / SPEC-015 — Oráculo do Cliente)
+from onboarding.router import router as onboarding_router
+
+app.include_router(onboarding_router, prefix=settings.API_PREFIX)
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
