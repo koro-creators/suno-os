@@ -179,10 +179,33 @@
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado em reunião 2026-05-14 (BR-020)
 > Base técnica: transcrições Gemini Meet já em uso na Suno
 > SPEC-016 (captura-seletiva-reunioes): rascunho
+> ⚠️ **Decisão 2026-05-26:** Reuniões são sub-feature de Biblioteca (filtro/tipo), não nav item próprio. `/reunioes` redireciona para `/biblioteca`. Curadoria em `/reunioes/[id]` permanece.
 - [ ] Opt-in por reunião (Creator decide o que capturar)
 - [ ] Transcrição via Gemini Meet com marcação de trechos relevantes
 - [ ] Wiki Ontológica com HITL: Creator revisa antes de persistir na Biblioteca
 - [ ] Integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto
+- [ ] Integração visual na Biblioteca: filter "Reuniões" em `selectedTypes` + cards de reunião na BibliotecaTable/Grid
+
+### Phase 22: Agentes de IA
+> Fase de produto: **Piloto** (FA-17) — solicitado 2026-05-26
+> SPEC-021 (agentes): **rascunho**
+- [ ] Listagem e CRUD de agentes (`/agentes`) — global com permissão por cliente
+- [ ] Editor completo com 7 tabs (Configuração, Skills, Apps, Memória, Agendamento, Atividade, Clientes)
+- [ ] Upload file-based de memória contextual (GCS)
+- [ ] Schedule: hourly/daily com seleção de dias/horário/timezone
+- [ ] Runtime LangGraph: Skills como tools, memory files como contexto
+- [ ] Preview sandboxed + execução manual + activity log
+- [ ] Cloud Scheduler (Fase D — PRE-01 e PRE-04 resolvidos)
+
+### Phase 23: Configurações Admin
+> Fase de produto: **Piloto** (FA-12 expansão) — solicitado 2026-05-26
+> SPEC-022 (configuracoes-admin): **rascunho**
+- [ ] `/configuracoes` → admin panel com 4 seções: Usuários/RBAC, Integrações Globais, Skills/Modelos, Auditoria
+- [ ] Drive OAuth migra de `/configuracoes/drive` para aba "Drive" no editor de cliente
+- [ ] Gestão de usuários: listar, convidar, editar papel, suspender via Firebase Admin SDK
+- [ ] Integrações globais: Gemini API Key (Fase A) + extensível
+- [ ] Defaults de modelo LLM por skill (editável inline)
+- [ ] Audit log append-only
 
 ---
 
@@ -206,6 +229,7 @@
 | SPEC-016 | captura-seletiva-reunioes | FA-16 Captura Seletiva de Reuniões via Gemini Meet | rascunho | Momento 2 (Phase 21) |
 | SPEC-017 | skills-admin | FA-12-01 Skills Admin — CRUD DB + RBAC + audit | rascunho | Piloto |
 | SPEC-018 | clientes-admin | FA-12-03 Clientes Admin — status enum + junction skill_clients | rascunho | Piloto |
+| SPEC-021 | agentes | FA-17 Agentes de IA — global com permissão por cliente, LangGraph runtime, schedule | rascunho | Piloto |
 
 > IDs reservados (não criados ainda): SPEC-007 (Solar System navigation), SPEC-012, SPEC-013, SPEC-014.
 
@@ -215,6 +239,7 @@
 |----|------|---------|:------:|
 | SPEC-019 | sidebar-recentes | Phase 12 Sidebar Recentes Dinâmico | rascunho |
 | SPEC-020 | busca-global | Phase 13 Busca Global Cmd+K | rascunho |
+| SPEC-022 | configuracoes-admin | Admin panel /configuracoes — RBAC, integrações, defaults, auditoria; Drive → editor de cliente | rascunho |
 
 ### Legacy Design Specs (pré-SDD, sem artefato constitution)
 
