@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { redirect } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
@@ -29,6 +29,12 @@ export default function ClientPage({
   }
 
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(t);
+  }, []);
 
   const filteredSkills = activeFilter
     ? client.skills.filter((s) => s.type === activeFilter)
@@ -109,24 +115,50 @@ export default function ClientPage({
           );
         })}
 
-        {filteredSkills.map((skill, idx) => {
-          const size = skillSize(skill.moons.length);
-          const radius = orbitRadii[idx];
-          const planetX = sunCenterX + radius;
-          const yOffset = yOffsets[idx] ?? 0;
+        {loading
+          ? /* Skeleton skill planets */
+            filteredSkills.map((skill, idx) => {
+              const size = skillSize(skill.moons.length);
+              const radius = orbitRadii[idx];
+              const planetX = sunCenterX + radius;
+              return (
+                <div
+                  key={`skeleton-${skill.slug}`}
+                  className="orbit-appear"
+                  style={{
+                    position: 'absolute',
+                    left: planetX - size / 2,
+                    top: `calc(50% - ${size / 2}px)`,
+                    width: size,
+                    height: size,
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--nebula)',
+                    animation: 'pulse 1.4s ease-in-out infinite',
+                    animationDelay: `${idx * 120}ms`,
+                    zIndex: 10,
+                  }}
+                />
+              );
+            })
+          : /* Real skill planets */
+            filteredSkills.map((skill, idx) => {
+              const size = skillSize(skill.moons.length);
+              const radius = orbitRadii[idx];
+              const planetX = sunCenterX + radius;
+              const yOffset = yOffsets[idx] ?? 0;
 
-          return (
-            <SkillPlanet
-              key={skill.slug}
-              skill={skill}
-              size={size}
-              planetX={planetX}
-              yOffset={yOffset}
-              delay={idx * 80}
-              onClick={() => router.push(`/${clientSlug}/${skill.slug}`)}
-            />
-          );
-        })}
+              return (
+                <SkillPlanet
+                  key={skill.slug}
+                  skill={skill}
+                  size={size}
+                  planetX={planetX}
+                  yOffset={yOffset}
+                  delay={idx * 80}
+                  onClick={() => router.push(`/${clientSlug}/${skill.slug}`)}
+                />
+              );
+            })}
 
         <FilterPills
           types={['criacao', 'midia', 'planejamento']}

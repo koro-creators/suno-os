@@ -1,10 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { Globe } from 'lucide-react';
+import Link from 'next/link';
 import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
 import QuickStats from '@/components/solar/QuickStats';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
@@ -15,8 +18,19 @@ const solarSizes = [40, 55, 65, 110];
 
 const totalSkills = clients.reduce((sum, c) => sum + c.skills.length, 0);
 
+// Sun center X = left(-280) + 620/2 = 30px from left edge
+const sunCenterX = 30;
+const orbitRadii = sorted.map((_, idx) => 440 + idx * 130);
+
 export default function Home() {
   const router = useRouter();
+  const { isAdmin } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
@@ -44,18 +58,55 @@ export default function Home() {
           }}
         />
 
-        {/* Sun center X coordinate */}
+        {/* Empty state — only visible when clients list is empty */}
+        {clients.length === 0 && !loading && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 16,
+              zIndex: 20,
+            }}
+          >
+            <Globe
+              size={48}
+              strokeWidth={1.5}
+              style={{ color: 'var(--text-muted)' }}
+            />
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+              Nenhum cliente no sistema solar
+            </span>
+            {isAdmin && (
+              <Link
+                href="/clientes/new"
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: 8,
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.75rem',
+                  textDecoration: 'none',
+                  transition: 'border-color 150ms ease, color 150ms ease',
+                }}
+              >
+                Adicionar cliente
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* Orbit semicircles + planets (or skeletons while loading) */}
         {(() => {
-          // Sun center = left(-280) + 620/2 = 30px from left edge
-          const sunCenterX = 30;
-          // Planet orbit radii — each planet sits at this distance from sun center
-          const orbitRadii = sorted.map((_, idx) => 440 + idx * 130);
-          // Slight vertical offsets for organic feel
           const yOffsets = [0, 0, 0, 0];
 
           return (
             <>
-              {/* Orbit semicircles — aligned to each planet */}
+              {/* Orbit semicircles — always visible */}
               {orbitRadii.map((radius, idx) => {
                 const diameter = radius * 2;
                 return (
@@ -77,26 +128,50 @@ export default function Home() {
                 );
               })}
 
-              {/* Planets — absolute positioned on their orbit */}
-              {sorted.map((client, idx) => {
-                const size = solarSizes[idx] ?? 50;
-                const radius = orbitRadii[idx];
-                // Planet X = sunCenterX + radius (rightmost point of the semicircle)
-                const planetX = sunCenterX + radius;
-                const yOffset = yOffsets[idx] ?? 0;
+              {loading
+                ? /* Skeleton planets */
+                  sorted.map((client, idx) => {
+                    const size = solarSizes[idx] ?? 50;
+                    const radius = orbitRadii[idx];
+                    const planetX = sunCenterX + radius;
+                    return (
+                      <div
+                        key={`skeleton-${client.slug}`}
+                        className="orbit-appear"
+                        style={{
+                          position: 'absolute',
+                          left: planetX - size / 2,
+                          top: `calc(50% - ${size / 2}px)`,
+                          width: size,
+                          height: size,
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--nebula)',
+                          animation: 'pulse 1.4s ease-in-out infinite',
+                          animationDelay: `${idx * 120}ms`,
+                          zIndex: 10,
+                        }}
+                      />
+                    );
+                  })
+                : /* Real planets */
+                  sorted.map((client, idx) => {
+                    const size = solarSizes[idx] ?? 50;
+                    const radius = orbitRadii[idx];
+                    const planetX = sunCenterX + radius;
+                    const yOffset = yOffsets[idx] ?? 0;
 
-                return (
-                  <Planet
-                    key={client.slug}
-                    client={client}
-                    size={size}
-                    planetX={planetX}
-                    yOffset={yOffset}
-                    delay={idx * 80}
-                    onClick={() => router.push(`/${client.slug}`)}
-                  />
-                );
-              })}
+                    return (
+                      <Planet
+                        key={client.slug}
+                        client={client}
+                        size={size}
+                        planetX={planetX}
+                        yOffset={yOffset}
+                        delay={idx * 80}
+                        onClick={() => router.push(`/${client.slug}`)}
+                      />
+                    );
+                  })}
             </>
           );
         })()}
