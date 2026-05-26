@@ -1,14 +1,16 @@
-"""SPEC-005 Phase A — smoke tests.
+"""SPEC-005 Phase A — smoke tests (updated for Phase B).
+
+Phase A stubs that previously returned 501 have been replaced by real Phase B
+implementations (commit feat(SPEC-005): backend canvas v2 — Fases A+B).
 
 Verifies that:
-  • The new endpoint stubs exist and return 501 on present workflows, 404 on
-    missing ones (caixa-preta).
+  • Canvas endpoints exist and return 2xx on present workflows, 404 on
+    missing ones (caixa-preta rule — RN-009/010/011).
   • Pydantic schemas import cleanly and reject invalid handles / kinds.
   • Fixtures populate the in-memory store as expected.
 
-These tests don't exercise real behaviour (Phase B does that). Their job is
-to lock in the contract surface so a Phase B regression on the API shape is
-caught early.
+Behavioural coverage (validator, migration, edges CRUD, auto-layout) lives in
+test_canvas_phase_b.py.
 """
 
 from __future__ import annotations
@@ -34,14 +36,16 @@ def client() -> TestClient:
 
 
 # ---------------------------------------------------------------------------
-# Endpoint stubs (TASK-A04)
+# Endpoint contract (TASK-A04 — updated: Phase B stubs replaced with real impl)
 # ---------------------------------------------------------------------------
 
 
-def test_get_edges_returns_501_on_existing_workflow(client, seed_workflow_v2_linear):
+def test_get_edges_returns_200_on_existing_workflow(client, seed_workflow_v2_linear):
+    """Phase B: GET /edges returns the persisted edge list, not 501."""
     response = client.get(f"/api/workflows/{seed_workflow_v2_linear}/edges")
-    assert response.status_code == 501
-    assert "Phase B" in response.json()["detail"]
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
 
 
 def test_get_edges_returns_404_on_missing_workflow(client):
@@ -49,7 +53,8 @@ def test_get_edges_returns_404_on_missing_workflow(client):
     assert response.status_code == 404
 
 
-def test_set_edges_returns_501_on_existing_workflow(client, seed_workflow_v2_linear):
+def test_set_edges_returns_200_on_existing_workflow(client, seed_workflow_v2_linear):
+    """Phase B: POST /edges bulk-replaces and returns the new edge list."""
     body = SetEdgesRequest(
         edges=[
             WorkflowEdge(
@@ -61,7 +66,8 @@ def test_set_edges_returns_501_on_existing_workflow(client, seed_workflow_v2_lin
         ]
     ).model_dump()
     response = client.post(f"/api/workflows/{seed_workflow_v2_linear}/edges", json=body)
-    assert response.status_code == 501
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
 
 
 def test_delete_edge_404_on_missing_workflow(client):
@@ -75,9 +81,10 @@ def test_delete_edge_404_on_missing_workflow(client):
     "path",
     ["auto-layout", "validate", "migrate-v2"],
 )
-def test_post_endpoints_return_501_on_existing(client, seed_workflow_v2_linear, path):
+def test_post_endpoints_return_200_on_existing(client, seed_workflow_v2_linear, path):
+    """Phase B: all three canvas POST endpoints return 200 (not 501)."""
     response = client.post(f"/api/workflows/{seed_workflow_v2_linear}/{path}")
-    assert response.status_code == 501
+    assert response.status_code == 200
 
 
 # ---------------------------------------------------------------------------
