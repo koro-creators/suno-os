@@ -6,6 +6,9 @@ export interface ClientMetrics {
   lastActivity: string;
 }
 
+/** Client lifecycle status. Existing clients default to ACTIVE. */
+export type ClientAdminStatus = 'DRAFT' | 'PRE_ACTIVE' | 'ACTIVE' | 'ARCHIVED';
+
 export interface ClientAdmin {
   id: string;
   name: string;
@@ -17,4 +20,6 @@ export interface ClientAdmin {
   metrics: ClientMetrics;
   createdAt: string;
   updatedAt: string;
+  /** SPEC-015/SPEC-018: lifecycle status. Defaults to ACTIVE for existing clients. */
+  status?: ClientAdminStatus;
 }

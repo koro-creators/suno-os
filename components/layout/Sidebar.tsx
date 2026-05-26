@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, Zap, LogOut, type LucideIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, Zap, Settings, Video, CheckCircle, LogOut, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
 interface NavItemDef {
   label: string;
@@ -12,23 +13,15 @@ interface NavItemDef {
   adminOnly?: boolean;
 }
 
-interface RecentItemDef {
-  label: string;
-  color: string;
-}
-
 const NAV_ITEMS: NavItemDef[] = [
   { label: 'Home', icon: Globe, href: '/' },
   { label: 'Clientes', icon: Users, href: '/clientes', adminOnly: true },
   { label: 'Skills', icon: Sparkles, href: '/skills', adminOnly: true },
   { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca', adminOnly: true },
   { label: 'Workflows', icon: Zap, href: '/workflows', adminOnly: true },
-];
-
-const RECENT_ITEMS: RecentItemDef[] = [
-  { label: 'Vivo · Plano de Mídia', color: '#8B5CF6' },
-  { label: 'Samsung · Copy Social', color: '#1428A0' },
-  { label: 'Americanas · Report Performance', color: '#F97316' },
+  { label: 'Aprovações', icon: CheckCircle, href: '/aprovacoes', adminOnly: true },
+  { label: 'Reuniões', icon: Video, href: '/reunioes', adminOnly: true },
+  { label: 'Configurações', icon: Settings, href: '/configuracoes', adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -37,6 +30,7 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAdmin, role, signOut } = useAuth();
+  const { recents } = useNavigationHistory();
 
   const visibleNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
@@ -222,9 +216,22 @@ export default function Sidebar() {
           >
             Recentes
           </div>
-          {RECENT_ITEMS.map(({ label, color }) => (
-            <RecentItem key={label} label={label} color={color} />
-          ))}
+          {recents.length === 0 ? (
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                padding: '10px 16px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Nenhuma visita recente
+            </div>
+          ) : (
+            recents.map(({ label, color, href }) => (
+              <RecentItem key={href} label={label} color={color} />
+            ))
+          )}
         </div>
       </div>
 

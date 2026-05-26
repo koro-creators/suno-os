@@ -37,7 +37,7 @@ Cobertura: FA-14 (Google Drive como Fonte) · FR-170..FR-179 · BR-018 · RN-027
 
 Artefatos: mesma estrutura da SPEC 1, cobrindo CTM-09 (8 componentes), ENT-39..ENT-43, DFL-09, telas T-32/T-33, endpoints API-140..150.
 
-#### SPEC 3 (opcional) — `docs/specs/large/deepagents-poc-shoot-for-the-moon/`
+#### SPEC 3 (opcional) — `docs/specs/large/deepagents-poc-moon-shot/`
 
 Cobertura: validar os 5 pré-requisitos do ADR-011 via PoC em CTM-04 (Provocation Engine — Explorer↔Crítico).
 

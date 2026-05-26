@@ -498,7 +498,7 @@ class WorkflowCompiler:
 
             elif step_type == "workflow":
                 target_wf_id = step.get("workflow_id")
-                input_mapping = step.get("input_mapping", {})
+                input_mapping = step.get("input_mapping") or {}
 
                 # 1. Buscar definition do sub-workflow
                 from workflows.router import _workflows

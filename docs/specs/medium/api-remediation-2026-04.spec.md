@@ -1,5 +1,5 @@
 ---
-spec-id: SPEC-005
+spec-id: SPEC-014
 slug: api-remediation-2026-04
 artefato: spec
 nivel-sdd: spec-anchored

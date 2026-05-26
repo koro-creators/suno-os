@@ -2,9 +2,9 @@
 spec-id: SPEC-005
 slug: workflow-builder-canvas
 artefato: constitution
-atualizada: 2026-04-30
+atualizada: 2026-05-15
 versao: 1.0
-status: rascunho
+status: em-revisao
 substitui: SPEC-003 (docs/specs/large/workflow-builder/)
 escopo:
   projeto: sunos

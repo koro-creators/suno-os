@@ -253,11 +253,11 @@ Quando usuário clica num Planeta em T-02:
 | Comportamento visual | Planetas que NÃO oferecem o tipo filtrado: `opacity: 0.3` (200ms) |
 | `aria-pressed` | `true` na ativa |
 
-### 4.2 Shoot for the Moon (T-06, T-07, T-08) — "Devorando"
+### 4.2 Moon Shot (T-06, T-07, T-08) — "Devorando"
 
 #### 4.2.1 Animação "Devorando" (T-06 → T-07 transição)
 
-Esta é a **microinteração de assinatura** do Shoot for the Moon — devorar o briefing visualmente:
+Esta é a **microinteração de assinatura** do Moon Shot — devorar o briefing visualmente:
 
 ```
 Frame 0:    [Briefing textarea preenchida] (T-06)
@@ -635,7 +635,7 @@ KnowledgeItem em ingestão exibe pill orange com:
 | `Esc` | Fecha Drawer/Modal/Toast/Edit (exceto T-09 Forced Reflection) |
 | `Arrow keys` | Tabs (recomendado) · Navegação em FaiscaPanel · Listas em Command Palette |
 | `Enter` em input de tag/comentário | Confirma e blur |
-| `⌘⇧M` (futuro) | Atalho Shoot for the Moon |
+| `⌘⇧M` (futuro) | Atalho Moon Shot |
 | `/` (futuro) | Focus em search global |
 
 **Skip link** (`<a href="#main">Pular para conteúdo</a>` visível em focus) — atualmente ausente, dívida documentada no DS §6.7.
@@ -978,7 +978,7 @@ Sequência sugerida de implementação:
 | Sprint | Foco | Entregas |
 |--------|------|----------|
 | 1 | RN-014 visual | Componente `AIBadge` + animação `cross-fade-200` |
-| 2 | Shoot for the Moon UX | `ShootForTheMoonModal` + `FaiscaPanel` + `FaiscaCard` + animação `devorando-spark` |
+| 2 | Moon Shot UX | `MoonShotModal` + `FaiscaPanel` + `FaiscaCard` + animação `devorando-spark` |
 | 3 | Forced Reflection | `ForcedReflectionInterstitial` + animação `blur-backdrop` (com override reduced-motion) |
 | 4 | Mensuração | `KPICard` + `TrendChart` + animação `counter-up` + `path-draw` |
 | 5 | Onboarding | `OnboardingWizard` + `OnboardingTrackCard` + transições wizard |
@@ -1009,5 +1009,5 @@ Sequência sugerida de implementação:
 
 | Versão | Data | Descrição |
 |--------|------|-----------|
-| 1.0 | 2026-04-28 | Versão inicial. Cobertura horizontal de microinterações (não tela a tela). **Microinterações catalogadas em 9 áreas**: Sistema Solar (hover Planeta · transição L0→L1 · OrbitRing first-load · FilterPills); Shoot for the Moon (animação "Devorando" T-06→T-07 · orbit-appear de FaiscaCards · star bounce · refinar/descartar · Time-Boxing transitions); Chat (streaming token · 3-dots typing · MessageBubble entrada · ResultActions · FeedbackInline · marcação Faísca→Brasa→Validado RN-014); Forced Reflection (fricção intencional · blur backdrop · sem fechamento por backdrop); Feedback HITL (thumbs · stars rating · scope pills); Catálogos Admin (cards · drawer · modal · tabs); Workflows; Mensuração (KPICard · TrendChart · DiversityChart com counter-up e path-draw); Onboarding (wizard transitions · cards). **11 animações novas** identificadas e especificadas (devorando-spark · card-bounce-in · slide-fade-down/right · modal-scale-in/bounce · counter-up · path-draw · cross-fade-200 · progress-bar-fill · blur-backdrop) — todas com override obrigatório em `prefers-reduced-motion`. **Responsividade** com 4 breakpoints (mobile/tablet/desktop/wide) detalhada componente a componente. **Toasts e Banners** com 4 variantes. **Dark/Light theme transitions** especificadas (250ms ease backgrounds · 200ms ease ícone). **WCAG 2.1 AA** explícita: contraste verificado por token, atalhos teclado completos, ARIA por elemento, focus visible único, touch targets ≥44x44px. **Anti-patterns** consolidados (rotação contínua · float · pulse decorativo · animação >600ms). **Vocabulário Suno (RN-016)** aplicado em todo copy (Devorar · Provocar · Faísca · Brasa · Koro com K). |
+| 1.0 | 2026-04-28 | Versão inicial. Cobertura horizontal de microinterações (não tela a tela). **Microinterações catalogadas em 9 áreas**: Sistema Solar (hover Planeta · transição L0→L1 · OrbitRing first-load · FilterPills); Moon Shot (animação "Devorando" T-06→T-07 · orbit-appear de FaiscaCards · star bounce · refinar/descartar · Time-Boxing transitions); Chat (streaming token · 3-dots typing · MessageBubble entrada · ResultActions · FeedbackInline · marcação Faísca→Brasa→Validado RN-014); Forced Reflection (fricção intencional · blur backdrop · sem fechamento por backdrop); Feedback HITL (thumbs · stars rating · scope pills); Catálogos Admin (cards · drawer · modal · tabs); Workflows; Mensuração (KPICard · TrendChart · DiversityChart com counter-up e path-draw); Onboarding (wizard transitions · cards). **11 animações novas** identificadas e especificadas (devorando-spark · card-bounce-in · slide-fade-down/right · modal-scale-in/bounce · counter-up · path-draw · cross-fade-200 · progress-bar-fill · blur-backdrop) — todas com override obrigatório em `prefers-reduced-motion`. **Responsividade** com 4 breakpoints (mobile/tablet/desktop/wide) detalhada componente a componente. **Toasts e Banners** com 4 variantes. **Dark/Light theme transitions** especificadas (250ms ease backgrounds · 200ms ease ícone). **WCAG 2.1 AA** explícita: contraste verificado por token, atalhos teclado completos, ARIA por elemento, focus visible único, touch targets ≥44x44px. **Anti-patterns** consolidados (rotação contínua · float · pulse decorativo · animação >600ms). **Vocabulário Suno (RN-016)** aplicado em todo copy (Devorar · Provocar · Faísca · Brasa · Koro com K). |
 | 1.1 | 2026-04-28 | Adicionadas **§4.10 (Aprovação FA-13 — T-29/T-30/T-31)** e **§4.11 (Drive FA-14 — T-32/T-33)** com microinterações específicas. Animação central "Validators paralelos passando" (chips Brand + Português com `scan-shimmer` correndo, depois checkmark + concluído) e "Carimbo Validado" (stamp circular com overshoot `cubic-bezier`, pulse e som opcional) materializam a estética **Validado** definida no glossário do BRD. **+8 animações novas** registradas em §10.2: `scan-shimmer`, `validated-stamp-impact`, `oauth-warn-glow`, `card-slide-out-right`, `card-slide-out-up`, `tween-counter`, `chain-stepper-stagger`. Todas com override `prefers-reduced-motion` específico (shimmer → progress estática; stamp → fade simples; glow → estático; slides → fade; tween → instantâneo; stagger → simultâneo). **Sequência de implementação** estendida com Sprint 7 (FA-13 components + animações) e Sprint 8 (FA-14 components + animações). RN-014 (marca visual) reforçada com Validation Badge persistente em T-29/T-30 e carimbo final ao APPROVE. RN-024/025/026/029 visualizados via UI (banner round 3, banner "Apenas relatório", chip travado `🔒 drive.readonly`). |

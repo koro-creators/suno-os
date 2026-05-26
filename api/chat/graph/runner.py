@@ -4,6 +4,9 @@ Graph Runner -- executes the sunOS chat LangGraph.
 Two modes:
 1. run_chat() -- full invoke, returns complete response (for non-streaming)
 2. run_chat_stream() -- async generator yielding SSE events
+
+Phase 11 addition: best-effort conversation persistence after each stream
+completes.  Failures are caught and logged — they never interrupt the user.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, AsyncGenerator
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -136,6 +140,106 @@ def _build_initial_state(
 
 
 # ---------------------------------------------------------------------------
+# Conversation persistence (best-effort, Phase 11)
+# ---------------------------------------------------------------------------
+
+
+async def _persist_conversation(
+    conversation_id: str,
+    skill_slug: str,
+    user_message: str,
+    assistant_message: str,
+) -> None:
+    """Upsert the human + assistant turn into persistent storage.
+
+    This is intentionally best-effort: any exception is caught and logged
+    so it never interrupts the streaming response reaching the client.
+
+    Strategy:
+      1. Try PostgreSQL via SQLAlchemy (sync, wrapped in asyncio.to_thread).
+      2. Fall back to the in-memory store in chat.conversations.router so the
+         data survives at least for the duration of the process.
+    """
+    now = datetime.now(timezone.utc)
+    new_messages = [
+        {"role": "user", "content": user_message, "timestamp": now.isoformat()},
+        {"role": "assistant", "content": assistant_message, "timestamp": now.isoformat()},
+    ]
+
+    def _sync_persist() -> bool:
+        """Run DB upsert synchronously (called inside asyncio.to_thread)."""
+        try:
+            from sqlalchemy import create_engine, text
+            from sqlalchemy.orm import sessionmaker
+
+            engine = create_engine(
+                settings.DATABASE_URL.replace("+asyncpg", ""),
+                pool_pre_ping=True,
+                connect_args={"connect_timeout": 3},
+            )
+            SessionLocal = sessionmaker(bind=engine)
+            db = SessionLocal()
+            try:
+                # Upsert: append new messages to the JSONB column (migration 004).
+                # Uses a raw SQL statement for JSONB concatenation to avoid
+                # loading the full array into Python on every turn.
+                db.execute(
+                    text(
+                        """
+                        INSERT INTO conversations (id, user_id, skill_slug, messages, created_at, last_message_at)
+                        VALUES (:id, :user_id, :skill_slug, :messages::jsonb, :now, :now)
+                        ON CONFLICT (id) DO UPDATE
+                        SET messages = conversations.messages || :messages::jsonb,
+                            last_message_at = :now
+                        """
+                    ),
+                    {
+                        "id": conversation_id,
+                        "user_id": "anonymous",  # replaced when auth wired up
+                        "skill_slug": skill_slug,
+                        "messages": json.dumps(new_messages),
+                        "now": now,
+                    },
+                )
+                db.commit()
+                return True
+            finally:
+                db.close()
+        except Exception as db_exc:
+            logger.debug("DB persist failed for conversation %s: %s", conversation_id, db_exc)
+            return False
+
+    import asyncio
+
+    persisted_to_db = await asyncio.to_thread(_sync_persist)
+
+    if not persisted_to_db:
+        # Fallback: write into the in-memory store so GET /conversations works
+        # within the same process even without a DB.
+        try:
+            from chat.conversations.router import _memory_store
+
+            existing = _memory_store.get(conversation_id, {})
+            existing_messages: list[dict] = list(existing.get("messages", []))
+            existing_messages.extend(new_messages)
+            _memory_store[conversation_id] = {
+                "id": conversation_id,
+                "user_id": existing.get("user_id", "anonymous"),
+                "skill_slug": skill_slug,
+                "title": existing.get("title"),
+                "created_at": existing.get("created_at", now),
+                "last_message_at": now,
+                "messages": existing_messages,
+            }
+        except Exception as mem_exc:
+            logger.warning(
+                "In-memory persist also failed for conversation %s: %s",
+                conversation_id,
+                mem_exc,
+            )
+
+
+# ---------------------------------------------------------------------------
 # Streaming runner
 # ---------------------------------------------------------------------------
 
@@ -154,6 +258,8 @@ async def run_chat_stream(
     """Execute the chat graph with SSE streaming.
 
     Yields SSEEvent objects for each meaningful chunk from the graph.
+    After the stream completes, attempts best-effort persistence of the
+    conversation turn (user message + assistant response) to the database.
     """
     state = _build_initial_state(
         message=message,
@@ -189,6 +295,7 @@ async def run_chat_stream(
     graph = build_chat_graph(llm, agents)
 
     seen_message_ids: set[str] = set()
+    collected_text_parts: list[str] = []  # Phase 11: accumulate for persistence
 
     try:
         async for chunk in graph.astream(state, config={"recursion_limit": 20}):
@@ -228,6 +335,7 @@ async def run_chat_stream(
                                 elif isinstance(part, str):
                                     text_parts.append(part)
                             content = "".join(text_parts)
+                        collected_text_parts.append(content)
                         yield SSEEvent(
                             event="text",
                             data={"content": content},
@@ -237,6 +345,27 @@ async def run_chat_stream(
             event="done",
             data={"conversation_id": conv_id, "tokens_used": 0},
         )
+
+        # Phase 11: best-effort persistence — never raises to caller
+        try:
+            full_assistant_response = "".join(collected_text_parts)
+            if full_assistant_response:
+                import asyncio as _asyncio
+
+                _asyncio.ensure_future(
+                    _persist_conversation(
+                        conversation_id=conv_id,
+                        skill_slug=skill_slug,
+                        user_message=message,
+                        assistant_message=full_assistant_response,
+                    )
+                )
+        except Exception as persist_exc:
+            logger.warning(
+                "Failed to schedule conversation persistence for %s: %s",
+                conv_id,
+                persist_exc,
+            )
 
     except Exception as exc:
         logger.error("run_chat_stream error: %s", exc, exc_info=True)

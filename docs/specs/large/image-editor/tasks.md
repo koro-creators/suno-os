@@ -1,8 +1,9 @@
 ---
-spec-id: SPEC-003
+spec-id: SPEC-008
 slug: image-editor
 artefato: tasks
-atualizada: 2026-04-28
+atualizada: 2026-05-15
+status: rascunho
 versao: 1.0
 ---
 

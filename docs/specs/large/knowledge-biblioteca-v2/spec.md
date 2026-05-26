@@ -6,7 +6,7 @@ nivel-sdd: spec-anchored
 tamanho: large
 status: rascunho
 criada: 2026-04-14
-atualizada: 2026-04-14
+atualizada: 2026-05-15
 versao: 1.0
 escopo:
   projeto: sunos
@@ -15,6 +15,12 @@ escopo:
   papel: Tech Lead
   branch: master
   contexto: Evoluir Biblioteca para multimodal com vector search e interface com thumbnails
+upstream:
+  - docs/brd/parte3-requisitos.md (BR-004, BR-005, BR-006, BR-007, BR-008, BR-015)
+  - docs/brd/parte4-regras.md (RN-006, RN-007, RN-010, RN-011, RN-021)
+  - docs/prd/parte1-feature-map.md (FA-01)
+  - docs/srd/parte2-domain-model.md (BC-05: DO-29..37)
+  - docs/srd/parte8-APIs-contracts.md (API-100..112)
 ---
 
 # Spec — Knowledge Architecture + Biblioteca v2

@@ -398,73 +398,6 @@ ADRs canônicos (ADR-XXX em `docs/srd/parte7-ADRs.md`) cobrem decisões de produ
   - ✅ Erro na hora.
   - ❌ Manter regra ESLint custom (~30 LoC). Mitigação: testar a própria regra.
 
-### ADR-LOCAL-06 — Cascade deactivation para branches não-executadas
-
-- **Status.** Aceita.
-- **Contexto.** Quando um `condition` node toma o ramo `then`, os nodes reachable *apenas* pelo ramo `else` não executam. Sem tratamento explícito, esses nodes simplesmente não aparecem no `workflow_step_logs` — o usuário não consegue distinguir "foi pulado" de "falhou silenciosamente". O frontend de execução fica sem informação para colorir esses nodes, deixando parte do grafo em estado "desconhecido" visualmente.
-- **Decisão.** O executor, ao resolver qualquer `condition` node, calcula o conjunto de nodes *reachable only via branch não-tomada* (DFS a partir do handle não-tomado, excluindo nodes também alcançáveis pelo handle tomado). Para cada node nesse conjunto, insere um `workflow_step_log` com `status: 'skipped'` e `reason: 'condition_not_met'` (ou `'merge_cancelled'` para branches canceladas por `merge_policy='any'`). Esses logs aparecem no tracing e na UI com cor neutra (cinza), distintos de `running` (amarelo pulsando), `completed` (verde) e `error` (vermelho).
-- **Alternativas rejeitadas.**
-  1. **Não registrar nodes não-executados.** Rejeitado: usuário não consegue depurar qual branch foi tomada; silent omission em log é anti-pattern.
-  2. **Registrar apenas o próximo hop (1 nível após o condition).** Rejeitado: workflows com chains longas ficam parcialmente invisíveis.
-  3. **Frontend infere via topologia.** Rejeitado: frontend não tem acesso à lógica de execução; duplicaria regras de roteamento.
-- **Consequências.**
-  - ✅ UI pode colorir todo o grafo após execução sem ambiguidade.
-  - ✅ Auditoria completa: toda execução tem log de cada node (executado ou pulado).
-  - ✅ Mesmo para `merge_policy='any'`, branches canceladas são logadas como `skipped`.
-  - ❌ Volume de `workflow_step_logs` aumenta proporcionalmente ao número de branches (aceitável — logs são baratos).
-  - ⚠️ Implementação: `validator.py:reachable_only_via(graph, start_handle)` requer DFS com exclusão de interseção. Adicionar à suite de testes unitários do validator.
-
-### ADR-LOCAL-07 — Separação de state do canvas: geometria vs. execução vs. interação
-
-- **Status.** Aceita.
-- **Contexto.** `useNodesState`/`useEdgesState` do React Flow gerencia geometria (posições, edges). Durante execução de um workflow, o frontend precisa colorir cada node com status atual (`running`/`completed`/`error`/`skipped`). Esse estado não é geometria — não cabe em `useNodesState` sem misturar responsabilidades e triggerear re-renders desnecessários de posições quando só o status muda. Sem arquitetura definida, implementadores criam soluções ad-hoc incompatíveis.
-- **Decisão.** Separação explícita em 3 camadas:
-  1. **Geometria** → `useNodesState` / `useEdgesState` (React Flow hooks) — posições, edges, dimensões, seleção.
-  2. **Estado de execução por node** → `ExecutionStateContext` (React Context local em `app/workflows/[workflowId]/`) com shape `Map<step_id, ExecutionNodeStatus>`, onde `ExecutionNodeStatus = 'idle' | 'running' | 'completed' | 'error' | 'skipped'`. Alimentado por SSE polling da execução (`GET /api/workflows/{id}/runs/{runId}/stream`).
-  3. **Interação** → `useState` local na page — node sendo editado no `NodeConfigDrawer`, modo de canvas (`hand`/`select`).
-
-  Zustand **não é adotado** nesta SPEC — Context é suficiente para 1 componente raiz + filhos no MVP. Reavaliar se precisar de state compartilhado entre múltiplas rotas.
-
-- **Alternativas rejeitadas.**
-  1. **Tudo em `useNodesState` (adicionar `execution_status` em `node.data`).** Rejeitado: mistura responsabilidades; atualizar status de 1 node re-renderiza a geometria de todos.
-  2. **Zustand para execution state.** Rejeitado: adiciona dep nova; Context é suficiente.
-  3. **Props drilling do status para cada Node component.** Rejeitado: 5+ níveis de componente, impraticável.
-- **Consequências.**
-  - ✅ Mudança de status de 1 node durante execução não re-renderiza posições dos demais.
-  - ✅ Padrão explícito: cada implementador sabe onde colocar cada tipo de state.
-  - ⚠️ `ExecutionStateContext` deve ser inicializado com todos os `step_id`s quando o workflow abre (para evitar flash de "idle" durante 1ª execução).
-
-### ADR-LOCAL-08 — Conjunto mínimo de input types para NodeConfigDrawer (MVP)
-
-- **Status.** Aceita.
-- **Contexto.** O sim (referência de mercado) chegou a 33 tipos de input ao longo de meses. Sem definição explícita do conjunto MVP, implementadores criam inputs ad-hoc para cada node, resultando em inconsistências visuais e comportamentais difíceis de refatorar. O `NodeConfigDrawer` é o componente de maior superfície de UI do canvas.
-- **Decisão.** 11 tipos de input compõem o MVP, implementados como componentes em `components/workflows/canvas/panels/inputs/`:
-
-  | Input type | Componente | Casos de uso |
-  |---|---|---|
-  | `short-text` | `ShortTextInput` | Nome do node, strings curtas |
-  | `long-text` | `LongTextInput` | System prompt, descrições |
-  | `dropdown` | `DropdownInput` | Modelo LLM, step type, merge_policy |
-  | `combobox` | `ComboboxInput` | Tool selecionável com search em tempo real |
-  | `toggle` | `ToggleInput` | Enable/disable node, opções binárias |
-  | `slider` | `SliderInput` | Temperature (0–2), max_tokens (0–8192) |
-  | `messages` | `MessagesInput` | Pares system/user para configuração do LLM node |
-  | `variable-ref` | `VariableRefInput` | Referência a output de node anterior via `{{step_id.field}}` |
-  | `workflow-select` | `WorkflowSelectInput` | Sub-workflow node (dropdown de workflows do cliente) |
-  | `tool-select` | `ToolSelectInput` | Tool da Biblioteca de skills do cliente |
-  | `condition-expr` | `ConditionExprInput` | Expressão booleana do ConditionNode (texto livre + preview de resultado) |
-
-  Interface unificada de cada input: `{ value: unknown, onChange: (v: unknown) => void, disabled?: boolean, error?: string }`. Tipos adicionais (code editor, credential-selector, file-upload, filter-builder) são V2.
-
-- **Alternativas rejeitadas.**
-  1. **Implementar todos os 33 tipos do sim de início.** Rejeitado: overkill; os 11 cobrem 100% dos step types do MVP.
-  2. **Inputs ad-hoc inline em cada Node component.** Rejeitado: duplicação, inconsistência, impossível de reusar.
-  3. **Usar biblioteca de form (React Hook Form + Zod inline).** Rejeitado: adiciona deps; os 11 tipos são simples o suficiente para useState local.
-- **Consequências.**
-  - ✅ Consistência visual em todos os nodes.
-  - ✅ Extensível: novo tipo = novo arquivo com a interface padrão.
-  - ⚠️ `variable-ref` (`{{step_id.field}}`) requer que o canvas exponha a lista de outputs de nodes anteriores — `NodeConfigDrawer` precisa receber `upstreamOutputs: Map<step_id, string[]>` como prop.
-
 ## 5. Frontend Architecture
 
 ### 5.1. Estrutura
@@ -767,40 +700,6 @@ def _wrap_predecessor_for_any_merge(original_fn, merge_step_id, predecessor_id):
 
 **Observação operacional.** A implementação acima requer que o `WorkflowState` (TypedDict do LangGraph) tenha campos auxiliares (`__merge_*_event`, `__task_*`) inicializados no run startup. Não-trivial; melhor encapsular em uma helper `setup_merge_any_state(workflow_definition, initial_state)` que detecta MergeNodes `any` e popula os auxiliares antes de chamar `graph.ainvoke(state)`. Isso será refinado durante implementação — TASK-B05 marca como "GG" justamente por essa complexidade.
 
-**Cascade deactivation (ADR-LOCAL-06).** Após resolver um `condition` node, o executor chama `compute_skipped_steps(graph, taken_handle, all_edges)` que faz DFS no handle não-tomado e retorna a lista de step_ids exclusivos. Para cada step nessa lista, insere `workflow_step_log(status='skipped', reason='condition_not_met')`. A mesma lógica se aplica a branches canceladas por `merge_policy='any'` (razão: `'merge_cancelled'`). O volume extra de logs é proporcional ao número de branches — aceitável.
-
-```python
-def compute_skipped_steps(
-    edges: list[dict],
-    condition_step_id: str,
-    taken_handle: str,
-) -> set[str]:
-    not_taken_handle = "else" if taken_handle == "then" else "then"
-    # Nodes alcançáveis via handle tomado
-    reachable_taken = _dfs(edges, condition_step_id, taken_handle)
-    # Nodes alcançáveis apenas via handle não-tomado
-    reachable_not_taken = _dfs(edges, condition_step_id, not_taken_handle)
-    return reachable_not_taken - reachable_taken  # exclusivos ao branch não-tomado
-
-def _dfs(edges: list[dict], start_id: str, start_handle: str | None = None) -> set[str]:
-    adj: dict[str, list[str]] = {}
-    for e in edges:
-        adj.setdefault(e["source_step_id"], []).append(e["target_step_id"])
-    visited: set[str] = set()
-    queue = [
-        e["target_step_id"] for e in edges
-        if e["source_step_id"] == start_id
-        and (start_handle is None or e["source_handle"] == start_handle)
-    ]
-    while queue:
-        node = queue.pop()
-        if node in visited:
-            continue
-        visited.add(node)
-        queue.extend(adj.get(node, []))
-    return visited
-```
-
 **Error handling (`wrap_error=True`).** Implementação muito mais simples:
 
 ```python
@@ -824,29 +723,53 @@ def _route_after_step(self, step_id: str):
     return route
 ```
 
-### 6.3. HITL — Pausa e Resume Token
-
-O step type `hitl` usa `interrupt()` + `Command(resume=...)` do LangGraph. O checkpointer persiste o `StateGraph` state automaticamente — não é necessário serializar manualmente como fazem implementações sem LangGraph.
-
-**O que precisa ser implementado além do LangGraph:** o **resume token**, que é o mecanismo pelo qual o Aprovador recebe um link direto para retomar a execução sem precisar navegar na UI.
+**Cascade deactivation — `compute_skipped_steps` (executor.py).** Quando um nó `condition` toma `then` ou `else`, os nós que só eram atingíveis pelo caminho não-tomado recebem `status: skipped` em `step_logs`. Algoritmo DFS:
 
 ```python
-# api/workflows/hitl.py — gerado quando o executor pausa num HITLNode
+def compute_skipped_steps(edges, condition_step_id, taken_handle) -> set[str]:
+    not_taken_handle = "else" if taken_handle == "then" else "then"
+    reachable_taken = _dfs(edges, condition_step_id, taken_handle)
+    reachable_not_taken = _dfs(edges, condition_step_id, not_taken_handle)
+    return reachable_not_taken - reachable_taken  # steps exclusivos do ramo não-tomado
 
-from dataclasses import dataclass
+def _dfs(edges, start_id, start_handle=None) -> set[str]:
+    adj: dict[str, list[str]] = {}
+    for e in edges:
+        adj.setdefault(e["source_step_id"], []).append(e["target_step_id"])
+    visited: set[str] = set()
+    queue = [
+        e["target_step_id"] for e in edges
+        if e["source_step_id"] == start_id
+        and (start_handle is None or e["source_handle"] == start_handle)
+    ]
+    while queue:
+        node = queue.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+        queue.extend(adj.get(node, []))
+    return visited
+```
 
+O resultado é diferença dos conjuntos: nós atingíveis apenas pelo ramo não-tomado (excluindo nós que ambos os ramos alcançam antes de um merge). O executor marca esses step_ids com `status: skipped, skip_reason: branch_not_taken` em `step_logs`. A UI reflete via `ExecutionStateContext` (ADR-LOCAL-07).
+
+### 6.3. HITL Resume Token
+
+Quando um step `hitl` é alcançado, o executor pausa e emite um `HITLResumeToken` para o operador externo:
+
+```python
 @dataclass
 class HITLResumeToken:
-    thread_id: str       # thread_id do checkpointer do LangGraph — chave para retomar
-    execution_id: str    # UUID do workflow_run
+    thread_id: str
+    execution_id: str
     workflow_id: str
-    step_id: str         # step que pausou (HITLNode)
-    resume_url: str      # POST /api/workflows/{workflow_id}/runs/{execution_id}/resume
-    ui_url: str          # https://sunos.suno.com.br/workflows/{workflow_id}/runs/{execution_id}
-    expires_at: str      # ISO 8601 — quando o token expira (default: +48h)
-    input_schema: dict   # JSON Schema dos campos que o Aprovador precisa preencher
+    step_id: str
+    resume_url: str   # POST /api/workflows/{workflow_id}/runs/{execution_id}/resume
+    ui_url: str       # https://sunos.suno.com.br/workflows/{workflow_id}/runs/{execution_id}
+    expires_at: str   # ISO 8601, default +48h
+    input_schema: dict
 
-def generate_resume_token(workflow_id: str, execution_id: str, step: dict, thread_id: str) -> HITLResumeToken:
+def generate_resume_token(workflow_id, execution_id, step, thread_id) -> HITLResumeToken:
     return HITLResumeToken(
         thread_id=thread_id,
         execution_id=execution_id,
@@ -859,11 +782,8 @@ def generate_resume_token(workflow_id: str, execution_id: str, step: dict, threa
     )
 ```
 
-O executor, ao detectar que o LangGraph pausou num `interrupt()`, chama `generate_resume_token` e persiste o token em `workflow_step_logs.metadata`. O `NotificationDispatcher` do executor (ou integração com SPEC-004) usa `ui_url` e `resume_url` para enviar a notificação ao responsável pelo HITL.
+O token é enviado via `NotificationDispatcher` (Slack/email) e armazenado em `workflow_runs.hitl_token` para lookup quando o operador POST `/resume`. `thread_id` é o ID de suspensão do LangGraph (`graph.get_state(config).config["configurable"]["thread_id"]`) necessário para o `graph.ainvoke(resume_payload, config)` de retomada.
 
-**Resume:** `POST /api/workflows/{id}/runs/{runId}/resume` recebe `{ thread_id, decision, fields }` e chama `graph.invoke(Command(resume=decision_payload), config={"configurable": {"thread_id": thread_id}})`.
-
-**Cascade deactivation em HITL:** quando um HITLNode com `merge_policy='any'` é o responsável por cancelar branches paralelas, o executor deve logar os branches cancelados com `status: 'skipped'` e `reason: 'hitl_cancelled'` (ver ADR-LOCAL-06).
 
 ### 6.4. Validator (`validator.py`)
 
@@ -984,8 +904,8 @@ MLflow spans:
 - `workflow.compile` (parent)
   - tag `compiler_version: v1|v2`
 - `workflow.execute` (parent)
-  - `step.{step_id}` (child por node — inclui steps com `status=skipped`)
-    - tag `step_type`, `step_name`, `parallel_group_id` (para fan-out), `skip_reason` (se skipped)
+  - `step.{step_id}` (child por node)
+    - tag `step_type`, `step_name`, `parallel_group_id` (para fan-out), `skip_reason` (se `status=skipped`)
 - `workflow.migration_v1_v2` (parent)
   - `migration.layered_layout`
   - `migration.create_edges`
@@ -1025,11 +945,56 @@ Estruturado JSON: `workflow_id`, `run_id`, `step_id`, `compiler_version`, `actio
 - **TODO-DESIGN-C.** Templates atuais (4 em produção) têm que ser explicitamente migrados ou são pegos pela migration JIT como qualquer workflow? Inclinação: mesma migration. Confirmar que não há campos especiais nos templates que quebram.
 - **TODO-DESIGN-D.** Canvas em mobile (<768px) — read-only com aviso ou redirect? Inclinação: read-only com banner "Edição apenas em desktop". Confirmar.
 
-<!-- REVIEW: Os 8 ADR-LOCAL cobrem os trade-offs? Os fluxos sequenciais cobrem todos os casos? -->
+
+### ADR-LOCAL-06 — Cascade deactivation: marcar `skipped` via DFS no executor
+
+- **Status:** Aceita (v1.1 — identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** Steps no ramo não-tomado de um `condition` ficavam com `status: null` em `step_logs`, tornando impossível para a UI distinguir "ainda não executou" de "foi pulado propositalmente". A UI precisava colorir corretamente esses nodes.
+- **Decisão:** Executor chama `compute_skipped_steps(edges, condition_step_id, taken_handle)` imediatamente após tomar uma branch. Nodes no resultado recebem `status: skipped, skip_reason: branch_not_taken` em `step_logs` antes do próximo step executar. `ExecutionStateContext` no frontend lê esse status e colore o nó em cinza.
+- **Alternativas consideradas:**
+  1. Marcar skipped só no final da execução — rejeitado: UI ficaria sem feedback durante execução longa.
+  2. Deixar sem marcação e UI inferir por ausência de log — rejeitado: impossível distinguir de "aguardando".
+- **Consequências:**
+  - ✅ UI sempre consistente: cada node está em `idle | running | completed | error | skipped`.
+  - ✅ DFS é O(V+E) e síncrono; overhead negligível.
+  - ⚠️ Nodes que ambas as branches alcançam (antes de merge) NÃO são marcados skipped (intersecção excluída pela operação de diferença de conjuntos).
+
+### ADR-LOCAL-07 — Canvas state: separação geometry vs. execution status
+
+- **Status:** Aceita (v1.1 — identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** `useNodesState` e `useEdgesState` do React Flow gerenciam posição e geometria. Sobrepor status de execução por node nesse mesmo estado causaria re-renders desnecessários e acoplamento entre domínios.
+- **Decisão:** Três camadas de estado distintas:
+  1. **Geometry** → `useNodesState` / `useEdgesState` (React Flow nativo)
+  2. **Execution per node** → `ExecutionStateContext`: `Map<step_id, 'idle'|'running'|'completed'|'error'|'skipped'>` atualizado via polling ou SSE de `workflow_runs/{id}/stream`
+  3. **Interaction** → `useState` local no `page.tsx` (panel aberto, step selecionado, etc.)
+- **Alternativas consideradas:**
+  1. Zustand global para tudo — rejeitado: overhead de store e acoplamento desnecessário para MVP.
+  2. Colocar execution status como custom data nos nodes do React Flow — rejeitado: força re-render do canvas inteiro a cada tick de polling.
+- **Consequências:**
+  - ✅ Polling/SSE de execution status não causa re-render do canvas.
+  - ✅ Cada camada evoluível independentemente.
+  - ⚠️ `ExecutionStateContext` precisa ser provido apenas na rota `/workflows/[workflowId]` — não global.
+
+### ADR-LOCAL-08 — 11 tipos de input MVP para NodeConfigDrawer
+
+- **Status:** Aceita (v1.1 — identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** `NodeConfigDrawer` (painel lateral de configuração de step) precisava de tipos de input definidos antes da implementação; sem lista explícita, cada step seria implementado com inputs ad-hoc.
+- **Decisão:** 11 tipos MVP em `components/workflows/canvas/panels/inputs/`:
+  `ShortTextInput`, `LongTextInput`, `DropdownInput`, `ComboboxInput`, `ToggleInput`, `SliderInput`, `MessagesInput`, `VariableRefInput`, `WorkflowSelectInput`, `ToolSelectInput`, `ConditionExprInput`.
+  Cada type tem schema Zod próprio. Novos tipos pós-MVP adicionam arquivo sem quebrar existentes.
+- **Alternativas consideradas:**
+  1. JSON Schema form gerado automaticamente — rejeitado: perda de controle sobre UX por tipo.
+  2. Apenas `ShortText` e `Dropdown` no MVP — rejeitado: `ConditionExprInput` e `VariableRefInput` são bloqueantes para condition e LLM steps.
+- **Consequências:**
+  - ✅ Implementação consistente entre os 7 node types.
+  - ✅ Schema Zod por tipo valida antes de salvar.
+  - ⚠️ 11 componentes iniciais — mas cada um é ~40 LoC (simples).
+
+<!-- REVIEW: Os 8 ADR-LOCAL cobrem os trade-offs? Algum outro merece registro (ex: schema de auto-save — debounce 500ms vs throttle)? Os fluxos sequenciais cobrem todos os casos? -->
 
 ## 11. Changelog
 
 | Versão | Data | Mudança |
 |--------|------|---------|
 | 1.0 | 2026-04-30 | Versão inicial — substitui design.md da SPEC-003. Arquitetura canvas + 5 ADR-LOCAL (React Flow, auto-layout Python, retrocompat 1 release, merge any cancellation, ESLint enforcement) + estratégia de testes em 9 níveis |
-| 1.1 | 2026-05-26 | ADR-LOCAL-06 (cascade deactivation — nodes skipped em branch não-tomada), ADR-LOCAL-07 (separação de state canvas: geometria/execução/interação via ExecutionStateContext), ADR-LOCAL-08 (11 input types MVP para NodeConfigDrawer). §6.3 HITL resume token (HITLResumeToken + generate_resume_token). §6.2 compute_skipped_steps. Tracing atualizado para incluir steps skipped. Fonte: análise comparativa simstudioai/sim (docs/research/competitive-analysis/competitive-intel-simstudioai-sim.md) |
+| 1.1 | 2026-05-26 | ADR-LOCAL-06 (cascade deactivation DFS), ADR-LOCAL-07 (ExecutionStateContext), ADR-LOCAL-08 (11 input types); §6.2 compute_skipped_steps; §6.3 HITLResumeToken; §6.3–6.5 renumerados; §8.1 skip_reason tag |

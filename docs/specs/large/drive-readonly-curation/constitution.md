@@ -2,8 +2,10 @@
 spec-id: SPEC-006
 slug: drive-readonly-curation
 artefato: constitution
-atualizada: 2026-04-30
+atualizada: 2026-05-15
+status: rascunho
 versao: 1.0
+fase: Momento 2
 escopo:
   projeto: sunos
   stack: "Frontend: Next.js 14 + TypeScript | Backend: FastAPI + LangGraph + Python 3.11"
@@ -35,6 +37,9 @@ pre_conditions:
   - id: PRE-04
     descricao: "Cliente piloto identificado e contratualmente autorizado a conectar Drive. Sem assinatura de termo de uso/escopo, OAuth não pode ser solicitado (LGPD + cláusula contratual)."
 ---
+
+> ⚠️ **REST-08 v2 (decisão 14/05/2026)** — Drive é restrito ao Drive **interno da Suno** (`/sunos-shared/`). Drive externo de clientes está fora de escopo. Atualizar todos os contratos desta SPEC que referenciem Drive de cliente.
+> ⚠️ **Pre-conditions bloqueadoras**: PRE-01 (ADR-009 Proposto), PRE-02 (ADR-011 Proposto/rascunho), PRE-03 (CTM-01 contrato cliente assinado), PRE-04 (cliente piloto definido). Nenhuma pode ser pulada.
 
 # Constitution — Drive Read-Only Curation (FA-14)
 

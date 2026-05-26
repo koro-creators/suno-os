@@ -1,9 +1,9 @@
 ---
-spec-id: SPEC-006
+spec-id: SPEC-013
 slug: chat-attachments
 nivel-sdd: spec-anchored
 tamanho: medium
-status: rascunho
+status: parcialmente-implementada
 criada: 2026-04-16
 atualizada: 2026-04-16
 versao: 1.0

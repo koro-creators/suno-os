@@ -2,8 +2,12 @@
 spec-id: SPEC-002
 slug: knowledge-biblioteca-v2
 artefato: design
-atualizada: 2026-04-14
-versao: 1.0
+nivel-sdd: spec-anchored
+tamanho: large
+status: rascunho
+criada: 2026-05-15
+atualizada: 2026-05-26
+versao: 1.1
 ---
 
 # Design — Knowledge Architecture + Biblioteca v2
@@ -49,7 +53,8 @@ versao: 1.0
 │  ├── audio_processor.py (transcribe + chunk)                 │
 │  ├── video_processor.py (transcribe + keyframes)             │
 │  ├── image_processor.py (caption + resize)                   │
-│  └── text_processor.py  (chunk paragraphs)                   │
+│  ├── text_processor.py  (chunk paragraphs)                   │
+│  └── entity_extractor.py (LLMGraphTransformer → knowledge_entities) │
 └──────────────────────┬───────────────────────────────────────┘
                        │
           ┌────────────┼────────────┐
@@ -96,6 +101,10 @@ User uploads file
                               │
                     INSERT knowledge_chunks
                     UPDATE status='ready'
+                              │
+                    entity_extractor.py (async, não bloqueia)
+                    INSERT knowledge_entities + entity_relationships
+                    (status='pending' — HITL gate SPEC-015)
 ```
 
 ## Decisões Técnicas
@@ -188,8 +197,9 @@ api/
       image_processor.py
       text_processor.py
       thumbnail.py         # Thumbnail generation
+      entity_extractor.py  # LLMGraphTransformer + dedup (ADR-013) — NOVO
   models/
-    knowledge.py           # SQLAlchemy models
+    knowledge.py           # SQLAlchemy models + knowledge_entities + entity_relationships
 ```
 
 ### Backend (modificados)
@@ -213,6 +223,146 @@ contexts/BibliotecaContext.tsx              # Fetch de API real (quando disponí
 PostgreSQL: CREATE EXTENSION vector + migrations
 GCS: criar bucket sunos-knowledge
 ```
+
+## Extração de Entidades Ontológicas (ADR-013)
+
+> Decisão de arquitetura: ADR-013 (LLMGraphTransformer vs. Cognee vs. FalkorDB GraphRAG-SDK).
+> Detalhe: ADR-007 (AlloyDB + pgvector), ADR-008 (RAG architecture).
+
+### Modelo de Dados — Novas Tabelas
+
+```sql
+CREATE TABLE knowledge_entities (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id    UUID NOT NULL REFERENCES clients(id),
+  doc_id       UUID NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+  entity_type  VARCHAR(50) NOT NULL,   -- ONTOLOGY_NODES abaixo
+  entity_name  TEXT NOT NULL,
+  properties   JSONB DEFAULT '{}',
+  embedding    VECTOR(768),
+  status       VARCHAR(20) NOT NULL DEFAULT 'pending',  -- pending | approved | rejected
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_ke_client    ON knowledge_entities(client_id);
+CREATE INDEX idx_ke_type      ON knowledge_entities(client_id, entity_type);
+CREATE INDEX idx_ke_status    ON knowledge_entities(client_id, status);
+CREATE INDEX idx_ke_embedding ON knowledge_entities
+  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 50);
+
+CREATE TABLE entity_relationships (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id  UUID NOT NULL,
+  source_id  UUID NOT NULL REFERENCES knowledge_entities(id) ON DELETE CASCADE,
+  target_id  UUID NOT NULL REFERENCES knowledge_entities(id) ON DELETE CASCADE,
+  relation   VARCHAR(80) NOT NULL,
+  weight     FLOAT NOT NULL DEFAULT 1.0,
+  doc_id     UUID REFERENCES knowledge_documents(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_er_source ON entity_relationships(source_id);
+CREATE INDEX idx_er_target ON entity_relationships(target_id);
+CREATE INDEX idx_er_client ON entity_relationships(client_id);
+```
+
+### Componente `entity_extractor.py`
+
+```python
+from langchain_experimental.graph_transformers import LLMGraphTransformer
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+ONTOLOGY_NODES = [
+    "Posicionamento", "Persona", "Competidor",
+    "Produto", "TomDeVoz", "Briefing"
+]
+
+ONTOLOGY_RELATIONSHIPS = [
+    "COMPETE_COM", "DESTINA_A", "PERTENCE_A",
+    "MENCIONA", "DEFINE", "ORIENTA"
+]
+
+def build_extractor() -> LLMGraphTransformer:
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+    return LLMGraphTransformer(
+        llm=llm,
+        allowed_nodes=ONTOLOGY_NODES,
+        allowed_relationships=ONTOLOGY_RELATIONSHIPS,
+        strict_mode=True,
+        node_properties=["description", "source_doc"],
+    )
+
+async def extract_and_persist(
+    doc_id: str, client_id: str, chunks: list[str], db
+) -> int:
+    """Extrai entidades de todos os chunks, faz dedup e persiste."""
+    extractor = build_extractor()
+    from langchain_core.documents import Document
+
+    graph_docs = extractor.convert_to_graph_documents(
+        [Document(page_content=c) for c in chunks]
+    )
+    count = 0
+    for gd in graph_docs:
+        for node in gd.nodes:
+            if not _is_duplicate(db, client_id, node, threshold=0.92):
+                _upsert_entity(db, client_id, doc_id, node)
+                count += 1
+        for rel in gd.relationships:
+            _upsert_relationship(db, client_id, rel)
+    db.commit()
+    return count
+```
+
+### Dedup via Cosine Similarity (threshold 0.92)
+
+Antes de inserir, verifica existência de entidade semanticamente equivalente no mesmo `(client_id, entity_type)`:
+
+```python
+def _is_duplicate(db, client_id, node, threshold=0.92) -> bool:
+    from langchain_core.documents import Document
+    embedding = embed_text(node.id)       # reutiliza embeddings.py
+    result = db.execute(
+        text("""
+        SELECT 1 FROM knowledge_entities
+        WHERE client_id = :cid
+          AND entity_type = :etype
+          AND 1 - (embedding <=> :emb::vector) > :threshold
+        LIMIT 1
+        """),
+        {"cid": client_id, "etype": node.type,
+         "emb": str(embedding), "threshold": threshold}
+    ).fetchone()
+    return result is not None
+```
+
+### Integração com `processor.py`
+
+Fase 2 assíncrona, disparada após embedding. Falha na extração não reverte `status='ready'`.
+
+```python
+# processor.py (trecho)
+async def process_document(doc_id: str, client_id: str, db):
+    # Fase 1: chunk + embed (existente)
+    chunks = await extract_and_chunk(doc_id)
+    await embed_and_store(doc_id, chunks, db)
+    await update_status(doc_id, "ready", db)
+
+    # Fase 2: extração ontológica (nova — falha silenciosa)
+    try:
+        await extract_and_persist(doc_id, client_id, [c.text for c in chunks], db)
+    except Exception as e:
+        logger.warning("entity extraction failed for doc %s: %s", doc_id, e)
+        # status='ready' mantido; entidades ficam ausentes — não bloqueia RAG semântico
+```
+
+**Distinção crítica:** `knowledge_entities` captura entidades de **toda a Biblioteca** (ingestão automatizada, `status='pending'`). `wiki_entities` (SPEC-015) é o **perfil ontológico curado** do cliente — subset aprovado via HITL pelo Oráculo. As duas tabelas coexistem com propósitos distintos e **não se substituem**.
+
+### Nova dependência
+
+```
+langchain-experimental>=0.3.0  # LLMGraphTransformer
+```
+
+Adicionar em `api/pyproject.toml`. Ver ADR-013 §6 para guia de spike de qualidade antes do Piloto.
 
 <!-- REVIEW -->
 **Checkpoint**: A arquitetura faz sentido para as restrições do projeto?

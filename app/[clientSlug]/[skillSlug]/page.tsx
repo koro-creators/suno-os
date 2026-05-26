@@ -7,6 +7,7 @@ import AppHeader from '@/components/layout/AppHeader';
 import ChatInterface from '@/components/chat/ChatInterface';
 import { getClientBySlug, getSkillBySlug, getSkillTypeColor } from '@/lib/utils';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
+import { useSkills } from '@/contexts/SkillsContext';
 import type { Moon } from '@/lib/types';
 
 const typeLabels: Record<string, string> = {
@@ -73,6 +74,7 @@ export default function SkillPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { documents } = useBiblioteca();
+  const { skills: adminSkills } = useSkills();
 
   const client = getClientBySlug(clientSlug);
   if (!client) {
@@ -85,7 +87,18 @@ export default function SkillPage({
   }
 
   const skillColor = getSkillTypeColor(skill.type);
-  const moons = skill.moons;
+
+  // Dynamic moons: prefer moons from SkillsContext (editable admin data) over
+  // static moons from data/clients.ts. Fall back when admin skill is not found,
+  // not assigned to this client, not active, or has no moons configured.
+  const adminSkill = adminSkills.find(
+    (s) =>
+      s.slug === skillSlug &&
+      s.assignedClients.includes(clientSlug) &&
+      s.status === 'active' &&
+      s.moons.length > 0
+  );
+  const moons: Moon[] = adminSkill?.moons ?? skill.moons;
 
   // Resolve initial moon from query param or default to first
   const moonParam = searchParams.get('moon');

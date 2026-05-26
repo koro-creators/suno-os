@@ -1,12 +1,12 @@
 ---
 documento: BRD Parte 1 — Contexto do Projeto
 projeto: sunOS
-cliente: Suno United Creators (uso 100% interno)
+cliente: Suno United Creators
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 2.0
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
-autor: Heitor Miranda + Claude (assistido)
+ultima_atualizacao: 2026-05-18
+autor: Heitor Miranda
 status: Rascunho
 aprovacoes:
   - area: Diretoria Suno United Creators
@@ -20,7 +20,7 @@ aprovacoes:
 fonte_principal: Documentação do repo suno-os master + transcrições + materiais Crescera
 ---
 
-# BRD Parte 1 — Contexto do Projeto sunOS
+# BRD Parte 1 — Contexto SunOS
 
 > Este documento captura o contexto de negócio do projeto sunOS — o sistema operacional de IA da Suno United Creators. É a primeira parte de quatro do BRD (Contexto, Glossário, Requisitos, Regras). Toda afirmação aqui está rastreável a uma fonte; pontos sem confirmação clara estão marcados como `[A validar]`.
 
@@ -28,7 +28,7 @@ fonte_principal: Documentação do repo suno-os master + transcrições + materi
 
 ## 1. Introdução
 
-### 1.1. Contexto do Cliente
+### 1.1. Contexto Suno United Creators
 
 A **Suno United Creators** é uma agência publicitária independente brasileira fundada em abril de 2017, com sede em São Paulo. Em 2026, a empresa conta com aproximadamente **300 colaboradores ("creators")** e está em seu **9º ano de operação**.
 
@@ -42,28 +42,7 @@ A **Suno United Creators** é uma agência publicitária independente brasileira
 
 **Momento atual**: a Suno opera num período de **reestruturação e transformação digital impulsionada por IA**. O fundador Guga Ketzer determinou que a agência precisa "fazer um leapfrog" no uso de inteligência artificial para preservar competitividade frente a holdings (WPP, Publicis), consultorias (Accenture Song) e agências AI-native (Monks, Jellyfish).
 
-**Fontes**:
-- Deck "Crescera SmartGrowth - 02032026.pptx" (slides 2, 9, 10)
-- `docs/handoff/PRODUCT_HANDOFF.md`:7
-- Confirmações Q1-Q4, Q3a do briefing
-- Dossiê executivo Guga Ketzer
-
-### 1.2. Contexto da BU
-
-O sunOS é uma iniciativa da **área de Tecnologia e Dados para Marketing**, sob direção executiva de **Heitor Miranda**. A área tutela tecnicamente o produto, mas o sunOS é um **projeto cross-grupo** — destinado ao uso por todas as empresas/times do United Creators.
-
-**Estrutura de governança do projeto**:
-
-| Papel | Pessoa | Responsabilidade |
-|-------|--------|------------------|
-| Sponsor executivo | Guga (José Augusto Ketzer) | Mandato, direção estratégica, reuniões semanais (terças) |
-| Liderança técnica e estratégica | Heitor Miranda | Arquitetura, roadmap, decisão técnica |
-| Patrocinador sócio — Criação | Bruno Prosperi | Voz da Criação na evolução do produto (não-operacional) |
-| Patrocinador sócio — Mídia | Leonardo Yukio Takai | Voz da Mídia na evolução do produto (não-operacional). Também owner do produto separado **Toolbox** (mercado SMB) |
-
-**Fontes**: confirmações Q5, Q6, ajustes sobre Q19 do briefing.
-
-### 1.3. Contexto do Projeto
+### 1.2. Contexto do Projeto
 
 O sunOS nasceu de forma **embrionária** com a popularização de LLMs (Gemini, GPT, Claude) na agência, sem formato definido. Em **24 de fevereiro de 2026**, em primeiro papo direto entre Heitor Miranda e o fundador Guga, a iniciativa foi **formalmente incumbida**: Heitor recebeu o mandato de "transformar a forma da Suno trabalhar via IA", conectando criatividade, mídia e martech num sistema operacional interno baseado em inteligência artificial.
 
@@ -81,7 +60,7 @@ O sunOS nasceu de forma **embrionária** com a popularização de LLMs (Gemini, 
 - `docs/handoff/PRODUCT_HANDOFF.md`:230, :523
 - Transcrições de reunião do Heitor com William (AI Engineer)
 
-### 1.4. Escopo e Não-Escopo de Negócio
+### 1.3. Escopo e Não-Escopo de Negócio
 
 #### Escopo (In-Scope)
 
@@ -107,12 +86,9 @@ O sunOS nasceu de forma **embrionária** com a popularização de LLMs (Gemini, 
 | **Comercialização externa, white-label, SaaS** | Decisão estratégica explícita do sponsor — sunOS é **100% interno** |
 | **Atender clientes externos diretamente** | sunOS amplifica creators internos; não é produto de fachada nem ferramenta entregue ao cliente |
 | **Substituir ferramentas de mercado adotadas** (Adobe Firefly, Sprinklr, etc.) | sunOS é uma camada de inteligência coletiva e governança, não substituto operacional dessas ferramentas |
-| **Produto externo para SMB** | Existe um produto separado chamado **Toolbox**, sob responsabilidade do sócio Takai (Mídia), com escopo, roadmap e modelo de negócio independentes do sunOS |
 | **Substituir CRMs ou ERPs do grupo** | sunOS é camada cross-domínio, não plataforma transacional |
 | **Atuar como ferramenta de billing/financeiro** | Há sistemas dedicados (iClips, Operand, etc.) |
 | **Mover atividades de produção tradicionais (gráfica, mídia exterior)** | Foco do sunOS é o trabalho intelectual e digital |
-
-**Fontes**: confirmações Q10, Q11 do briefing; ajuste sobre Toolbox (mercado SMB com Takai como produto separado).
 
 ---
 
@@ -125,18 +101,16 @@ O sunOS nasceu de forma **embrionária** com a popularização de LLMs (Gemini, 
 | **OBJ-01** | Reduzir custo operacional via automação | Automatizar tarefas repetitivas/redutíveis e calcular impacto em horas economizadas × custo médio. Business case em construção (136 atividades catalogadas). | Médio prazo (2026) | Q8 + Transcrição Heitor/William |
 | **OBJ-02** | Liberar talento criativo para alto valor | Reduzir trabalho mecânico e liberar pessoas para se concentrarem em julgamento estratégico, criatividade e relacionamento — em linha com a tese "inteligência artificial + inteligência natural" | Curto prazo (Q2-Q4 2026) | Guga, transcrição reunião sunOS |
 | **OBJ-03** | Centralizar governança e segurança de IA | Eliminar projetos isolados de IA, criar camada única de governança, proteção de IP da Suno e compliance | Curto prazo (em curso) | Q11 |
-| **OBJ-04** | Habilitar accountability total ao cliente | Permitir que todo trabalho criativo e de mídia "mova o ponteiro de negócio" mensurável, tese central do Smart Growth | Médio prazo (2026-2027) | Dossiê executivo Guga |
 | **OBJ-05** | Posicionar Suno como agência ambidestra de referência | Lado esquerdo (criatividade) + lado direito (tech/dados) integrados via sunOS — diferenciação frente a holdings, consultorias e agências AI-native | Longo prazo (2026-2028) | Guga, deck Crescera + transcrição |
 
 ### 2.2. Objetivos Secundários
 
 | ID | Objetivo | Descrição | Benefício adicional |
 |----|----------|-----------|---------------------|
-| **OBJ-S01** | Dobrar receita de projetos | Crescer de R$10M (2024) para R$20M anuais via aceleração com IA | Crescimento financeiro direto |
 | **OBJ-S02** | Acelerar onboarding de creators | Pessoas que chegam à Suno encontram conhecimento estruturado, produzem com qualidade desde o dia 1 | Redução de turnover, recuperação de contexto após saídas |
 | **OBJ-S03** | Criar cultura organizacional AI-augmented | Letramento em IA transversal, com skills compartilhadas e padronizadas | Vantagem cultural sustentável |
 
-### 2.3. KPIs e Métricas de Sucesso (propostos — a validar)
+### 2.3. KPIs e Métricas de Sucesso (a validar no Comitê Executivo)
 
 | KPI | Descrição | Baseline | Meta | Prazo | Status |
 |-----|-----------|----------|------|-------|--------|
@@ -147,44 +121,83 @@ O sunOS nasceu de forma **embrionária** com a popularização de LLMs (Gemini, 
 | Economia operacional | % redução em tarefas repetitivas | N/D | 30% | Q4 2027 | Proposto |
 | Custo evitado anual | R$ economizado em horas redutíveis | N/D | A definir | 2027 | Em construção |
 
-> **Nota crítica**: KPIs estão como **propostas, ainda não validadas**. O business case formal está em construção pelo Heitor Miranda em parceria com Ronaldo Severino (CFO). Atualizar este BRD assim que houver validação.
-
-**Fontes**: `docs/handoff/PRODUCT_HANDOFF.md`:359-365, confirmação Q13 do briefing.
+> **Status**: KPIs serão validados na apresentação ao **Comitê Executivo** (Guga + Sponsors + Heitor). Business case formal em construção com Ronaldo Severino (CFO). Atualizar este BRD com metas confirmadas após apresentação.
 
 ---
 
 ## 3. Stakeholders
 
-### 3.1. Stakeholders Internos
+### 3.1. Estrutura de Governança Operacional do sunOS
 
-#### 3.1.1. Sponsor e Direção do Projeto
+O sunOS opera sob um modelo de governança em três camadas, formalizado pelo sponsor executivo (Guga Ketzer) nas reuniões de 07/05 e 14/05/2026. A estrutura existe para permitir que um time técnico não dedicado escale entrega de valor para todo o grupo United Creators, sem virar gargalo e sem perder accountability por área.
 
-| Pessoa | Cargo | Papel no projeto |
-|--------|-------|------------------|
-| **Guga (José Augusto Ketzer)** | Fundador / Presidente da Suno United Creators | Sponsor executivo, mandatário do projeto, decisões estratégicas finais. Reuniões semanais (terças) com Heitor |
-| **Heitor Miranda** | Diretor Executivo, Tecnologia e Dados para Marketing | Líder do projeto, arquiteto, direção técnica e estratégica. Mandato formalizado em 24/02/2026 |
+#### 3.1.1. Sponsor (sócio responsável por área)
 
-#### 3.1.2. Time de Desenvolvimento (não dedicação 100%)
+Sócio responsável por desenhar a arquitetura de automações da sua área de atuação no sunOS, e cobrado diretamente pelo Guga sobre o resultado. Não é executor. É o "arquiteto da obra" que valida o fluxo, aprova workflows propostos pelos Builders, e responde por adoção e impacto na sua área.
 
-⚠️ **Importante**: nenhum membro do time é integralmente dedicado ao sunOS. Todos compartilham com responsabilidades operacionais em outras frentes (clientes, plataforma, etc.).
+| Área | Sponsor |
+|------|---------|
+| Mídia | Leonardo Takai / César Toledo |
+| BI | Leonardo Takai / César Toledo  |
+| Martech / Dados / Growth | Heitor Miranda |
+| Planejamento | Cíntia / Sérgio Katz  |
+| Criação | Bruno Prosperi |
+| Operações | Elton |
+| Produção | Ana Luísa Andre |
+| Financeiro | Ronaldo Severino |
+| RH | Ronaldo Severino |
+| Contabilidade | Ronaldo Severino |
 
-| Pessoa | Papel | Foco |
-|--------|-------|------|
-| Heitor Miranda | Tech Lead | Arquitetura, direção técnica, specs |
-| José Lucas (Zé) | Dev Lead | Plataforma, frontend/backend, infraestrutura |
-| William (Carioca) | AI Engineer | Arquitetura de agents, eval, harness — apoio remoto durante mestrado em AI na Escócia |
-| Fabinho | Dev | Auxiliar do Zé, construção, em capacitação ativa em AI |
-| Yuri | Process / Design | Mapeamento de processos, UX, entrevistas com lideranças do grupo |
+> Notas:
+> - Áreas administrativas (Financeiro, RH, Contabilidade) têm o mesmo sponsor (Ronaldo Severino) mas operam como linhas separadas para fins de mapeamento de processos e builders.
 
-#### 3.1.3. Patrocinadores Sócio (não-operacionais)
+Princípio operacional: "se o arquiteto não tiver presente na obra, não vai sair" (Guga, 07/05/2026).
 
-| Pessoa | Cargo | Papel |
-|--------|-------|-------|
-| **Bruno Prosperi** | Sócio (Criação) | Patrocinador — voz da criação na evolução do produto, fornece direção estratégica para skills criativos. NÃO atua na operação do sunOS |
-| **Leonardo Yukio Takai** | Sócio (Mídia) | Patrocinador — voz da mídia na evolução do produto. Também owner do produto separado **Toolbox** (mercado SMB). NÃO atua na operação do sunOS |
-| **Ronaldo Severino** | Sócio (CFO) | Patrocinador — voz do financeiro na evolução do produto. Co-construtor do business case (horas economizadas × custo médio) em parceria com Heitor. NÃO atua na operação do sunOS |
+#### 3.1.2. Builder (mão na massa por área)
 
-#### 3.1.5. Aprovadores (papel funcional, não nominal)
+Profissional sênior ou pleno da área que executa fluxos desenhados pelo Sponsor, valida que funcionam no dia a dia, e alimenta o Time Central com feedback de uso real. Não é necessariamente o líder da área. É a pessoa com afinidade pelo tema e disposição para ser referência operacional. Cada área tem 1 a 4 Builders, dependendo do volume e complexidade dos processos mapeados.
+
+Builders confirmados em 14/05/2026:
+
+| Área | Builders |
+|------|-----------|
+| Mídia | Bruna, Renata, Wagner, Carol, Fabio |
+| BI | Caetano, Milu, Thalles |
+| Operações | Rafael Zanardo Chammas|
+| Financeiro | João Drumond |
+| RH | Alessandra Pasquino |
+| Contabilidade | Vagner Silva |
+| Planejamento | Philippe Guimarães Gava |
+| Criação | A definir (Sponsor Bruno Prosperi vai propor) |
+| Produção | A definir (Sponsor Ana Luísa Andre vai propor) |
+
+#### 3.1.3. Time Central (provedor de infra e componentes)
+
+Time técnico liderado por Heitor Miranda. Provê: infraestrutura GCP, componentes reutilizáveis (Skills, Tools, Workflows base), governança técnica (RBAC, auditoria, segurança), e desenvolvimento de novas features de plataforma. Não constrói automações setoriais sob demanda. Esse trabalho fica com Builders, usando componentes do Time Central.
+
+Composição atual:
+
+| Pessoa | Papel |
+|--------|-------|
+| Heitor Miranda | Líder técnico e estratégico |
+| José Lucas | Engenheiro — Backend, agentes e infraestrutura de IA |
+| Wilian Wayne | Engenheiro — Engenharia de IA e desenvolvimento |
+| Mayra Otsuka | Gestão de Projeto e delivery |
+| Iuri Pereira dos Reis Santos | Dev Junior |
+| Fabio Marques Melo de Oliveira | Dev Junior |
+
+#### 3.1.4. Rituais de governança
+
+Quatro cadências formais sustentam o modelo:
+
+| Ritual | Cadência | Participantes | Pauta principal |
+|--------|----------|---------------|-----------------|
+| Comitê de Produto sunOS | Mensal | Guga + Sponsors + Heitor | Priorização, releases, KPIs (custo evitado, adoção) |
+| Roundtable de Sponsors | Quinzenal | Sponsors + Heitor (sem Guga) | Conflitos de prioridade, dependências cruzadas |
+| Builder Sync | Semanal | Builders + Time Central | Feedback de uso, ajustes táticos, novos workflows |
+| Demo semanal com Guga | Semanal | Heitor + Guga | Acompanhamento contínuo (já existe) |
+
+#### 3.1.5. Aprovadores
 
 Com a chegada do fluxo de Aprovação Hierárquica (BR-017), o sunOS materializa a hierarquia interna da Suno. Aprovadores são **superiores diretos de creators** que recebem submissões pré-validadas por agentes para decisão final. **Não é um cargo novo** — é um papel funcional desempenhado por sócios, líderes de área e seniores conforme a hierarquia configurada.
 
@@ -195,15 +208,6 @@ Com a chegada do fluxo de Aprovação Hierárquica (BR-017), o sunOS materializa
 | Hierarquia configurável | RN-026 — admin mantém mapa creator → aprovador por área/cliente |
 | Fallback | Se aprovador inativo, sistema escala para líder da área e alerta admin |
 
-#### 3.1.4. Champions (em definição)
-
-A estrutura de champions distribuídos pelas áreas, recomendada pelo Heitor, está em curso de implementação:
-
-| Área | Champions identificados | Status |
-|------|------------------------|--------|
-| Mídia | Gus, Teda (do time do sócio Takai) | Em onboarding |
-| Outras áreas | Le | Estabelecido |
-| Demais áreas | A definir | Mapeamento em curso com Yuri |
 
 ### 3.2. Times Consumidores
 
@@ -286,7 +290,7 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 | **REST-05** | Patrocínio executivo concentrado em sponsor único (Guga) | Mudanças na liderança da Suno United Creators podem afetar continuidade do projeto |
 | **REST-06** | Diretriz interna de proteção de IP da Suno ("vendemos ideias na essência") | Tudo o que codifica a inteligência proprietária da Suno (skills, prompts, knowledge curado) deve permanecer fechado, mesmo internamente — restrição que afeta arquitetura e UX |
 | **REST-07** | Integração Google Drive é exclusivamente read-only | RN-027 — sunOS não escreve, deleta ou move arquivos do Drive em hipótese alguma. Curadoria por agentes é sugestiva (RN-029); humano executa |
-| **REST-08** | Consentimento contratual cliente-a-cliente para dados no Drive | LGPD — cliente individual pode ser excluído da integração se contrato/política exigir. Default: opt-in, não opt-out |
+| **REST-08** | Integração Drive limitada ao Drive interno da Suno | Escopo alterado em 14/05/2026 (BR-018 v2). Integração opera exclusivamente no Drive corporativo da Suno United Creators. Não há integração com Drives externos de clientes nesta fase. Consentimento contratual segue a relação cliente-agência padrão, sem cláusulas específicas de IA exigidas por integração externa. Revisão se cenário de integração externa for reaberto |
 | **REST-09** | Aprovador final é sempre humano | RN-024 — sunOS não pode aprovar autonomamente, mesmo com Validation Report 100% positivo |
 
 ### 5.2. Premissas Identificadas
@@ -295,7 +299,8 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 |----|----------|-----------------|
 | **PRE-01** | LLMs continuarão a evoluir e barateando | Aumento inesperado de custo, dependência de fornecedores |
 | **PRE-02** | Adoção pelo time precisa ser cultural, não imposta | Sem adoção, ROI não se materializa |
-| **PRE-03** | Dados de cliente podem ser utilizados em IA com consentimento implícito da relação cliente-agência | LGPD ou exigência de cliente pode forçar revisão futura |
+| **PRE-03a** | Dados de trabalho regular (briefings, materiais de campanha, referências) podem ser utilizados em IA com consentimento implícito da relação cliente-agência | LGPD ou exigência de cliente pode forçar revisão futura |
+| **PRE-03b** | Gravação de áudio/vídeo de reuniões (FA-16 Captura Seletiva) exige **consentimento explícito** dos participantes — não se aplica o regime de PRE-03a. RN-031 materializa isso como garantia técnica (opt-in obrigatório). Base legal: LGPD Art. 7 (consentimento como fundamento para dados pessoais sensíveis como voz) | Captura de reuniões sem consentimento explícito viola LGPD — regime diferente do PRE-03a |
 | **PRE-04** | Heitor Miranda permanece dedicado à liderança do projeto | Risco de descontinuidade e perda de contexto |
 | **PRE-05** | Big techs (Google, Adobe, etc.) continuam relação favorável com a Suno | Bloqueio de acesso a APIs ou aumento de custo |
 | **PRE-06** | A diretriz interna de proteção de IP é aceita pelos clientes (não há cláusulas contratuais explícitas vetando IA externa) | Cliente individual pode exigir restrições; tratar caso a caso |
@@ -311,7 +316,7 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 
 | Risco | Prob. | Impacto | Mitigação |
 |-------|-------|---------|-----------|
-| Adoção lenta por resistência cultural | Média | Alto | Champions em cada área, testes com 3-5 users antes de rollout, treinamento contínuo |
+| Adoção lenta por resistência cultural | Média | Alto | Builders em cada área, testes com 3-5 users antes de rollout, treinamento contínuo |
 | API keys de IA não disponíveis ou caras | Média | Alto | Fallback para mock em todas as features (já implementado em SPEC-001/002/003) |
 | Custo de LLM escalar com uso | Alta | Médio | Gemini Flash como padrão (barato), rate limits por workflow, MLflow tracing para detectar abusos |
 | Time pequeno e não-dedicado limita evolução | Alta | Alto | Workflow Builder empodera outros times, descentraliza demanda; SDD documenta tudo para acelerar onboarding |
@@ -334,7 +339,7 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 ### 6.3. Possíveis Mitigadores Transversais
 
 - **Spec-Driven Development (SDD)**: skill `sdd-koro` está em uso ativo; cada feature crítica tem 5 artefatos (constitution, spec, design, plan, tasks) antes da implementação
-- **Champions distribuídos**: empoderar 1 pessoa por área para reduzir dependência do time central
+- **Builders distribuídos**: empoderar 1 pessoa por área para reduzir dependência do time central
 - **Demos semanais com sponsor**: cadência fixa que mantém visibilidade e mitiga risco de descontinuidade
 
 ---
@@ -349,7 +354,6 @@ O sunOS organiza, em uma plataforma única, capacidades de negócio que hoje est
 | **DEC-02** | Workflows entram em produção em Phase 1 ou só pilotos? | Heitor + Sponsor | Q2 2026 |
 | **DEC-03** | Diretrizes formais de uso de IA com clientes (mesmo que internas) | Diretoria | Q3 2026 |
 | **DEC-04** | Critério de inclusão de novos clientes/contas no sunOS | Heitor + Atendimento | Em curso |
-| **DEC-05** | Estratégia de eventual sinergia com Toolbox (produto Takai) | Heitor + Takai | Q4 2026 |
 | **DEC-06** | Budget formal para Phase 16 (Editor, VideoGen) — Fabric.js + Vertex AI | Guga + Ronaldo | Q2 2026 |
 
 ### 7.2. Informações a Confirmar
@@ -365,7 +369,7 @@ Nenhum conflito explícito identificado neste momento. As tensões mapeadas no b
 
 | Tensão potencial | Resolução |
 |------------------|-----------|
-| Uso interno-only vs. eventual produtização para SMB | Resolvido: sunOS = 100% interno; produto SMB ocorre separadamente sob a marca **Toolbox** (Takai) |
+| Uso interno-only vs. eventual produtização para SMB | Resolvido: sunOS = 100% interno. Produtização para mercado externo está fora do escopo do projeto. |
 | Tutela técnica vs. ownership cross-grupo | Resolvido: Heitor tutela tecnicamente; sponsorship é do Guga; uso é cross-grupo |
 | AI substitui pessoas vs. amplifica pessoas | Resolvido: princípio fundador "inteligência artificial + inteligência natural" |
 
@@ -376,8 +380,16 @@ Nenhum conflito explícito identificado neste momento. As tensões mapeadas no b
 | Versão | Data | Mudança |
 |--------|------|---------|
 | 1.0 | 2026-04-28 | Versão inicial baseada em PRODUCT_HANDOFF.md, transcrições de reuniões, deck Crescera SmartGrowth, materiais de research, dossiê executivo Guga Ketzer e confirmações Q1-Q20 + Q3a, Q7a, Q11a do briefing |
-| 1.1 | 2026-04-28 | Correções de revisão do Heitor: (a) Champions Gus e Teda são de Mídia, não Criação; (b) Ronaldo Severino reposicionado como Patrocinador Sócio (CFO), não como champion; (c) Stakeholder externo investidor anonimizado para "(a definir)"; (d) Seção 4.2 reescrita em linguagem de negócio (capacidades, não fases técnicas); (e) Seção 4.3 (Relação com sistemas) removida — é tratada em outros artefatos; (f) Seção 5.1 limpa — restrições técnicas e de stack movidas para escopo de SRD/PRD; mantidas apenas restrições de negócio puras |
+| 1.1 | 2026-04-28 | Correções de revisão do Heitor: (a) Builders Gus e Teda são de Mídia, não Criação; (b) Ronaldo Severino reposicionado como Patrocinador Sócio (CFO), não como builder; (c) Stakeholder externo investidor anonimizado para "(a definir)"; (d) Seção 4.2 reescrita em linguagem de negócio (capacidades, não fases técnicas); (e) Seção 4.3 (Relação com sistemas) removida — é tratada em outros artefatos; (f) Seção 5.1 limpa — restrições técnicas e de stack movidas para escopo de SRD/PRD; mantidas apenas restrições de negócio puras |
 | 1.2 | 2026-04-28 | **+ Aprovadores como papel funcional** em §3.1.5 (não cargo novo — sócios/líderes assumem). **+ 3 restrições** (REST-07 Drive read-only · REST-08 consentimento cliente-a-cliente · REST-09 aprovador sempre humano). Pedido Guga + Bruno Prosperi para fluxo de Aprovação Hierárquica e integração Google Drive |
+| 1.3 | 2026-05-14 | §3.1 reescrito com modelo Sponsor-Builder-Time Central formalizado (reuniões 07/05 e 14/05/2026). Tabelas de Sponsors e Builders confirmados. REST-08 reformulado (escopo Drive limitado ao Drive interno da Suno, BR-018 v2). |
+| 1.4 | 2026-05-14 | **PRE-03 dividida** em PRE-03a (dados de trabalho regular, consentimento implícito) e PRE-03b (gravação de reuniões, consentimento explícito obrigatório — LGPD Art. 7, alinhado a RN-031 e FA-16). |
+| 1.5 | 2026-05-15 | KPIs §2.3 — validação agendada para apresentação ao Comitê Executivo (não bloqueante). Título da seção e nota atualizados para refletir status real. |
+| 1.6 | 2026-05-17 | **§3.1.3**: time de desenvolvimento documentado formalmente com nomes completos e papéis individuais. |
+| 1.7 | 2026-05-18 | **§2.2**: OBJ-S01 (Dobrar receita de projetos) removido dos objetivos secundários. |
+| 1.8 | 2026-05-18 | **§1 reestruturado**: seção §1.2 (Contexto da BU) removida. Seções renumeradas. |
+| 1.9 | 2026-05-18 | **§2.1**: OBJ-04 (Habilitar accountability total ao cliente) removido dos objetivos principais. |
+| **2.0** | **2026-05-18** | **§7.1 + §7.3**: todas as menções ao Toolbox removidas por decisão do Heitor Miranda. DEC-05 removida. |
 
 ---
 
@@ -386,5 +398,5 @@ Nenhum conflito explícito identificado neste momento. As tensões mapeadas no b
 **Próximos passos**:
 1. Revisar Parte 1 com Heitor Miranda
 2. Apresentar para Guga em reunião semanal (terça)
-3. Iniciar Parte 2 (Glossário) com termos como United Creators, Smart Growth, Bioma Zero/Job/Agenting, Skill, Moon, HITL, Champion, Toolbox, Inteligência Natural
+3. Iniciar Parte 2 (Glossário) com termos como United Creators, Smart Growth, Bioma Zero/Job/Agenting, Skill, Moon, HITL, Builder, Inteligência Natural
 4. Em paralelo, finalizar business case (horas × custo) com Ronaldo

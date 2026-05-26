@@ -161,7 +161,6 @@ async def generate_image_endpoint(request: ImageGenRequest) -> ImageGenResponse:
         raise HTTPException(status_code=500, detail="Image generation failed")
 
 
-@router.get("/chat/conversations")
-async def list_conversations():
-    """List conversations. Placeholder — needs DB session dependency."""
-    return {"conversations": []}
+# NOTE: /api/conversations is handled by chat.conversations.router (Phase 11).
+# The placeholder endpoint previously here has been replaced by the full
+# implementation in chat/conversations/router.py.

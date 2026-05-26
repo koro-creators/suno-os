@@ -160,6 +160,31 @@ from tools.router import router as tools_router
 
 app.include_router(tools_router, prefix=settings.API_PREFIX)
 
+# Mount conversations router (Phase 11 — conversation persistence)
+from chat.conversations.router import router as conversations_router
+
+app.include_router(conversations_router, prefix=settings.API_PREFIX)
+
+# Mount drive router (Phase 18 — SPEC-006 FA-14 Drive scaffolding)
+from drive.router import router as drive_router
+
+app.include_router(drive_router, prefix=settings.API_PREFIX)
+
+# Mount onboarding router (Phase 19 / SPEC-015 — Oráculo do Cliente)
+from onboarding.router import router as onboarding_router
+
+app.include_router(onboarding_router, prefix=settings.API_PREFIX)
+
+# Mount approval router (Phase 20 — SPEC-004 / FA-13 Aprovação Hierárquica)
+from approval.router import router as approval_router
+
+app.include_router(approval_router, prefix=settings.API_PREFIX)
+
+# Mount meetings router (Phase 21 — SPEC-016 Captura Seletiva de Reunioes)
+from reunioes.router import router as reunioes_router
+
+app.include_router(reunioes_router, prefix=f"{settings.API_PREFIX}/meetings")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():

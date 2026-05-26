@@ -3,14 +3,14 @@ documento: UX Parte 1 — Inventário de Telas
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.3
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-15
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 fonte_prd:
-  - docs/prd/parte1-feature-map.md (FA-01 a FA-12)
-  - docs/prd/parte2-personas-jtbd.md (PX-01 a PX-05)
+  - docs/prd/parte1-feature-map.md (FA-01 a FA-16)
+  - docs/prd/parte2-personas-jtbd.md (PX-01 a PX-08)
 fonte_brd:
   - docs/brd/parte2-glossario.md (vocabulário Sistema Solar, Sun, Planeta, Órbita, Moon, Skill, Biblioteca, Workflow, Caixa-preta)
   - docs/brd/parte4-regras.md (RN-009 RBAC, RN-011 Caixa-preta operacional, RN-014 marcação Faísca, RN-016 vocabulário, RN-017 track por carreira)
@@ -19,7 +19,7 @@ fonte_ux:
 fonte_codigo:
   - app/ (rotas Next.js 14 implementadas)
   - components/ (componentes existentes)
-total_telas: 33 (T-01 a T-33); 18 existentes / 15 a construir
+total_telas: 39 (T-01 a T-39); 18 existentes / 21 a construir
 aprovacoes:
   - area: Tecnologia e Dados para Marketing
     aprovador: Heitor Miranda
@@ -33,9 +33,9 @@ aprovacoes:
 
 # UX Parte 1 — Inventário de Telas sunOS v1.0
 
-**Data:** Abril 2026
+**Data:** Maio 2026
 **Autor:** Heitor Miranda + Claude (assistido)
-**Versão:** 1.0
+**Versão:** 1.3
 **Status:** Especificação (mistura de telas existentes + a construir + em refactor)
 **Objetivo:** Catalogar todas as telas do sunOS (T-XX), mapeando para Features (FA-XX), Personas (PX-XX) e Jornadas (JN-XX); descrever propósito, estado e identificar lacunas.
 **Filosofia:** *"Sistema Solar como navegação; Caixa-preta como princípio; Faísca como vocabulário visual."*
@@ -47,7 +47,7 @@ aprovacoes:
 1. [Visão Geral e Mapeamento](#1-visão-geral-e-mapeamento)
 2. [FA-06 Sistema Solar (Navegação)](#2-fa-06--sistema-solar-navegação)
 3. [FA-04 Chat com Agentes ReAct](#3-fa-04--chat-com-agentes-react)
-4. [FA-02 Shoot for the Moon (Provocação Criativa)](#4-fa-02--shoot-for-the-moon)
+4. [FA-02 Moon Shot (Provocação Criativa)](#4-fa-02--moon-shot)
 5. [FA-12 Admin Areas (CRUD configurável)](#5-fa-12--admin-areas-crud-configurável)
 6. [FA-01 Biblioteca (Inteligência Coletiva)](#6-fa-01--biblioteca-inteligência-coletiva)
 7. [FA-05 Workflows Automatizados](#7-fa-05--workflows-automatizados)
@@ -68,7 +68,7 @@ aprovacoes:
 Este documento especifica o **inventário completo de telas (T-XX)** do sunOS — sistema operacional de IA da Suno United Creators — cobrindo:
 
 - **Telas existentes** (estado: `existe`) — já implementadas em `app/` e em produção/staging
-- **Telas a construir** (estado: `a construir`) — necessárias para features ainda não implementadas (FA-02 Shoot for the Moon, FA-08 Phase 16 multimodal, FA-10 Mensuração, FA-11 Safety, FA-09 RBAC operacional, FA-01 captura proativa)
+- **Telas a construir** (estado: `a construir`) — necessárias para features ainda não implementadas (FA-02 Moon Shot *(Momento 2)*, FA-08 Phase 16 multimodal, FA-10 Mensuração, FA-11 Safety, FA-09 RBAC operacional, FA-01 captura proativa, FA-13 Aprovação Hierárquica *(Momento 2)*, FA-16 Captura Seletiva *(Momento 2)*)
 - **Telas em refactor** (estado: `em refactor`) — existem mas precisam evoluir (ex: ChatSession persistência, Sistema Solar com sincronização de Admin)
 
 Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Parte 2). Jornadas JN-XX são inferidas de personas + JTBDs (Parte 3 do PRD ainda não escrita formalmente; mapeamento provisório no §12).
@@ -82,9 +82,9 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 | T-03 | Sistema Solar L1 (Planeta/Cliente) | FA-06 | Todas | JN-00 | existe | P0 |
 | T-04 | Sistema Solar L2 (Órbita/Skill) | FA-06 | Todas | JN-00 | existe | P0 |
 | T-05 | Chat (Skill + Moon ativos) | FA-04 | PX-02, PX-03, PX-04, PX-05 | JN-02, JN-03, JN-04 | existe (em refactor para persistência P1) | P0 |
-| T-06 | Shoot for the Moon — Acionamento Modal | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | P0 (POC) |
-| T-07 | Shoot for the Moon — Painel de Faíscas | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | P0 (POC) |
-| T-08 | Shoot for the Moon — Modo Dupla (time-boxing) | FA-02 | PX-02 | JN-02, JN-06 | a construir | P1 (Piloto) |
+| T-06 | Moon Shot — Acionamento Modal | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | M2 (Momento 2) |
+| T-07 | Moon Shot — Painel de Faíscas | FA-02 | PX-02, PX-04, PX-05 | JN-02, JN-04, JN-06 | a construir | M2 (Momento 2) |
+| T-08 | Moon Shot — Modo Dupla (time-boxing) | FA-02 | PX-02 | JN-02, JN-06 | a construir | M2 (Momento 2) |
 | T-09 | Forced Reflection Interstitial | FA-11, FA-07 | PX-02, PX-05 | Transversal | a construir | P1 (Piloto) |
 | T-10 | Skills Admin — Catálogo | FA-12, FA-03 | PX-01 | JN-01 | existe | P0 |
 | T-11 | Skills Admin — Editor (4 tabs) | FA-12, FA-03 | PX-01 | JN-01 | existe | P0 |
@@ -97,28 +97,36 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 | T-18 | Clientes Admin — Editor (4 tabs) | FA-12 | PX-01 | JN-01 | existe | P0 |
 | T-19 | Clientes Admin — Novo Cliente | FA-12 | PX-01 | JN-01 | existe | P0 |
 | T-20 | Workflows Admin — Catálogo | FA-12, FA-05 | PX-01, PX-03 | JN-07 | existe | P0 |
-| T-21 | Workflows Admin — Builder | FA-12, FA-05 | PX-01, PX-03 | JN-07 | existe | P0 |
+| T-21 | Workflows Admin — Builder (Canvas Drag-and-Drop, ADR-003) | FA-12, FA-05 | PX-01, PX-07, PX-08 | JN-07, JN-16 | em refactor (ADR-003) | P0/P3 |
 | T-22 | Workflows Admin — Novo Workflow | FA-12, FA-05 | PX-01, PX-03 | JN-07 | existe | P0 |
 | T-23 | Workflows Admin — Histórico de Execuções | FA-05, FA-10 | PX-01, PX-03 | JN-07 | existe | P0 |
 | T-24 | Mensuração — Dashboard Executivo | FA-10 | PX-01 | JN-08 | a construir | P1 (Piloto) |
 | T-25 | Mensuração — Skill Health Detail | FA-10, FA-03 | PX-01 | JN-08 | a construir | P1 (Piloto) |
-| T-26 | Mensuração — Homogeneização Coletiva | FA-10, FA-11 | PX-01 | JN-08 | a construir | P2 (MVP) |
+| T-26 | Mensuração — Homogeneização Coletiva | FA-10, FA-11 | PX-01 | JN-08 | a construir | M2 (Momento 2) |
 | T-27 | Onboarding — Track por Carreira | FA-11 | PX-02, PX-05 | JN-09 | a construir | P1 (Piloto) |
 | T-28 | Design System (referência interna) | FA-12 | Devs/Designers | — | existe | P0 |
-| T-29 | Aprovação — Inbox do Aprovador | FA-13 | PX-06 (Aprovador), PX-01 | JN-11 | a construir | P1 (Piloto) |
-| T-30 | Aprovação — Detalhe da Submissão | FA-13 | PX-06, PX-01, PX-02, PX-03 | JN-11 | a construir | P1 (Piloto) |
-| T-31 | Aprovação — Submeter para Aprovação (modal) | FA-13 | PX-02, PX-03, PX-04 | JN-11 | a construir | P1 (Piloto) |
-| T-32 | Drive — Sync Dashboard (estado + cleanup reports) | FA-14 | PX-01 | JN-12 | a construir | P1 (Piloto) |
-| T-33 | Drive — Inbox de Sugestões de Curadoria | FA-14 | PX-01 | JN-12 | a construir | P1 (Piloto) |
+| T-29 | Aprovação — Inbox do Aprovador | FA-13 | PX-06 (Aprovador), PX-01 | JN-11 | a construir | M2 (Momento 2) |
+| T-30 | Aprovação — Detalhe da Submissão | FA-13 | PX-06, PX-01, PX-02, PX-03 | JN-11 | a construir | M2 (Momento 2) |
+| T-31 | Aprovação — Submeter para Aprovação (modal) | FA-13 | PX-02, PX-03, PX-04 | JN-11 | a construir | M2 (Momento 2) |
+| T-32 | Drive Suno — Sync Dashboard (estado + cleanup reports) | FA-14 | PX-01 | JN-12 | a construir | P1 (Piloto) |
+| T-33 | Drive Suno — Inbox de Sugestões de Curadoria | FA-14 | PX-01 | JN-12 | a construir | P1 (Piloto) |
+| T-34 | Onboarding — Wizard de Cadastro Cliente (4 passos) | FA-15 | PX-07, PX-01 | JN-13 | a construir | P2 (Piloto) |
+| T-35 | Onboarding — Progresso Seed Oráculo do Cliente | FA-15 | PX-07, PX-01 | JN-13 | a construir | P2 (Piloto) |
+| T-36 | Onboarding — Validação Entidade-a-Entidade (HITL) | FA-15 | PX-07, PX-01 | JN-13 | a construir | P2 (Piloto) |
+| T-37 | Captura — Modal "Iniciar Captura" (opt-in por reunião) | FA-16 | PX-03, PX-02, PX-04, PX-05 | JN-14 | a construir | M2 (Momento 2) |
+| T-38 | Captura — Revisão de Transcrição + Wiki Ontológica HITL | FA-16 | PX-01, PX-07 | JN-14 | a construir | M2 (Momento 2) |
 
-> **Convenções:** P0 = essencial Protótipo/Piloto; P1 = Piloto; P2 = MVP. Todas as telas obedecem RN-009 (RBAC) e RN-011 (Caixa-preta para Operacional).
+| T-39 | Wiki Ontológica — Painel de Entidades do Cliente | FA-15, BR-021 | PX-07, PX-01 | JN-13, JN-14 | a construir | P2 (Piloto) |
+
+> **Convenções:** P0 = essencial Protótipo/Piloto; P1 = Piloto; P2 = Piloto MVP; M2 = Momento 2 (pós-Piloto). Todas as telas obedecem RN-009 (RBAC) e RN-011 (Caixa-preta para Operacional).
 
 ### 1.3 Estado de Implementação (Resumo)
 
 | Estado | Total | T-XX |
 |--------|:-----:|------|
-| **Existe** | 18 | T-01, T-02, T-03, T-04, T-05, T-10, T-11, T-12, T-13, T-14, T-15, T-17, T-18, T-19, T-20, T-21, T-22, T-23, T-28 |
-| **A construir** | 15 | T-06, T-07, T-08, T-09, T-16, T-24, T-25, T-26, T-27, T-29, T-30, T-31, T-32, T-33 |
+| **Existe** | 18 | T-01, T-02, T-03, T-04, T-05, T-10, T-11, T-12, T-13, T-14, T-15, T-17, T-18, T-19, T-20, T-22, T-23, T-28 |
+| **Em refactor** | 1 | T-21 (ADR-003 — canvas drag-and-drop) |
+| **A construir** | 20 | T-06, T-07, T-08, T-09, T-16, T-24, T-25, T-26, T-27, T-29, T-30, T-31, T-32, T-33, T-34, T-35, T-36, T-37, T-38, T-39 |
 | **Em refactor** | 1 | T-05 (persistência de conversas — débito P1 do handoff) |
 
 > Nota: T-05 aparece em "existe" e "em refactor" (existe na sua função básica; precisa evoluir para persistência cross-session).
@@ -147,6 +155,11 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 | DO-51 | DriveDocument | FA-14 | T-32, T-33 |
 | DO-53 | CurationSuggestion | FA-14 | T-33 |
 | DO-54 | DriveCleanupReport | FA-14 | T-32 |
+| DO-55 | WikiEntity (entidade ontológica do cliente) | FA-15, BR-021 | T-36, T-38, T-39 |
+| DO-56 | EntityUpdateProposal (proposta de atualização vinda de reunião) | FA-16, BR-021 | T-38, T-39 |
+| DO-57 | ClientSeed (estado PRE_ACTIVE / ACTIVE do onboarding) | FA-15 | T-34, T-35, T-36, T-39 |
+| DO-58 | MeetingCapture (reunião com captura ativada) | FA-16 | T-37, T-38 |
+| DO-59 | MeetingTranscript / TranscriptSegment | FA-16 | T-38 |
 
 ### 1.5 Cobertura por Persona
 
@@ -158,7 +171,9 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 | **PX-04** Planejamento Estratégico | T-05, T-06, T-07, T-20, T-21 | T-02, T-03, T-04 |
 | **PX-05** Creator Junior | T-05, T-06, T-07, T-09, T-27 | T-02, T-03, T-04 |
 | **PX-06** Aprovador (Sócio) | T-29, T-30 | T-02 (read-only ao Sistema Solar para contexto) |
-| **PX-01** Líder/Curador (extensão FA-14) | + T-32, T-33 | — |
+| **PX-01** Líder/Curador (extensão FA-14/15/16) | + T-32, T-33, T-35, T-38 | — |
+| **PX-07** Sponsor de Área | T-34, T-35, T-36, T-38 | T-20, T-21, T-23 |
+| **PX-08** Builder de Área | T-20, T-21, T-22, T-23 | T-05 |
 
 > **RN-011 (Caixa-preta):** T-13 a T-16 (Biblioteca Admin) **NUNCA** aparecem para perfil Operacional — nem como menu, link, breadcrumb, ou destino de URL direta. Operacional acessando `/biblioteca` é redirecionado para `/` com mensagem genérica (sem revelar a existência do recurso).
 
@@ -188,7 +203,7 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 
 **Rotas backlog (estado: a construir):**
 
-- `/[clientSlug]/[skillSlug]/shoot-for-the-moon` — Painel de Faíscas (T-07) [Inferido]
+- `/[clientSlug]/[skillSlug]/moon-shot` — Painel de Faíscas (T-07) [Inferido]
 - `/biblioteca/risco` ou seção dedicada em `/biblioteca` — Alerta Conhecimento em Risco (T-16)
 - `/mensuracao` — Dashboard Executivo (T-24)
 - `/mensuracao/skills/[skillId]` — Skill Health Detail (T-25)
@@ -199,9 +214,10 @@ Toda T-XX é rastreável a ≥1 FA-XX (do PRD Parte 1) e ≥1 PX-XX (do PRD Part
 - `/aprovacoes/configuracao/[clientSlug]` — Config de ApprovalChain (T-30 sub-rota — Admin)
 - `/drive/[clientSlug]` — Sync Dashboard (T-32)
 - `/drive/[clientSlug]/sugestoes` — Inbox de Curadoria (T-33)
+- `/clientes/[clientSlug]/wiki` — Wiki Ontológica — Painel de Entidades (T-39)
 - T-31 é **modal sobreposto** ao Chat (T-05) ou ao Painel de Faíscas (T-07) — não rota dedicada (preserva contexto do output sendo submetido)
 
-> Decisão pendente: Shoot for the Moon vive como **modal sobreposto ao Chat** (T-06 → T-07 in-context) ou como **rota dedicada**? Recomendação UX: modal/painel sobreposto preserva contexto da Skill ativa e atende RN-003 (≤3 cliques). Validar com Bruno Prosperi.
+> Decisão pendente: Moon Shot vive como **modal sobreposto ao Chat** (T-06 → T-07 in-context) ou como **rota dedicada**? Recomendação UX: modal/painel sobreposto preserva contexto da Skill ativa e atende RN-003 (≤3 cliques). Validar com Bruno Prosperi.
 
 ---
 
@@ -277,7 +293,7 @@ JN-00 (Entrada/Wayfinding) — qualquer jornada começa aqui.
 
 #### 2.2.1 Propósito
 
-Tela do cliente. O Planeta torna-se centro local; ao redor dele orbitam as **Skills disponíveis** (Órbitas). Persona todas; objetivo é escolher uma Skill em ≤2 cliques após entrar. Aqui aparece também o atalho **Shoot for the Moon** (FA-02-03 — acionamento contextual).
+Tela do cliente. O Planeta torna-se centro local; ao redor dele orbitam as **Skills disponíveis** (Órbitas). Persona todas; objetivo é escolher uma Skill em ≤2 cliques após entrar. Aqui aparece também o atalho **Moon Shot** (FA-02-03 — acionamento contextual).
 
 #### 2.2.2 Rota
 
@@ -313,7 +329,7 @@ JN-00 (Wayfinding); entrada para JN-02 (ideação), JN-03 (execução), JN-04 (a
 
 3. **FilterPills** (filtra Skills por tipo)
 
-4. **CTA Shoot for the Moon** (FA-02-03 — RN-003)
+4. **CTA Moon Shot** (FA-02-03 — RN-003)
    - Botão flutuante ou na barra superior
    - Variante primary (Sun gradient)
    - Texto: "Devorar este briefing" *(vocabulário Suno; nunca "Gerar ideias")*
@@ -334,7 +350,7 @@ JN-00 (Wayfinding); entrada para JN-02 (ideação), JN-03 (execução), JN-04 (a
 #### 2.2.7 Interações
 
 - Click em Skill → T-04
-- Click em CTA Shoot for the Moon → T-06 (modal sobreposto)
+- Click em CTA Moon Shot → T-06 (modal sobreposto)
 - Hover em Skill → tooltip com descrição curta + score HITL (FA-03-06)
 
 ---
@@ -368,7 +384,7 @@ Esta tela é uma **tela combinada**: header do Sistema Solar + área de Chat (T-
    - Pills selecionáveis representando Moons da Skill
    - Estado ativo: Moon escolhida marcada via `?moon=[moonSlug]`
    - Cor: `--sun` na ativa, `--text-muted` nas inativas
-3. **CTA Shoot for the Moon** persistente no header (atalho contextual — RN-003)
+3. **CTA Moon Shot** persistente no header (atalho contextual — RN-003)
 
 #### 2.3.6 Estados da Tela
 
@@ -377,7 +393,7 @@ Mesmos de T-05.
 #### 2.3.7 Interações
 
 - Click em Moon chip → atualiza query string e re-injeta contexto de Moon
-- Click em CTA Shoot for the Moon → T-06
+- Click em CTA Moon Shot → T-06
 
 ---
 
@@ -387,7 +403,7 @@ Mesmos de T-05.
 
 #### 3.1.1 Propósito
 
-Interface conversacional principal — onde **Creator e IA conversam**. Toda Skill processual e o Shoot for the Moon chegam ao usuário através desta tela. É o ponto de **maior densidade funcional** do sunOS.
+Interface conversacional principal — onde **Creator e IA conversam**. Toda Skill processual e o Moon Shot chegam ao usuário através desta tela. É o ponto de **maior densidade funcional** do sunOS.
 
 #### 3.1.2 Rota
 
@@ -410,7 +426,7 @@ JN-02, JN-03, JN-04, JN-06 — todas as jornadas de uso ativo do Chat.
 1. **Breadcrumb**: `Home > [Cliente] > [Skill]`
 2. **PromptTemplateBar** com Moon chips
 3. **ModelSelector** (FA-04-02): dropdown para trocar Gemini Flash, Pro, GPT-4o, Claude
-4. **CTA Shoot for the Moon** (atalho)
+4. **CTA Moon Shot** (atalho)
 
 **Área Principal — Conversa:**
 
@@ -471,7 +487,7 @@ JN-02, JN-03, JN-04, JN-06 — todas as jornadas de uso ativo do Chat.
 - Click em "Variar" → gera 3 alternativas (FA-04-06)
 - Click em "Salvar" [Inferido — pendente] → adiciona a algum repositório do Creator
 - Drag-and-drop em paperclip → upload de arquivo (SPEC-006)
-- Click em CTA Shoot for the Moon → abre T-06 sobre Chat preservando histórico
+- Click em CTA Moon Shot → abre T-06 sobre Chat preservando histórico
 
 #### 3.1.8 Marcação Faísca (RN-014)
 
@@ -479,9 +495,9 @@ Toda MessageBubble assistant exibe badge com texto "Faísca" / "Estímulo" enqua
 
 ---
 
-## 4. FA-02 — Shoot for the Moon
+## 4. FA-02 — Moon Shot (Momento 2)
 
-### T-06: Shoot for the Moon — Acionamento Modal
+### T-06: Moon Shot — Acionamento Modal
 
 #### 4.1.1 Propósito
 
@@ -504,7 +520,7 @@ JN-02 (ideação contextualizada), JN-04 (análise estratégica → território 
 **Modal centralizado, max-width 600px, bg `--deep`, radius 12px:**
 
 1. **Header do Modal**
-   - Título: "Shoot for the Moon" (com ícone planet)
+   - Título: "Moon Shot" (com ícone planet)
    - Subtítulo: *"Devorar [Cliente] e Provocar Faíscas"* (vocabulário Suno)
    - Botão close (×)
 
@@ -541,7 +557,7 @@ JN-02 (ideação contextualizada), JN-04 (análise estratégica → território 
 
 ---
 
-### T-07: Shoot for the Moon — Painel de Faíscas
+### T-07: Moon Shot — Painel de Faíscas
 
 #### 4.2.1 Propósito
 
@@ -549,7 +565,7 @@ Painel onde o pipeline Explorer↔Crítico (FA-02-01) **transmite Faíscas em st
 
 #### 4.2.2 Rota
 
-Modal/painel sobreposto, ou rota dedicada `/[clientSlug]/[skillSlug]/shoot-for-the-moon` *(estado: a construir; recomendação UX: painel sobreposto preserva contexto)*. **Estado: a construir** (P0 — POC).
+Modal/painel sobreposto, ou rota dedicada `/[clientSlug]/[skillSlug]/moon-shot` *(estado: a construir; recomendação UX: painel sobreposto preserva contexto)*. **Estado: a construir** (P0 — POC).
 
 #### 4.2.3 Jornada
 
@@ -601,7 +617,7 @@ JN-02, JN-04, JN-06.
 
 ---
 
-### T-08: Shoot for the Moon — Modo Dupla (Time-Boxing)
+### T-08: Moon Shot — Modo Dupla (Time-Boxing)
 
 #### 4.3.1 Propósito
 
@@ -864,26 +880,41 @@ JN-07 (configuração e operação de Workflows).
 
 ---
 
-### T-21: Workflows Admin — Builder
+### T-21: Workflows Admin — Builder Canvas (ADR-003)
 
 #### 7.2.1 Propósito
 
-Configurar steps do Workflow visualmente. Sequência de steps tipados (tool, LLM, condição, ação, HITL gate). Compilação para LangGraph StateGraph.
+Canvas visual drag-and-drop para configurar Workflows. Personas **PX-07 (Sponsor de Área)** e **PX-08 (Builder de Área)** constroem automações sem engenharia. Compilação para LangGraph StateGraph no backend. **Em refactor** para ADR-003 (substitui sequência vertical de steps da v1).
 
 #### 7.2.2 Rota
 
-`/workflows/[workflowId]` *(estado: existe)*
+`/workflows/[workflowId]` *(estado: em refactor — ADR-003)*
 
 #### 7.2.3 Elementos
 
 - **Breadcrumb**: `Home > Workflows > [NomeWorkflow]`
-- **Tabs**: Builder · Schedule · Histórico (link para T-23)
-- **Builder (sequência vertical de Steps)**:
-  - StepCard com tipo, nome, configuração; botões + para inserir novo step entre dois
-  - **Tipos de step**: Tool · LLM (escolha de Skill) · Condição (if/else) · Ação (notify, write) · **HITL gate** (pausa para revisor humano)
-  - Encadeamento via sub-workflows (FA-05-04)
-- **Schedule** (cron humanizado): "Diariamente às X" · "Toda segunda às Y" · etc.
-- **Footer**: Salvar (primary), Testar, Arquivar
+- **Tabs**: Builder (canvas) · Schedule · Histórico (link para T-23)
+- **Canvas ReactFlow (ADR-003)**:
+  - **Toolbar de nodes** (paleta lateral): Tool · LLM · Condição · Ação · HITL Gate · Merge · Workflow (sub-workflow)
+  - **7 tipos de nó** — cada um via `NodeShell` com chrome compartilhado (card + handles + ARIA)
+  - **Handles por tipo** (vocabulário ADR-003 obrigatório):
+    - `tool`, `llm`, `action`, `workflow` → source handles: `out`, `error`
+    - `condition` → source handles: `then`, `else`
+    - `hitl` → source handles: `approved`, `rejected`, `modified`
+    - `merge` → source handle: `out`
+    - Todos → target handle: `in`
+  - Arrastar node da paleta → solta no canvas → configura via painel lateral
+  - Conectar handles com drag de edge (validação inline — handle incompatível não conecta)
+  - **Auto-layout** (dagre) via botão "Organizar" — respeita mock-mode (FR-122)
+  - **NodeShell chrome**: cor de borda + ícone Lucide (size 14, strokeWidth 1.5) + preview 1 linha truncada + focus ring `0 0 0 2px rgba(255,200,1,0.15)`
+  - Validator automático ao salvar: detecta handles incorretos, ciclos inválidos, nodes órfãos
+- **Painel de configuração** (lateral direita, slide-in ao selecionar nó):
+  - LLM: selecionar Skill, configurar parâmetros, preview de system prompt (Caixa-preta para Operacional)
+  - Tool: selecionar integração, mapear inputs/outputs
+  - Condição: expression builder (campo text + preview resultado mock)
+  - HITL Gate: selecionar revisor, prazo de espera, ação default (timeout → rejected)
+- **Schedule** (cron humanizado): "Diariamente às X" · "Toda segunda às Y" · trigger por evento
+- **Footer**: Salvar + Compilar (primary), Testar Run (abre modal com input mock), Arquivar
 
 ---
 
@@ -1030,7 +1061,7 @@ Transversal a JN-02, JN-03, JN-06.
 
 #### 9.2.1 Propósito
 
-Primeiro contato do Creator com o sunOS. **Sugere track** conforme estágio (RN-017): junior → "Estou começando uma ideia"; sênior → "Me prova que tá errada"; pleno → escolhe. Persona principal PX-05 (junior); também PX-02 e champions.
+Primeiro contato do Creator com o sunOS. **Sugere track** conforme estágio (RN-017): junior → "Estou começando uma ideia"; sênior → "Me prova que tá errada"; pleno → escolhe. Persona principal PX-05 (junior); também PX-02 e builders.
 
 #### 9.2.2 Rota
 
@@ -1095,7 +1126,7 @@ Component library viva — exibe tokens, componentes, padrões de uso. Não é t
 
 ---
 
-## 11.5. FA-13 — Aprovação Hierárquica
+## 11.5. FA-13 — Aprovação Hierárquica (Momento 2)
 
 ### T-29: Aprovação — Inbox do Aprovador
 
@@ -1234,7 +1265,7 @@ FR-160, FR-161.
 
 ---
 
-## 11.6. FA-14 — Google Drive como Fonte
+## 11.6. FA-14 — Drive Suno como Fonte Curada da Biblioteca
 
 ### T-32: Drive — Sync Dashboard
 
@@ -1323,9 +1354,326 @@ FR-173, FR-174, FR-175, FR-176, FR-177.
 
 ---
 
+## 11.7. FA-15 — Onboarding com Oráculo do Cliente
+
+### T-34: Onboarding — Wizard de Cadastro Cliente
+
+#### 11.7.1 Propósito
+
+Wizard de 4 passos para **Sponsor de Área (PX-07)** cadastrar novo cliente no sunOS. Coletam-se metadados, configura-se o Oráculo do Cliente, conecta-se o Drive Suno interno e dispara-se o seed ontológico em background. Meta: ≤5 minutos de input humano (FR-180).
+
+#### 11.7.2 Rota
+
+`/clientes/new` (ou `/clientes/[clientSlug]/onboarding`) *(estado: a construir — P2 Piloto)*
+
+#### 11.7.3 Personas
+
+PX-07 (Sponsor de Área — inicia e conclui), PX-01 (Admin/Time Central — supervisão).
+
+#### 11.7.4 Jornada
+
+JN-13 (Onboarding de Novo Cliente com Oráculo).
+
+#### 11.7.5 Elementos
+
+**Passo 1 — Metadados do cliente:**
+- Nome do cliente, slug único (auto-gerado, editável), logo (upload opcional)
+- Área responsável (Mídia, Criação, Planejamento, Operações, Produção, Financeiro/RH)
+- Sponsor de Área (preenchido automaticamente pelo usuário logado, confirmável)
+- Champion(s) (multi-select — users com role Champion)
+- Áreas parceiras (checkbox: quais outras áreas têm acesso read)
+- Validação inline: slug único verificado em real-time
+
+**Passo 2 — Configuração do Oráculo:**
+- Toggle "Permitir pesquisa web" (default OFF — RN-033)
+- Se ON: confirmar domínios allow-list (pré-preenchidos com defaults seguros)
+- Descrição em linguagem natural do cliente (para cold-start do Oráculo)
+- ETA estimado: "Seed de 6 entidades leva entre 2h–24h"
+
+**Passo 3 — Drive Suno (OAuth):**
+- Status atual do Drive Suno interno (conectado / não conectado)
+- CTA `Conectar Drive Suno` (OAuth — scope `drive.readonly`, pasta-raiz Suno)
+- Nota: "Apenas Drive interno da Suno. Drives externos de clientes não são conectados." (REST-08 v2)
+- Se já conectado para o workspace: skip com confirmação visual
+
+**Passo 4 — Confirmação e Kickoff:**
+- Resumo dos dados dos 3 passos anteriores (revisão)
+- Checkbox "Confirmar — inicia seed ontológico automaticamente"
+- CTA `Cadastrar Cliente` (primary) — cria cliente em estado `PRE_ACTIVE`, dispara job de seed
+- Redirect para T-35 (Progresso do Seed)
+
+#### 11.7.6 Estados
+
+- **Progresso do wizard**: stepper no topo (1/4 → 2/4 → …); dados de passos anteriores preservados ao navegar para trás
+- **Slug já em uso**: erro inline imediato "Slug já utilizado por [outro cliente]"
+- **Drive não conectado e passo 2 skip**: alerta no passo 4 "Sem Drive conectado — Oráculo usará pesquisa web + dados manuais"
+- **Erro ao criar**: toast + permite tentar novamente sem perder dados
+
+#### 11.7.7 RBAC
+
+Sponsor de Área + Admin/Time Central. Operacional não vê (RN-009/011).
+
+#### 11.7.8 FRs cobertos
+
+FR-180, FR-183 (params Oráculo), FR-181 (kickoff Drive sync).
+
+---
+
+### T-35: Onboarding — Progresso do Seed Oráculo
+
+#### 11.7.9 Propósito
+
+Visibilidade em tempo real do progresso do **Oráculo do Cliente** ao construir as 6 entidades ontológicas do novo cliente. PX-07 e PX-01 acompanham sem precisar de acesso direto ao backend.
+
+#### 11.7.10 Rota
+
+`/clientes/[clientSlug]/onboarding/progresso` *(estado: a construir — P2 Piloto)*
+
+#### 11.7.11 Elementos
+
+- **Header**: nome do cliente + status chip (`PRE_ACTIVE` âmbar com ícone de relógio)
+- **Progress tracker — 6 entidades** (FR-182):
+  1. Perfil do Cliente
+  2. Mercado e Setor
+  3. Concorrentes Diretos
+  4. Personas-Alvo
+  5. Histórico de Campanhas
+  6. Restrições Legais e Contratuais
+
+  Cada entidade: barra de progresso individual + status (Gerando… / Aguardando HITL / Aprovado / Rejeitado)
+
+- **ETA global**: "Estimativa: X horas restantes" (calculado com base no progresso atual)
+- **Alerta de atraso** (FR-185): se alguma entidade está há >48h sem aprovação → banner âmbar "Revisão pendente há Xh — HITL necessário para ativar cliente"
+- **CTA `Revisar Entidades`**: aparece quando ≥1 entidade está em `AGUARDANDO_HITL` → leva para T-36
+- **CTA `Ir para Catálogo`**: link para T-17 (cliente aparece lá como PRE_ACTIVE)
+
+#### 11.7.12 Estados
+
+- **Todas aprovadas**: banner verde "Todas as entidades aprovadas — cliente sendo ativado" → redireciona para T-17 com cliente `ACTIVE`
+- **Erro de seed**: card vermelho por entidade com `last_error` e CTA `Tentar novamente`
+- **Timeout ≥72h** (FR-185): alert persistente com link de escalonamento para Time Central
+
+#### 11.7.13 RBAC
+
+Sponsor de Área + Admin/Time Central.
+
+#### 11.7.14 FRs cobertos
+
+FR-182, FR-184, FR-185.
+
+---
+
+### T-36: Onboarding — Validação Entidade-a-Entidade (HITL)
+
+#### 11.7.15 Propósito
+
+Interface de revisão HITL para o **Sponsor de Área (PX-07)** aprovar ou corrigir cada uma das 6 entidades geradas pelo Oráculo. **Não permite batch acceptance** (RN-032): cada entidade deve ser revisada individualmente. Após todas aprovadas → cliente transita de `PRE_ACTIVE` para `ACTIVE`.
+
+#### 11.7.16 Rota
+
+`/clientes/[clientSlug]/onboarding/validacao` *(estado: a construir — P2 Piloto)*
+
+#### 11.7.17 Elementos
+
+- **Breadcrumb**: `Home > Clientes > [NomeCliente] > Validação Ontológica`
+- **Stepper lateral** (6 entidades): mostra status de cada (PENDENTE / APROVADO / REJEITADO)
+- **Painel central — entidade atual**:
+  - Título da entidade + ícone
+  - Conteúdo gerado pelo Oráculo (≥100 palavras — FR-182)
+  - Seção de proveniência: lista de fontes usadas (URLs allow-list RN-033, documentos Drive)
+  - Campo de edição (textarea) — pré-preenchido com conteúdo gerado; editável antes de aprovar
+- **CTAs por entidade**:
+  - `Aprovar` (primary — salva como está)
+  - `Editar + Aprovar` (abre textarea; salva edição)
+  - `Rejeitar e Regenerar` (dispara novo seed para essa entidade; volta a status GERANDO)
+- **Navegação**: `← Anterior` / `Próxima →` entre entidades; não pode pular entidade PENDENTE
+- **Footer global**: contador "X de 6 aprovadas" + `Concluir Validação` (só habilitado quando 6/6 aprovadas)
+
+#### 11.7.18 Estados
+
+- **Concluir com 6/6 aprovadas**: trigger `PRE_ACTIVE → ACTIVE` (FR-185); toast "Cliente [nome] ativado com sucesso"; redirect para T-17
+- **Rejeitado + regenerado**: entidade volta a GERANDO — progress indicator inline com ETA
+- **Regeneração timeout >24h**: alerta com CTA para contatar Time Central
+
+#### 11.7.19 RBAC
+
+Sponsor de Área + Time Central (admin override). Operacional não vê (RN-011).
+
+#### 11.7.20 FRs cobertos
+
+FR-184, FR-185, RN-032.
+
+---
+
+### T-39: Wiki Ontológica — Painel de Entidades do Cliente
+
+#### 11.7.21 Propósito
+
+Repositório visual das **6 entidades ontológicas** do cliente — pessoas-chave, sistemas, objetivos de negócio, contratos vigentes, jornadas-foco e brand voice — conforme BR-021. Interface centraliza a visualização, edição (HITL) e rastreabilidade de proveniência de cada entidade: de qual reunião, upload de Drive ou input manual ela foi gerada ou atualizada.
+
+#### 11.7.22 Rota
+
+`/clientes/[clientSlug]/wiki` *(estado: a construir — P2 Piloto)*
+
+#### 11.7.23 Personas
+
+PX-01 (Líder/Curador — curadoria completa, aprovação), PX-07 (Sponsor de Área — aprovação de mudanças ontológicas da sua área).
+
+#### 11.7.24 Jornada
+
+JN-13 (Onboarding com Oráculo do Cliente), JN-14 (Captura Seletiva — origem de propostas de atualização).
+
+#### 11.7.25 Elementos
+
+**Seis seções colapsáveis** (uma por entidade ontológica — FR-182):
+
+- **Pessoas-chave**: nome, área, papel, contato; badge de última atualização
+- **Sistemas**: nome, categoria, descrição, integrações relevantes
+- **Objetivos de negócio**: OKRs, KPIs, ciclos de review
+- **Contratos vigentes**: status, vigência, partes, budget (visível só a PX-01/PX-07 — Caixa-preta)
+- **Jornadas-foco**: contexto de uso principal, skills mais acionadas para este cliente
+- **Brand voice**: tom, vocabulário permitido, proibições
+
+**Por entidade:**
+- Badge de origem: `seed automático` / `revisado HITL` / `atualizado via captura [ID reunião]`
+- Botão `Editar` inline: abre textarea com confirmação obrigatória (RN-032 — sem batch acceptance)
+- Link `Ver histórico`: drawer lateral com linha do tempo de aprovações (quem + data)
+
+**Barra de estado do cliente:**
+- Indicador `PRE_ACTIVE` (amarelo) / `ACTIVE` (verde) — gate FR-184
+- Ao clicar: tooltip explicando o que falta para completar a ativação
+
+#### 11.7.26 Estados
+
+- **PRE_ACTIVE**: banner amarelo "Onboarding em progresso — complete todas as entidades para ativar o cliente"
+- **ACTIVE**: badge verde "Oráculo ativo" + data de ativação
+- **Proposta pendente de reunião**: entidades com proposta de atualização pendente de revisão exibem badge laranja "Revisão necessária" com link para T-38
+- **Caixa-preta**: Operacional acessando `/clientes/[slug]/wiki` recebe 404 genérico (RN-011) — não revela existência
+
+#### 11.7.27 RBAC
+
+Admin e Líder (PX-01): acesso completo — visualizar, editar e aprovar. Sponsor de Área (PX-07): visualizar + aprovar mudanças ontológicas (pode editar antes de aprovar). Operacional: caixa-preta 404 (RN-011, RN-009).
+
+#### 11.7.28 FRs cobertos
+
+FR-181, FR-182, FR-183, FR-184 (gate PRE_ACTIVE → ACTIVE), FR-194 (HITL sem auto-merge); RN-032, RN-011.
+
+---
+
+## 11.8. FA-16 — Captura Seletiva de Reuniões (Momento 2)
+
+### T-37: Captura — Modal "Iniciar Captura" (Opt-in)
+
+#### 11.8.1 Propósito
+
+Ponto de entrada para ativar a **Captura Seletiva** de uma reunião específica. **Opt-in obrigatório por reunião** (RN-031): o padrão é OFF. Aciona notificação imediata a todos os participantes antes de iniciar transcrição.
+
+#### 11.8.2 Contexto de acionamento
+
+Modal contextual — pode ser aberto a partir de:
+- Integração com Google Calendar (botão "Capturar no sunOS" no invite)
+- Chat (CTA no contexto de uma Skill com reunião associada)
+- Ação manual em `/reunioes` (se implementado como tela futura)
+
+*(estado: a construir — P2 Piloto)*
+
+#### 11.8.3 Personas
+
+PX-03, PX-02, PX-04, PX-05 (qualquer Creator com acesso à reunião).
+
+#### 11.8.4 Jornada
+
+JN-14 (Captura Seletiva de Reunião).
+
+#### 11.8.5 Elementos
+
+- **Header do modal**: título da reunião (do calendar event) + data/hora + duração
+- **Toggle principal**: "Capturar esta reunião no sunOS" (padrão: OFF, requires explicit click — RN-031)
+- **Lista de participantes**: avatares + nomes extraídos do calendar event; indica quais têm conta sunOS vs. externos
+- **Alerta de conformidade** (FR-191, PRE-03b — LGPD Art. 7): "Todos os participantes serão notificados ≤2 minutos após ativação"
+  - Badge "Participantes externos" se houver — exige **consentimento explícito** (PRE-03b) antes de qualquer transcrição
+  - Tooltip informativo: "Gravação de reuniões requer consentimento de todos os participantes conforme LGPD Art. 7"
+- **Botão `Iniciar Captura`** (primary — aparece só quando toggle ON):
+  - Ao clicar: dispara notificação para todos
+  - Se ≥1 participante falha a receber notificação → modal de erro "Captura bloqueada: notificação não entregue a [nome]" com opção de tentar novamente ou cancelar
+- **Botão `Cancelar`** (secondary — mantém padrão OFF)
+
+#### 11.8.6 Estados
+
+- **Notificação falhou**: não inicia captura; exibe erro com nomes dos participantes afetados (FR-191)
+- **Captura iniciada com sucesso**: modal fecha, toast "Reunião sendo capturada — revisão disponível após encerramento"
+- **Reunião já em andamento vs. futura**: modal adapta copy ("Capturar agora" vs. "Ativar captura para esta reunião")
+
+#### 11.8.7 RBAC
+
+Qualquer Creator autenticado com participação na reunião. Sem restrição de área — a captura é opt-in individual. Supervisor (PX-07) pode ver log de capturas ativadas.
+
+#### 11.8.8 FRs cobertos
+
+FR-190, FR-191, RN-031.
+
+---
+
+### T-38: Captura — Revisão de Transcrição + Wiki Ontológica HITL
+
+#### 11.8.9 Propósito
+
+Interface pós-reunião para **Líder/Curador (PX-01)** e **Sponsor de Área (PX-07)** revisarem a transcrição, a extração estruturada e aprovarem atualizações propostas na Wiki Ontológica. **Sem auto-merge**: toda atualização à ontologia requer aprovação humana (FR-194).
+
+#### 11.8.10 Rota
+
+`/reunioes/[meetingId]/revisao` *(estado: a construir — P2 Piloto)*
+
+#### 11.8.11 Personas
+
+PX-01 (Líder/Curador — revisa Wiki), PX-07 (Sponsor — aprova mudanças de ontologia).
+
+#### 11.8.12 Jornada
+
+JN-14 (Captura Seletiva de Reunião).
+
+#### 11.8.13 Elementos
+
+**Painel esquerdo — Transcrição:**
+- Transcrição diarizada por participante (FR-192 — diarization)
+- Timestamps clicáveis (jump para segmento de áudio se player disponível)
+- Busca full-text dentro da transcrição
+- RBAC: só participantes da reunião + Líder/Admin (FR-195)
+
+**Painel direito — Extração Estruturada (FR-193):**
+- **Seção Decisões**: cada decisão + responsável identificado (nome do participante)
+- **Seção Próximos Passos**: cada ação + prazo + responsável
+- **Seção Entidades Identificadas**: pessoas, clientes, produtos, campanhas mencionados
+- **Seção Briefings Emergentes**: fragmentos de briefing detectados (candidatos a Faísca)
+- Cada item tem checkbox "Confirmar" ou ícone de edição inline
+
+**Painel inferior — Wiki Ontológica HITL (FR-194):**
+- Diff view: mostra propostas de atualização às 6 entidades ontológicas do cliente
+  - Linha a linha: `+ adicionado` (verde) / `- removido` (vermelho) / contexto (cinza)
+- Por proposta: `Aceitar` / `Rejeitar` / `Editar antes de aceitar`
+- Contador: "X de Y propostas revisadas"
+- `Aplicar aprovadas` (CTA — só atualiza entidades com status ACEITO)
+
+#### 11.8.14 Estados
+
+- **Transcrição ainda processando** (>1h p95 — FR-192): skeleton loader com ETA e badge "Processando…"
+- **Sem propostas Wiki**: seção "Nenhuma atualização ontológica identificada nesta reunião"
+- **Todas propostas revisadas**: banner verde + CTA `Concluir Revisão` (arquiva reunião como `REVISADA`)
+- **Acesso negado** (usuário não participante): 404 genérico (RN-009/010 — Caixa-preta)
+
+#### 11.8.15 RBAC
+
+Participantes da reunião + Líder/Admin do cliente. Operacional não vê. Sponsor pode aprovar mudanças na Wiki mas não edita transcrição. (FR-195, RN-011)
+
+#### 11.8.16 FRs cobertos
+
+FR-192, FR-193, FR-194, FR-195, RN-031.
+
+---
+
 ## 12. Fluxos por Jornada
 
-> Jornadas inferidas de Personas + JTBDs (PRD Parte 2). A Parte 3 do PRD (Matriz Persona-Objetivo-Jornada) formalizará IDs e detalhes — esta seção é mapeamento provisório.
+> Jornadas mapeadas a partir do PRD Parte 2 (Personas + JTBDs) e PRD Parte 3 (Matriz Persona-Jornada v1.2 — 17 jornadas formalizadas: JN-00 a JN-17). Fluxos abaixo alinham-se a essa formalização.
 
 ### JN-00: Wayfinding (entrada / navegação)
 
@@ -1359,7 +1707,7 @@ T-20 (Workflows) ←→ T-21, T-22
 T-02 → T-03 → T-04
     ↓
 T-05 (Chat com Skill ativa)
-    ↓ [acionamento Shoot for the Moon]
+    ↓ [acionamento Moon Shot]
 T-06 (Modal Acionamento) → T-07 (Painel de Faíscas)
     ↓ [N stars atingido]
 T-09 (Forced Reflection)
@@ -1386,7 +1734,7 @@ T-02 → T-03 → T-04
     ↓
 T-05 (Skill Análise de Mercado / Persona Sintética / Brief Builder)
     ↓ [opcional]
-T-06 → T-07 (Shoot for the Moon para conectar insight a território criativo)
+T-06 → T-07 (Moon Shot para conectar insight a território criativo)
     ↓ [opcional]
 T-22 → T-21 (Configura Workflow Pesquisa de Mercado)
 ```
@@ -1449,8 +1797,117 @@ T-02 (Home com track atribuída)
 T-03 → T-04 → T-05 (primeira sessão guiada)
 ```
 
----
+### JN-11: Submissão e Aprovação Hierárquica (PX-02, PX-06)
 
+```
+T-05 (Chat — output gerado)
+    ↓ [usuário clica Submeter]
+T-31 (Modal "Submeter para Aprovação" — escolhe cadeia de aprovação)
+    ↓ [notificação enviada ao aprovador]
+T-29 (Inbox do Aprovador — PX-06 vê pendências)
+    ↓ [click na submissão]
+T-30 (Detalhe — PX-06 revisa + aprova/rejeita com comentário)
+    ↓ [aprovado]
+[output marcado como Aprovado no Chat — PX-02 notificado]
+```
+
+### JN-12: Curadoria do Drive Suno (PX-01)
+
+```
+T-32 (Drive Suno — Sync Dashboard)
+    ↓ [badge "N sugestões pendentes"]
+T-33 (Inbox de Sugestões de Curadoria)
+    ↓ [curador aceita sugestão IMPORT_TO_LIBRARY]
+T-13 (Biblioteca — novo item importado visível)
+```
+
+### JN-13: Onboarding de Novo Cliente com Oráculo (PX-07, PX-01)
+
+```
+PX-07 (Sponsor de Área) inicia onboarding
+    ↓
+T-34 (Wizard 4 passos: metadados → Oráculo params → Drive Suno OAuth → confirmação)
+    ↓ [CTA "Cadastrar Cliente" — cliente criado em PRE_ACTIVE]
+T-35 (Progresso Seed Oráculo — acompanha 6 entidades em background)
+    ↓ [≥1 entidade em AGUARDANDO_HITL]
+T-36 (Validação Entidade-a-Entidade — Sponsor aprova cada uma; sem batch)
+    ↓ [6/6 aprovadas — RN-032]
+[cliente → ACTIVE]
+    ↓
+T-17 (Cliente ativo no catálogo) + T-39 (Wiki Ontológica acessível — PX-07/PX-01 podem consultar/editar entidades)
+```
+
+### JN-14: Captura Seletiva de Reunião (PX-03, qualquer Creator)
+
+```
+[Reunião no calendário / convite recebido]
+    ↓ [Creator decide capturar]
+T-37 (Modal "Iniciar Captura" — opt-in por reunião, padrão OFF — RN-031)
+    ↓ [toggle ON + confirmar]
+[Notificação enviada ≤2min a todos os participantes — bloqueia se falhar (FR-191)]
+    ↓ [reunião ocorre; transcrição em background ≤1h p95]
+T-38 (Revisão de Transcrição + extração estruturada + diff Wiki Ontológica HITL)
+    ↓ [Líder/Sponsor aprova propostas — sem auto-merge (FR-194)]
+[Wiki Ontológica do cliente atualizada com aprovação humana]
+```
+
+### JN-16: Builder de Área constrói Workflow Visual (PX-08)
+
+```
+PX-08 (Builder de Área — ex: Bruna/Renata/Wagner em Mídia, Caetano/Milu/Thalles em BI)
+    ↓
+T-20 (Workflows — Catálogo)
+    ↓
+T-22 (Novo — escolhe template ou Em branco)
+    ↓
+T-21 (Canvas drag-and-drop visual — ADR-003)
+    → Arrasta nodes da paleta (Tool, LLM, Condição, HITL, Merge, Workflow)
+    → Conecta handles (out/error, then/else, approved/rejected/modified)
+    → Configura cada nó no painel lateral
+    → Validação automática inline
+    ↓ [CTA "Salvar + Compilar"]
+[Compilado para LangGraph StateGraph no backend]
+    ↓ [agendado ou manual]
+T-23 (Histórico de Execuções — acompanha runs)
+    ↓ [HITL gate, se houver]
+T-05 (Chat — revisão humana no gate)
+```
+
+### JN-15: Wiki Ontológica — Consulta e Edição Direta (PX-07, PX-01)
+
+> *Jornada recorrente pós-onboarding — Sponsor/Líder atualiza entidades manualmente sem depender de reunião.*
+
+```
+PX-07 (Sponsor de Área) ou PX-01 (Líder)
+    ↓ [acessa diretamente ou via link no Cliente Admin]
+T-39 (Wiki Ontológica — Painel de Entidades)
+    ↓ [seleciona entidade a editar]
+[Clica "Editar" — textarea inline com conteúdo atual]
+    ↓ [salva edição — RN-032: confirmação obrigatória, sem batch]
+[Entidade atualizada com badge "revisado HITL" + entrada no histórico de alterações]
+    ↓ [opcional: badge laranja "Revisão necessária" de captura pendente]
+T-38 (Revisão Transcrição HITL — se quiser revisar proposta de reunião)
+```
+
+### JN-17: Governança Setorial — Sponsor acompanha uso da área (PX-07)
+
+> *Sponsor de Área valida que o sunOS está sendo usado conforme os objetivos definidos no onboarding.*
+
+```
+PX-07 (Sponsor de Área — ex: Bruno Prosperi em Criação, Ana Luísa em Produção)
+    ↓
+T-39 (Wiki Ontológica — verifica se entidades estão atualizadas)
+    ↓
+T-24 (Dashboard Executivo — métricas de uso da área)
+    ↓
+T-25 (Skill Health — quais Skills a área mais usa; taxa de HITL thumbs-up)
+    ↓ [opcional: identifica Skills subutilizadas]
+T-20 (Workflows — revisa fluxos ativos configurados pelo Builder da área)
+    ↓ [opcional]
+T-21 (Canvas — edita Workflow em conjunto com PX-08)
+```
+
+---
 ## 13. Progressive Disclosure por Persona
 
 ### PX-01 — Líder/Curador
@@ -1475,7 +1932,7 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 
 **Elementos prioritários:**
 - T-05 Chat
-- T-06, T-07, T-08 Shoot for the Moon (modos sênior + dupla)
+- T-06, T-07, T-08 Moon Shot (modos sênior + dupla)
 - Marcação visual Faísca (RN-014) sempre visível
 - Visible reasoning toggle (default hidden — RN-017)
 
@@ -1512,7 +1969,7 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 
 **Elementos prioritários:**
 - T-05 Chat com Skills Análise de Mercado, Persona Sintética, Brief Builder
-- T-06, T-07 Shoot for the Moon (modo "começando uma ideia")
+- T-06, T-07 Moon Shot (modo "começando uma ideia")
 - T-20, T-21, T-22 Workflows (Pesquisa de Mercado)
 
 **Elementos secundários:**
@@ -1527,7 +1984,7 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 **Elementos prioritários:**
 - T-27 Onboarding (track "Estou começando uma ideia" sugerido — RN-017)
 - T-05 Chat
-- T-06, T-07 Shoot for the Moon (modo divergente, junior-leaning)
+- T-06, T-07 Moon Shot (modo divergente, junior-leaning)
 - T-09 Forced Reflection (N=3, mais frequente — RN-015)
 - Marcação Faísca/estímulo sempre visível (RN-014)
 
@@ -1540,6 +1997,63 @@ T-03 → T-04 → T-05 (primeira sessão guiada)
 
 ---
 
+### PX-06 — Aprovador (Sócio)
+
+**Foco:** Revisão e aprovação de outputs críticos.
+
+**Elementos prioritários:**
+- T-29 Inbox do Aprovador (notificação push quando há pendências)
+- T-30 Detalhe da Submissão (review + aprovar/rejeitar com comentário)
+
+**Elementos secundários:**
+- T-02 (Sistema Solar — read-only, para contexto do cliente)
+
+**Ocultos:**
+- Tudo de Admin (Skills, Biblioteca, Clientes, Workflows)
+- Mensuração
+
+---
+
+### PX-07 — Sponsor de Área
+
+**Foco:** Definição da arquitetura de automação da sua área. Onboarding de novos clientes. Aprovação final da ontologia.
+
+**Elementos prioritários:**
+- T-34 Wizard de Cadastro de Cliente (inicia onboarding)
+- T-35 Progresso Seed Oráculo (acompanha geração das 6 entidades)
+- T-36 Validação Entidade-a-Entidade (aprova ontologia — HITL gate crítico)
+- T-20, T-21 Workflows (supervisão dos Builders da sua área)
+- T-38 Revisão de Transcrição / Wiki Ontológica (aprova atualizações de ontologia)
+
+**Elementos secundários:**
+- T-17, T-18, T-19 (Clientes — vê status PRE_ACTIVE → ACTIVE dos seus clientes)
+- T-29, T-30 (Aprovação — quando atua como aprovador em chain)
+
+**Ocultos:**
+- System prompts das Skills (Caixa-preta para não-Líder)
+- Mensuração financeira detalhada (só PX-01)
+
+---
+
+### PX-08 — Builder de Área
+
+**Foco:** Construção de Workflows automatizados via canvas visual (ADR-003). Sem necessidade de engenharia para configurar automações da área.
+
+**Elementos prioritários:**
+- T-20, T-21 (Workflows — catálogo + canvas drag-and-drop)
+- T-22 (Novo Workflow — escolha de template)
+- T-23 (Histórico de Execuções — monitora runs)
+
+**Elementos secundários:**
+- T-05 Chat (testa outputs das Skills usadas nos Workflows)
+- T-02, T-03, T-04 (Sistema Solar — contexto)
+
+**Ocultos:**
+- Biblioteca (Caixa-preta — RN-011)
+- Clientes Admin (visibilidade limitada aos da sua área)
+- Mensuração (sem acesso direto — vê via reports do PX-07)
+
+---
 ## 14. Estados Globais e Edge Cases
 
 ### 14.1 Loading States
@@ -1601,10 +2115,10 @@ Toggle disponível no AppHeader (T-Topo) — aplica `data-theme` em `<html>`. Am
 | FA | Nome | Telas que entregam |
 |----|------|--------------------|
 | **FA-01** Biblioteca | Inteligência Coletiva | T-13, T-14, T-15, T-16 (todas Caixa-preta para Operacional) — RN-011 |
-| **FA-02** Shoot for the Moon | Provocação Criativa | T-06, T-07, T-08 (todas a construir — POC/Piloto) |
+| **FA-02** Moon Shot | Provocação Criativa | T-06, T-07, T-08 (todas a construir — **Momento 2**) |
 | **FA-03** Skills processuais | Catálogo + contexto | T-04, T-05 (consumo); T-10, T-11, T-12 (configuração) |
 | **FA-04** Chat ReAct | Interface conversacional | T-04, T-05 (em refactor para persistência) |
-| **FA-05** Workflows | Engine LangGraph | T-20, T-21, T-22, T-23 |
+| **FA-05** Workflows | Engine LangGraph | T-20, T-21 (canvas ADR-003 — em refactor), T-22, T-23 |
 | **FA-06** Sistema Solar | Navegação | T-02, T-03, T-04 |
 | **FA-07** HITL Feedback | Avaliação humana | T-05 (inline), T-09 (forced reflection — a construir) |
 | **FA-08** Multimodal | Imagem/Vídeo | T-05 (consumo via VisualCreator); telas dedicadas pendentes (lacuna §14.4) |
@@ -1612,6 +2126,10 @@ Toggle disponível no AppHeader (T-Topo) — aplica `data-theme` em `<html>`. Am
 | **FA-10** Mensuração | Custo evitado, KPIs | T-24, T-25, T-26 (todas a construir) |
 | **FA-11** Safety Cultural | Ownership e cultura | T-09, T-27 (a construir); marcação Faísca transversal em T-05/T-07 |
 | **FA-12** Admin areas | CRUD configurável | T-10, T-11, T-12, T-13, T-14, T-15, T-17, T-18, T-19, T-20, T-21, T-22, T-23, T-28 |
+| **FA-13** Aprovação Hierárquica | Workflow de aprovação | T-29, T-30, T-31 (a construir — **Momento 2**) |
+| **FA-14** Drive Suno como Fonte | Curadoria do Drive interno | T-32, T-33 (a construir) — Caixa-preta Operacional (RN-011) |
+| **FA-15** Onboarding com Oráculo | Cadastro automatizado de clientes | T-34, T-35, T-36, T-39 (a construir — Piloto) — HITL gate RN-032 |
+| **FA-16** Captura Seletiva de Reuniões | Transcrição opt-in + Wiki HITL | T-37, T-38 (a construir — **Momento 2**) — opt-in RN-031, PRE-03b, LGPD Art. 7 |
 
 > **Toda FA-XX tem ≥1 tela mapeada.** FA-08 e FA-09 têm cobertura parcial — ver §14.4.
 
@@ -1622,6 +2140,8 @@ Toggle disponível no AppHeader (T-Topo) — aplica `data-theme` em `<html>`. Am
 | Versão | Data | Descrição |
 |--------|------|-----------|
 | 1.0 | 2026-04-28 | Versão inicial. **28 Telas (T-01 a T-28)**: 18 existentes (validadas em `app/`), 10 a construir, 1 em refactor (T-05 persistência). Mapeamento completo para FA-01 a FA-12 (12 features) e PX-01 a PX-05 (5 personas). 9 jornadas inferidas (JN-00 a JN-09). Caixa-preta da Biblioteca (RN-011) explicitada para PX-03 Operacional. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Sistema Solar, Sun, Planeta, Órbita, Moon); Koro sempre com K. Anti-patterns evitados em copy. Lacunas identificadas em §14.4. |
+| 1.3 | 2026-05-15 | **+T-39 Wiki Ontológica** (BR-021): Painel de Entidades do Cliente com 6 entidades ontológicas, HITL obrigatório (RN-032), gate PRE_ACTIVE→ACTIVE, caixa-preta Operacional. Rota `/clientes/[slug]/wiki`. **Fase corrigida para Momento 2**: T-06, T-07, T-08 (Moon Shot / BR-001), T-26 (Homogeneização / BR-014), T-29, T-30, T-31 (Aprovação / BR-017), T-37, T-38 (Captura / BR-020). **Seções §4/§11.5/§11.8** marcadas como Momento 2. **T-37**: PRE-03b + LGPD Art. 7 explicitados. **§1.4 Objetos de Domínio**: DO-55 a DO-59 adicionados (WikiEntity, EntityUpdateProposal, ClientSeed, MeetingCapture, MeetingTranscript). **§12 Fluxos**: JN-13 atualizado com T-39 pós-ACTIVE; JN-15 (Wiki direta) e JN-17 (Governança Setorial Sponsor) adicionados. Total: **39 telas** (18 existentes + 1 em refactor + 20 a construir). |
+| 1.2 | 2026-05-14 | **+5 novas telas (T-34 a T-38)** para FA-15 (Onboarding com Oráculo do Cliente: T-34 Wizard 4 passos, T-35 Progresso Seed, T-36 Validação Entidade-a-Entidade HITL) e FA-16 (Captura Seletiva: T-37 Modal Opt-in, T-38 Revisão Transcrição + Wiki HITL). **T-21 reescrito** para canvas drag-and-drop ADR-003 — vocabulário de handles `out`/`error`/`then`/`else`/`approved`/`rejected`/`modified`; NodeShell pattern; 7 tipos de nó. **Personas PX-07 (Sponsor de Área) e PX-08 (Builder de Área)** adicionadas (seção 13). **JN-11 a JN-16** formalizados na seção 12. **FA-13 a FA-16** adicionadas à tabela de cobertura. Seções §11.7 (FA-15) e §11.8 (FA-16) adicionadas. Drive Suno atualizado (REST-08 v2 — só Drive interno da Suno). Total: **38 telas** (18 existentes + 1 em refactor + 19 a construir). FRs cobertos: FR-180 a FR-195. |
 | 1.1 | 2026-04-28 | Adicionadas **5 novas Telas (T-29 a T-33)** para FA-13 (Aprovação Hierárquica) e FA-14 (Drive como Fonte): T-29 Inbox do Aprovador, T-30 Detalhe da Submissão (com sub-rota Admin para config de chain), T-31 Modal de Submeter para Aprovação (contextual em T-05/T-07/T-23), T-32 Drive Sync Dashboard, T-33 Inbox de Sugestões de Curadoria. Persona PX-06 (Aprovador Sócio) adicionada na cobertura. Jornadas JN-11 (Submissão) e JN-12 (Curadoria do Drive) referenciadas. Rotas novas: `/aprovacoes`, `/aprovacoes/[requestId]`, `/aprovacoes/configuracao/[clientSlug]` (Admin), `/drive/[clientSlug]`, `/drive/[clientSlug]/sugestoes`. Total: **33 telas** (18 existentes + 15 a construir + 1 em refactor). RBAC: T-29/T-30 visíveis a aprovadores em chain ativa; T-32/T-33 visíveis a Admin/Líder do cliente; Operacional não vê (RN-011). FRs cobertos: FR-160 a FR-179. |
 
 ---

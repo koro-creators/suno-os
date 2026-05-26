@@ -2,7 +2,9 @@
 spec-id: SPEC-004
 slug: approval-hierarchy
 artefato: plan
-atualizada: 2026-04-30
+atualizada: 2026-05-15
+status: rascunho
+fase: Momento 2
 versao: 1.0
 ---
 

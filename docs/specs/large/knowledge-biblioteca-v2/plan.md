@@ -2,7 +2,8 @@
 spec-id: SPEC-002
 slug: knowledge-biblioteca-v2
 artefato: plan
-atualizada: 2026-04-14
+status: rascunho
+atualizada: 2026-05-15
 versao: 1.0
 ---
 

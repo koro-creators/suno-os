@@ -1,8 +1,9 @@
 ---
-spec-id: SPEC-002
+spec-id: SPEC-009
 slug: video-generation
 artefato: design
-atualizada: 2026-04-28
+atualizada: 2026-05-15
+status: rascunho
 versao: 1.0
 ---
 

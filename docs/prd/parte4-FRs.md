@@ -3,9 +3,9 @@ documento: PRD Parte 4 — Requisitos Funcionais (FR-XXX)
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.3
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -19,8 +19,8 @@ aprovacoes:
     status: Pendente
 fonte_brd: docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_prd: docs/prd/parte1-feature-map.md, docs/prd/parte2-personas-jtbd.md, docs/prd/parte3-matriz-persona-jornada.md
-fonte_frd: FRD Shoot for the Moon (FR-001 a FR-018, externo) — referenciado, não duplicado
-total_frs: 60 (FR-100 a FR-159; FR-001 a FR-018 vivem no FRD Shoot for the Moon)
+fonte_frd: FRD Moon Shot (FR-001 a FR-018, externo) — referenciado, não duplicado
+total_frs: 101 (FR-100 a FR-198 + FR-200 a FR-201; FR-001 a FR-018 no FRD Moon Shot)
 ---
 
 # PRD Parte 4 — Requisitos Funcionais (FR-XXX)
@@ -29,7 +29,7 @@ total_frs: 60 (FR-100 a FR-159; FR-001 a FR-018 vivem no FRD Shoot for the Moon)
 
 ### 1.1. Contexto do Produto
 
-O **sunOS** é o sistema operacional de IA da Suno United Creators — plataforma 100% interna que organiza Skills de IA, Biblioteca de conhecimento (Inteligência Coletiva), Workflows automatizados, agentes ReAct, motor de provocação criativa (Shoot for the Moon) e governança institucional num único produto, navegado pela metáfora de Sistema Solar (Clientes como Planetas, Skills como Órbitas, Moons como sub-áreas). Atende ~300 Creators do grupo United Creators.
+O **sunOS** é o sistema operacional de IA da Suno United Creators — plataforma 100% interna que organiza Skills de IA, Biblioteca de conhecimento (Inteligência Coletiva), Workflows automatizados, agentes ReAct, motor de provocação criativa (Moon Shot) e governança institucional num único produto, navegado pela metáfora de Sistema Solar (Clientes como Planetas, Skills como Órbitas, Moons como sub-áreas). Atende ~300 Creators do grupo United Creators.
 
 ### 1.2. Objetivo deste Documento
 
@@ -39,18 +39,18 @@ Este documento é o **catálogo de Requisitos Funcionais (FR-XXX)** do sunOS —
 
 **Escopo deste documento**: cobre **comportamento de produto** (o que o sistema faz observável pelo usuário). NFRs (performance, segurança, ISO 25010), arquitetura, modelos de dados e ADRs vivem no **SRD**.
 
-### 1.3. Relação com FRD Shoot for the Moon (não-duplicação)
+### 1.3. Relação com FRD Moon Shot (não-duplicação)
 
-O **FRD Shoot for the Moon** já especifica **FR-001 a FR-018** detalhando a feature FA-02 e parte de FA-01 (retrieval divergente). Esta Parte 4 do PRD:
+O **FRD Moon Shot** já especifica **FR-001 a FR-018** detalhando a feature FA-02 e parte de FA-01 (retrieval divergente). Esta Parte 4 do PRD:
 
 - **NÃO duplica** FR-001 a FR-018 — referencia diretamente
 - **Cobre os FRs ainda não detalhados** em FRD próprio, organizados em faixas separadas (FR-100 a FR-159)
-- **Áreas cobertas aqui**: FA-01 Biblioteca (Curadoria, Caixa-preta), FA-03 Skills processuais, FA-04 Chat ReAct, FA-05 Workflows, FA-06 Sistema Solar, FA-07 HITL, FA-08 Multimodal, FA-09 Governança/RBAC, FA-10 Mensuração, FA-11 Safety cultural (não-Shoot for the Moon), FA-12 Admin areas
+- **Áreas cobertas aqui**: FA-01 Biblioteca (Curadoria, Caixa-preta), FA-03 Skills processuais, FA-04 Chat ReAct, FA-05 Workflows, FA-06 Sistema Solar, FA-07 HITL, FA-08 Multimodal, FA-09 Governança/RBAC, FA-10 Mensuração, FA-11 Safety cultural (não-Moon Shot), FA-12 Admin areas
 
 | Faixa | Origem | Status |
 |-------|--------|--------|
-| FR-001 a FR-018 | FRD Shoot for the Moon (externo) | Detalhado externamente — referenciar |
-| FR-019 a FR-099 | Reservados para expansão futura do FRD Shoot for the Moon | Reservado |
+| FR-001 a FR-018 | FRD Moon Shot (externo) | Detalhado externamente — referenciar |
+| FR-019 a FR-099 | Reservados para expansão futura do FRD Moon Shot | Reservado |
 | **FR-100 a FR-159** | **Esta Parte 4 do PRD** | **Detalhado neste documento** |
 
 ### 1.4. Convenções
@@ -88,7 +88,7 @@ O **FRD Shoot for the Moon** já especifica **FR-001 a FR-018** detalhando a fea
 | PRD Parte 1 (FA-01 a FA-12) | FRs agrupados por Feature (§3) |
 | PRD Parte 2 (PX-01 a PX-05) | FRs especificam comportamento por Persona quando relevante |
 | PRD Parte 3 (JN-01 a JN-10) | FRs aparecem como passos críticos das jornadas |
-| FRD Shoot for the Moon (FR-001 a FR-018) | Não duplicado; referenciado |
+| FRD Moon Shot (FR-001 a FR-018) | Não duplicado; referenciado |
 | SRD | NFRs ISO 25010 e arquitetura derivam destes FRs |
 
 ---
@@ -108,17 +108,17 @@ O **FRD Shoot for the Moon** já especifica **FR-001 a FR-018** detalhando a fea
 | FA-08 Multimodal | FR-135 a FR-137 | 3 | PX-02, PX-03 | Piloto / MVP |
 | FA-09 Governança/RBAC | FR-138 a FR-143 | 6 | Todas (transversal) | Piloto |
 | FA-10 Mensuração | FR-144 a FR-150 | 7 | PX-01 (primária) | Piloto |
-| FA-11 Safety cultural (não-Shoot for the Moon) | FR-151 a FR-155 | 5 | PX-02, PX-05, PX-01 | Piloto |
+| FA-11 Safety cultural (não-Moon Shot) | FR-151 a FR-155 | 5 | PX-02, PX-05, PX-01 | Piloto |
 | FA-12 Admin areas | FR-156 a FR-159 | 4 | PX-01 | Protótipo |
 | **Subtotal Parte 4** | FR-100 a FR-159 | **60** | — | — |
-| FA-02 Shoot for the Moon (FRD externo) | FR-001 a FR-018 | 18 (referenciados) | PX-02, PX-04, PX-05 | POC → Piloto |
+| FA-02 Moon Shot (FRD externo) | FR-001 a FR-018 | 18 (referenciados) | PX-02, PX-04, PX-05 | POC → Piloto |
 | **Total combinado** | — | **78** | — | — |
 
 ### 2.2. Resumo por Fase
 
 | Fase | Quantidade FRs (Parte 4) | Features envolvidas | Criticidade |
 |------|--------------------------|---------------------|-------------|
-| **POC** | (FRs do FRD Shoot for the Moon) | FA-02 | Core externa |
+| **POC** | (FRs do FRD Moon Shot) | FA-02 | Core externa |
 | **Protótipo** | ~30 (FA-01, FA-03, FA-04, FA-06, FA-07, FA-12) | Base operacional | Core |
 | **Piloto** | ~24 (FA-05, FA-08, FA-09, FA-10, FA-11) | Cobertura completa | Core + Importante |
 | **MVP** | ~6 refinamentos (FA-08 video, métricas avançadas) | Refinamento | Refinado |
@@ -137,7 +137,7 @@ O **FRD Shoot for the Moon** já especifica **FR-001 a FR-018** detalhando a fea
 
 ### 3.1. FA-01 — Biblioteca (Inteligência Coletiva)
 
-> Cobre os FRs de **curadoria, ingestão, indexação, escopo, visibilidade e detecção de risco**. FRs de retrieval divergente para Shoot for the Moon vivem no FRD externo.
+> Cobre os FRs de **curadoria, ingestão, indexação, escopo, visibilidade e detecção de risco**. FRs de retrieval divergente para Moon Shot vivem no FRD externo.
 
 ---
 
@@ -240,7 +240,7 @@ O sistema MUST bloquear a ingestão de KnowledgeItem se algum dos metadados obri
 
 **Descrição**
 
-Após validação dos metadados (FR-101), o sistema MUST executar indexação dual em background: **(a) chunking + embedding vetorial** persistido em pgvector com metadados anexos (scope, tags, cliente, domínio), e **(b) inserção no grafo de conhecimento** com nós (KnowledgeItem) e arestas (relações por tag, cliente compartilhado, similarity threshold). O sistema MUST tornar o item disponível para retrieval por Skills (FR-110) e por retrieval divergente do Shoot for the Moon (FRD externo) em ≤5 minutos após upload típico (PDF <10MB).
+Após validação dos metadados (FR-101), o sistema MUST executar indexação dual em background: **(a) chunking + embedding vetorial** persistido em pgvector com metadados anexos (scope, tags, cliente, domínio), e **(b) inserção no grafo de conhecimento** com nós (KnowledgeItem) e arestas (relações por tag, cliente compartilhado, similarity threshold). O sistema MUST tornar o item disponível para retrieval por Skills (FR-110) e por retrieval divergente do Moon Shot (FRD externo) em ≤5 minutos após upload típico (PDF <10MB).
 
 **Contexto de Negócio e Motivação**
 
@@ -588,7 +588,7 @@ O sistema MUST exibir, no Sistema Solar (FA-06) ao selecionar um Cliente (Planet
 
 **Regras de Negócio Associadas**
 
-- RN-003 — princípio ≤3 cliques (compartilhado com Shoot for the Moon)
+- RN-003 — princípio ≤3 cliques (compartilhado com Moon Shot)
 
 **Fase e Prioridade**
 
@@ -1144,8 +1144,9 @@ O sistema MUST oferecer interface visual no Admin (`/workflows`) para compor Wor
 
 | Inclui | Não Inclui |
 |--------|------------|
-| Composição visual sequencial | Drag-and-drop visual de agentes (ADR-001 — não é esse o escopo) |
-| Validação básica de configuração por step | Substituir Zapier/n8n (BR-016) |
+| Composição visual drag-and-drop com nodes tipados (ADR-003) | Substituir Zapier/n8n na camada técnica (BR-016) |
+| Validação semântica de conexões entre nodes | Editor de código compilado (LangGraph) exposto a Builders |
+| Templates obrigatórios por área (Plano de Mídia, etc.) | Workflows sem inputs explícitos |
 
 **Atores / Personas**
 
@@ -1168,7 +1169,7 @@ O sistema MUST oferecer interface visual no Admin (`/workflows`) para compor Wor
 |---------|-------|
 | **Fase** | Piloto |
 | **Criticidade** | Core |
-| **Status** | Em Produção (SPEC-003) |
+| **Status** | Em Produção (SPEC-003), refatorado para drag-and-drop a partir de 05/2026 (ADR-003) |
 
 ---
 
@@ -2404,9 +2405,9 @@ O sistema MUST bloquear a geração de qualquer relatório (manual, ad-hoc, auto
 
 ---
 
-### 3.10. FA-11 — Safety Cultural & Ownership Criativo (não-Shoot for the Moon)
+### 3.10. FA-11 — Safety Cultural & Ownership Criativo (não-Moon Shot)
 
-> Cobre os FRs de safety cultural que **não** vivem no FRD Shoot for the Moon: marcação de outputs em Skills, validação vocabulário UI, tracks de onboarding, métricas por carreira, validação cultural com Sponsor.
+> Cobre os FRs de safety cultural que **não** vivem no FRD Moon Shot: marcação de outputs em Skills, validação vocabulário UI, tracks de onboarding, métricas por carreira, validação cultural com Sponsor.
 
 ---
 
@@ -2414,7 +2415,7 @@ O sistema MUST bloquear a geração de qualquer relatório (manual, ad-hoc, auto
 
 **Descrição**
 
-Ao primeiro login, o sistema MUST apresentar tela inicial perguntando estágio de carreira do usuário (cargo + anos de experiência). Com base na resposta e em RN-017: SE junior (<3 anos), MUST sugerir track **"Estou começando uma ideia"** (divergente, abundante); SE sênior (≥7 anos), MUST sugerir **"Tenho uma ideia, me prova que tá errada"** (devil's advocate); SE pleno, MUST apresentar ambas com explicação curta. O usuário MUST conseguir pular ou trocar track depois. A escolha define defaults de N para forced reflection (FR-013 do FRD Shoot for the Moon — N=3 junior, N=5 sênior) e visibilidade de visible reasoning.
+Ao primeiro login, o sistema MUST apresentar tela inicial perguntando estágio de carreira do usuário (cargo + anos de experiência). Com base na resposta e em RN-017: SE junior (<3 anos), MUST sugerir track **"Estou começando uma ideia"** (divergente, abundante); SE sênior (≥7 anos), MUST sugerir **"Tenho uma ideia, me prova que tá errada"** (devil's advocate); SE pleno, MUST apresentar ambas com explicação curta. O usuário MUST conseguir pular ou trocar track depois. A escolha define defaults de N para forced reflection (FR-013 do FRD Moon Shot — N=3 junior, N=5 sênior) e visibilidade de visible reasoning.
 
 **Contexto de Negócio e Motivação**
 
@@ -2459,7 +2460,7 @@ Ao primeiro login, o sistema MUST apresentar tela inicial perguntando estágio d
 
 **Descrição**
 
-Todo output gerado por IA no sunOS (mensagens do agente no Chat, variações, imagens geradas, vídeos gerados, Faíscas do Shoot for the Moon, drafts de Skill processual) MUST exibir **marcação visual clara** identificando-o como **"estímulo" / "provocação" / "Faísca"** — nunca como peça final. SE o usuário tenta compartilhar, exportar ou publicar output IA sem confirmação humana explícita ("promover a peça final"), o sistema MUST bloquear a ação até confirmação. A marcação MUST seguir padrão único de design definido no Design System (`/design-system`).
+Todo output gerado por IA no sunOS (mensagens do agente no Chat, variações, imagens geradas, vídeos gerados, Faíscas do Moon Shot, drafts de Skill processual) MUST exibir **marcação visual clara** identificando-o como **"estímulo" / "provocação" / "Faísca"** — nunca como peça final. SE o usuário tenta compartilhar, exportar ou publicar output IA sem confirmação humana explícita ("promover a peça final"), o sistema MUST bloquear a ação até confirmação. A marcação MUST seguir padrão único de design definido no Design System (`/design-system`).
 
 **Contexto de Negócio e Motivação**
 
@@ -2549,7 +2550,7 @@ Em pipeline de CI/CD ou em editor de copy do Admin, o sistema MUST validar todo 
 
 **Descrição**
 
-O sistema MUST calcular trimestralmente métricas de uso segmentadas por estágio de carreira (junior/pleno/sênior, baseado em FR-151): NPS por segmento, taxa de skip de forced reflection, score HITL agregado, distribuição de uso entre Skills divergentes (Shoot for the Moon) vs. convergentes (Skills processuais). Métricas MUST ser apresentadas no Dashboard executivo (FR-148) com flag se NPS junior < NPS sênior por 2 trimestres (sinal de problema de adoção).
+O sistema MUST calcular trimestralmente métricas de uso segmentadas por estágio de carreira (junior/pleno/sênior, baseado em FR-151): NPS por segmento, taxa de skip de forced reflection, score HITL agregado, distribuição de uso entre Skills divergentes (Moon Shot) vs. convergentes (Skills processuais). Métricas MUST ser apresentadas no Dashboard executivo (FR-148) com flag se NPS junior < NPS sênior por 2 trimestres (sinal de problema de adoção).
 
 **Contexto de Negócio e Motivação**
 
@@ -2936,7 +2937,7 @@ A tela `/workflows` MUST exibir Workflows como cards com nome, schedule humaniza
 | BR-009 (Auditabilidade) | FR-107, FR-117, FR-121, FR-142, FR-144, FR-145, FR-146 | FA-09, FA-10 |
 | BR-010 (Ownership criativo) | FR-118, FR-119, FR-131, FR-132, FR-135, FR-136, FR-137, FR-152 | FA-02 (FRD), FA-04, FA-08, FA-11 |
 | BR-011 (Cultura brasileira) | FR-153, FR-155 | FA-11, FA-12 |
-| BR-012 (UX por carreira) | FR-151, FR-154; FR-013 (FRD Shoot for the Moon — N variável) | FA-11, FA-02 (FRD) |
+| BR-012 (UX por carreira) | FR-151, FR-154; FR-013 (FRD Moon Shot — N variável) | FA-11, FA-02 (FRD) |
 | BR-013 (Mensuração custo) | FR-145, FR-148, FR-149, FR-159 | FA-05, FA-10, FA-12 |
 | BR-014 (Detecção homogeneização) | FR-131, FR-133, FR-147, FR-148, FR-150 | FA-07, FA-10, FA-11 |
 | BR-015 (Integração Skills) | FR-100, FR-110, FR-111, FR-115, FR-121, FR-156, FR-158 | FA-01, FA-03, FA-04, FA-12 |
@@ -2946,11 +2947,222 @@ A tela `/workflows` MUST exibir Workflows como cards com nome, schedule humaniza
 
 ### 4.1. BRs sem FR Associado
 
-Nenhum BR sem FR neste documento. Cada um dos 16 BRs tem ≥1 FR mapeado, considerando os FRs do FRD Shoot for the Moon (FR-001 a FR-018) para os BRs primariamente atendidos por FA-02 (BR-001).
+Nenhum BR sem FR neste documento. Cada um dos 16 BRs tem ≥1 FR mapeado, considerando os FRs do FRD Moon Shot (FR-001 a FR-018) para os BRs primariamente atendidos por FA-02 (BR-001).
 
 ### 4.2. FRs Derivados (sem BR explícito)
 
 Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
+
+
+---
+
+### 3.X. FA-15 — Onboarding Automatizado de Cliente (Oráculo do Cliente)
+
+#### FR-180 — Wizard de cadastro de cliente em 4 passos
+
+**Feature**: FA-15 (Onboarding com Oráculo) | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: O sistema MUST oferecer wizard de cadastro de novo cliente em exatamente 4 passos sequenciais:
+- **Passo 1 (Metadados)**: nome do cliente, slug (URL-friendly), setor de atuação, porte (SMB/Mid/Enterprise), website oficial
+- **Passo 2 (Oráculo)**: configuração de parâmetros do Oráculo — profundidade de pesquisa (superficial/padrão/profunda), domínios permitidos para pesquisa web (allow-list editável, RN-033), idiomas a considerar
+- **Passo 3 (Drive)**: conectar pasta do Drive Suno interno atribuída ao cliente via OAuth (FA-14-01, escopo `drive.readonly`)
+- **Passo 4 (Confirmação)**: revisão resumida + botão "Disparar Oráculo"
+
+MUST: validação inline por passo (não só submit final). MUST: auto-salvar estado entre passos (usuário pode retomar em ≤24h se abandonar). MUST: tempo de input humano ativo ≤5 minutos (excluindo aguardo de processamento do Oráculo).
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-022 (primário), BR-004 | RN-006, RN-032 | FA-15, FA-12 | JN-13 passo 1-4 |
+
+---
+
+#### FR-181 — Trigger de sync inicial do Drive Suno
+
+**Feature**: FA-15 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: Ao confirmar wizard passo 3 (FR-180), o sistema MUST disparar job de sync inicial da pasta Drive Suno conectada ao cliente. MUST: retornar ETA estimada (≤24h para sync inicial). MUST: exibir barra de progresso estimada na UI de onboarding. MUST: notificar admin via in-app se job não completar em ≤72h com erro detalhado. SHOULD: sync completo de pasta ≤1000 arquivos em ≤2h; acima disto, processamento em lotes com progresso incremental.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-022, BR-004 | RN-030 (sync periódico), RN-006 | FA-15, FA-14 | JN-13 passo 3 |
+
+---
+
+#### FR-182 — Geração automática de seed ontológico pelo Oráculo
+
+**Feature**: FA-15 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: Após sync completo do Drive (FR-181), o sistema MUST executar o Oráculo do Cliente — Deep Agent que gera seed das **6 entidades ontológicas core**:
+1. **Perfil do Cliente**: nome, setor, porte, missão declarada, valores institucionais, posicionamento
+2. **Mercado e Setor**: contexto competitivo, tendências atuais, oportunidades identificadas
+3. **Concorrentes Diretos**: até 5, com diferenciação e posicionamento vs. cliente
+4. **Personas-Alvo**: até 3, com características demográficas, comportamentais e dores
+5. **Histórico de Campanhas**: últimas 12 meses, principais formatos, resultados relevantes
+6. **Restrições Legais e Contratuais**: NDA, proibições de claim, vocabulário proibido, segmentos restritos
+
+MUST: cada entidade gerada com ≥100 palavras de conteúdo substantivo. MUST: cada claim com proveniência rastreável (fonte: Drive/{arquivo} ou Web/{URL} ou Briefing). MUST: entidades geradas em ≤30 min após disparo do Oráculo (objetivo: ≤15 min p95).
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-022, BR-004, BR-007 | RN-032, RN-033 | FA-15 | JN-13 passos 5-7 |
+
+---
+
+#### FR-183 — Pesquisa web em allow-list configurada (RN-033)
+
+**Feature**: FA-15 | **Fase**: Piloto | **Criticidade**: Alta
+
+**Descrição**: O Oráculo MUST consultar fontes públicas **somente dentro da allow-list configurada** (passo 2 do wizard, FR-180) para enriquecer as entidades do seed. MUST: cada fact extraído da web com proveniência rastreável (URL + data de consulta + trecho citado). MUST NOT: scraping de conteúdo protegido por paywall, login, ou robots.txt `Disallow`. MUST NOT: acessar domínios fora da allow-list, mesmo que recomendados por um resultado anterior. SHOULD: allow-list default inclui: site oficial do cliente, LinkedIn, Glassdoor, principais portais de notícia do setor.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-022, BR-007 | RN-033 (allow-list), RN-012 (auditoria) | FA-15 | JN-13 passo 6 |
+
+---
+
+#### FR-184 — UI de validação entidade-a-entidade (HITL gate)
+
+**Feature**: FA-15 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: O sistema MUST apresentar UI de validação onde PX-01 (Líder/Curador) revisa cada entidade individualmente. MUST: três ações por entidade — **Aceitar** (aprovação explícita), **Editar inline** (modificar texto e aceitar), **Rejeitar e regenerar** (Oráculo refaz só aquela entidade). MUST NOT: batch acceptance — cada entidade requer decisão explícita (RN-032). MUST: editor inline com textarea expansível e syntax highlighting básico para edição direta do texto. MUST: cada decisão auditada com timestamp, responsável e ação tomada. SHOULD: mostrar fonte/proveniência de cada claim antes da decisão do usuário.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-022, BR-004 | RN-032 (HITL gate obrigatório), RN-012 | FA-15 | JN-13 passo 8 |
+
+---
+
+#### FR-185 — Status PRE_ACTIVE até HITL gate completo; ativação automática
+
+**Feature**: FA-15 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: MUST: cliente recém-cadastrado inicia em status `PRE_ACTIVE` imediatamente após o disparo do wizard. MUST NOT: Skills processuais, Moon Shot, ou Workflows executar em clientes com status `PRE_ACTIVE`. MUST: cliente avança para `ACTIVE` somente após PX-01 aprovar **todas** as 6 entidades ontológicas (RN-032 — nenhuma pode ser pulada). MUST: ativação automática (`PRE_ACTIVE → ACTIVE`) disparada imediatamente após aprovação da última entidade, sem passo adicional de confirmação. MUST: admin vê lista de clientes em `PRE_ACTIVE` com tempo pendente; sistema gera alerta in-app se cliente permanece `PRE_ACTIVE` por ≥72h. SHOULD: Sistema Solar (FA-06) exibe cliente em estado "pendente" para Admin mas não para Operacional.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-022, BR-004, BR-019 | RN-032 (HITL gate), RN-009 (RBAC) | FA-15, FA-06, FA-09 | JN-13 passos 9-10 |
+
+
+### 3.Y. FA-16 — Captura Seletiva de Reuniões
+
+
+
+
+#### FR-190 — Acionamento opt-in por reunião (RN-031)
+
+**Feature**: FA-16 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: O sistema MUST exigir acionamento explícito por usuário autorizado (RBAC: Operacional + Líder) para cada reunião individualmente. MUST: default OFF em todas as integrações de calendário — zero captura automática. MUST: antes de confirmar opt-in, verificar se tipo de reunião está na allow-list configurada (RN-031); se não, bloquear com mensagem clara. MUST NOT: auto-join, auto-record, ou qualquer forma de captura passiva.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-020 (primário), BR-008 | RN-031 (opt-in + allow-list) | FA-16, FA-09 | JN-14 passo 1-2 |
+
+---
+
+#### FR-191 — Notificação obrigatória a todos os participantes (RN-031)
+
+**Feature**: FA-16 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: Quando captura for iniciada, o sistema MUST enviar notificação a **todos** os participantes identificados antes de iniciar gravação. MUST: notificação contém — quem solicitou a captura, propósito institucional ("fins de conhecimento institucional sunOS"), link para política de privacidade. MUST: notificação entregue com ≤2 min do início da reunião via in-app + email do participante se disponível. MUST NOT: iniciar transcrição se notificação falhar para ≥1 participante com email registrado — captura é abortada e solicitante é notificado do motivo.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-020, BR-008, BR-007 | RN-031 (notificação obrigatória), RN-013 (LGPD) | FA-16 | JN-14 passo 3 |
+
+---
+
+#### FR-192 — Transcrição automática em ≤1h com diarization
+
+**Feature**: FA-16 | **Fase**: Piloto | **Criticidade**: Alta
+
+**Descrição**: Após encerramento da reunião, o sistema MUST processar o áudio e retornar transcrição completa em português brasileiro em ≤1h (p95). MUST: texto estruturado com diarization — cada utterance atribuída a speaker (Speaker A, Speaker B, ou nome se identificável). MUST: timestamp por utterance para referência cruzada com extração estruturada (FR-193). MUST: transcrição armazenada com RBAC restrito conforme FR-195. SHOULD: precisão de diarization ≥85% em reuniões com ≤6 participantes.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-020, BR-004 | RN-013 (retenção LGPD), RN-012 (auditoria) | FA-16 | JN-14 passo 4 |
+
+---
+
+#### FR-193 — Extração estruturada de decisões, próximos passos e entidades
+
+**Feature**: FA-16 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: O sistema MUST executar LLM sobre transcrição (FR-192) para extrair estruturadamente:
+a. **Decisões tomadas**: com responsável identificado e contexto resumido
+b. **Próximos passos**: com prazo declarado (se mencionado) e responsável
+c. **Entidades mencionadas**: clientes, concorrentes, produtos, pessoas-chave
+d. **Briefings emergentes**: novos escopo, demanda, ou mudança de direção capturados
+
+MUST: cada item com timestamp de ocorrência na transcrição (ref. para verificação). MUST: confiança por item (alta/média/baixa) baseada em evidência textual direta. MUST: extração concludida em ≤30 min após fim da transcrição (FR-192).
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-020, BR-004 | RN-012, RN-013 | FA-16 | JN-14 passo 5 |
+
+---
+
+#### FR-194 — Alimentação da Wiki Ontológica com proveniência (HITL)
+
+**Feature**: FA-16 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: Entidades e decisões extraídas (FR-193) MUST ser propostas para a Wiki Ontológica do cliente com proveniência completa: reunião ID + data + participantes + timestamp da utterance. MUST: PX-01 (Líder) revisa proposta antes de consolidar na Wiki — HITL não opcional. MUST NOT: auto-merge ou sobrescrever entidades existentes sem revisão humana explícita. SHOULD: interface mostra diff entre entidade existente e nova proposta (versão antes/depois) para decisão informada do revisor.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-020, BR-004, BR-007 | RN-032, RN-012 | FA-16, FA-01 | JN-14 passo 6 |
+
+---
+
+#### FR-195 — RBAC sobre transcrição e conteúdo extraído
+
+**Feature**: FA-16 | **Fase**: Piloto | **Criticidade**: Core
+
+**Descrição**: MUST: acesso à transcrição completa (FR-192) restrito a participantes presentes na reunião + Líder/Admin da área — não acessível a Operacionais que não participaram. MUST: conteúdo extraído (decisões, próximos passos — FR-193) segue RBAC padrão da sessão: quem pode ver é quem poderia participar da reunião. MUST: audit log completo de acesso à transcrição: quem, quando, qual conteúdo visualizou. MUST NOT: transcrição completa visível via API sem autenticação explícita do participante.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-020, BR-007, BR-008 | RN-009, RN-011, RN-012 (auditoria) | FA-16, FA-09 | JN-14 passo 7-8 |
+
+---
+
+### 3.Z. BR-019 Transversal — Software Estruturado, Não Chat Livre
+
+#### FR-196 — Chat sempre contextualizado por Skill + Moon ativo
+
+**Feature**: FA-04, FA-06 | **Fase**: Protótipo | **Criticidade**: Alta
+
+**Descrição**: O sistema MUST garantir que toda sessão de Chat com agente IA seja contextualizada por: (a) cliente ativo (Planeta), (b) Skill ativa (Órbita), (c) Moon selecionado (chip). MUST NOT: existir modo de "chat livre" não contextualizado disponível para usuários com perfil Operacional. SHOULD: Admin/Líder pode ter acesso a modo diagnóstico sem Skill (escopo restrito, auditado). Implementa BR-019: sunOS como "software estruturado", não assistente genérico.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-019 (primário), BR-002 | RN-003 (acionamento ≤3 cliques), RN-010 | FA-04, FA-06 | JN-03, JN-07 (transversal) |
+
+---
+
+#### FR-197 — Navegação guiada: Skill deve ser escolhida antes do Chat
+
+**Feature**: FA-06 | **Fase**: Protótipo | **Criticidade**: Alta
+
+**Descrição**: MUST: fluxo de navegação do Sistema Solar MUST NOT permitir acesso ao Chat sem Skill selecionada para perfis Operacional e Creator. MUST: botão "Chat" ou equivalente desabilitado ou ausente se usuário está no nível Sun ou Planeta sem Órbita selecionada. MUST: sistema exibe prompt de seleção de Skill quando usuário tenta acessar Chat diretamente (ex.: via URL). Implementa paradigma BR-019 na navegação.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-019 (primário), BR-006 | RN-003 | FA-06, FA-04 | JN-02, JN-03, JN-04 (entrada) |
+
+---
+
+#### FR-198 — Onboarding inclui módulo "Software Estruturado"
+
+**Feature**: FA-11, FA-09 | **Fase**: Piloto | **Criticidade**: Média
+
+**Descrição**: MUST: onboarding de novo Creator/Operador (JN-09) MUST incluir módulo específico explicando o paradigma "Software Estruturado, não chat livre": por que Skill + Moon + Chat é a interface, o que é a Caixa-preta, por que o sistema Solar existe. SHOULD: módulo em ≤3 telas de onboarding, com exemplo prático de "como NÃO usar" vs "como usar". Implementa BR-019 como princípio cultural aprendido, não apenas técnico.
+
+| BRs | RNs | FAs | Jornadas |
+|-----|-----|-----|----------|
+| BR-019, BR-012 | RN-016 (vocabulário), RN-017 (tracks por carreira) | FA-11, FA-09 | JN-09 |
+
+---
 
 ---
 
@@ -2972,6 +3184,11 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 | PX-05 | JN-09 (Onboarding) | FR-130, FR-140, FR-151, FR-152, FR-154 | FA-09, FA-11 | Piloto |
 | PX-05 | JN-02 (track junior) | FR-001 a FR-018 (FRD com N=3), FR-152 | FA-02 (FRD), FA-11 | Piloto |
 | Todas | Transversal | FR-138, FR-139, FR-144 | FA-09, FA-10 | Protótipo → Piloto |
+| PX-01 | JN-13 (Onboarding Oráculo) | FR-180 a FR-185 | FA-15, FA-14, FA-12 | Piloto |
+| PX-03 | JN-14 (Captura Seletiva) | FR-190 a FR-195 | FA-16, FA-01, FA-09 | Piloto |
+| PX-07 | JN-15 (Sponsor arquiteta) | FR-122 a FR-127 (canvas), FR-159 | FA-05, FA-12 | Piloto |
+| PX-08 | JN-16 (Builder constrói) | FR-122 a FR-127, FR-159 | FA-05, FA-03, FA-07 | Piloto |
+| PX-08 | JN-17 (Builder Sync) | FR-150 (custo evitado), FR-122 a FR-127 | FA-05, FA-10 | Piloto |
 
 ---
 
@@ -2993,7 +3210,7 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 | Ambiguidade | Documentos Conflitantes | Resolução Proposta |
 |-------------|------------------------|---------------------|
 | Operacional pode criar Workflows próprios? | Parte 1 (Operacional consome via Skills) vs. JN-07 (PX-03 configura) | RBAC permite Workflows próprios sem schedule (FR-159); compartilhados exigem Líder |
-| Tracks de onboarding (FR-151) interagem com track sênior do Shoot for the Moon? | RN-017 fala "track de onboarding" (FA-11-03); FRD fala "track sênior" (FR-013) | FR-151 define track inicial; FR-013 (FRD) define modos dentro do Shoot for the Moon — independentes mas coerentes |
+| Tracks de onboarding (FR-151) interagem com track sênior do Moon Shot? | RN-017 fala "track de onboarding" (FA-11-03); FRD fala "track sênior" (FR-013) | FR-151 define track inicial; FR-013 (FRD) define modos dentro do Moon Shot — independentes mas coerentes |
 | Validação automática de vocabulário (FR-153) é gate Piloto ou MVP? | Parte 1 sugere Piloto; PA-10 ainda pendente | Proposto Piloto se PA-10 confirmar viabilidade até Junho 2026 |
 
 ### 6.3. Clarificações Necessárias
@@ -3006,7 +3223,7 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 | Validar definições por área de junior/pleno/sênior (PA-09) | Bruno Prosperi (criação), Takai (mídia) | FR-151 fica subespecificado | Junho 2026 |
 | Definir formato e infraestrutura de validação automática de copy (PA-10) | Heitor + time dev | FR-153 fica bloqueado | Antes do Protótipo |
 | Aprovar lista atualizada de ferramentas adotadas (PA-11) | Diretoria | FR-127 fica subespecificado | Junho 2026 |
-| Importar baseline ROI das 136 atividades (PA-04) | Heitor + champions | FR-149 não calcula custo evitado em Skills sem baseline | Maio 2026 |
+| Importar baseline ROI das 136 atividades (PA-04) | Heitor + builders | FR-149 não calcula custo evitado em Skills sem baseline | Maio 2026 |
 | Decidir formato exato do Dashboard executivo (PA-05) | Heitor + Guga | FR-148 fica subespecificado | Junho 2026 |
 | Confirmar PX-05 como persona separada (ASS-PX-01 da Parte 2) | Heitor + Bruno Prosperi | FR-151, FR-154 viram variantes se PX-05 vira track | Maio 2026 |
 
@@ -3014,10 +3231,10 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 
 ## 7. Cobertura de Features (FA-XX) por FRs
 
-| FA-XX | FRs neste PRD | FRs no FRD Shoot for the Moon | Status |
+| FA-XX | FRs neste PRD | FRs no FRD Moon Shot | Status |
 |-------|---------------|--------------------------------|:------:|
 | FA-01 Biblioteca | FR-100 a FR-108 (9 FRs) | — | OK |
-| FA-02 Shoot for the Moon | — (referenciada via FR-001 a FR-018 do FRD externo) | FR-001 a FR-018 | OK (no FRD) |
+| FA-02 Moon Shot | — (referenciada via FR-001 a FR-018 do FRD externo) | FR-001 a FR-018 | OK (no FRD) |
 | FA-03 Skills processuais | FR-109 a FR-115 (7 FRs) | — | OK |
 | FA-04 Chat ReAct | FR-116 a FR-121 (6 FRs) | — | OK |
 | FA-05 Workflows | FR-122 a FR-127 (6 FRs) | — | OK |
@@ -3028,8 +3245,13 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 | FA-10 Mensuração | FR-144 a FR-150 (7 FRs) | — | OK |
 | FA-11 Safety cultural | FR-151 a FR-155 (5 FRs) | (compartilha FR-013, FR-014 do FRD para forced reflection e marcação) | OK |
 | FA-12 Admin areas | FR-156 a FR-159 (4 FRs) | — | OK |
+| FA-13 Aprovação Hierárquica | FR-160 a FR-170 (11 FRs) | — | OK |
+| FA-14 Drive Suno Read-Only | FR-171 a FR-179 (9 FRs) | — | OK |
+| FA-15 Onboarding de Cliente | FR-180 a FR-185 (6 FRs) | — | OK |
+| FA-16 Captura Seletiva | FR-190 a FR-195 (6 FRs) | — | OK |
+| BR-019 Transversal | FR-196 a FR-198 (3 FRs) | — | OK |
 
-**Cobertura completa**: nenhuma FA órfã. FA-02 (Shoot for the Moon) é a única FA cujos FRs vivem **integralmente no FRD externo** — esta Parte 4 referencia mas não duplica. Demais 11 FAs têm cobertura direta neste documento.
+**Cobertura completa**: nenhuma FA órfã. FA-02 (Moon Shot) é a única FA cujos FRs vivem **integralmente no FRD externo** — esta Parte 4 referencia mas não duplica. Demais 15 FAs têm cobertura direta neste documento.
 
 ---
 
@@ -3037,5 +3259,7 @@ Nenhum FR derivado neste documento. Cada FR-100 a FR-159 rastreia ≥1 BR.
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **60 FRs (FR-100 a FR-159)** detalhados neste documento, cobrindo 11 das 12 FAs (FA-01, FA-03 a FA-12). FA-02 (Shoot for the Moon) cobre via referência ao FRD externo (FR-001 a FR-018, 18 FRs). Total combinado: **78 FRs**. Linguagem RFC 2119 (MUST/SHOULD/MAY) aplicada. Cada FR rastreia ≥1 BR + ≥1 FA + ≥1 RN aplicável. Cobertura completa: cada um dos 16 BRs tem ≥1 FR; nenhuma FA órfã. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma); anti-patterns evitados. **Koro sempre com K** |
-| 1.1 | 2026-04-28 | **+20 FRs** cobrindo as features novas: FR-160 a FR-170 (11 FRs para FA-13 Aprovação Hierárquica) e FR-171 a FR-179 (9 FRs para FA-14 Google Drive). Total documento: **80 FRs**; total combinado com FRD Shoot for the Moon: **98 FRs**. Pedido Guga + Bruno Prosperi. BR-017 e BR-018 cobertos completamente |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **60 FRs (FR-100 a FR-159)** detalhados neste documento, cobrindo 11 das 12 FAs (FA-01, FA-03 a FA-12). FA-02 (Moon Shot) cobre via referência ao FRD externo (FR-001 a FR-018, 18 FRs). Total combinado: **78 FRs**. Linguagem RFC 2119 (MUST/SHOULD/MAY) aplicada. Cada FR rastreia ≥1 BR + ≥1 FA + ≥1 RN aplicável. Cobertura completa: cada um dos 16 BRs tem ≥1 FR; nenhuma FA órfã. Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma); anti-patterns evitados. **Koro sempre com K** |
+| 1.1 | 2026-04-28 | **+20 FRs** cobrindo as features novas: FR-160 a FR-170 (11 FRs para FA-13 Aprovação Hierárquica) e FR-171 a FR-179 (9 FRs para FA-14 Google Drive). Total documento: **80 FRs**; total combinado com FRD Moon Shot: **98 FRs**. Pedido Guga + Bruno Prosperi. BR-017 e BR-018 cobertos completamente |
+| 1.3 | 2026-05-14 | Heitor Miranda + Claude (assistido) | FR-180 a FR-185 (FA-15 Onboarding Oráculo) e FR-190 a FR-195 (FA-16 Captura Seletiva) expandidos de placeholders TODO para FRs completos RFC 2119. +FR-196 a FR-198 (BR-019 Transversal — software estruturado). §5 Jornada×Persona: +PX-07, PX-08, JN-13, JN-14, JN-15, JN-16, JN-17. §7 Coverage: +FA-13, FA-14, FA-15, FA-16, BR-019 Transversal. Total: ~101 FRs. |
+| 1.2 | 2026-05-14 | FR-122 atualizado: drag-and-drop aceito via ADR-003 (ADR-001 superseded). +12 FRs placeholder (FR-180 a FR-185 para FA-15 Onboarding, FR-190 a FR-195 para FA-16 Captura Seletiva). Total documento: **92 FRs**; todos marcados com TODO para expansão antes de SDD |

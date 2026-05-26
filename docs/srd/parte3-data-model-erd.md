@@ -25,7 +25,7 @@ Este documento traduz os **Bounded Contexts e Aggregates** do Domain Model (Part
 O modelo é dividido em:
 
 - **Tabelas existentes** já em produção/staging — inferíveis de `api/migrations/001_knowledge_tables.sql`, `002_workflow_tables.sql`, `api/models/conversation.py`, `api/models/knowledge.py`
-- **Tabelas novas necessárias** para cobrir BRs ainda não cobertas (especialmente BR-013 mensuração de custo evitado, BR-014 detecção de homogeneização, BR-007/009/012 RBAC + auditoria, BC-04 Shoot for the Moon, BC-05 Measurement)
+- **Tabelas novas necessárias** para cobrir BRs ainda não cobertas (especialmente BR-013 mensuração de custo evitado, BR-014 detecção de homogeneização, BR-007/009/012 RBAC + auditoria, BC-04 Moon Shot, BC-05 Measurement)
 - **pgvector tables** para embeddings (Biblioteca + Briefing semantic distance)
 
 ### 1.2. Escopo
@@ -452,7 +452,7 @@ Schema já documentado. Evolução proposta:
 
 #### ENT-20 — `knowledge_graph_edges`
 
-**Tipo**: Vector/Graph — auxiliar para retrieval divergente do Shoot for the Moon (FA-02)
+**Tipo**: Vector/Graph — auxiliar para retrieval divergente do Moon Shot (FA-02)
 
 | Atributo | Tipo | Constraints |
 |----------|------|-------------|

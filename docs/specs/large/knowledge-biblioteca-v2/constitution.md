@@ -2,7 +2,8 @@
 spec-id: SPEC-002
 slug: knowledge-biblioteca-v2
 artefato: constitution
-atualizada: 2026-04-14
+status: rascunho
+atualizada: 2026-05-15
 versao: 1.0
 escopo:
   projeto: sunos
@@ -11,6 +12,9 @@ escopo:
   papel: Tech Lead
   branch: master
   contexto: Evoluir Biblioteca para suportar multimodal + vector search, mantendo interface simples
+upstream:
+  - docs/brd/parte3-requisitos.md (BR-004, BR-005, BR-006, BR-007, BR-008, BR-015)
+  - docs/brd/parte4-regras.md (RN-006, RN-007, RN-010, RN-011, RN-021)
 ---
 
 # Constitution — Knowledge Architecture + Biblioteca v2

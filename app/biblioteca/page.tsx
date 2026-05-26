@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, Search, LayoutList, LayoutGrid } from 'lucide-react';
+import { Plus, Search, LayoutList, LayoutGrid, BookOpen } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import BibliotecaCard from '@/components/biblioteca/BibliotecaCard';
 import BibliotecaTable from '@/components/biblioteca/BibliotecaTable';
 import BibliotecaSidebar from '@/components/biblioteca/BibliotecaSidebar';
 import BibliotecaDrawer from '@/components/biblioteca/BibliotecaDrawer';
 import BibliotecaModal from '@/components/biblioteca/BibliotecaModal';
+import EmptyState from '@/components/ui/EmptyState';
 import Toast from '@/components/ui/Toast';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
@@ -295,8 +296,18 @@ export default function BibliotecaPage() {
             </div>
           )}
 
+          {/* No data at all — rich empty state with CTA */}
+          {documents.length === 0 && (
+            <EmptyState
+              icon={BookOpen}
+              title="Biblioteca vazia"
+              description="Adicione documentos, briefings e referências para enriquecer suas skills."
+              action={{ label: 'Adicionar documento', onClick: () => setModalDoc(null) }}
+            />
+          )}
+
           {/* Content: table or grid */}
-          {filtered.length === 0 ? (
+          {documents.length > 0 && filtered.length === 0 ? (
             <p
               style={{
                 textAlign: 'center',
@@ -307,7 +318,7 @@ export default function BibliotecaPage() {
             >
               Nenhum item encontrado.
             </p>
-          ) : viewMode === 'table' ? (
+          ) : documents.length > 0 && viewMode === 'table' ? (
             <BibliotecaTable
               documents={filtered}
               onRowClick={(doc) => setDrawerDoc(doc)}

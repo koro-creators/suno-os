@@ -1,5 +1,5 @@
 ---
-spec-id: SPEC-004
+spec-id: SPEC-012
 slug: workflow-chaining
 nivel-sdd: spec-anchored
 tamanho: medium
@@ -22,6 +22,9 @@ arquivos-relacionados:
   - lib/workflow-types.ts
   - components/workflows/WorkflowStepEditor.tsx
   - components/workflows/WorkflowBuilder.tsx
+notas:
+  - "Frontend refs (WorkflowBuilder.tsx, WorkflowStepEditor.tsx) são pré-canvas — atualizar para SPEC-005 canvas components quando implementar"
+  - "Handle vocabulary para step type workflow: source=out/error (canvas-conventions.md)"
 ---
 
 # Workflow Chaining — Encadeamento de Workflows

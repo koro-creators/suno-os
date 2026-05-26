@@ -3,9 +3,9 @@ documento: BRD Parte 4 — Regras de Negócio (RN-XXX)
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.2
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -17,32 +17,32 @@ aprovacoes:
     aprovador: Heitor Miranda
     data: 2026-04-28
     status: Pendente
-fonte_principal: Parte 3 (Requisitos BR-XXX) + FRD Shoot for the Moon + Research foundation engineering serendipity
+fonte_principal: Parte 3 (Requisitos BR-XXX) + FRD Moon Shot + Research foundation engineering serendipity
 ---
 
 # BRD Parte 4 — Regras de Negócio
 
 ## Objetivo
 
-Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em **regras decisionais formais (RN-XXX)** com lógica explícita SE/ENTÃO/SENÃO. Cada regra pode ser implementada como código, validada por auditoria, ou usada como guideline operacional para tomadas de decisão por humanos.
+Esta parte materializa os **Requisitos de Negócio (BR-XXX)** da Parte 3 em **regras decisionais formais (RN-XXX)** com lógica explícita SE/ENTÃO/SENÃO. Cada regra pode ser implementada como código, validada por auditoria, ou usada como guideline operacional para tomadas de decisão por humanos.
 
 **RN ≠ FR (Functional Requirement)**: a RN descreve **a lógica de decisão de negócio**, não como o sistema implementa. O FRD/PRD/SRD traduzirão cada RN em mecanismos técnicos.
 
 ## Como Usar
 
-- Cada RN tem ID sequencial (RN-001 a RN-022), referencia ≥1 BR da Parte 3
+- Cada RN tem ID sequencial (RN-001 a RN-034), referencia ≥1 BR da Parte 3
 - Lógica formal: **SE** (condição) **ENTÃO** (ação) **SENÃO** (ação alternativa ou comportamento padrão)
 - Inputs declaram o que precisa estar disponível (origem, sistema)
 - KPIs ligam a regra a métricas de sucesso da Parte 3
 - **Confiabilidade** sinaliza a robustez da fonte: Alta (fonte oficial direta), Média (fonte única ou inferência baseada em pesquisa), Baixa (proposta a validar)
 
-## Sumário Executivo (22 RNs)
+## Sumário Executivo (34 RNs)
 
 | ID | Título resumido | BR(s) | Categoria | Confiabilidade |
 |----|----------------|-------|-----------|:--------------:|
 | **RN-001** | Filtragem de provocações por zona de bisociação | BR-001 | Filtragem | Alta |
 | **RN-002** | Convergência do loop Explorer↔Crítico | BR-001 | Filtragem | Alta |
-| **RN-003** | Acionamento do Shoot for the Moon | BR-001 | Acionamento | Alta |
+| **RN-003** | Acionamento do Moon Shot | BR-001 | Acionamento | Alta |
 | **RN-004** | Avaliação mensal de redução de tempo por skill | BR-002 | Mensuração | Média |
 | **RN-005** | Geração e flagging do dashboard executivo | BR-003 | Mensuração | Média |
 | **RN-006** | Validação de metadados em ingestão da Biblioteca | BR-004 | Acesso/Curadoria | Alta |
@@ -70,6 +70,10 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **RN-028** | Intersecção ACL Drive × RBAC sunOS — default deny | BR-018, BR-007 | Drive/Acesso | Alta |
 | **RN-029** | Curadoria do Drive por agente é **sugestiva**; humano executa | BR-018, BR-010 | Drive/Cultura | Alta |
 | **RN-030** | Re-sync periódico (24h) + webhook para mudanças críticas | BR-018 | Drive/Reliability | Média |
+| **RN-031** | Acionamento opt-in obrigatório para captura de reuniões | BR-020 | Captura/Privacidade | Alta |
+| **RN-032** | HITL obrigatório no seed ontológico inicial | BR-022 | Onboarding/HITL | Alta |
+| **RN-033** | Allow-list para pesquisa web no onboarding | BR-022 | Onboarding/Governança | Média |
+| **RN-034** | Bloqueio de chat livre em Skills processuais | BR-019 | UX/Estruturação | Alta |
 
 ---
 
@@ -83,11 +87,11 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **BR(s) relacionado(s)** | BR-001 (Provocação criativa contra homogeneização) |
 | **Dimensão/Subdimensão** | Filtragem / Zona criativa |
 | **Variável de decisão** | Classificação de provocação por nível de surpresa relevante |
-| **Inputs necessários** | Embedding do briefing (LLM), embedding da provocação, modo do creator (adjacente / equilibrado / radical) — origem: pipeline Shoot for the Moon |
+| **Inputs necessários** | Embedding do briefing (LLM), embedding da provocação, modo do creator (adjacente / equilibrado / radical) — origem: pipeline Moon Shot |
 | **Condição** | **SE** distância semântica entre briefing e provocação for **mínima** (zona "óbvio") **ENTÃO** descartar provocação. **SE** distância for **moderada e mappeável** (zona Sweet Spot) **ENTÃO** priorizar. **SE** distância for **extrema sem ponte de sentido** (zona "incoerente") **ENTÃO** descartar. **SENÃO** seguir conforme modo configurado pelo creator |
 | **Ação de negócio recomendada** | Apresentar ao creator apenas provocações na zona Sweet Spot por padrão; expandir para zonas adjacentes ou radicais sob demanda explícita |
 | **KPIs de sucesso** | ≥60% de provocações classificadas como "úteis" em testes blind (BR-001) · ≥90% de filtragem efetiva de zonas extremas |
-| **Fontes** | FRD Shoot for the Moon §FR-011 · Research foundation: Hope, Chan, Kittur & Shahaf 2017 · Chan & Schunn 2014 |
+| **Fontes** | FRD Moon Shot §FR-011 · Research foundation: Hope, Chan, Kittur & Shahaf 2017 · Chan & Schunn 2014 |
 | **Confiabilidade** | **Alta** — operacionalização técnica detalhada no FRD, baseada em literatura empírica |
 
 ---
@@ -100,7 +104,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **BR(s) relacionado(s)** | BR-001 |
 | **Dimensão/Subdimensão** | Filtragem / Multi-agente |
 | **Variável de decisão** | Aprovação ou rejeição de provocação após avaliação multi-agente |
-| **Inputs necessários** | Provocação gerada pelo Explorer + scores das 3 dimensões avaliadas pelo Crítico (Novidade, Coerência, Potencial Criativo) — origem: pipeline Shoot for the Moon |
+| **Inputs necessários** | Provocação gerada pelo Explorer + scores das 3 dimensões avaliadas pelo Crítico (Novidade, Coerência, Potencial Criativo) — origem: pipeline Moon Shot |
 | **Condição** | **SE** score médio (Novidade × Coerência × Potencial) ≥ 8 **ENTÃO** aprovar provocação. **SE** qualquer dimensão individual < 5 **ENTÃO** rejeitar e devolver ao Explorer com feedback. **SE** ≥ 5 iterações sem convergência **ENTÃO** interromper e descartar. **SENÃO** continuar iteração |
 | **Ação de negócio recomendada** | Garantir que toda provocação apresentada ao creator passou por avaliação adversarial estruturada — protege contra ruído |
 | **KPIs de sucesso** | Taxa de aprovação automática estável entre 30%–60% das provocações geradas (sinal de calibração saudável) · Tempo médio de iteração < 20s |
@@ -109,7 +113,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 
 ---
 
-### RN-003 — Acionamento do Shoot for the Moon
+### RN-003 — Acionamento do Moon Shot
 
 | Campo | Valor |
 |-------|-------|
@@ -118,7 +122,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **Dimensão/Subdimensão** | Acionamento / UX |
 | **Variável de decisão** | Disparo do pipeline criativo a partir do contexto do creator |
 | **Inputs necessários** | Cliente ativo na sessão · Tema/briefing em andamento · Modo de intensidade configurado |
-| **Condição** | **SE** creator está em contexto de cliente E aciona Shoot for the Moon **ENTÃO** executar pipeline com contexto automático. **SE** creator não tem contexto de cliente E aciona **ENTÃO** solicitar tema/briefing antes de executar. **SE** pipeline ultrapassar 30s sem resposta **ENTÃO** notificar creator com opção de cancelar. **SENÃO** executar normalmente |
+| **Condição** | **SE** creator está em contexto de cliente E aciona Moon Shot **ENTÃO** executar pipeline com contexto automático. **SE** creator não tem contexto de cliente E aciona **ENTÃO** solicitar tema/briefing antes de executar. **SE** pipeline ultrapassar 30s sem resposta **ENTÃO** notificar creator com opção de cancelar. **SENÃO** executar normalmente |
 | **Ação de negócio recomendada** | Manter o princípio "3 cliques até o valor" — creator nunca deve preencher formulário longo para receber provocações |
 | **KPIs de sucesso** | Tempo médio de resposta < 15s · Taxa de cancelamento por timeout < 5% |
 | **Fontes** | FRD §FR-008, princípio "Botão da criatividade, não do desespero" |
@@ -172,7 +176,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **Variável de decisão** | Aceitação ou bloqueio de conteúdo na Biblioteca |
 | **Inputs necessários** | Conteúdo submetido + campos: título, domínio (cliente \| indústria \| cultura \| metodologia \| referência), tags, cliente associado, fonte, descrição |
 | **Condição** | **SE** conteúdo submetido sem título OU sem domínio OU com < 2 tags OU com descrição < 50 caracteres **ENTÃO** bloquear ingestão e exigir correção. **SE** conteúdo for cliente-específico mas sem cliente associado **ENTÃO** bloquear. **SE** todos os metadados obrigatórios estão completos **ENTÃO** aceitar e iniciar indexação dual (vetorial + grafo). **SENÃO** solicitar correção |
-| **Ação de negócio recomendada** | Sem metadados estruturados, retrieval divergente do Shoot for the Moon não funciona. Curadoria preguiçosa hoje = serendipidade fraca amanhã |
+| **Ação de negócio recomendada** | Sem metadados estruturados, retrieval divergente do Moon Shot não funciona. Curadoria preguiçosa hoje = serendipidade fraca amanhã |
 | **KPIs de sucesso** | 100% dos itens da Biblioteca com metadados completos · Tempo médio de curadoria por item < 5 min |
 | **Fontes** | FRD §FR-001 |
 | **Confiabilidade** | **Alta** — derivado diretamente do FRD |
@@ -189,7 +193,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **Variável de decisão** | Visibilidade de conteúdo de cliente conforme status do cliente |
 | **Inputs necessários** | Status do cliente (ativo / inativo) · Perfil do usuário · Tipo de retrieval (padrão vs. busca explícita por líder) |
 | **Condição** | **SE** cliente status = "ativo" **ENTÃO** exibir conteúdo no Sistema Solar e em todos retrievals padrão. **SE** cliente status = "inativo" **ENTÃO** manter conteúdo na Biblioteca mas ocultar de Sistema Solar e retrievals padrão. **SE** líder solicitar busca explícita por cliente inativo **ENTÃO** permitir acesso. **SENÃO** seguir status do cliente |
-| **Ação de negócio recomendada** | Repertório de clientes históricos não desaparece — serve a Shoot for the Moon e a onboarding, sem poluir a operação diária |
+| **Ação de negócio recomendada** | Repertório de clientes históricos não desaparece — serve a Moon Shot e a onboarding, sem poluir a operação diária |
 | **KPIs de sucesso** | ≥80% das contas históricas críticas com contexto preservado (BR-005) · Zero conhecimento perdido em saídas de clientes |
 | **Fontes** | FRD §FR-005, BR-005 |
 | **Confiabilidade** | **Alta** |
@@ -224,7 +228,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **Dimensão/Subdimensão** | Acesso / RBAC |
 | **Variável de decisão** | Operações permitidas por perfil de usuário |
 | **Inputs necessários** | Perfil do usuário autenticado (Admin / Líder / Operacional) · Recurso solicitado · Operação solicitada (read/write/delete) |
-| **Condição** | **SE** perfil = Admin **ENTÃO** liberar CRUD total na Biblioteca + lógica de skills + system prompts. **SE** perfil = Líder **ENTÃO** liberar CRUD na Biblioteca da sua área + leitura de áreas relacionadas. **SE** perfil = Operacional **ENTÃO** liberar apenas consumo via skills/Shoot for the Moon (sem acesso direto à Biblioteca, lógica de skills ou system prompts). **SENÃO** negar acesso (default deny) |
+| **Condição** | **SE** perfil = Admin **ENTÃO** liberar CRUD total na Biblioteca + lógica de skills + system prompts. **SE** perfil = Líder **ENTÃO** liberar CRUD na Biblioteca da sua área + leitura de áreas relacionadas. **SE** perfil = Operacional **ENTÃO** liberar apenas consumo via skills/Moon Shot (sem acesso direto à Biblioteca, lógica de skills ou system prompts). **SENÃO** negar acesso (default deny) |
 | **Ação de negócio recomendada** | Default deny: qualquer ambiguidade de permissão é resolvida negando. Caixa-preta protegida nas sete chaves |
 | **KPIs de sucesso** | Zero exposição de skills/system prompts a perfis operacionais (auditável) · 100% de operações registradas em log de auditoria |
 | **Fontes** | FRD §FR-007, Glossário §1 (Caixa-preta), BR-007, ADR-CAND-002 |
@@ -475,7 +479,7 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | **Condição** | **SE** creator submete asset para aprovação **ENTÃO** disparar agentes validators em paralelo (mínimo: BrandValidator, PortuguêsValidator; configuráveis por área: LegalValidator, AccessibilityValidator etc.). **SE** algum validator falha técnicamente (timeout, erro) **ENTÃO** marcar dimensão como `error` (não bloqueia, mas alerta o aprovador). **SE** todos completam **ENTÃO** consolidar Validation Report estruturado (`{dimensão, status, evidências[], sugestões[]}`) e anexar à submissão. **SENÃO** seguir comportamento padrão |
 | **Ação de negócio recomendada** | Aprovador recebe asset + Report — sabe imediatamente onde estão os pontos de atenção sem ter que revisar tudo manualmente |
 | **KPIs de sucesso** | ≥80% das revisões evitáveis endereçadas (BR-017) · Tempo médio de validação < 60s P95 |
-| **Fontes** | BR-017, FRD Shoot for the Moon §FA-11 (Safety Cultural) |
+| **Fontes** | BR-017, FRD Moon Shot §FA-11 (Safety Cultural) |
 | **Confiabilidade** | **Alta** — pedido explícito do sponsor com lógica clara |
 
 ### RN-024 — Aprovador é sempre humano
@@ -585,6 +589,68 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 
 ---
 
+### RN-031 — Acionamento opt-in obrigatório para Captura de Reuniões
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-031 |
+| **BR(s) relacionado(s)** | BR-020 |
+| **Dimensão/Subdimensão** | Captura / Privacidade |
+| **Variável de decisão** | Quando o sunOS pode iniciar gravação |
+| **Inputs necessários** | Tipo de reunião · Usuário autorizado · Confirmação explícita |
+| **Condição** | **SE** usuário autorizado clica explicitamente em "Iniciar captura" para uma reunião específica **E** todos os participantes recebem notificação automática **ENTÃO** inicia gravação. **SE** qualquer condição faltar **ENTÃO** não inicia. **SENÃO** permanece off |
+| **Ação de negócio recomendada** | Default OFF em qualquer integração de calendário. Sem auto-join. Sem captura passiva |
+| **KPIs de sucesso** | Zero capturas sem opt-in registrado · 100% das capturas com notificação aos participantes |
+| **Fontes** | BR-020, princípio Caixa-preta |
+| **Confiabilidade** | **Alta** |
+
+### RN-032 — HITL obrigatório no seed ontológico inicial
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-032 |
+| **BR(s) relacionado(s)** | BR-022 |
+| **Dimensão/Subdimensão** | Onboarding / HITL |
+| **Variável de decisão** | Quando uma entidade da ontologia sugerida vira parte oficial da Wiki |
+| **Inputs necessários** | Sugestão do agente · Validação humana |
+| **Condição** | **SE** entidade foi sugerida pelo agente de Discovery **E** humano (Builder de Operações) validou explicitamente (aceitar/rejeitar/editar) **ENTÃO** entidade vira oficial. **SE** >7 dias sem validação **ENTÃO** entidade fica em status PENDING_REVIEW e bloqueia ativação do cliente. **SENÃO** não vira oficial |
+| **Ação de negócio recomendada** | Cliente permanece PRE-ACTIVE até no mínimo as 6 entidades core terem decisão humana registrada |
+| **KPIs de sucesso** | Zero clientes ativados sem validação completa do seed · Tempo médio de validação <72h após sync |
+| **Fontes** | BR-022, BR-010 (ownership humano) |
+| **Confiabilidade** | **Alta** |
+
+### RN-033 — Allow-list para pesquisa web no onboarding
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-033 |
+| **BR(s) relacionado(s)** | BR-022 |
+| **Dimensão/Subdimensão** | Onboarding / Governança de fontes |
+| **Variável de decisão** | Quais fontes externas o agente de Discovery pode consultar |
+| **Inputs necessários** | URL/domínio · Allow-list atual |
+| **Condição** | **SE** domínio está na allow-list configurada pelo admin **ENTÃO** consulta permitida. **SE** não está **ENTÃO** bloqueia e loga tentativa. **SE** conteúdo exige login ou paywall **ENTÃO** bloqueia (sem scraping protegido). **SENÃO** opera normalmente |
+| **Ação de negócio recomendada** | Allow-list inicial sugerida: linkedin.com (perfil público apenas), site corporativo do cliente, news públicas (G1, Folha, Estadão, Valor, Meio&Mensagem). Expansão exige aprovação do Comitê de Produto |
+| **KPIs de sucesso** | Zero acessos a fontes não autorizadas · 100% das consultas com proveniência rastreável |
+| **Fontes** | BR-022, princípio de governança de fontes |
+| **Confiabilidade** | **Média** (depende de configuração e disciplina) |
+
+### RN-034 — Bloqueio de chat livre em Skills processuais
+
+| Campo | Valor |
+|-------|-------|
+| **Regra ID** | RN-034 |
+| **BR(s) relacionado(s)** | BR-019 |
+| **Dimensão/Subdimensão** | UX / Estruturação |
+| **Variável de decisão** | Quando o Chat aceita instrução livre vs. exige inputs estruturados |
+| **Inputs necessários** | Skill ativa · Contexto da sessão |
+| **Condição** | **SE** Skill processual está ativa **ENTÃO** Chat exige inputs estruturados conforme schema da Skill (form, wizard). **SE** Skill é FA-02 (Moon Shot) **ENTÃO** Chat aceita instrução livre. **SE** Skill é Discovery (chat persistente do consultor) **ENTÃO** Chat aceita instrução livre. **SE** nenhuma Skill ativa **ENTÃO** UI sugere selecionar Skill ou Cliente. Operação em chat genérico é logada para análise de gaps de cobertura |
+| **Ação de negócio recomendada** | Chat genérico não é proibido tecnicamente. É desencorajado por UX. Análise periódica de uso de chat genérico revela Skills faltantes |
+| **KPIs de sucesso** | >80% das sessões de creators operacionais com Skill ativa · Tendência decrescente de uso de chat genérico ao longo do Piloto |
+| **Fontes** | BR-019, ADR-003 |
+| **Confiabilidade** | **Alta** |
+
+---
+
 ## Matriz de Cobertura — RN ↔ BR
 
 | BR | RNs relacionadas |
@@ -606,9 +672,13 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 | BR-015 (Integração Skills) | RN-021 |
 | BR-016 (Coexistência ferramentas) | RN-022 |
 | BR-017 (Aprovação hierárquica) | RN-023, RN-024, RN-025, RN-026 |
-| BR-018 (Google Drive fonte) | RN-027, RN-028, RN-029, RN-030 |
+| BR-018 (Drive interno da Suno) | RN-027, RN-028, RN-029, RN-030 |
+| BR-019 (UX estruturada) | RN-034 |
+| BR-020 (Captura seletiva) | RN-031 |
+| BR-021 (Wiki Ontológica) | RN-032, RN-033 |
+| BR-022 (Onboarding Oráculo) | RN-032, RN-033 |
 
-**Cobertura completa**: cada um dos 16 BRs tem ≥1 RN. BRs prioritários (Alta) têm 1-3 RNs cada.
+**Cobertura completa**: cada um dos 22 BRs (BR-001 a BR-022) tem ≥1 RN. BRs prioritários (Alta) têm 1-3 RNs cada. BR-021 (Wiki Ontológica) é coberto via RN-032 (HITL no seed) e RN-033 (allow-list).
 
 ---
 
@@ -616,8 +686,8 @@ Esta parte materializa os **16 Requisitos de Negócio (BR-XXX)** da Parte 3 em *
 
 | Confiabilidade | Quantidade | RNs |
 |---------------|:----------:|-----|
-| **Alta** | 12 | RN-001, RN-002, RN-003, RN-006, RN-007, RN-009, RN-010, RN-011, RN-014, RN-018, RN-019, RN-020, RN-021 |
-| **Média** | 9 | RN-004, RN-005, RN-008, RN-012, RN-013, RN-015, RN-016, RN-022 |
+| **Alta** | 22 | RN-001, RN-002, RN-003, RN-006, RN-007, RN-009, RN-010, RN-011, RN-014, RN-018, RN-019, RN-020, RN-021, RN-023, RN-024, RN-025, RN-027, RN-028, RN-029, RN-031, RN-032, RN-034 |
+| **Média** | 11 | RN-004, RN-005, RN-008, RN-012, RN-013, RN-015, RN-016, RN-022, RN-026, RN-030, RN-033 |
 | **Baixa** | 1 | RN-017 |
 
 RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de virarem código ou guideline operacional.
@@ -641,7 +711,7 @@ RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de vir
 
 - **PRD**: cada RN gera ≥1 caso de teste de aceitação por feature; lógicas de UX condicional (RN-014, RN-017) viram comportamentos de produto especificados
 - **SRD**: RNs de governança/segurança (RN-009 a RN-013) viram NFRs ISO 25010 — Security, Maintainability, Reliability; RNs de mensuração (RN-018, RN-019) viram requisitos de observabilidade
-- **FRD**: RNs já têm operacionalização parcial no FRD Shoot for the Moon — completar o cross-reference entre RN-XXX e FR-XXX é tarefa do PM/Tech Lead durante implementação
+- **FRD**: RNs já têm operacionalização parcial no FRD Moon Shot — completar o cross-reference entre RN-XXX e FR-XXX é tarefa do PM/Tech Lead durante implementação
 - **Design System / UX Specs**: RN-014, RN-016, RN-017 são guidelines diretos para padrões de interface
 - **Compliance docs (LGPD)**: RN-013 alimenta política de retenção e descarte; RN-010 alimenta política de isolamento entre clientes
 
@@ -655,6 +725,8 @@ RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de vir
 |--------|------|---------|
 | 1.0 | 2026-04-28 | Versão inicial. **22 RNs** organizadas em 6 categorias (espelhando a Parte 3). 12 Alta confiabilidade, 9 Média, 1 Baixa. Cobertura completa de todos os 16 BRs. Toda RN com lógica SE/ENTÃO/SENÃO formal, KPIs verificáveis e fonte rastreável. RNs críticas: RN-009 (RBAC), RN-010 (isolamento clientes), RN-011 (caixa-preta da Biblioteca), RN-019 e RN-020 (safety contra homogeneização) |
 | 1.1 | 2026-04-28 | **+8 RNs** (RN-023 a RN-030) na nova **Categoria G — Aprovação & Drive**. Cobre BR-017 (4 RNs sobre validators paralelos, aprovador humano, anti-loop, hierarquia configurável) e BR-018 (4 RNs sobre read-only, intersecção ACL/RBAC, curadoria sugestiva, sync periódico+webhook). Todas Alta confiabilidade exceto RN-026 e RN-030 (Média) |
+| 1.3 | 2026-05-14 | **Correções documentais**: frontmatter `versao` corrigido para 1.2 real. Sumário atualizado de "(22 RNs)" para "(34 RNs)". RN-031 a RN-034 adicionados à tabela do sumário (estavam no corpo mas ausentes da tabela). Matriz de Confiabilidade corrigida: Alta 12→22, Média 9→11 (somavam 22, agora somam 34). BR-021 adicionado à Matriz de Cobertura. |
+| 1.2 | 2026-05-14 | **+4 RNs** (RN-031 a RN-034). RN-031: opt-in obrigatório para captura de reuniões (BR-020). RN-032: HITL obrigatório no seed ontológico (BR-022). RN-033: allow-list para pesquisa web no onboarding (BR-022). RN-034: bloqueio de chat livre em Skills processuais (BR-019, ADR-003). Matriz RN x BR atualizada com novos BRs. |
 
 ---
 
@@ -666,4 +738,4 @@ RNs **Baixa confiabilidade** devem ser priorizadas para validação antes de vir
 3. **Calibrar thresholds quantitativos** (RN-008, RN-012, RN-015, RN-019) com baseline real antes da implementação
 4. **BRD completo (4 partes)** está pronto para apresentação consolidada à Diretoria
 5. **Iniciar pipeline downstream**: PRD (Feature Map FA-XX, Personas PX-XX, Requisitos Funcionais FR-XXX) e SRD (Arquitetura, NFRs, ADRs)
-6. Revisar **FRD Shoot for the Moon** garantindo que cada FR-XXX é rastreável a um BR-XXX e a uma RN-XXX
+6. Revisar **FRD Moon Shot** garantindo que cada FR-XXX é rastreável a um BR-XXX e a uma RN-XXX

@@ -3,9 +3,9 @@ documento: UX Parte 2 — Arquitetura da Informação
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.1
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-15
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 fonte_prd:
@@ -86,7 +86,7 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 
 ### 2.8 Role-based enablement por perfil
 
-3 perfis (RN-009): **Admin** (CRUD total) · **Líder** (CRUD da sua área) · **Operacional** (apenas consumo via Skills/Shoot for the Moon, sem acesso a Biblioteca/system prompts). Visibilidade do menu lateral, breadcrumbs e ações é filtrada antes da renderização (default deny).
+3 perfis (RN-009): **Admin** (CRUD total) · **Líder** (CRUD da sua área) · **Operacional** (apenas consumo via Skills/Moon Shot, sem acesso a Biblioteca/system prompts). Visibilidade do menu lateral, breadcrumbs e ações é filtrada antes da renderização (default deny).
 
 ---
 
@@ -170,7 +170,7 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 | Rota | Nó/Tela | Função | Personas |
 |------|---------|--------|----------|
 | `/` | T-02 | L0 — Sun + Planetas (Clientes) | Todas |
-| `/[clientSlug]` | T-03 | L1 — Planeta + Órbitas (Skills) + CTA Shoot for the Moon | Todas |
+| `/[clientSlug]` | T-03 | L1 — Planeta + Órbitas (Skills) + CTA Moon Shot | Todas |
 | `/[clientSlug]/[skillSlug]` | T-04 + T-05 | L2 + Chat (PromptTemplateBar com Moon chips) | Todas |
 | `/[clientSlug]/[skillSlug]?moon=[moonSlug]` | T-05 | L3 — Moon ativa (chip selecionado) | Todas |
 | `/[clientSlug]/[skillSlug]/[moonSlug]` | (redirect) | Backward compat — redireciona para `?moon=` | — |
@@ -227,11 +227,11 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 |------|---------|--------|
 | `/mensuracao` | T-24 | Dashboard Executivo mensal (RN-005) |
 | `/mensuracao/skills/[skillId]` | T-25 | Skill Health Detail (RN-004) |
-| `/mensuracao/homogeneizacao` | T-26 | Diversidade Coletiva (RN-019/020) |
+| `/mensuracao/homogeneizacao` | T-26 | Diversidade Coletiva (RN-019/020) — **Momento 2** (BR-014) |
 
-### 5.7 Shoot for the Moon (FA-02) — **modal sobreposto** (sem rota dedicada)
+### 5.7 Moon Shot (FA-02) — **modal sobreposto** (sem rota dedicada) — **Momento 2**
 
-> **Decisão IA:** Shoot for the Moon não cria rota — é modal/painel sobre T-03 ou T-05. Justificativa: preserva contexto da Skill ativa e atende RN-003 (≤3 cliques).
+> **Decisão IA:** Moon Shot não cria rota — é modal/painel sobre T-03 ou T-05. Justificativa: preserva contexto da Skill ativa e atende RN-003 (≤3 cliques).
 
 | Trigger | Nó/Tela | Função |
 |---------|---------|--------|
@@ -239,7 +239,55 @@ Conforme Design System §3.6 (Parte 4): separação entre superfícies por **bor
 | Após T-06 | T-07 | Painel de Faíscas (streaming) |
 | Variante de T-07 | T-08 | Modo Dupla (time-boxing) |
 
-> Decisão alternativa pendente (PA): rota dedicada `/[clientSlug]/[skillSlug]/shoot-for-the-moon` se futuras integrações exigirem deep-link.
+> Decisão alternativa pendente (PA): rota dedicada `/[clientSlug]/[skillSlug]/moon-shot` se futuras integrações exigirem deep-link.
+
+### 5.8 Aprovação Hierárquica (FA-13) — **Momento 2** — a construir
+
+**Sidebar entry:** Aprovações (Admin/Líder/PX-06 Aprovador — **invisível para Operacional**)
+
+| Rota | Nó/Tela | Função |
+|------|---------|--------|
+| `/aprovacoes` | T-29 | Inbox do Aprovador (PX-06) — pendências filtradas por chain ativa |
+| `/aprovacoes/[requestId]` | T-30 | Detalhe da Submissão — revisar + aprovar/rejeitar com comentário |
+| `/aprovacoes/configuracao/[clientSlug]` | T-30 (sub-rota Admin) | Config de ApprovalChain por cliente |
+| Modal sobre T-05/T-07/T-23 | T-31 | Submeter para Aprovação (contextual — sem rota dedicada) |
+
+> **Caixa-preta (RN-011):** Operacional não vê o módulo nem recebe notificações — Aprovação é fluxo entre Criativo e Aprovador sócio.
+
+### 5.9 Drive Suno como Fonte Curada (FA-14) — **Piloto** — a construir
+
+**Sidebar entry:** Drive Suno (Admin/Líder — **invisível para Operacional**)
+
+> **REST-08 v2:** apenas Drive interno da Suno (não Drive de clientes externos). Decisão de 14/05/2026.
+
+| Rota | Nó/Tela | Função |
+|------|---------|--------|
+| `/drive/[clientSlug]` | T-32 | Sync Dashboard — estado de sincronização + cleanup reports |
+| `/drive/[clientSlug]/sugestoes` | T-33 | Inbox de Sugestões de Curadoria (IMPORT_TO_LIBRARY) |
+
+### 5.10 Onboarding com Oráculo do Cliente (FA-15) — **Piloto** — a construir
+
+**Sidebar entry:** sem entry própria — acessível via Clientes Admin e link direto pós-cadastro
+
+| Rota | Nó/Tela | Função |
+|------|---------|--------|
+| `/clientes/[clientSlug]/onboarding` | T-34 | Wizard 4 passos: metadados → Oráculo params → Drive OAuth → confirmação |
+| `/clientes/[clientSlug]/onboarding/seed` | T-35 | Progresso Seed — acompanha geração das 6 entidades ontológicas |
+| `/clientes/[clientSlug]/onboarding/validacao` | T-36 | Validação Entidade-a-Entidade HITL (RN-032 — sem batch) |
+| `/clientes/[clientSlug]/wiki` | T-39 | Wiki Ontológica — Painel de Entidades do Cliente (BR-021) |
+
+> **Gate PRE_ACTIVE → ACTIVE (FR-184/185):** cliente só fica ACTIVE após T-36 completo (6/6 entidades aprovadas). T-39 é destino recorrente pós-ativação: PX-07 e PX-01 consultam e editam entidades continuamente. **Caixa-preta:** `/clientes/[slug]/wiki` retorna 404 para Operacional (RN-011).
+
+### 5.11 Captura Seletiva de Reuniões (FA-16) — **Momento 2** — a construir
+
+**Sidebar entry:** sem entry própria — acionada via integração Google Calendar ou CTA no Chat
+
+| Rota/Trigger | Nó/Tela | Função |
+|------|---------|--------|
+| Modal sobre Chat/Calendar | T-37 | Opt-in por reunião (padrão OFF — RN-031, PRE-03b LGPD Art. 7) |
+| `/reunioes/[meetingId]/revisao` | T-38 | Revisão de Transcrição + extração estruturada + diff Wiki HITL |
+
+> **PRE-03b:** consentimento explícito obrigatório antes de qualquer transcrição. Notificação ≤2 min a todos os participantes (FR-191). Sem consentimento → captura bloqueada.
 
 ---
 
@@ -249,7 +297,7 @@ Algumas funcionalidades têm múltiplos pontos de entrada — o sistema deve man
 
 | Funcionalidade | Entradas | Comportamento |
 |----------------|----------|---------------|
-| **Shoot for the Moon** | (1) CTA em T-03 (Planeta) · (2) CTA em T-04/T-05 (Chat) · (3) ⌘K [futuro] | Mesmo modal T-06 com contexto pré-preenchido conforme origem |
+| **Moon Shot** | (1) CTA em T-03 (Planeta) · (2) CTA em T-04/T-05 (Chat) · (3) ⌘K [futuro] | Mesmo modal T-06 com contexto pré-preenchido conforme origem |
 | **Forced Reflection** | (1) T-05 Chat (após N stars) · (2) T-07 Painel de Faíscas (após N stars) | Mesmo interstitial T-09; tracking N=5 sênior / N=3 junior |
 | **Settings/Profile** | Sidebar footer + User Menu no AppHeader | Mesma tela [futura] de Settings |
 | **Search/Discovery** | ⌘K (futuro) + filter sidebars das Admin areas | ⌘K busca cross-cutting; filter sidebars são contextuais ao módulo |
@@ -306,7 +354,7 @@ Algumas funcionalidades têm múltiplos pontos de entrada — o sistema deve man
 | Categoria | Exemplos | Permissão |
 |-----------|----------|-----------|
 | **Navegação** | "Ir para Sun", "Ir para [Cliente]", "Ir para Skills", "Ir para Biblioteca" | Filtrado por RBAC — Operacional NÃO vê "Ir para Biblioteca" |
-| **Ações** | "Nova Skill", "Novo Workflow", "Devorar briefing (Shoot for the Moon)" | Filtrado por RBAC |
+| **Ações** | "Nova Skill", "Novo Workflow", "Devorar briefing (Moon Shot)" | Filtrado por RBAC |
 | **Busca por entidade** | Nome de Cliente, Skill, Workflow, KnowledgeItem (semantic search) | KnowledgeItem **invisível para Operacional** (RN-011) |
 | **Recentes** | Últimos 5 itens acessados (Sessões, Skills) | Por usuário |
 
@@ -391,14 +439,14 @@ Para perfil Operacional:
 │   /[clientSlug]                                                      │
 │   ├─ Planeta no centro local                                         │
 │   ├─ Órbitas (Skills disponíveis)                                    │
-│   └─ CTA Shoot for the Moon (modal T-06)                             │
+│   └─ CTA Moon Shot (modal T-06)                             │
 ├─────────────────────────────────────────────────────────────────────┤
 │ L2: ÓRBITA (SKILL) + CHAT                                            │
 │   /[clientSlug]/[skillSlug]                                          │
 │   ├─ PromptTemplateBar com Moon chips                                │
 │   ├─ Chat (MessageList + ChatInput)                                  │
 │   ├─ Context Sidebar (Biblioteca/Agentes/HITL — Caixa-preta para Op) │
-│   └─ CTA Shoot for the Moon contextual                               │
+│   └─ CTA Moon Shot contextual                               │
 ├─────────────────────────────────────────────────────────────────────┤
 │ L3: MOON (sub-área via chip)                                         │
 │   /[clientSlug]/[skillSlug]?moon=[moonSlug]                          │
@@ -413,34 +461,41 @@ Para perfil Operacional:
 ### 10.2 Módulos Paralelos (não vivem no Sistema Solar)
 
 ```
-┌────────────────────────┬─────────────────────────────────────────────┐
-│ Sidebar entry          │ Rotas e telas                               │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Home                   │ / (T-02)                                    │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Skills (Admin/Líder)   │ /skills (T-10), /skills/new (T-12),         │
-│                        │ /skills/[skillId] (T-11)                    │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Biblioteca             │ /biblioteca (T-13/T-14/T-15),               │
-│ (Caixa-preta — RN-011) │ /biblioteca?filter=risco (T-16)             │
-│                        │ INVISÍVEL para Operacional                  │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Clientes (Admin/Líder) │ /clientes (T-17), /clientes/new (T-19),     │
-│                        │ /clientes/[clientId] (T-18)                 │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Workflows              │ /workflows (T-20), /workflows/new (T-22),   │
-│ (Admin/Líder + PX-03)  │ /workflows/[workflowId] (T-21),             │
-│                        │ /workflows/[workflowId]/runs (T-23)         │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Mensuração             │ /mensuracao (T-24),                         │
-│ (Admin/Líder — PX-01)  │ /mensuracao/skills/[skillId] (T-25),        │
-│                        │ /mensuracao/homogeneizacao (T-26)           │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Onboarding             │ /onboarding (T-27)                          │
-│ (first-run + opt-in)   │                                             │
-├────────────────────────┼─────────────────────────────────────────────┤
-│ Design System          │ /design-system (T-28) — devs/designers      │
-└────────────────────────┴─────────────────────────────────────────────┘
+┌──────────────────────────────┬──────────────────────────────────────────────────────────────┐
+│ Sidebar entry                │ Rotas e telas                                                │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Home                         │ / (T-02)                                                     │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Skills (Admin/Líder)         │ /skills (T-10), /skills/new (T-12), /skills/[skillId] (T-11) │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Biblioteca                   │ /biblioteca (T-13/T-14/T-15), /biblioteca?filter=risco (T-16) │
+│ (Caixa-preta — RN-011)       │ INVISÍVEL para Operacional                                   │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Clientes (Admin/Líder)       │ /clientes (T-17), /clientes/new (T-19),                      │
+│                              │ /clientes/[clientId] (T-18)                                  │
+│                              │ /clientes/[slug]/onboarding/* (T-34/35/36) — Oráculo         │
+│                              │ /clientes/[slug]/wiki (T-39) — Wiki Ontológica [Caixa-preta] │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Workflows                    │ /workflows (T-20), /workflows/new (T-22),                    │
+│ (Admin/Líder + PX-03/PX-08)  │ /workflows/[workflowId] (T-21 — canvas ADR-003),             │
+│                              │ /workflows/[workflowId]/runs (T-23)                          │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Mensuração                   │ /mensuracao (T-24), /mensuracao/skills/[skillId] (T-25),     │
+│ (Admin/Líder — PX-01)        │ /mensuracao/homogeneizacao (T-26) — Momento 2                │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Aprovações [M2]              │ /aprovacoes (T-29), /aprovacoes/[requestId] (T-30)            │
+│ (Admin/Líder/PX-06)          │ modal T-31 (sem rota) — INVISÍVEL para Operacional            │
+│ Invisível p/ Operacional     │                                                              │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Drive Suno [Piloto]          │ /drive/[clientSlug] (T-32),                                  │
+│ (Admin/Líder — REST-08 v2)   │ /drive/[clientSlug]/sugestoes (T-33)                         │
+│ Invisível p/ Operacional     │                                                              │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Onboarding (first-run)       │ /onboarding (T-27) — track por carreira                      │
+│ (first-run + opt-in)         │                                                              │
+├──────────────────────────────┼──────────────────────────────────────────────────────────────┤
+│ Design System                │ /design-system (T-28) — devs/designers                       │
+└──────────────────────────────┴──────────────────────────────────────────────────────────────┘
 ```
 
 ### 10.3 Fluxo Cross-Modules (exemplos)
@@ -473,12 +528,12 @@ Login (T-01)
 
 ## 11. Profundidade Máxima e Princípio dos 3 Cliques
 
-**RN-003 (Acionamento Shoot for the Moon ≤ 3 cliques)** generaliza-se como princípio de IA:
+**RN-003 (Acionamento Moon Shot ≤ 3 cliques)** generaliza-se como princípio de IA:
 
 | Persona | Tarefa | Caminho | Cliques |
 |---------|--------|---------|:-------:|
 | PX-02/03/04/05 | Chegar ao Chat de uma Skill | Sun → Planeta → Skill | **3** |
-| PX-02 | Acionar Shoot for the Moon | Sun → Planeta → CTA Shoot (ou Sun → Planeta → Skill → CTA Shoot) | **3-4** |
+| PX-02 | Acionar Moon Shot | Sun → Planeta → CTA Shoot (ou Sun → Planeta → Skill → CTA Shoot) | **3-4** |
 | PX-05 | Iniciar onboarding | Login → Onboarding → completar | **2** |
 | PX-01 | Editar uma Skill | Sun → Sidebar Skills → row → Editar | **3-4** |
 | PX-01 | Cadastrar item na Biblioteca | Sun → Sidebar Biblioteca → Adicionar (modal T-14) | **3** |
@@ -498,7 +553,7 @@ Login (T-01)
 | Sun (T-02) | Sim | Sim | Sim |
 | Planeta (T-03) | Sim | Sim | Sim (apenas clientes ativos — RN-007) |
 | Órbita/Skill + Chat (T-04/T-05) | Sim | Sim | Sim |
-| Shoot for the Moon (T-06/T-07/T-08) | Sim | Sim | Sim (com track adaptado por carreira — RN-017) |
+| Moon Shot (T-06/T-07/T-08) | Sim | Sim | Sim (com track adaptado por carreira — RN-017) |
 | Forced Reflection (T-09) | Sim | Sim | Sim (N=3 para junior; N=5 para sênior) |
 | Skills Admin (T-10/T-11/T-12) | Sim (CRUD total) | Sim (CRUD da sua área) | **NÃO** |
 | Biblioteca Admin (T-13/T-14/T-15/T-16) | Sim | Sim | **NÃO — Caixa-preta total (RN-011)** |
@@ -508,6 +563,11 @@ Login (T-01)
 | Sidebar item "Biblioteca" | Visível | Visível | **Não renderizado (não desabilitado)** |
 | Linguagem "Biblioteca" no Chat | Mantida | Mantida | Substituída por "contexto do cliente" |
 | Visible reasoning do agente | Disponível (toggle) | Disponível | Hidden by default (especialmente junior — RN-017) |
+| Aprovações (T-29/T-30/T-31) — **Momento 2** | Sim | Sim (sua área) | **NÃO — Caixa-preta (RN-011)** |
+| Drive Suno (T-32/T-33) | Sim | Sim (seu cliente) | **NÃO — Caixa-preta (RN-011)** |
+| Wiki Ontológica (T-39) | Sim | Sim (seu cliente) | **NÃO — 404 genérico (RN-011)** |
+| Captura Seletiva T-37 (opt-in) — **Momento 2** | Sim | Sim | Sim (participantes da reunião) |
+| Revisão Captura T-38 — **Momento 2** | Sim | Sim | **NÃO** (apenas Líder + participantes) |
 
 > **Default Deny (RN-009):** qualquer ambiguidade é resolvida negando acesso. Operacional acessando rota Admin via URL direta recebe redirect 302 para `/` com toast genérico.
 
@@ -543,7 +603,7 @@ Ver §8.
 |---------|---------------|
 | Sistema Solar como navegação operacional, Sidebar como navegação administrativa | Separa ato de **consumir IA** (jornada Creator → Cliente → Skill) de **governar IA** (jornada Líder → CRUDs). Reflete cultura "Bioma Zero (administra) vs. Bioma Job (executa)" do Glossário §1. |
 | Moon como chip (L3) em vez de tela própria | SPEC-007. Reduz profundidade de 4 para 3 níveis no Sistema Solar; preserva contexto da Skill. |
-| Shoot for the Moon como modal sobre Chat (sem rota dedicada) | RN-003: ≤3 cliques. Modal preserva contexto da Skill ativa. Decisão revisitável se deep-link for necessário. |
+| Moon Shot como modal sobre Chat (sem rota dedicada) | RN-003: ≤3 cliques. Modal preserva contexto da Skill ativa. Decisão revisitável se deep-link for necessário. |
 | Sem `companySlug` na URL | sunOS é single-tenant interno (Suno United Creators implícita). Diferencia da convenção Koro genérica `/{companySlug}/workspace/{buSlug}/...`. Decisão consciente. |
 | Sidebar separa "Admin" e "Mensuração" mesmo ambos restritos a PX-01 | Ajuda hierarquia mental: Admin = configurar; Mensuração = monitorar. Diferentes intenções da PX-01. |
 | Biblioteca **invisível** (não desabilitada) para Operacional | RN-011 explícita do Guga: *"a biblioteca o cara não pode saber. A biblioteca é o olho também."* Não é só restrição de acesso — é Caixa-preta. |
@@ -571,13 +631,23 @@ Ver §8.
 | Componente | Para qual feature/tela | Nota |
 |-----------|------------------------|------|
 | `CommandPalette` | Cmd+K (cross-cutting) | P2/P3 do roadmap; aplicar RBAC e Caixa-preta |
-| `ShootForTheMoonModal` | T-06 | Modal com seleção de track/zona |
+| `MoonShotModal` | T-06 | Modal com seleção de track/zona |
 | `FaiscaCard` + `FaiscaPanel` | T-07 | Painel streaming com cards de Faísca |
 | `TimeBoxingTimer` | T-08 | Timer 90s/5min com bloqueio alternado |
 | `ForcedReflectionInterstitial` | T-09 | Modal de pausa cognitiva |
 | `MensuracaoLayout` + `KPICard` + `DiversityChart` | T-24/T-25/T-26 | Dashboard executivo + drill-downs |
 | `OnboardingWizard` | T-27 | Wizard 3-passos com sugestão por carreira |
 | `RiscoTable` | T-16 | Tabela de Conhecimento em Risco |
+| `ApprovalInbox` + `SubmissionDetail` | T-29/T-30 | Inbox do aprovador + detalhe da submissão |
+| `SubmitApprovalModal` | T-31 | Modal contextual de submissão (sem rota) |
+| `DriveSyncDashboard` | T-32 | Painel de estado de sync + cleanup reports |
+| `CurationInbox` | T-33 | Inbox de sugestões de curadoria do Drive |
+| `OnboardingWizardOraculo` | T-34 | Wizard 4 passos para cadastro de cliente com Oráculo |
+| `SeedProgressPanel` | T-35 | Progress bar + status por entidade ontológica |
+| `EntityValidationStepper` | T-36 | Stepper HITL entidade-a-entidade (RN-032) |
+| `CaptureOptInModal` | T-37 | Modal opt-in por reunião (PRE-03b / LGPD Art. 7) |
+| `TranscriptReviewPanel` + `WikiDiffPanel` | T-38 | Revisão transcrição diarizada + diff ontológico HITL |
+| `WikiOntologicaPanel` | T-39 | Painel de 6 entidades ontológicas com HITL inline |
 
 ### 15.3 Hooks/Contexts a evoluir
 
@@ -586,8 +656,11 @@ Ver §8.
 | `AuthContext` | Expor `role` (Admin/Líder/Operacional) e `careerStage` (junior/pleno/sênior — RN-017) |
 | `useTheme` | Já existe — manter |
 | Novo `OnboardingContext` | Persistir track escolhido, applied flag |
-| Novo `ShootForTheMoonContext` | Pipeline state, Faíscas geradas, stars count (trigger T-09) |
+| Novo `MoonShotContext` | Pipeline state, Faíscas geradas, stars count (trigger T-09) |
 | `BibliotecaContext` | Filtrar resultados conforme RBAC; expor método `redactedLanguage()` para PX-03 |
+| Novo `OnboardingOraculoContext` | Estado do wizard + seed progress + validação HITL por entidade |
+| Novo `MeetingCaptureContext` | Estado opt-in por reunião, status de transcrição, propostas de atualização Wiki |
+| Novo `WikiOntologicaContext` | Entidades DO-55/DO-57 do cliente ativo; histórico de alterações; gate PRE_ACTIVE/ACTIVE |
 
 ---
 
@@ -595,4 +668,5 @@ Ver §8.
 
 | Versão | Data | Descrição |
 |--------|------|-----------|
+| 1.1 | 2026-05-15 | **Sincronização com BRD v1.3-1.5 e UX Parte 1 v1.3.** §5.6 Mensuração: T-26 marcado como Momento 2 (BR-014). §5.7 Moon Shot: header marcado como Momento 2 (BR-001). **Novas seções §5.8–5.11**: FA-13 Aprovação Hierárquica (Momento 2, T-29/30/31), FA-14 Drive Suno (Piloto, T-32/33), FA-15 Onboarding com Oráculo (Piloto, T-34/35/36/39 — gate PRE_ACTIVE/ACTIVE, caixa-preta Wiki), FA-16 Captura Seletiva (Momento 2, T-37/38 — PRE-03b LGPD Art. 7). **§10.2 Módulos Paralelos**: adicionados Aprovações, Drive Suno, rotas wiki e onboarding sob Clientes Admin; PX-08 Builder em Workflows. **§12 Visibilidade**: 5 novas linhas para T-29/30/31 (Aprovação), T-32/33 (Drive), T-37/38 (Captura), T-39 (Wiki). **§15.2**: 11 novos componentes (T-29 a T-39). **§15.3**: 3 novos contexts (OnboardingOráculo, MeetingCapture, WikiOntológica). |
 | 1.0 | 2026-04-28 | Versão inicial. Mapeamento L0-L4 do Sistema Solar do sunOS adaptado da convenção Koro (sunOS é single-tenant — sem `companySlug`). Convenção: L0 Sun → L1 Planeta (Cliente) → L2 Órbita (Skill) → L3 Moon (chip via `?moon=`) → L4 Conversa/Sessão (estado interno do Chat). Módulos paralelos (Skills, Biblioteca, Clientes, Workflows, Mensuração, Onboarding) não vivem na hierarquia do Sistema Solar — acessíveis via Sidebar. **Caixa-preta da Biblioteca (RN-011)** explicitada como princípio fundamental: invisível (não desabilitada) para Operacional em Sidebar, Breadcrumbs, Cmd+K, copy do Chat, URL direta (redirect). Vocabulário Suno aplicado (RN-016): Sun, Planeta, Órbita, Moon, Skill, Biblioteca, Workflow, Faísca, Devorar, Provocar; Koro sempre com K. Profundidade máxima ≤3 níveis (RN-003 generalizada). Cmd+K Command Palette documentado para futuro (P2/P3). |

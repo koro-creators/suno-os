@@ -3,9 +3,9 @@ documento: PRD Parte 2 — Personas e Jobs-to-be-done
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.0
+versao: 1.2
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-05-14
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -19,8 +19,8 @@ aprovacoes:
     status: Pendente
 fonte_brd: docs/brd/parte1-contexto.md, docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_handoff: docs/handoff/PRODUCT_HANDOFF.md
-fonte_frd: FRD Shoot for the Moon (referenciado nos BRDs Parte 3 e 4)
-total_personas: 5 (PX-01 a PX-05)
+fonte_frd: FRD Moon Shot (referenciado nos BRDs Parte 3 e 4)
+total_personas: 8 (PX-01 a PX-08)
 ---
 
 # PRD Parte 2 — Personas e Jobs-to-be-done
@@ -49,14 +49,14 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 
 | Artefato | Relação |
 |----------|---------|
-| BRD Parte 1 (Contexto §3.1.4) | Champions são embriões das personas operacionais (Gus/Teda em Mídia, Le em outras áreas) |
-| BRD Parte 2 (Glossário) | Vocabulário "Creator", "Bioma Zero/Job", "Patrocinador Sócio", "Champion" |
+| BRD Parte 1 (Contexto §3.1.4) | Builders confirmados por área em 14/05/2026 — ver tabela em §PX-08 e BRD §3.1.2 |
+| BRD Parte 2 (Glossário) | Vocabulário "Creator", "Bioma Zero/Job", "Patrocinador Sócio", "Builder" |
 | BRD Parte 3 (BRs) | Cada persona é demandante de BRs específicos (matriz no §3.2 da Parte 3) |
 | BRD Parte 4 (RNs) | RN-017 (Track por carreira) explicita diferença junior/sênior |
 | PRD Parte 1 (Feature Map FA-XX) | Cada feature mapeia para personas atendidas |
 | PRD Parte 3 (Matriz Persona × Jornada) | Persona × Jornada × Feature × KPI |
 | PRD Parte 4 (FRs) | FRs especificam comportamento por persona quando relevante |
-| FRD Shoot for the Moon | PX-01 a PX-04 já existem no FRD; este documento referencia e adiciona PX-05 |
+| FRD Moon Shot | PX-01 a PX-04 já existem no FRD; este documento referencia e adiciona PX-05 |
 
 ---
 
@@ -66,20 +66,23 @@ As personas aqui descritas são **internas à Suno United Creators** — todas s
 
 | ID | Persona | Papel no Negócio | Importância | Features Principais |
 |----|---------|------------------|-------------|---------------------|
-| **PX-01** | Líder/Curador | Bioma Zero — sócio/diretor/líder de área que governa Inteligência Coletiva, IP e qualidade. Champions também se encaixam aqui parcialmente | Core | FA-01 (Biblioteca), FA-09 (Governança), FA-10 (Mensuração), FA-12 (Admin) |
-| **PX-02** | Criativo Sênior | Bioma Job — Creator de criação/redação/direção com 7+ anos, identidade-protetivo, engaja IA seletivamente para refinamento e devil's advocate | Core | FA-02 (Shoot for the Moon), FA-04 (Chat), FA-11 (Safety cultural) |
+| **PX-01** | Líder/Curador | Bioma Zero — sócio/diretor/líder de área que governa Inteligência Coletiva, IP e qualidade. Builders também se encaixam aqui parcialmente | Core | FA-01 (Biblioteca), FA-09 (Governança), FA-10 (Mensuração), FA-12 (Admin) |
+| **PX-02** | Criativo Sênior | Bioma Job — Creator de criação/redação/direção com 7+ anos, identidade-protetivo, engaja IA seletivamente para refinamento e devil's advocate | Core | FA-02 (Moon Shot), FA-04 (Chat), FA-11 (Safety cultural) |
 | **PX-03** | Operador Processual | Bioma Job — Creator que executa tarefas processuais recorrentes (mídia, BI, planejamento, financeiro) e busca aceleração com contexto preservado | Core | FA-03 (Skills processuais), FA-04 (Chat), FA-05 (Workflows) |
-| **PX-04** | Planejamento Estratégico | Bioma Job — Planner/CSO/analista de mercado que conecta insights de mercado a territórios criativos e estratégicos | Importante | FA-02 (Shoot for the Moon), FA-03 (Análise de Mercado, Persona Sintética), FA-05 (Pesquisa de Mercado) |
+| **PX-04** | Planejamento Estratégico | Bioma Job — Planner/CSO/analista de mercado que conecta insights de mercado a territórios criativos e estratégicos | Importante | FA-02 (Moon Shot), FA-03 (Análise de Mercado, Persona Sintética), FA-05 (Pesquisa de Mercado) |
 | **PX-05** | Creator Junior | Bioma Job — Creator com < 3 anos de experiência, adota IA entusiasticamente em ideação, em risco de over-reliance | Importante | FA-02 (track junior), FA-04 (Chat), FA-11 (forced reflection, validação vocabulário) |
+| **PX-06** | Aprovador Sócio | Papel funcional de aprovação hierárquica — sócio, head ou líder sênior que recebe e decide submissões de assets com Validation Report (não é cargo novo — é papel funcional de Bruno Prosperi, Takai, Sergio Katz etc.) | Importante | FA-13 (primário), FA-01 (Brand Guidelines), FA-09 (RBAC) |
+| **PX-07** | Sponsor de Área | Líder/Diretor de área que desenha a arquitetura de automação setorial — "Arquiteto" na governança Sponsor-Builder-Time Central (BRD §3.1). Instâncias confirmadas 14/05: Takai/Toledo (Mídia/BI), Heitor (Martech), Cíntia/Katz (Planejamento), Bruno (Criação), Elton (Operações), Ana Luísa (Produção), Ronaldo (Financeiro/RH) | Importante | FA-05 (Workflows), FA-10 (Mensuração por área), FA-14 (Drive), FA-15 (Onboarding) |
+| **PX-08** | Builder de Área | Analista sênior/coordenador que constrói Workflows seguindo arquitetura do Sponsor, usando componentes do Time Central (tools, agentes, ações, decisões). Instâncias confirmadas: Bruna/Renata/Wagner (Mídia), Caetano/Milu/Thalles (BI), Mayra Otsuka (Martech), Philippe Gava (Planejamento), Chamas (Operações), João Drumond (Financeiro), Alessandra Pasquino (RH), Vagner Silva (Contabilidade) — Criação e Produção a definir pelos Sponsors | Importante | FA-05 (primário — canvas visual), FA-03 (Skills da área), FA-09, FA-10 |
 
 ### 2.2. Ecossistema de Personas
 
 As personas formam uma cadeia de valor onde **PX-01 cura, PX-02/PX-04 ideam, PX-03 executa, PX-05 aprende** — e o sunOS amplifica todas sem substituir nenhuma.
 
 - **PX-01 Líder/Curador** alimenta o sistema (Biblioteca, configuração de Skills, definição de Workflows recorrentes) e governa qualidade (HITL, Mensuração, RBAC). Sua produtividade depende de eficiência de curadoria e de evidências defensáveis para Diretoria.
-- **PX-02 Criativo Sênior** consome o sistema em modo **divergente** prioritariamente — Shoot for the Moon como rompedor de bloqueio e devil's advocate. Para tarefas processuais, delega frequentemente a PX-03 ou usa Skills processuais com supervisão.
+- **PX-02 Criativo Sênior** consome o sistema em modo **divergente** prioritariamente — Moon Shot como rompedor de bloqueio e devil's advocate. Para tarefas processuais, delega frequentemente a PX-03 ou usa Skills processuais com supervisão.
 - **PX-03 Operador Processual** consome o sistema em modo **convergente** prioritariamente — Skills com contexto injetado para entregar relatório/plano/copy mais rápido. Workflows automatizam o que ele faria manualmente. Beneficiário direto da Biblioteca (FA-01) sem precisar saber que ela existe (Caixa-preta).
-- **PX-04 Planejamento Estratégico** transita entre divergente (Shoot for the Moon para conectar insights) e convergente (Análise de Mercado, Persona Sintética, Pesquisa de Mercado como Workflow). É ponte entre PX-02 e PX-03.
+- **PX-04 Planejamento Estratégico** transita entre divergente (Moon Shot para conectar insights) e convergente (Análise de Mercado, Persona Sintética, Pesquisa de Mercado como Workflow). É ponte entre PX-02 e PX-03.
 - **PX-05 Creator Junior** é o perfil mais sensível ao sistema: maior risco de over-reliance, maior necessidade de proteção via UX adaptada (track junior, forced reflection com N=3, visible reasoning hidden by default).
 
 PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam saúde criativa coletiva (via FA-11 e RN-019/020); PX-03 valida custo evitado (via FA-10-03 e RN-018); PX-05 valida UX adaptada (via RN-017).
@@ -88,9 +91,9 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Fase | Personas Core | Personas Importantes | Personas Secundárias |
 |------|---------------|----------------------|----------------------|
-| **POC** | PX-02 Criativo Sênior (testes blind do Shoot for the Moon) | — | — |
+| **POC** | PX-02 Criativo Sênior (testes blind do Moon Shot) | — | — |
 | **Protótipo** | PX-01, PX-02, PX-03 | PX-04 | PX-05 |
-| **Piloto** | PX-01, PX-02, PX-03, PX-04 | PX-05 | — |
+| **Piloto** | PX-01, PX-02, PX-03, PX-04 | PX-05, PX-07, PX-08 | PX-06 |
 | **MVP** | Todas | — | — |
 
 ---
@@ -103,7 +106,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Aspecto | Descrição |
 |---------|-----------|
-| **Papel Organizacional** | Bioma Zero — sócio, diretor de área, head de criação/mídia/planejamento, gerente sênior. Inclui champions de área (Gus/Teda em Mídia, Le em outras áreas) parcialmente, embora champions sejam papel cultural mais que cargo |
+| **Papel Organizacional** | Bioma Zero — sócio, diretor de área, head de criação/mídia/planejamento, gerente sênior. Builders (PX-08) são papel cultural separado, não PX-01 — ver §PX-08 para instâncias confirmadas |
 | **Senioridade Típica** | Liderança (10+ anos de experiência) |
 | **KPIs pelos quais é cobrado(a)** | Saúde de receita da área, retenção de clientes, retenção de talento, qualidade percebida do output do time, win rate em new business, shortlist em festivais (Cannes/Effie), accountability de uso de IA, custo evitado da área |
 | **Relação com outras personas** | Lidera PX-02, PX-03, PX-04, PX-05; presta contas ao Sponsor (Guga) e patrocinadores sócio (Bruno, Takai, Ronaldo) |
@@ -145,7 +148,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 - **Inteligência Coletiva acionável**: repertório histórico vira patrimônio compartilhado, sobrevive a turnover (FA-01)
 - **Caixa-preta operacional**: IP da Suno protegido nas sete chaves, sem expor a perfis Operacionais (FA-09)
 - **Dashboard executivo defensável**: tendência mensal de custo evitado, qualidade percebida, KPIs de negócio (FA-10)
-- **Empoderamento de Workflows sem dependência de eng**: PX-03 e champions configuram suas próprias automações (FA-05)
+- **Empoderamento de Workflows sem dependência de eng**: PX-03 e builders configuram suas próprias automações (FA-05)
 - **Safety contra homogeneização**: monitor mensal das 3 métricas + bloqueio de relatório com satisfação isolada (FA-10-08, FA-10-09)
 - **Captura proativa pré-saída**: alerta de conhecimento crítico em risco (FA-01-07)
 
@@ -241,7 +244,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 - Receio (justificado) de que ferramentas externas vazem ideias confidenciais
 
 **Oportunidades (o que o sunOS destrava):**
-- **Shoot for the Moon Provoca Faíscas inesperadas**: combina conceitos de domínios distantes na zona Sweet Spot (FA-02)
+- **Moon Shot Provoca Faíscas inesperadas**: combina conceitos de domínios distantes na zona Sweet Spot (FA-02)
 - **Modo "Tenho uma ideia, me prova que tá errada"** (devil's advocate, senior-leaning) — usa IA para stress-test sem perder ownership (RN-017)
 - **Marcação visual de outputs como Faísca/estímulo** — não há ambiguidade sobre o que é IA vs. autor (RN-014, FA-11)
 - **Forced reflection após N stars** — protege engajamento cognitivo (RN-015)
@@ -253,7 +256,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | ID | JTBD | Features | BRs |
 |----|------|----------|-----|
-| **JTBD-08** | When estou bloqueado em territórios óbvios para um briefing, I want to acionar Shoot for the Moon em ≤3 cliques e receber Faíscas inesperadas mas mappeáveis, so that consigo romper bloqueio sem perder ownership autoral | FA-02, FA-06 | BR-001, BR-010 |
+| **JTBD-08** | When estou bloqueado em territórios óbvios para um briefing, I want to acionar Moon Shot em ≤3 cliques e receber Faíscas inesperadas mas mappeáveis, so that consigo romper bloqueio sem perder ownership autoral | FA-02, FA-06 | BR-001, BR-010 |
 | **JTBD-09** | When tenho uma ideia que acho boa, I want to pedir ao agente "me prove que tá errada" em modo devil's advocate, so that consigo stress-testar antes de defender com cliente | FA-02 (modo senior), FA-04 | BR-001, BR-012 |
 | **JTBD-10** | When uso IA em sessão de ideação, I want to ver claramente o que é estímulo/Faísca vs. peça final, so that preservo identidade autoral e cliente sabe quem assinou | FA-04, FA-11 | BR-010 |
 | **JTBD-11** | When preciso de referência cultural ou case similar de cliente, I want to receber automaticamente como contexto da Skill ativa em ≤2 minutos, so that não quebro fluxo criativo buscando em drives | FA-01, FA-03 | BR-006 |
@@ -275,7 +278,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Feature | Como esta Persona Usa |
 |---------|----------------------|
-| FA-02 Shoot for the Moon | **Uso primário** — modo "me prova que tá errada", modo dupla, todas as zonas de bisociação |
+| FA-02 Moon Shot | **Uso primário** — modo "me prova que tá errada", modo dupla, todas as zonas de bisociação |
 | FA-04 Chat | Interface principal para conversa com agentes ReAct |
 | FA-08 Multimodal | Visualizar Faíscas como imagem ou vídeo (Phase 16) |
 | FA-11 Safety cultural | Beneficiário primário — marcação Faísca, forced reflection, personas brasileiras |
@@ -433,7 +436,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 - Falta de método estruturado para Provocar territórios não-óbvios
 
 **Oportunidades (o que o sunOS destrava):**
-- **Shoot for the Moon como ferramenta estratégica**: conecta insights de domínios distantes a território criativo (FA-02, BR-001)
+- **Moon Shot como ferramenta estratégica**: conecta insights de domínios distantes a território criativo (FA-02, BR-001)
 - **Skill Análise de Mercado** com contexto histórico do cliente injetado automaticamente (FA-03)
 - **Skill Persona Sintética** com referências culturais brasileiras curadas (FA-03)
 - **Workflow Pesquisa de Mercado** como agendamento ou disparo manual com sub-workflows (FA-05)
@@ -447,7 +450,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 |----|------|----------|-----|
 | **JTBD-20** | When inicio Pesquisa de Mercado para new business pitch, I want to disparar Workflow Pesquisa de Mercado que faz busca web + síntese + contexto + report, so that entrego pesquisa em ≤50% do tempo histórico | FA-05, FA-03 | BR-002, BR-013 |
 | **JTBD-21** | When monto Persona Sintética para campanha, I want to receber referências culturais brasileiras e dados demográficos contextualizados pela Biblioteca, so that persona não é genérica e respeita cultura local | FA-03, FA-01, FA-11 | BR-006, BR-011 |
-| **JTBD-22** | When tenho insight de mercado e quero conectar a território criativo não-óbvio, I want to acionar Shoot for the Moon com modo "começando uma ideia" e receber Faíscas que combinam meu insight com domínios distantes, so that rompo o óbvio e provoco PX-02 com insumo rico | FA-02, FA-04 | BR-001, BR-011 |
+| **JTBD-22** | When tenho insight de mercado e quero conectar a território criativo não-óbvio, I want to acionar Moon Shot com modo "começando uma ideia" e receber Faíscas que combinam meu insight com domínios distantes, so that rompo o óbvio e provoco PX-02 com insumo rico | FA-02, FA-04 | BR-001, BR-011 |
 | **JTBD-23** | When construo Brief Builder, I want to ter inputs históricos do cliente, briefings anteriores e tom de voz injetados automaticamente, so that briefing é estratégico desde a primeira versão | FA-03, FA-01 | BR-002, BR-006 |
 | **JTBD-24** | When apresento análise estratégica ao Líder, I want to ter custo evitado da minha pesquisa visível no dashboard, so that valor estratégico do trabalho automatizado é reconhecido | FA-10 | BR-013 |
 
@@ -456,7 +459,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 > O que faria o Planejamento Estratégico dizer que o sunOS "funciona" para ele?
 
 - Tempo médio para Análise de Mercado / Pesquisa de Mercado / Persona Sintética reduz ≥30%
-- Insights estratégicos de Shoot for the Moon classificados como "úteis" por ≥60% das vezes (testes blind)
+- Insights estratégicos de Moon Shot classificados como "úteis" por ≥60% das vezes (testes blind)
 - Persona Sintética e Análise de Mercado avaliadas como mais ricas em insight (vs. sem sunOS) em ≥65% dos casos
 - Win rate em new business pitches mantém ou melhora pós-sunOS (KPI de negócio do BR-013)
 - Brief Builder reduz ciclo de iteração com PX-02 em ≥30%
@@ -465,7 +468,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Feature | Como esta Persona Usa |
 |---------|----------------------|
-| FA-02 Shoot for the Moon | **Uso primário** — modo "começando uma ideia" e exploração de territórios |
+| FA-02 Moon Shot | **Uso primário** — modo "começando uma ideia" e exploração de territórios |
 | FA-03 Skills | **Uso primário** — Análise de Mercado, Persona Sintética, Brief Builder |
 | FA-05 Workflows | **Uso primário** — Pesquisa de Mercado |
 | FA-04 Chat | Interface principal |
@@ -554,7 +557,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Feature | Como esta Persona Usa |
 |---------|----------------------|
-| FA-02 Shoot for the Moon | **Uso primário** — modo "começando uma ideia" (junior-leaning), zona Sweet Spot |
+| FA-02 Moon Shot | **Uso primário** — modo "começando uma ideia" (junior-leaning), zona Sweet Spot |
 | FA-04 Chat | Interface principal |
 | FA-11 Safety cultural | **Beneficiário primário** — track junior, forced reflection N=3, visible reasoning hidden, personas brasileiras |
 | FA-07 HITL | Engaja com forced reflection mais frequente |
@@ -576,7 +579,7 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 
 | Persona | Fase de Entrada | Justificativa |
 |---------|-----------------|---------------|
-| PX-02 Criativo Sênior | POC | POC do Shoot for the Moon valida com 3+ Creators seniores em testes blind (BR-001, critério ≥60% provocações úteis) |
+| PX-02 Criativo Sênior | POC | POC do Moon Shot valida com 3+ Creators seniores em testes blind (BR-001, critério ≥60% provocações úteis) |
 | PX-01 Líder/Curador | Protótipo | Curadoria da Biblioteca, configuração de Skills, governança são pré-requisitos de qualquer uso real |
 | PX-03 Operador Processual | Protótipo | Skills processuais com context injection e Workflows são valor primário de aceleração (BR-002) |
 
@@ -586,6 +589,8 @@ PX-01 valida saúde de todos (via HITL e Mensuração); PX-02 e PX-04 validam sa
 |---------|-----------------|---------------|
 | PX-04 Planejamento Estratégico | Protótipo (com escopo limitado) → Piloto (cobertura completa) | Análise de Mercado e Brief Builder validados em Protótipo; Pesquisa de Mercado como Workflow no Piloto |
 | PX-05 Creator Junior | Protótipo (com proteção limitada) → Piloto (com track + forced reflection completos) | Necessário para validar BR-012 e proteção contra over-reliance; pode esperar para ter UX completa |
+| PX-07 Sponsor de Área | Piloto | Arquiteto setorial formalizado em 14/05/2026; seus Workflows e dashboard de custo evitado por área só fazem sentido com dados reais de operação no Piloto |
+| PX-08 Builder de Área | Piloto | Construtores de Workflows reais usando canvas visual (ADR-003); papel operacional inicia com Workflows maduros no Piloto |
 
 ### 4.3. Personas Secundárias
 
@@ -644,14 +649,140 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 **Jornadas**: JN-11 (Submissão para aprovação)
 
 **Mapeamento BR**: BR-017 (primário), BR-009 (Auditabilidade), BR-010 (Ownership), BR-013 (Mensuração)
+---
+
+### PX-07 — Sponsor de Área (NOVA — formalizado 14/05/2026)
+
+**Perfil**: Sócio, diretor ou head de área que **desenha a arquitetura de automação da sua área** — define quais atividades automatizar, que Workflows priorizar e como o sunOS serve os objetivos estratégicos da área. Formalizado pelo Guga (07/05/2026 e 14/05/2026) como "Arquitetos" na governança Sponsor-Builder-Time Central (BRD Parte 1 §3.1). Diferença vs. PX-01 Líder/Curador: PX-01 cura conhecimento e gerencia infraestrutura; PX-07 desenha arquitetura de automação e representa a área no Comitê de Produto.
+
+**Instâncias confirmadas (14/05/2026):**
+
+| Área | Sponsor | Status |
+|------|--------|--------|
+| Mídia | Leonardo Takai / César Toledo | Pendente (dual — decide no Comitê de Produto Junho/2026) |
+| BI | Leonardo Takai / César Toledo | Pendente (dual — decide no Comitê de Produto Junho/2026) |
+| Martech / Dados / Growth | Heitor Miranda | ✓ Confirmado |
+| Planejamento | Cíntia / Sérgio Katz | Pendente (dual — decide no Comitê de Produto Junho/2026) |
+| Criação | Bruno Prosperi | ✓ Confirmado |
+| Operações | Elton | ✓ Confirmado |
+| Produção | Ana Luísa Andre | ✓ Confirmado |
+| Financeiro | Ronaldo Severino | ✓ Confirmado |
+| RH | Ronaldo Severino | ✓ Confirmado |
+| Contabilidade | Ronaldo Severino | ✓ Confirmado |
+
+**KPIs:**
+- Penetração de automação na área (% de tarefas-alvo com Workflow/Skill operacional)
+- Custo evitado atribuível à área (dashboard FA-10)
+- Adoption rate de Builders da área
+- Número de Workflows operacionais atribuídos à área
+- Win rate em new business (onde aplicável)
+
+**Ferramentas atuais (pré-sunOS):** planilhas de processo, reuniões de status manuais, dependência de eng para toda automação. Sem visibilidade centralizada de o que é possível automatizar nem de custo evitado por área.
+
+**Dores:**
+- Dependência total do Time Central para definir o que pode ser automatizado — sem ferramenta de mapeamento estruturado
+- Falta de dashboard de custo evitado por área para defender investimento com evidência objetiva
+- Risco de Builders construírem Workflows sem alinhamento arquitetural, gerando retrabalho
+- Sem fórum estruturado de alinhamento horizontal entre Sponsors de áreas diferentes
+- Dificuldade em comunicar requisitos de novos componentes ao Time Central em formato padronizado
+
+**Oportunidades (o que o sunOS destrava):**
+- Roundtable de Sponsors (quinzenal) como fórum de alinhamento horizontal entre áreas
+- Dashboard FA-10 segmentado por área — custo evitado atribuível ao design do Sponsor
+- Validação de Workflows construídos por Builders antes de entrar em operação real
+- FA-15 (Onboarding): Oráculo do Cliente gera seed ontológico que alimenta automações do Sponsor
+
+**Jobs-to-be-done (JTBD):**
+
+| ID | JTBD | Features | BRs |
+|----|------|----------|-----|
+| **JTBD-35** | When desenho arquitetura de automação da minha área, I want to mapear quais atividades são candidatas a Workflow vs. Skill com critério estruturado, so that priorizo o investimento do Time Central com lógica estratégica e evito Builders construindo na direção errada | FA-05, FA-10 | BR-002, BR-013 |
+| **JTBD-36** | When acompanho adoção do sunOS na minha área, I want to ter dashboard de custo evitado e Workflows ativos segmentados por área, so that defendo continuidade do investimento com evidência objetiva na reunião com Guga | FA-10, FA-05 | BR-003, BR-013 |
+| **JTBD-37** | When identifico oportunidade nova de automação, I want to registrar requisito de componente para o Time Central em formato estruturado (tipo de tool, input, output esperado), so that Builders recebem o que precisam construir sem depender de reunião oral | FA-05, FA-12 | BR-002 |
+| **JTBD-38** | When Builder da minha área finaliza Workflow novo, I want to poder validar arquitetura e fluxo antes da operação real, so that o Workflow respeita a lógica do negócio da área e não gera retrabalho | FA-05, FA-09 | BR-002, BR-019 |
+
+**Critérios de sucesso para PX-07:**
+- ≥80% das áreas com ≥1 Workflow operacional atribuível ao planejamento do Sponsor no Piloto
+- Dashboard mostra custo evitado segmentado por área (não só agregado)
+- Roundtable de Sponsors ocorre quinzenalmente com ≥5 Sponsors participando
+- Zero Workflows construídos sem aprovação arquitetural do Sponsor da área
+
+**Features que atendem:** FA-05 (primário — canvas e catálogo), FA-10 (dashboard por área), FA-14 (Drive como fonte de contexto), FA-15 (Onboarding automatizado), FA-09 (RBAC — Sponsor configura permissões), FA-12 (Admin)
+
+**Jornadas:** JN-15 (Sponsor desenhando arquitetura setorial), JN-07 (validação de Workflows), JN-08 (dashboard mensal)
+
+**Mapeamento BR:** BR-002 (Aceleração), BR-003 (ROI), BR-013 (Mensuração), BR-019 (UX estruturada), BR-022 (Onboarding Oráculo)
 
 ---
+
+### PX-08 — Builder de Área (NOVA — formalizado 14/05/2026)
+
+**Perfil**: Analista sênior ou coordenador que **constrói Workflows seguindo a arquitetura desenhada pelo Sponsor, usando componentes disponibilizados pelo Time Central** (tools, agentes fundacionais, ações, decisões). É o elo operacional entre visão estratégica do Sponsor e execução técnica — não desenvolve backend, mas compõe fluxos no canvas visual (ADR-003). Formalizado em 14/05/2026 na estrutura Sponsor-Builder-Time Central (BRD Parte 1 §3.1.2). Anteriormente chamado de "Champion" — renomeado para refletir o papel real: construtores de automação setorial.
+
+**Instâncias confirmadas (14/05/2026):**
+
+| Área | Builders | Status |
+|------|---------|--------|
+| Mídia | Bruna, Renata, Wagner, TBD | 3/4 confirmados |
+| BI | Caetano, Milu, Thalles | ✓ Completo |
+| Martech / Dados / Growth | Mayra Otsuka | ✓ Completo |
+| Planejamento | Philippe Guimarães Gava | ✓ Completo |
+| Criação | A definir (Bruno Prosperi propõe até Junho/2026) | Pendente |
+| Operações | Chamas | ✓ Completo |
+| Produção | A definir (Ana Luísa Andre propõe até Junho/2026) | Pendente |
+| Financeiro | João Drumond | ✓ Completo |
+| RH | Alessandra Pasquino | ✓ Completo |
+| Contabilidade | Vagner Silva | ✓ Completo |
+
+**KPIs:**
+- Número de Workflows construídos e operacionais atribuídos à área
+- Tempo médio de construção de Workflow (do requisito aprovado à operação)
+- Taxa de adoção pelos Operadores da área (% de uso do Workflow)
+- Custo evitado dos Workflows construídos
+- Dependência de eng reduzida (Workflows operando sem intervenção do squad)
+
+**Ferramentas atuais (pré-sunOS):** tentativas isoladas de automação com ferramentas não-integradas, dependência de eng para qualquer fluxo mais complexo, sem visibilidade de histórico de execuções para diagnóstico.
+
+**Dores:**
+- Sem canvas para compor Workflows visualmente — qualquer fluxo complexo exige eng
+- Componentes do Time Central não documentados de forma padronizada — não sabe o que existe
+- Sem histórico de execuções com logs por step para auto-diagnóstico de falhas
+- Dificuldade em comunicar requisitos técnicos de novos componentes ao Time Central em formato que eles entendam
+- Sem clareza sobre fronteira de responsabilidade: o que é Builder vs. o que é Time Central
+
+**Oportunidades (o que o sunOS destrava):**
+- Canvas visual drag-and-drop (ADR-003, FA-05-01) para compor Workflows sem código
+- Catálogo estruturado de componentes do Time Central com limitações documentadas
+- Histórico de execuções com logs por step — auto-diagnóstico de Workflows com comportamento inesperado
+- Builder Sync semanal estruturado com backlog de componentes e priorização conjunta
+
+**Jobs-to-be-done (JTBD):**
+
+| ID | JTBD | Features | BRs |
+|----|------|----------|-----|
+| **JTBD-39** | When o Sponsor aprova automação nova para minha área, I want to compor o Workflow usando componentes do Time Central no canvas visual, so that construo o fluxo sem depender de um desenvolvedor no loop crítico | FA-05, FA-12 | BR-002, BR-019 |
+| **JTBD-40** | When construo Workflow novo, I want to ver catálogo atualizado de componentes disponíveis (tools, agentes fundacionais, ações, decisões) com limitações documentadas, so that não invento o que o Time Central já construiu | FA-05, FA-12 | BR-002, BR-015 |
+| **JTBD-41** | When Workflow da minha área apresenta comportamento inesperado, I want to ver histórico de execuções com logs por step e status por node, so that diagnostico e corrijo sem precisar acionar eng | FA-05, FA-10 | BR-002, BR-009 |
+| **JTBD-42** | When estou no Builder Sync semanal, I want to poder comunicar requisito de novo componente em linguagem suficientemente técnica (tipo, input, output esperado, caso de uso), so that Time Central prioriza o que minha área mais precisa sem ambiguidade | FA-05, FA-12 | BR-002 |
+
+**Critérios de sucesso para PX-08:**
+- ≥5 Workflows construídos por Builders (não por eng) operacionais no Piloto
+- Tempo médio de construção de Workflow < 2 dias após componentes disponíveis
+- ≥80% dos Builders reportam conseguir auto-diagnosticar falhas sem acionar eng
+- Builder Sync semanal ocorre com ≥3 Builders participando regularmente
+- Zero Workflows que deveriam ser de Builder entregues por eng
+
+**Features que atendem:** FA-05 (primário — canvas visual, catálogo, histórico), FA-03 (Skills da área), FA-14 (Drive como fonte de contexto), FA-09 (RBAC — Builder pode criar Workflows), FA-10 (dashboard da área), FA-12 (Admin)
+
+**Jornadas:** JN-16 (Builder construindo Workflow visual), JN-17 (Builder Sync semanal com Time Central), JN-07 (operação de Workflow recorrente)
+
+**Mapeamento BR:** BR-002 (primário — Aceleração sem dependência de eng), BR-013 (Mensuração), BR-019 (UX estruturada), BR-005 (Continuidade — Builders mantêm conhecimento operacional vivo na área)
 
 ## 5. Implicações para UX, Produto e Engenharia
 
 ### 5.1. Para UX
 
-- **PX-02 e PX-04 guiam o desenho de Shoot for the Moon** (FA-02) — modos "me prova que tá errada" (sênior) e "começando uma ideia" (junior/exploração estratégica) são guidelines diretos
+- **PX-02 e PX-04 guiam o desenho de Moon Shot** (FA-02) — modos "me prova que tá errada" (sênior) e "começando uma ideia" (junior/exploração estratégica) são guidelines diretos
 - **PX-03 guia o desenho de Skills processuais e Workflows** (FA-03, FA-05) — context injection automática, schedule humanizado, HITL gates não-fricativos
 - **PX-01 guia o desenho de Admin areas e Mensuração** (FA-12, FA-10) — pattern Model Repo (table + sidebar + drawer), dashboard executivo mensal, alertas
 - **PX-05 guia o desenho de proteções culturais** (FA-11) — track junior, forced reflection com N=3, visible reasoning hidden, marcação Faísca
@@ -660,8 +791,8 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 
 ### 5.2. Para Produto
 
-- **Priorização de POC**: foco em PX-02 (validação BR-001 do Shoot for the Moon)
-- **Priorização de Protótipo**: cobertura PX-01 (curadoria), PX-02 (Shoot for the Moon), PX-03 (Skills + Workflows iniciais)
+- **Priorização de POC**: foco em PX-02 (validação BR-001 do Moon Shot)
+- **Priorização de Protótipo**: cobertura PX-01 (curadoria), PX-02 (Moon Shot), PX-03 (Skills + Workflows iniciais)
 - **Priorização de Piloto**: + PX-04 (cobertura completa de Análise/Persona/Pesquisa) + PX-05 (track + proteções)
 - **Trade-off PX-02 × PX-05**: investir em RN-015 (forced reflection adaptativo) é gate para evitar adoção que prejudica saúde criativa coletiva (research Doshi & Hauser)
 - **Validação cultural com PX-01 (sponsor + sócios)**: ≥90% das releases aprovadas culturalmente antes de chegar a PX-02/PX-03/PX-05 (RN-016, FA-11-09)
@@ -670,7 +801,7 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 ### 5.3. Para Engenharia
 
 - **Performance crítica para PX-03**: Skills processuais e Workflows não podem regredir > 10% de latência após context injection (BR-015)
-- **Performance crítica para PX-02**: pipeline Shoot for the Moon < 15s tempo médio de resposta (RN-003)
+- **Performance crítica para PX-02**: pipeline Moon Shot < 15s tempo médio de resposta (RN-003)
 - **Segurança/permissionamento por perfil**: RBAC é central — PX-01 (Admin/Líder) acessa CRUDs; PX-02/03/04/05 (Operacional para a maioria) consome via Chat sem ver Biblioteca
 - **Personalização por perfil**:
   - PX-05 (junior): track de onboarding "começando uma ideia", N=3 forced reflection
@@ -688,10 +819,10 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 | ID | Assunção | Impacto se Falsa | Status |
 |----|----------|------------------|--------|
 | ASS-PX-01 | PX-05 (Creator Junior) merece persona separada de PX-02/PX-03 (e não apenas "track" nas existentes) | Se falsa, simplificar para 4 personas com tracks adaptativos; risco de subdimensionar proteção contra over-reliance | A validar com Bruno Prosperi e Heitor — pesquisa setorial sustenta a separação (research foundation AI & Society 2025) |
-| ASS-PX-02 | Champions (Gus/Teda em Mídia, Le em outras áreas) se encaixam parcialmente em PX-01, mas papel cultural específico pode merecer persona separada | Se falsa e champion vira persona PX-06, refazer matrizes; risco de subdimensionar adoção cross-grupo | A validar com Heitor e Yuri — atualmente tratado como sub-papel de PX-01 |
+| ASS-PX-02 | ~~Builders (Gus/Teda em Mídia) se encaixam em PX-01~~ → **RESOLVIDO 14/05/2026**: Builder é PX-08 (persona separada, não sub-papel de PX-01). Instâncias confirmadas: Bruna/Renata/Wagner (Mídia), Caetano/Milu/Thalles (BI), Mayra (Martech), Philippe (Planejamento), Chamas (Operações), João Drumond/Alessandra/Vagner (Financeiro/RH/Contabilidade). Criação e Produção pendentes. | N/A — resolvido | Resolvido |
 | ASS-PX-03 | PX-04 (Planejamento Estratégico) inclui CSO ao nível de área e Planners de squad — perfis suficientemente parecidos para uma persona única | Se falsa e CSO precisa persona separada, refazer JTBDs | A validar com Sergio Katz |
 | ASS-PX-04 | Definições por área de "júnior/pleno/sênior" (RN-017) são suficientemente convergentes para que tracks adaptativos funcionem cross-área | Se falsa, tracks precisam ser por área (criação ≠ mídia ≠ planejamento) | A validar (PA-09) com Bruno Prosperi (criação), Takai (mídia) |
-| ASS-PX-05 | Personas brasileiras dos agentes (Antropófaga, Carnavalesco, Anciã) ressoam com PX-02 e PX-04, e não causam ruído com PX-03 (mais técnico) | Se falsa e PX-03 considera "infantil", precisa de modos neutros + brasileiros | A validar com sócios e champions |
+| ASS-PX-05 | Personas brasileiras dos agentes (Antropófaga, Carnavalesco, Anciã) ressoam com PX-02 e PX-04, e não causam ruído com PX-03 (mais técnico) | Se falsa e PX-03 considera "infantil", precisa de modos neutros + brasileiros | A validar com sócios e builders |
 | ASS-PX-06 | Forced reflection moments (RN-015) são aceitos como proteção, não fricção, especialmente por PX-05 e PX-02 | Adoção cai; risco de virar feature ignorada | A validar via A/B testing no Piloto |
 
 ### 6.2. Informações Adicionais Necessárias
@@ -700,7 +831,7 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 |--------|-------------|------------|
 | Confirmação de PX-05 como persona separada | Decisão formal de PM + Sponsor sobre dimensão de proteção a juniors | Heitor + Bruno Prosperi |
 | Definições por área de júnior/pleno/sênior | Critérios para acionar track de onboarding correto (RN-017) | Bruno Prosperi (criação), Takai (mídia), demais sócios — PA-09 |
-| Champions como persona separada (PX-06?) | Confirmar se papel cultural específico de champion (cross-grupo, identificação de oportunidades, treinamento informal) merece tratamento próprio | Heitor + Yuri |
+| Builders como persona separada (PX-06?) | Confirmar se papel cultural específico de builder (cross-grupo, identificação de oportunidades, treinamento informal) merece tratamento próprio | Heitor + Yuri |
 | Validação de PX-02 vs. PX-04 | Confirmar que perfis criativos seniores (PX-02) e planners (PX-04) têm jobs suficientemente diferentes para personas separadas | Sergio Katz + Bruno Prosperi |
 | KPIs de negócio adicionais por persona | Lista exaustiva de KPIs que cada persona é cobrada (atualmente proposta mas não validada) | RH + sócios das áreas |
 
@@ -710,5 +841,6 @@ Nenhuma persona secundária identificada nesta versão. Todas as 6 personas são
 
 | Versão | Data | Autor | Alterações |
 |--------|------|-------|------------|
-| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **5 Personas (PX-01 a PX-05)** com perfil, KPIs, ferramentas atuais, dores, oportunidades, JTBDs verificáveis ("When X, I want to Y, so that Z"), critérios de sucesso e mapeamento para Features (FA-XX) e BRs (BR-XXX). PX-01 a PX-04 derivadas do FRD Shoot for the Moon (referenciado nos BRDs Parte 3 e 4). PX-05 (Creator Junior) adicionada para preencher lacuna de cobertura única de BR-012 (UX por carreira) e endereçar risco de over-reliance documentado em research foundation (Microsoft Research / MIT Media Lab 2025). Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma Zero/Job); anti-patterns evitados |
+| 1.0 | 2026-04-28 | Heitor Miranda + Claude (assistido) | Versão inicial. **5 Personas (PX-01 a PX-05)** com perfil, KPIs, ferramentas atuais, dores, oportunidades, JTBDs verificáveis ("When X, I want to Y, so that Z"), critérios de sucesso e mapeamento para Features (FA-XX) e BRs (BR-XXX). PX-01 a PX-04 derivadas do FRD Moon Shot (referenciado nos BRDs Parte 3 e 4). PX-05 (Creator Junior) adicionada para preencher lacuna de cobertura única de BR-012 (UX por carreira) e endereçar risco de over-reliance documentado em research foundation (Microsoft Research / MIT Media Lab 2025). Vocabulário Suno aplicado (Devorar, Provocar, Faísca, Brasa, Caixa-preta, Bioma Zero/Job); anti-patterns evitados |
 | 1.1 | 2026-04-28 | **+1 Persona**: PX-06 Aprovador Sócio (papel funcional, não cargo novo) com 5 JTBDs (JTBD-30 a JTBD-34). Pedido Guga + Bruno Prosperi para FA-13 Aprovação Hierárquica. Total agora: **6 Personas / 34 JTBDs**. Anti-rubber-stamping (RN-024) é princípio central da PX-06 |
+| 1.2 | 2026-05-14 | Heitor + Claude (assistido) | **+2 Personas**: PX-07 Sponsor de Área e PX-08 Builder de Área — formalização da governança Sponsor-Builder-Time Central (reuniões 07/05 e 14/05/2026). PX-06 adicionada à §2.1 Síntese. §2.3 Priorização atualizada (PX-07 e PX-08 entram no Piloto). §4.2 atualizada. JTBD-35 a JTBD-42 criados (4 por persona). Rename Champion→Builder aplicado transversalmente (ref: sessão 14/05/2026). Total: **8 Personas / 42 JTBDs** |

@@ -2,10 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import ClientCard from '@/components/clientes/ClientCard';
 import ClientDrawer from '@/components/clientes/ClientDrawer';
+import EmptyState from '@/components/ui/EmptyState';
 import { useClients } from '@/contexts/ClientsContext';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { ClientAdmin } from '@/lib/client-types';
@@ -114,28 +115,41 @@ export default function ClientesPage() {
           />
         </div>
 
-        {/* Grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {filtered.map((client) => {
-            const documentCount = documents.filter((doc) => doc.scope.includes(client.slug)).length;
-            return (
-              <ClientCard
-                key={client.id}
-                client={client}
-                documentCount={documentCount}
-                onSelect={setSelectedClient}
-              />
-            );
-          })}
-        </div>
+        {/* No data at all — rich empty state with CTA */}
+        {clients.length === 0 && (
+          <EmptyState
+            icon={Users}
+            title="Nenhum cliente cadastrado"
+            description="Adicione um cliente para organizar suas skills e conteúdos."
+            action={{ label: 'Novo cliente', onClick: () => router.push('/clientes/new') }}
+          />
+        )}
 
-        {filtered.length === 0 && (
+        {/* Grid */}
+        {clients.length > 0 && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: 16,
+            }}
+          >
+            {filtered.map((client) => {
+              const documentCount = documents.filter((doc) => doc.scope.includes(client.slug)).length;
+              return (
+                <ClientCard
+                  key={client.id}
+                  client={client}
+                  documentCount={documentCount}
+                  onSelect={setSelectedClient}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Filters narrowed to zero — softer message, no CTA */}
+        {clients.length > 0 && filtered.length === 0 && (
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 48 }}>
             Nenhum cliente encontrado.
           </p>

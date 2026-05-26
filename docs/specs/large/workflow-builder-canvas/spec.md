@@ -4,9 +4,9 @@ slug: workflow-builder-canvas
 artefato: spec
 nivel-sdd: spec-anchored
 tamanho: large
-status: rascunho
+status: em-revisao
 criada: 2026-04-30
-atualizada: 2026-04-30
+atualizada: 2026-05-15
 versao: 1.0
 substitui: SPEC-003 (docs/specs/large/workflow-builder/)
 escopo:

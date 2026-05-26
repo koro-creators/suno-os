@@ -6,8 +6,9 @@ nivel-sdd: spec-anchored
 tamanho: large
 status: rascunho
 criada: 2026-04-30
-atualizada: 2026-04-30
+atualizada: 2026-05-15
 versao: 1.0
+fase: Momento 2
 escopo:
   projeto: sunos
   stack: "Frontend: Next.js 14 + TypeScript | Backend: FastAPI + LangGraph + Python 3.11"
@@ -30,11 +31,14 @@ upstream:
   - docs/ux/parte5-ui-specs.md (§4.11)
 ---
 
+> ⚠️ **REST-08 v2 (decisão 14/05/2026)** — Drive é restrito ao Drive **interno da Suno** (`/sunos-shared/`). Drive externo de clientes está fora de escopo desta SPEC.
+
+
 # Especificação — Drive Read-Only Curation (FA-14)
 
 ## 1. Visão Geral
 
-**O quê.** Sistema que conecta o Google Drive de cada cliente da Suno como **fonte curada read-only** da Biblioteca do sunOS. Sync periódico (15min/24h) + Drive Push webhook descobrem documentos; um `CurationAgent` analisa e gera **sugestões** (`IMPORT_TO_LIBRARY`, `TAG`, `MERGE_WITH`, `MARK_DUPLICATE`, `MARK_OUTDATED`) que **sempre exigem decisão humana** (Líder/Curador). Importação aceita cria `KnowledgeItem` na Biblioteca com `provenance.drive_document_id` rastreável. Limpeza periódica gera `DriveCleanupReport` (duplicatas via `content_hash`, órfãos via `last_seen_at > 180d`, candidatos a arquivamento) — **apenas relatório, sem ação destrutiva**. Cliente individual pode ser excluído da integração via admin (LGPD/contratual).
+**O quê.** Sistema que conecta o **Google Drive interno da Suno** (`/sunos-shared/`) como **fonte curada read-only** da Biblioteca do sunOS. Sync periódico (15min/24h) + Drive Push webhook descobrem documentos; um `CurationAgent` analisa e gera **sugestões** (`IMPORT_TO_LIBRARY`, `TAG`, `MERGE_WITH`, `MARK_DUPLICATE`, `MARK_OUTDATED`) que **sempre exigem decisão humana** (Líder/Curador). Importação aceita cria `KnowledgeItem` na Biblioteca com `provenance.drive_document_id` rastreável. Limpeza periódica gera `DriveCleanupReport` (duplicatas via `content_hash`, órfãos via `last_seen_at > 180d`, candidatos a arquivamento) — **apenas relatório, sem ação destrutiva**. Cliente individual pode ser excluído da integração via admin (LGPD/contratual).
 
 **Por quê.** A Suno usa Drive como repositório de fato de brand guidelines, references, briefs, e materiais criativos. Hoje, ingerir esse acervo na Biblioteca é manual e demorado, levando a Biblioteca subutilizada. BR-018 pede integração; a versão **read-only + curadoria sugestiva** (ADR-009) preserva ownership do cliente sobre seu Drive enquanto reduz a 80% o atrito de ingestão.
 

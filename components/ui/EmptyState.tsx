@@ -1,42 +1,76 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { LucideIcon } from 'lucide-react';
 
-interface EmptyStateProps {
-  icon?: ReactNode;
+export interface EmptyStateProps {
+  icon: LucideIcon;
   title: string;
-  description?: string;
-  action?: { label: string; onClick: () => void };
+  description: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
-export default function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export default function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '48px 24px', textAlign: 'center',
-    }}>
-      {icon && (
-        <div style={{ marginBottom: 16, color: 'var(--text-muted)', opacity: 0.5 }}>
-          {icon}
-        </div>
-      )}
-      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: 500 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px 24px',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ marginBottom: 16, color: 'var(--text-muted)' }}>
+        <Icon size={48} strokeWidth={1.5} />
+      </div>
+
+      <p
+        style={{
+          fontSize: 18,
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          margin: '0 0 8px',
+          lineHeight: 1.3,
+        }}
+      >
         {title}
       </p>
-      {description && (
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 16px', maxWidth: 320 }}>
-          {description}
-        </p>
-      )}
+
+      <p
+        style={{
+          fontSize: 14,
+          color: 'var(--text-secondary)',
+          margin: '0 0 24px',
+          maxWidth: 320,
+          lineHeight: 1.5,
+        }}
+      >
+        {description}
+      </p>
+
       {action && (
         <button
           onClick={action.onClick}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            backgroundColor: 'var(--sun)', color: 'var(--void)',
-            border: 'none', borderRadius: 9999, padding: '8px 16px',
-            fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'var(--sun)',
+            color: '#000',
+            border: 'none',
+            borderRadius: 8,
+            padding: '10px 20px',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            transition: 'opacity 150ms ease',
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
         >
           {action.label}
         </button>
