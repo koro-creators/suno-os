@@ -160,6 +160,11 @@ from tools.router import router as tools_router
 
 app.include_router(tools_router, prefix=settings.API_PREFIX)
 
+# Mount conversations router (Phase 11 — conversation persistence)
+from chat.conversations.router import router as conversations_router
+
+app.include_router(conversations_router, prefix=settings.API_PREFIX)
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
