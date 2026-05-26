@@ -170,6 +170,11 @@ from drive.router import router as drive_router
 
 app.include_router(drive_router, prefix=settings.API_PREFIX)
 
+# Mount onboarding router (Phase 19 / SPEC-015 — Oráculo do Cliente)
+from onboarding.router import router as onboarding_router
+
+app.include_router(onboarding_router, prefix=settings.API_PREFIX)
+
 # Mount approval router (Phase 20 — SPEC-004 / FA-13 Aprovação Hierárquica)
 from approval.router import router as approval_router
 
