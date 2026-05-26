@@ -353,6 +353,9 @@ export default function SubmissionReviewPage() {
                 Conteúdo submetido
               </div>
               <div style={{ padding: 20 }}>
+                {/* TODO: render markdown formatting when content uses structured formatting.
+                    New deps are prohibited (CLAUDE.md) — react-markdown is out for Phase 20.
+                    For Phase D+, evaluate a zero-dep markdown renderer or a light remark plugin. */}
                 <pre
                   style={{
                     margin: 0,
