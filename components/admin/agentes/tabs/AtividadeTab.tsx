@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight } from '@carbon/icons-react';
 import { AgentRun } from '@/lib/agents-types';
 import { mockAgentRuns } from '@/data/agents-admin';
 
@@ -132,9 +132,9 @@ export default function AtividadeTab({ agentId }: Props) {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {isExpanded ? (
-                    <ChevronDown size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    <ChevronDown size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   ) : (
-                    <ChevronRight size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    <ChevronRight size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   )}
                   {formatDatetime(run.started_at)}
                 </div>

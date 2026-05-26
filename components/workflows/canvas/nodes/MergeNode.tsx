@@ -10,7 +10,7 @@
  */
 'use client';
 
-import { GitMerge } from 'lucide-react';
+import { Merge } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -33,7 +33,7 @@ export default function MergeNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={`Aguardar ${policy === 'all' ? 'todas as entradas' : 'a primeira entrada (any)'}`}
-      Icon={GitMerge}
+      Icon={Merge}
       borderColor={BORDER}
       accentColor="rgba(255,255,255,0.06)"
       sourceHandles={sources}

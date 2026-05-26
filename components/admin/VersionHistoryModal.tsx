@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { Close } from '@carbon/icons-react';
 import { SkillVersion } from '@/lib/admin-types';
 
 interface VersionHistoryModalProps {
@@ -72,7 +72,7 @@ export default function VersionHistoryModal({ skillName, versions, onClose, onRe
             display: 'flex',
           }}
         >
-          <X size={16} strokeWidth={1.5} />
+          <Close size={16} />
         </button>
 
         <h2 style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-primary)', margin: '0 0 20px' }}>

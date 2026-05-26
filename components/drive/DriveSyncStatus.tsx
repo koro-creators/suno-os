@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw, FileText, Clock, Loader2 } from 'lucide-react';
+import { Document, InProgress, Renew, Time } from '@carbon/icons-react';
 
 export interface DriveSyncStatusProps {
   lastSync: string | null;
@@ -36,7 +36,7 @@ export default function DriveSyncStatus({
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <RefreshCw size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+        <Renew size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
         <h2
           style={{
             fontSize: '0.8rem',
@@ -70,7 +70,7 @@ export default function DriveSyncStatus({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Clock size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+            <Time size={12} style={{ color: 'var(--text-muted)' }} />
             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Última sincronização
             </span>
@@ -93,7 +93,7 @@ export default function DriveSyncStatus({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FileText size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+            <Document size={12} style={{ color: 'var(--text-muted)' }} />
             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Documentos indexados
             </span>
@@ -137,9 +137,9 @@ export default function DriveSyncStatus({
           }}
         >
           {isSyncing ? (
-            <Loader2 size={14} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+            <InProgress size={14} style={{ animation: 'spin 1s linear infinite' }} />
           ) : (
-            <RefreshCw size={14} strokeWidth={1.5} />
+            <Renew size={14} />
           )}
           {isSyncing ? 'Sincronizando...' : 'Sincronizar agora'}
         </button>

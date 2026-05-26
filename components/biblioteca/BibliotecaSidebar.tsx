@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight } from '@carbon/icons-react';
 import FileTypeIcon from './FileTypeIcon';
 
 const SCOPE_OPTIONS: { key: string; label: string; color: string }[] = [
@@ -69,9 +69,9 @@ function CollapsibleSection({
         aria-expanded={open}
       >
         {open ? (
-          <ChevronDown size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          <ChevronDown size={12} style={{ color: 'var(--text-muted)' }} />
         ) : (
-          <ChevronRight size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />
         )}
         {title}
       </button>

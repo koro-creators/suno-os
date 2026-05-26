@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal, Layers } from 'lucide-react';
+import { Layers, OverflowMenuHorizontal } from '@carbon/icons-react';
 import { Workflow } from '@/lib/workflow-types';
 import { clients } from '@/data/clients';
 
@@ -289,7 +289,7 @@ export default function WorkflowTable({
                 {/* Steps count */}
                 <td style={metaTdStyle} className="wf-hide-mobile">
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <Layers size={12} strokeWidth={1.5} />
+                    <Layers size={12} />
                     {wf.steps_count}
                   </span>
                 </td>
@@ -351,7 +351,7 @@ export default function WorkflowTable({
                     }}
                     aria-label="Acoes"
                   >
-                    <MoreHorizontal size={16} strokeWidth={1.5} />
+                    <OverflowMenuHorizontal size={16} />
                   </button>
 
                   {isMenuOpen && (

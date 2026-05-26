@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Sparkles, Users } from 'lucide-react';
+import { Group, Star } from '@carbon/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function WelcomeScreen() {
@@ -87,7 +87,7 @@ export default function WelcomeScreen() {
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
-            <Users size={14} strokeWidth={1.5} />
+            <Group size={14} />
             Criar primeiro cliente
           </button>
 
@@ -110,7 +110,7 @@ export default function WelcomeScreen() {
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--twilight)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-subtle)'; }}
           >
-            <Sparkles size={14} strokeWidth={1.5} />
+            <Star size={14} />
             Explorar Skills
           </button>
         </div>

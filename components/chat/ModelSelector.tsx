@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '@carbon/icons-react';
 
 interface ModelOption {
   id: string;
@@ -59,7 +59,7 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
           backgroundColor: selected.color, flexShrink: 0,
         }} />
         {selected.label}
-        <ChevronDown size={10} strokeWidth={1.5} style={{
+        <ChevronDown size={10} style={{
           transform: open ? 'rotate(180deg)' : 'rotate(0)',
           transition: 'transform 150ms ease',
           color: 'var(--text-muted)',

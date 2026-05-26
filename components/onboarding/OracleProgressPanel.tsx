@@ -5,7 +5,7 @@
  * ADR-LOCAL-01: polling-based, 5s interval.
  */
 
-import { CheckCircle, Circle, Loader, AlertCircle } from 'lucide-react';
+import { CheckmarkFilled, CircleDash, InProgress, Warning } from '@carbon/icons-react';
 import type { OnboardingJobStatus, OntologyEntityType } from '@/lib/onboarding-types';
 import { ONTOLOGY_ENTITY_TYPES } from '@/lib/onboarding-types';
 
@@ -24,24 +24,24 @@ function EntityRow({ entityType, status, isCurrent }: {
   let color: string;
 
   if (status === 'generated' || status === 'accepted') {
-    icon = <CheckCircle {...iconProps} />;
+    icon = <CheckmarkFilled {...iconProps} />;
     color = '#22C55E';
   } else if (isCurrent) {
     icon = (
       <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}>
-        <Loader {...iconProps} />
+        <InProgress {...iconProps} />
       </span>
     );
     color = 'var(--sun)';
   } else if (status === 'regenerating') {
     icon = (
       <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}>
-        <Loader {...iconProps} />
+        <InProgress {...iconProps} />
       </span>
     );
     color = '#F97316';
   } else {
-    icon = <Circle {...iconProps} />;
+    icon = <CircleDash {...iconProps} />;
     color = 'var(--text-muted)';
   }
 
@@ -150,7 +150,7 @@ export default function OracleProgressPanel({ status }: Props) {
             border: '1px solid rgba(239,68,68,0.25)',
           }}
         >
-          <AlertCircle size={14} strokeWidth={1.5} style={{ color: '#EF4444', flexShrink: 0, marginTop: 1 }} />
+          <Warning size={14} style={{ color: '#EF4444', flexShrink: 0, marginTop: 1 }} />
           <span style={{ fontSize: '0.78rem', color: '#EF4444' }}>{status.errorDetail}</span>
         </div>
       )}

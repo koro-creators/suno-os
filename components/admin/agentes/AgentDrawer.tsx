@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { Close } from '@carbon/icons-react';
 import { Agent, AgentStatus } from '@/lib/agents-types';
 
 const STATUS_CONFIG: Record<AgentStatus, { label: string; color: string }> = {
@@ -125,7 +125,7 @@ export default function AgentDrawer({ agent, onClose }: AgentDrawerProps) {
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} strokeWidth={1.5} />
+            <Close size={18} />
           </button>
         </div>
 

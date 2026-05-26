@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, LayoutGrid, List, Zap } from 'lucide-react';
+import { Add, Dashboard, Flash, List, Search } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowCard from '@/components/workflows/WorkflowCard';
 import WorkflowTable from '@/components/workflows/WorkflowTable';
@@ -111,7 +111,7 @@ export default function WorkflowsPage() {
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
-            <Plus size={14} strokeWidth={2} />
+            <Add size={14} />
             Novo Workflow
           </button>
         </div>
@@ -121,7 +121,6 @@ export default function WorkflowsPage() {
           <div style={{ position: 'relative', maxWidth: 320, flex: '1 1 200px' }}>
             <Search
               size={14}
-              strokeWidth={1.5}
               style={{
                 position: 'absolute',
                 left: 12,
@@ -198,7 +197,7 @@ export default function WorkflowsPage() {
                 transition: 'all 150ms ease',
               }}
             >
-              <List size={14} strokeWidth={1.5} />
+              <List size={14} />
             </button>
             <button
               onClick={() => setViewMode('grid')}
@@ -219,7 +218,7 @@ export default function WorkflowsPage() {
                 transition: 'all 150ms ease',
               }}
             >
-              <LayoutGrid size={14} strokeWidth={1.5} />
+              <Dashboard size={14} />
             </button>
           </div>
         </div>
@@ -232,7 +231,7 @@ export default function WorkflowsPage() {
         {/* No data at all — rich empty state with CTA */}
         {workflows.length === 0 && (
           <EmptyState
-            icon={Zap}
+            icon={Flash}
             title="Nenhum workflow criado"
             description="Conecte skills em sequência para automatizar fluxos de criação de conteúdo."
             action={{ label: 'Novo workflow', onClick: () => router.push('/workflows/new') }}

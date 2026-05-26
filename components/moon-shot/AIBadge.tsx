@@ -13,7 +13,7 @@
  * Vocabulário Suno: Faísca → Brasa → Validado (Glossário §1).
  */
 
-import { Sparkles, Flame, CheckCircle2 } from 'lucide-react';
+import { CheckmarkFilled, Fire, Star } from '@carbon/icons-react';
 
 export type AIBadgeState = 'faisca' | 'brasa' | 'validado';
 export type AIBadgeSize = 'small' | 'medium';
@@ -27,27 +27,27 @@ interface AIBadgeProps {
 
 const STATE_CONFIG: Record<
   AIBadgeState,
-  { label: string; color: string; bg: string; Icon: typeof Sparkles; defaultTooltip: string }
+  { label: string; color: string; bg: string; Icon: typeof Star; defaultTooltip: string }
 > = {
   faisca: {
     label: 'Faísca',
     color: 'var(--sun)',
     bg: 'rgba(255, 200, 1, 0.12)',
-    Icon: Sparkles,
+    Icon: Star,
     defaultTooltip: 'Estímulo gerado por IA — matéria-prima para o creator. Não é peça final.',
   },
   brasa: {
     label: 'Brasa',
     color: '#F97316',
     bg: 'rgba(249, 115, 22, 0.12)',
-    Icon: Flame,
+    Icon: Fire,
     defaultTooltip: 'Output editado e integrado pelo creator — em refinamento.',
   },
   validado: {
     label: 'Validado',
     color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.12)',
-    Icon: CheckCircle2,
+    Icon: CheckmarkFilled,
     defaultTooltip: 'Output aprovado e integrado em entregável final.',
   },
 };
@@ -86,7 +86,7 @@ export default function AIBadge({
         transition: 'all 150ms ease',
       }}
     >
-      <cfg.Icon size={iconSize} strokeWidth={1.5} />
+      <cfg.Icon size={iconSize} />
       {showLabel && <span>{cfg.label}</span>}
     </span>
   );

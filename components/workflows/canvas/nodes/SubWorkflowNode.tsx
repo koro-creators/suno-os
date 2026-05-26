@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { Workflow } from 'lucide-react';
+import { Flow } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -30,7 +30,7 @@ export default function SubWorkflowNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={preview}
-      Icon={Workflow}
+      Icon={Flow}
       borderColor={BORDER}
       accentColor="rgba(236,72,153,0.15)"
       sourceHandles={sources}

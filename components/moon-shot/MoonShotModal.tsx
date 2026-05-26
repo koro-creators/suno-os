@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Sparkles, X, Send, AlertCircle } from 'lucide-react';
+import { Close, Send, Star, Warning } from '@carbon/icons-react';
 import FaiscaPanel, { type IntensityMode } from './FaiscaPanel';
 import { type FaiscaData } from './FaiscaCard';
 
@@ -127,7 +127,7 @@ export default function MoonShotModal({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Sparkles size={18} strokeWidth={1.5} color="var(--sun)" />
+            <Star size={18} color="var(--sun)" />
             <h2
               style={{
                 fontSize: 16,
@@ -163,7 +163,7 @@ export default function MoonShotModal({
               transition: 'all 150ms ease',
             }}
           >
-            <X size={14} strokeWidth={1.5} />
+            <Close size={14} />
           </button>
         </header>
 
@@ -224,7 +224,7 @@ export default function MoonShotModal({
                     transition: 'all 150ms ease',
                   }}
                 >
-                  <Send size={14} strokeWidth={1.5} />
+                  <Send size={14} />
                   Devorar
                 </button>
               </div>
@@ -281,7 +281,7 @@ export default function MoonShotModal({
                 color: 'var(--text-secondary)',
               }}
             >
-              <AlertCircle size={32} strokeWidth={1.5} color="#EF4444" />
+              <Warning size={32} color="#EF4444" />
               <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0 }}>
                 {errorMsg ?? 'Travei. Tenta de novo.'}
               </p>

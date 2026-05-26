@@ -15,7 +15,7 @@
  */
 'use client';
 
-import { Maximize, RefreshCw, ShieldCheck, Play, ZoomIn, ZoomOut } from 'lucide-react';
+import { Maximize, Play, Renew, SecurityServices, ZoomIn, ZoomOut } from '@carbon/icons-react';
 import { useReactFlow } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 
@@ -68,19 +68,19 @@ export default function CanvasToolbar({
       }}
     >
       <button style={BTN} onClick={() => flow.zoomIn()} aria-label="Aproximar">
-        <ZoomIn size={14} strokeWidth={1.5} />
+        <ZoomIn size={14} />
       </button>
       <button style={BTN} onClick={() => flow.zoomOut()} aria-label="Afastar">
-        <ZoomOut size={14} strokeWidth={1.5} />
+        <ZoomOut size={14} />
       </button>
       <button style={BTN} onClick={() => flow.fitView({ padding: 0.2 })} aria-label="Ajustar à tela">
-        <Maximize size={14} strokeWidth={1.5} />
+        <Maximize size={14} />
       </button>
       <button style={BTN} onClick={onAutoLayout}>
-        <RefreshCw size={14} strokeWidth={1.5} /> Reorganizar
+        <Renew size={14} /> Reorganizar
       </button>
       <button style={BTN} onClick={onValidate} disabled={validating}>
-        <ShieldCheck size={14} strokeWidth={1.5} /> {validating ? 'Validando…' : 'Validar'}
+        <SecurityServices size={14} /> {validating ? 'Validando…' : 'Validar'}
       </button>
       <button
         style={{
@@ -96,7 +96,7 @@ export default function CanvasToolbar({
         }}
         disabled={!validationOk}
       >
-        <Play size={14} strokeWidth={1.5} /> Executar
+        <Play size={14} /> Executar
       </button>
     </div>
   );

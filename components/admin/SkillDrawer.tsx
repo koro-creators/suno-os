@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, ExternalLink, Copy, Trash2 } from 'lucide-react';
+import { Close, Copy, Launch, TrashCan } from '@carbon/icons-react';
 import { SkillAdmin } from '@/lib/admin-types';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -215,7 +215,7 @@ export default function SkillDrawer({
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} strokeWidth={1.5} />
+            <Close size={18} />
           </button>
         </div>
 
@@ -514,7 +514,7 @@ export default function SkillDrawer({
               e.currentTarget.style.opacity = '1';
             }}
           >
-            <ExternalLink size={14} strokeWidth={1.5} />
+            <Launch size={14} />
             Abrir Editor
           </button>
           <button
@@ -542,7 +542,7 @@ export default function SkillDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Copy size={14} strokeWidth={1.5} />
+            <Copy size={14} />
             Duplicar
           </button>
           <button
@@ -568,7 +568,7 @@ export default function SkillDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Trash2 size={14} strokeWidth={1.5} />
+            <TrashCan size={14} />
             Excluir
           </button>
         </div>

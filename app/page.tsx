@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
-import { Globe } from 'lucide-react';
+import { Globe } from '@carbon/icons-react';
 import Link from 'next/link';
 import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
@@ -90,7 +90,6 @@ export default function Home() {
           >
             <Globe
               size={48}
-              strokeWidth={1.5}
               style={{ color: 'var(--text-muted)' }}
             />
             <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>

@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { CheckCircle, Edit3, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckmarkFilled, ChevronDown, ChevronUp, Edit, Renew } from '@carbon/icons-react';
 import type { HITLAction, OntologyEntityType, EntityStatus, EntityBadge } from '@/lib/onboarding-types';
 
 interface Props {
@@ -70,10 +70,10 @@ export default function EntityValidationCard({ entityType, content, status, badg
         {/* Status icon */}
         <span style={{ flexShrink: 0 }}>
           {isAccepted ? (
-            <CheckCircle size={16} strokeWidth={1.5} style={{ color: '#22C55E' }} />
+            <CheckmarkFilled size={16} style={{ color: '#22C55E' }} />
           ) : isRegenerating ? (
             <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}>
-              <RefreshCw size={16} strokeWidth={1.5} style={{ color: '#F97316' }} />
+              <Renew size={16} style={{ color: '#F97316' }} />
             </span>
           ) : (
             <span
@@ -116,7 +116,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
 
         {/* Expand toggle */}
         <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
-          {isExpanded ? <ChevronUp size={14} strokeWidth={1.5} /> : <ChevronDown size={14} strokeWidth={1.5} />}
+          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </span>
       </div>
 
@@ -186,7 +186,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
                     disabled={isPending}
                     style={actionButtonStyle('#22C55E', isPending)}
                   >
-                    <CheckCircle size={12} strokeWidth={1.5} />
+                    <CheckmarkFilled size={12} />
                     Aceitar edição
                   </button>
                   <button
@@ -204,7 +204,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
                     disabled={isPending}
                     style={actionButtonStyle('#22C55E', isPending)}
                   >
-                    <CheckCircle size={12} strokeWidth={1.5} />
+                    <CheckmarkFilled size={12} />
                     Aceitar
                   </button>
                   <button
@@ -212,7 +212,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
                     disabled={isPending}
                     style={actionButtonStyle('#8B5CF6', isPending)}
                   >
-                    <Edit3 size={12} strokeWidth={1.5} />
+                    <Edit size={12} />
                     Editar + Aceitar
                   </button>
                   <button
@@ -220,7 +220,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
                     disabled={isPending}
                     style={actionButtonStyle('#EF4444', isPending)}
                   >
-                    <RefreshCw size={12} strokeWidth={1.5} />
+                    <Renew size={12} />
                     Rejeitar + Regenerar
                   </button>
                 </>
@@ -240,7 +240,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
               }}
             >
               <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}>
-                <RefreshCw size={13} strokeWidth={1.5} />
+                <Renew size={13} />
               </span>
               Regenerando... aguarde.
             </div>
@@ -257,7 +257,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
                 color: '#22C55E',
               }}
             >
-              <CheckCircle size={12} strokeWidth={1.5} />
+              <CheckmarkFilled size={12} />
               Entidade aprovada
             </div>
           )}

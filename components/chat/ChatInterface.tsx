@@ -7,7 +7,7 @@ import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useToolStream } from '@/hooks/useToolStream';
 import { apiAvailable, getApiUrl } from '@/lib/api';
 import { useSkills } from '@/contexts/SkillsContext';
-import { MessageSquare, Type, ImageIcon } from 'lucide-react';
+import { Chat, Image, TextScale } from '@carbon/icons-react';
 import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
 import ChatInput from './ChatInput';
@@ -94,7 +94,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
           try {
             const response = await fetch(getApiUrl('/api/chat/generate-text'), {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-TextScale': 'application/json' },
               body: JSON.stringify({
                 prompt: `Crie 2 variações alternativas do seguinte texto, mantendo o mesmo objetivo e tom mas com abordagens criativas diferentes:\n\n${completedText}`,
                 content_type: 'custom',
@@ -178,7 +178,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
       try {
         const response = await fetch(getApiUrl('/api/chat/generate-text'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-TextScale': 'application/json' },
           body: JSON.stringify({
             prompt: `Crie 2 variações alternativas do seguinte texto, mantendo o mesmo objetivo e tom mas com abordagens criativas diferentes:\n\n${msg.content}`,
             content_type: 'custom',
@@ -257,9 +257,9 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
           borderBottom: '1px solid var(--border-subtle)',
         }}>
           {([
-            { mode: 'chat' as ChatMode, label: 'Chat', icon: MessageSquare },
-            { mode: 'text' as ChatMode, label: 'Texto', icon: Type },
-            { mode: 'image' as ChatMode, label: 'Imagem', icon: ImageIcon },
+            { mode: 'chat' as ChatMode, label: 'Chat', icon: Chat },
+            { mode: 'text' as ChatMode, label: 'Texto', icon: TextScale },
+            { mode: 'image' as ChatMode, label: 'Imagem', icon: Image },
           ]).map(({ mode, label, icon: Icon }) => (
             <button
               key={mode}
@@ -280,7 +280,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
                 transition: 'all 150ms ease',
               }}
             >
-              <Icon size={14} strokeWidth={1.5} />
+              <Icon size={14} />
               {label}
             </button>
           ))}

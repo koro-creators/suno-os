@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Video, Upload } from 'lucide-react';
+import { Close, Upload, Video } from '@carbon/icons-react';
 import { MeetingCreateData } from '@/lib/meeting-types';
 
 interface Props {
@@ -105,7 +105,7 @@ export default function OptInModal({ availableClients, onClose, onSubmit }: Prop
                 justifyContent: 'center',
               }}
             >
-              <Video size={14} strokeWidth={1.5} style={{ color: 'var(--sun)' }} />
+              <Video size={14} style={{ color: 'var(--sun)' }} />
             </div>
             <div>
               <h2 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
@@ -131,7 +131,7 @@ export default function OptInModal({ availableClients, onClose, onSubmit }: Prop
             onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
-            <X size={14} strokeWidth={1.5} />
+            <Close size={14} />
           </button>
         </div>
 
@@ -288,7 +288,7 @@ export default function OptInModal({ availableClients, onClose, onSubmit }: Prop
                   cursor: 'pointer',
                 }}
               >
-                <Upload size={12} strokeWidth={1.5} />
+                <Upload size={12} />
                 Upload de arquivo
                 <input
                   type="file"

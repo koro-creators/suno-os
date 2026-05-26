@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
-import { X, ExternalLink, Edit2, Trash2, Link } from 'lucide-react';
+import { Close, Edit, Launch, Link, TrashCan } from '@carbon/icons-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import FileTypeIcon from './FileTypeIcon';
 
@@ -168,7 +168,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} strokeWidth={1.5} />
+            <Close size={18} />
           </button>
         </div>
 
@@ -317,7 +317,7 @@ export default function BibliotecaDrawer({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {doc.links.map((link, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <ExternalLink size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    <Launch size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
                       {link.label}:
                     </span>
@@ -415,7 +415,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.opacity = '1';
             }}
           >
-            <Edit2 size={14} strokeWidth={1.5} />
+            <Edit size={14} />
             Editar
           </button>
           <button
@@ -444,7 +444,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Link size={14} strokeWidth={1.5} />
+            <Link size={14} />
             Copiar link
           </button>
           <button
@@ -470,7 +470,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Trash2 size={14} strokeWidth={1.5} />
+            <TrashCan size={14} />
             Excluir
           </button>
         </div>

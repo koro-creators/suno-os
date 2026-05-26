@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { RefreshCw, X, Download } from 'lucide-react';
+import { Close, Download, Renew } from '@carbon/icons-react';
 import FaiscaCard, { type FaiscaData } from './FaiscaCard';
 
 export type IntensityMode = 'adjacente' | 'equilibrado' | 'radical';
@@ -153,7 +153,7 @@ export default function FaiscaPanel({
                 transition: 'all 150ms ease',
               }}
             >
-              <RefreshCw size={14} strokeWidth={1.5} />
+              <Renew size={14} />
             </button>
           )}
 
@@ -180,7 +180,7 @@ export default function FaiscaPanel({
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
-              <Download size={14} strokeWidth={1.5} />
+              <Download size={14} />
               Manter ({starred.size})
             </button>
           )}
@@ -205,7 +205,7 @@ export default function FaiscaPanel({
                 transition: 'all 150ms ease',
               }}
             >
-              <X size={14} strokeWidth={1.5} />
+              <Close size={14} />
             </button>
           )}
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, KeyboardEvent } from 'react';
-import { Search } from 'lucide-react';
+import { Search } from '@carbon/icons-react';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 
 interface GlobalSearchProps {
@@ -118,7 +118,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <Search size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <Search size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           <input
             ref={inputRef}
             type="text"

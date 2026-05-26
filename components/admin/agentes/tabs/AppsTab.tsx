@@ -1,6 +1,6 @@
 'use client';
 
-import { HardDrive } from 'lucide-react';
+import { DataBase } from '@carbon/icons-react';
 import { useAgents } from '@/contexts/AgentsContext';
 import { Agent } from '@/lib/agents-types';
 
@@ -65,7 +65,7 @@ export default function AppsTab({ agent }: Props) {
                 flexShrink: 0,
               }}
             >
-              <HardDrive size={14} strokeWidth={1.5} style={{ color: 'var(--text-secondary)' }} />
+              <DataBase size={14} style={{ color: 'var(--text-secondary)' }} />
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>

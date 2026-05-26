@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, Trash2, File } from 'lucide-react';
+import { Document, TrashCan, Upload } from '@carbon/icons-react';
 import { useAgents } from '@/contexts/AgentsContext';
 import { Agent, MemoryFile } from '@/lib/agents-types';
 
@@ -75,7 +75,7 @@ export default function MemoriaTab({ agent }: Props) {
             transition: 'all 150ms ease',
           }}
         >
-          <Upload size={24} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          <Upload size={24} style={{ color: 'var(--text-muted)' }} />
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
             Arraste arquivos ou clique para selecionar
           </p>
@@ -99,7 +99,7 @@ export default function MemoriaTab({ agent }: Props) {
         </p>
       )}
 
-      {/* File list */}
+      {/* Document list */}
       {files.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {files.map((file) => (
@@ -128,7 +128,7 @@ function FileRow({ file, onDelete }: { file: MemoryFile; onDelete: () => void })
         borderRadius: 8,
       }}
     >
-      <File size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+      <Document size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
@@ -163,7 +163,7 @@ function FileRow({ file, onDelete }: { file: MemoryFile; onDelete: () => void })
         onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
       >
-        <Trash2 size={14} strokeWidth={1.5} />
+        <TrashCan size={14} />
       </button>
     </div>
   );

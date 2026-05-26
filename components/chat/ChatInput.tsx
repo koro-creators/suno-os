@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Send, Paperclip, X } from 'lucide-react';
+import { Attachment, Close, Send } from '@carbon/icons-react';
 import FileTypeIcon from '@/components/biblioteca/FileTypeIcon';
 
 const ACCEPTED_TYPES = '.pdf,.docx,.txt,.md,.png,.jpg,.webp,.mp3,.wav,.mp4,.mov';
@@ -113,7 +113,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; }}
                 >
-                  <X size={10} strokeWidth={2} />
+                  <Close size={10} />
                 </button>
               </span>
             );
@@ -172,7 +172,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         }}
       />
 
-      {/* Paperclip button — left side */}
+      {/* Attachment button — left side */}
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={disabled || attachments.length >= MAX_FILES}
@@ -206,7 +206,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           }
         }}
       >
-        <Paperclip size={14} strokeWidth={1.5} />
+        <Attachment size={14} />
       </button>
 
       {/* Send button — right side */}
@@ -232,7 +232,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           opacity: hasText && !disabled ? 1 : 0.4,
         }}
       >
-        <Send size={14} strokeWidth={2} />
+        <Send size={14} />
       </button>
     </div>
   );

@@ -10,14 +10,7 @@
  * mas NÃO mostra o prompt nem o reasoning interno (caixa-preta — RN-009).
  */
 
-import {
-  Utensils,
-  MessageSquareWarning,
-  Shapes,
-  PartyPopper,
-  Crown,
-  Eye,
-} from 'lucide-react';
+import { Badge, Category, Chat, Restaurant, Star, View } from '@carbon/icons-react';
 
 export type AgentPersona =
   | 'antropofaga'
@@ -34,42 +27,42 @@ interface AgentPersonaBadgeProps {
 
 const PERSONA_CONFIG: Record<
   AgentPersona,
-  { label: string; tooltip: string; Icon: typeof Utensils; color: string }
+  { label: string; tooltip: string; Icon: typeof Restaurant; color: string }
 > = {
   antropofaga: {
     label: 'Antropófaga',
     tooltip: 'Devora referências culturais e regurgita transformadas. Inspirada em Oswald de Andrade.',
-    Icon: Utensils,
+    Icon: Restaurant,
     color: '#FFC801', // sun
   },
   cetico: {
     label: 'Cético',
     tooltip: 'Raciocínio dialético — opõe e questiona toda premissa do briefing.',
-    Icon: MessageSquareWarning,
+    Icon: Chat,
     color: '#3B82F6',
   },
   'constraint-queen': {
     label: 'Constraint Queen',
     tooltip: 'Inversão por restrição — "e se o orçamento fosse zero?", "e se o Pix não existisse?". Jeitinho brasileiro.',
-    Icon: Shapes,
+    Icon: Category,
     color: '#10B981',
   },
   carnavalesco: {
     label: 'Carnavalesco',
     tooltip: 'Bisociação por reversão e excesso. Mistura registros incompatíveis.',
-    Icon: PartyPopper,
+    Icon: Star,
     color: '#EC4899',
   },
   ancia: {
     label: 'Anciã',
     tooltip: 'Recuperação analógica — "o que Olivetto / Serpa / Bernbach fariam?". Sabedoria de cases passados.',
-    Icon: Crown,
+    Icon: Badge,
     color: '#A855F7',
   },
   estranho: {
     label: 'O Estranho',
     tooltip: 'Maximização de distância semântica — busca o conceito mais inesperado que ainda faz sentido.',
-    Icon: Eye,
+    Icon: View,
     color: '#64748B',
   },
 };
@@ -101,7 +94,7 @@ export default function AgentPersonaBadge({
         transition: 'all 150ms ease',
       }}
     >
-      <cfg.Icon size={12} strokeWidth={1.5} />
+      <cfg.Icon size={12} />
       {showLabel && <span>{cfg.label}</span>}
     </span>
   );

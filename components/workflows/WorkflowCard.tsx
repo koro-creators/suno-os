@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, Play, Layers } from 'lucide-react';
+import { Layers, Play, Time } from '@carbon/icons-react';
 import { Workflow } from '@/lib/workflow-types';
 import { clients } from '@/data/clients';
 
@@ -126,7 +126,7 @@ export default function WorkflowCard({ workflow }: { workflow: Workflow }) {
             color: 'var(--text-muted)',
           }}
         >
-          <Layers size={12} strokeWidth={1.5} />
+          <Layers size={12} />
           {workflow.steps_count} steps
         </span>
         {workflow.schedule && workflow.schedule.enabled && (
@@ -139,7 +139,7 @@ export default function WorkflowCard({ workflow }: { workflow: Workflow }) {
               color: 'var(--sun)',
             }}
           >
-            <Clock size={12} strokeWidth={1.5} />
+            <Time size={12} />
             {workflow.schedule.cron}
           </span>
         )}
@@ -153,7 +153,7 @@ export default function WorkflowCard({ workflow }: { workflow: Workflow }) {
               color: workflow.last_run.status === 'completed' ? '#22C55E' : workflow.last_run.status === 'failed' ? '#EF4444' : 'var(--text-muted)',
             }}
           >
-            <Play size={12} strokeWidth={1.5} />
+            <Play size={12} />
             {workflow.last_run.status === 'completed' ? 'Sucesso' : workflow.last_run.status === 'failed' ? 'Falhou' : workflow.last_run.status}
           </span>
         )}

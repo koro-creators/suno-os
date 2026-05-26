@@ -16,16 +16,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Wrench,
-  Sparkles,
-  GitBranch,
-  Zap,
-  UserCheck,
-  Workflow as WorkflowIcon,
-  GitMerge,
-  type LucideIcon,
-} from 'lucide-react';
+import { CarbonIconType, Branch, Flash, Flow, Merge, Star, Tools, UserFollow } from '@carbon/icons-react';
 import { listAvailableTools, type ToolDescriptor } from '@/lib/api';
 
 interface DragPayload {
@@ -39,7 +30,7 @@ interface PaletteItem {
   key: string;
   label: string;
   description: string;
-  Icon: LucideIcon;
+  Icon: CarbonIconType;
   color: string;
   payload: DragPayload;
 }
@@ -49,7 +40,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-tool',
     label: 'Tool',
     description: 'Chama uma ferramenta do catálogo.',
-    Icon: Wrench,
+    Icon: Tools,
     color: '#3B82F6',
     payload: { source: 'step-type', step_type: 'tool' },
   },
@@ -57,7 +48,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-llm',
     label: 'LLM',
     description: 'Compor texto com prompt.',
-    Icon: Sparkles,
+    Icon: Star,
     color: '#8B5CF6',
     payload: { source: 'step-type', step_type: 'llm' },
   },
@@ -65,7 +56,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-condition',
     label: 'Condição',
     description: 'Branch then/else por valor.',
-    Icon: GitBranch,
+    Icon: Branch,
     color: '#F59E0B',
     payload: { source: 'step-type', step_type: 'condition' },
   },
@@ -73,7 +64,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-action',
     label: 'Ação',
     description: 'Side-effect (Slack, email…).',
-    Icon: Zap,
+    Icon: Flash,
     color: '#22C55E',
     payload: { source: 'step-type', step_type: 'action' },
   },
@@ -81,7 +72,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-hitl',
     label: 'Aprovação humana',
     description: 'Pausa para revisão (HITL).',
-    Icon: UserCheck,
+    Icon: UserFollow,
     color: 'var(--sun)',
     payload: { source: 'step-type', step_type: 'hitl' },
   },
@@ -89,7 +80,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-workflow',
     label: 'Sub-workflow',
     description: 'Chama outro workflow.',
-    Icon: WorkflowIcon,
+    Icon: Flow,
     color: '#EC4899',
     payload: { source: 'step-type', step_type: 'workflow' },
   },
@@ -97,7 +88,7 @@ const STEP_TYPES: PaletteItem[] = [
     key: 'st-merge',
     label: 'Merge',
     description: 'Aguarda fan-in (all/any).',
-    Icon: GitMerge,
+    Icon: Merge,
     color: 'var(--text-muted)',
     payload: { source: 'step-type', step_type: 'merge' },
   },
@@ -133,7 +124,7 @@ function PaletteRow({ item }: { item: PaletteItem }) {
         (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)';
       }}
     >
-      <item.Icon size={14} strokeWidth={1.5} color={item.color} />
+      <item.Icon size={14} color={item.color} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>
           {item.label}
@@ -248,7 +239,7 @@ export default function NodePalette() {
                 key: `tool-${tool.tool_name}`,
                 label: tool.label,
                 description: tool.description,
-                Icon: Wrench,
+                Icon: Tools,
                 color: '#3B82F6',
                 payload: {
                   source: 'tool',

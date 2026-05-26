@@ -4,7 +4,7 @@
  * SPEC-015 — Step 4: Summary + "Iniciar Oráculo" confirmation.
  */
 
-import { User, Globe, FileText, Clock } from 'lucide-react';
+import { Document, Globe, Time, User } from '@carbon/icons-react';
 import { useOnboardingOraculo } from '@/contexts/OnboardingOraculoContext';
 import { ONTOLOGY_ENTITY_TYPES } from '@/lib/onboarding-types';
 
@@ -64,7 +64,7 @@ export default function WizardStep4Confirm() {
         {/* Sponsor */}
         {wizardState.sponsorName && (
           <SummaryRow
-            icon={<User size={14} strokeWidth={1.5} />}
+            icon={<User size={14} />}
             label="Sponsor"
             value={`${wizardState.sponsorName}${wizardState.sponsorEmail ? ` — ${wizardState.sponsorEmail}` : ''}`}
           />
@@ -72,21 +72,21 @@ export default function WizardStep4Confirm() {
 
         {/* Oracle depth */}
         <SummaryRow
-          icon={<Clock size={14} strokeWidth={1.5} />}
+          icon={<Time size={14} />}
           label="Profundidade"
           value={DEPTH_LABELS[wizardState.oracleConfig.depth]}
         />
 
         {/* Language */}
         <SummaryRow
-          icon={<Globe size={14} strokeWidth={1.5} />}
+          icon={<Globe size={14} />}
           label="Idioma"
           value={wizardState.oracleConfig.language === 'pt-BR' ? 'Português (BR)' : 'English (US)'}
         />
 
         {/* Domains */}
         <SummaryRow
-          icon={<Globe size={14} strokeWidth={1.5} />}
+          icon={<Globe size={14} />}
           label="Domínios"
           value={
             wizardState.oracleConfig.allowedDomains.length > 0
@@ -97,7 +97,7 @@ export default function WizardStep4Confirm() {
 
         {/* Drive docs */}
         <SummaryRow
-          icon={<FileText size={14} strokeWidth={1.5} />}
+          icon={<Document size={14} />}
           label="Docs Drive"
           value={wizardState.selectedDocIds.length > 0
             ? `${wizardState.selectedDocIds.length} documento(s)`

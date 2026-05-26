@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { TrashCan } from '@carbon/icons-react';
 import { useClients } from '@/contexts/ClientsContext';
 import { useAgents } from '@/contexts/AgentsContext';
 import { Agent, AgentPermission } from '@/lib/agents-types';
@@ -168,7 +168,7 @@ function PermissionRow({
         onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
       >
-        <Trash2 size={14} strokeWidth={1.5} />
+        <TrashCan size={14} />
       </button>
     </div>
   );

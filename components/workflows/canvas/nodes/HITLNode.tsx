@@ -7,7 +7,7 @@
  */
 'use client';
 
-import { UserCheck } from 'lucide-react';
+import { UserFollow } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -32,7 +32,7 @@ export default function HITLNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={preview}
-      Icon={UserCheck}
+      Icon={UserFollow}
       borderColor={BORDER}
       accentColor="rgba(255,200,1,0.15)"
       sourceHandles={sources}

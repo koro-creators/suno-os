@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Search } from '@carbon/icons-react';
 import { MeetingStatus } from '@/lib/meeting-types';
 
 interface Props {
@@ -35,7 +35,6 @@ export default function ReuniaoFiltros({
       <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 320 }}>
         <Search
           size={14}
-          strokeWidth={1.5}
           style={{
             position: 'absolute',
             left: 12,

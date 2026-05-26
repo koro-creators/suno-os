@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ImageIcon, Loader2, Sparkles, Download, ZoomIn } from 'lucide-react';
+import { Download, Image, InProgress, Star, ZoomIn } from '@carbon/icons-react';
 import { apiAvailable, generateImage, ImageGenResponse } from '@/lib/api';
 
 const ASPECT_RATIOS = [
@@ -96,7 +96,7 @@ export default function ImageGenPanel({ model }: ImageGenPanelProps) {
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <ImageIcon size={14} strokeWidth={1.5} style={{ color: 'var(--sun)' }} />
+        <Image size={14} style={{ color: 'var(--sun)' }} />
         <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
           Gerar Imagem
         </span>
@@ -269,9 +269,9 @@ export default function ImageGenPanel({ model }: ImageGenPanelProps) {
         }}
       >
         {loading ? (
-          <Loader2 size={14} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+          <InProgress size={14} style={{ animation: 'spin 1s linear infinite' }} />
         ) : (
-          <Sparkles size={14} strokeWidth={1.5} />
+          <Star size={14} />
         )}
         {loading ? 'Gerando...' : 'Gerar Imagem'}
       </button>
@@ -369,7 +369,7 @@ export default function ImageGenPanel({ model }: ImageGenPanelProps) {
                     }}
                     title="Ampliar"
                   >
-                    <ZoomIn size={14} strokeWidth={1.5} />
+                    <ZoomIn size={14} />
                   </button>
                   <a
                     href={img.url}
@@ -390,7 +390,7 @@ export default function ImageGenPanel({ model }: ImageGenPanelProps) {
                     }}
                     title="Baixar"
                   >
-                    <Download size={14} strokeWidth={1.5} />
+                    <Download size={14} />
                   </a>
                 </div>
                 <div style={{

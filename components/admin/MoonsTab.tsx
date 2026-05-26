@@ -1,6 +1,6 @@
 'use client';
 
-import { GripVertical, Trash2, Plus } from 'lucide-react';
+import { Add, Draggable, TrashCan } from '@carbon/icons-react';
 import { SkillAdmin } from '@/lib/admin-types';
 import { Moon } from '@/lib/types';
 
@@ -75,9 +75,8 @@ export default function MoonsTab({ data, onChange }: MoonsTabProps) {
               gap: 8,
             }}
           >
-            <GripVertical
+            <Draggable
               size={14}
-              strokeWidth={1.5}
               style={{ color: 'var(--text-muted)', flexShrink: 0, cursor: 'grab' }}
             />
             <input
@@ -117,7 +116,7 @@ export default function MoonsTab({ data, onChange }: MoonsTabProps) {
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#EF4444'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; }}
             >
-              <Trash2 size={14} strokeWidth={1.5} />
+              <TrashCan size={14} />
             </button>
           </div>
         ))}
@@ -142,7 +141,7 @@ export default function MoonsTab({ data, onChange }: MoonsTabProps) {
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--twilight)'; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-subtle)'; }}
       >
-        <Plus size={14} strokeWidth={1.5} />
+        <Add size={14} />
         Adicionar moon
       </button>
     </div>

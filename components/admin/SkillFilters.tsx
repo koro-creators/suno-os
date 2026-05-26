@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Search } from '@carbon/icons-react';
 import { SkillType } from '@/lib/types';
 
 interface SkillFiltersProps {
@@ -37,7 +37,6 @@ export default function SkillFilters({
       <div style={{ position: 'relative', flex: '0 1 240px' }}>
         <Search
           size={13}
-          strokeWidth={1.5}
           style={{
             position: 'absolute',
             left: 12,

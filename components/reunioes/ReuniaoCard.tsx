@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Video, Clock, Calendar, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronRight, Time, Video } from '@carbon/icons-react';
 import { Meeting, MeetingStatus } from '@/lib/meeting-types';
 
 interface Props {
@@ -81,7 +81,7 @@ export default function ReuniaoCard({ meeting }: Props) {
               flexShrink: 0,
             }}
           >
-            <Video size={14} strokeWidth={1.5} style={{ color: 'var(--sun)' }} />
+            <Video size={14} style={{ color: 'var(--sun)' }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
@@ -101,20 +101,20 @@ export default function ReuniaoCard({ meeting }: Props) {
             </div>
           </div>
         </div>
-        <ChevronRight size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
+        <ChevronRight size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }} />
       </div>
 
       {/* Meta */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Calendar size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          <Calendar size={12} style={{ color: 'var(--text-muted)' }} />
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
             {formatDate(meeting.created_at)}
           </span>
         </div>
         {meeting.duration_minutes != null && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Clock size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+            <Time size={12} style={{ color: 'var(--text-muted)' }} />
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
               {meeting.duration_minutes} min
             </span>

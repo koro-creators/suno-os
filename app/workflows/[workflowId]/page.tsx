@@ -14,7 +14,7 @@
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Play, History } from 'lucide-react';
+import { Play, RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { apiAvailable, migrateWorkflowV2 } from '@/lib/api';
@@ -210,7 +210,7 @@ export default function WorkflowEditorPage() {
                 cursor: 'pointer',
               }}
             >
-              <History size={14} strokeWidth={1.5} />
+              <RecentlyViewed size={14} />
               Histórico
             </button>
             <button

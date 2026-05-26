@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, XCircle, RotateCcw, Send, RefreshCcw } from 'lucide-react';
+import { CheckmarkFilled, ErrorFilled, Renew, Send } from '@carbon/icons-react';
 import type { ApprovalEvent } from '@/lib/approval-types';
 
 interface CommentThreadProps {
@@ -26,22 +26,22 @@ const ACTION_CONFIG = {
   },
   RESUBMITTED: {
     label: 'Resubmetido após revisão',
-    icon: RefreshCcw,
+    icon: Renew,
     color: '#F97316',
   },
   APPROVE: {
     label: 'Aprovado',
-    icon: CheckCircle,
+    icon: CheckmarkFilled,
     color: '#22C55E',
   },
   REQUEST_CHANGES: {
     label: 'Revisão solicitada',
-    icon: RotateCcw,
+    icon: Renew,
     color: '#F97316',
   },
   REJECT: {
     label: 'Rejeitado',
-    icon: XCircle,
+    icon: ErrorFilled,
     color: '#EF4444',
   },
 } as const;
@@ -86,7 +86,7 @@ export default function CommentThread({ events }: CommentThreadProps) {
                   flexShrink: 0,
                 }}
               >
-                <Icon size={12} strokeWidth={1.5} style={{ color: cfg.color }} />
+                <Icon size={12} style={{ color: cfg.color }} />
               </div>
               {!isLast && (
                 <div

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Type, Loader2, Sparkles, Copy, Check } from 'lucide-react';
+import { Checkmark, Copy, InProgress, Star, TextScale } from '@carbon/icons-react';
 import { apiAvailable, generateText, TextGenResponse } from '@/lib/api';
 
 const CONTENT_TYPES = [
@@ -113,7 +113,7 @@ export default function TextGenPanel({ skillSlug, model }: TextGenPanelProps) {
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Type size={14} strokeWidth={1.5} style={{ color: 'var(--sun)' }} />
+        <TextScale size={14} style={{ color: 'var(--sun)' }} />
         <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
           Gerar Texto
         </span>
@@ -263,9 +263,9 @@ export default function TextGenPanel({ skillSlug, model }: TextGenPanelProps) {
         }}
       >
         {loading ? (
-          <Loader2 size={14} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+          <InProgress size={14} style={{ animation: 'spin 1s linear infinite' }} />
         ) : (
-          <Sparkles size={14} strokeWidth={1.5} />
+          <Star size={14} />
         )}
         {loading ? 'Gerando...' : 'Gerar'}
       </button>
@@ -338,9 +338,9 @@ export default function TextGenPanel({ skillSlug, model }: TextGenPanelProps) {
                     }}
                   >
                     {copiedIndex === i ? (
-                      <Check size={12} strokeWidth={1.5} />
+                      <Checkmark size={12} />
                     ) : (
-                      <Copy size={12} strokeWidth={1.5} />
+                      <Copy size={12} />
                     )}
                     {copiedIndex === i ? 'Copiado' : 'Copiar'}
                   </button>

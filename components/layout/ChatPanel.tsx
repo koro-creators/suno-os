@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { Chat, Close } from '@carbon/icons-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -95,9 +95,9 @@ export default function ChatPanel() {
             />
           )}
           {isOpen ? (
-            <X size={14} strokeWidth={1.5} />
+            <Close size={14} />
           ) : (
-            <MessageCircle size={14} strokeWidth={1.5} />
+            <Chat size={14} />
           )}
         </button>
 

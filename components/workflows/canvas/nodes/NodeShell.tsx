@@ -12,8 +12,8 @@
  */
 'use client';
 
+import type { CarbonIconType } from '@carbon/icons-react';
 import { Handle, Position } from '@xyflow/react';
-import type { LucideIcon } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 
 export interface HandleSpec {
@@ -28,7 +28,7 @@ export interface HandleSpec {
 export interface NodeShellProps {
   title: string;
   preview?: string;
-  Icon: LucideIcon;
+  Icon: CarbonIconType;
   borderColor: string;
   /** Background colour at 10% opacity over `--deep` for the card. */
   accentColor: string;
@@ -99,7 +99,7 @@ export function NodeShell({
           borderBottom: `1px solid ${accentColor}`,
         }}
       >
-        <Icon size={14} strokeWidth={1.5} color={borderColor} />
+        <Icon size={14} color={borderColor} />
         <span style={{ fontWeight: 500 }}>{title}</span>
       </div>
       {preview && (

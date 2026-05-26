@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, User, Trash2, ExternalLink } from 'lucide-react';
+import { Close, Launch, TrashCan, User } from '@carbon/icons-react';
 import { ClientAdmin } from '@/lib/client-types';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
@@ -176,7 +176,7 @@ export default function ClientDrawer({
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} strokeWidth={1.5} />
+            <Close size={18} />
           </button>
         </div>
 
@@ -205,7 +205,7 @@ export default function ClientDrawer({
 
           {/* Contact */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <User size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <User size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
               Contato: {client.contact}
             </span>
@@ -463,7 +463,7 @@ export default function ClientDrawer({
                 }}
               >
                 Ver na Biblioteca
-                <ExternalLink size={12} strokeWidth={1.5} />
+                <Launch size={12} />
               </a>
             </div>
           </div>
@@ -532,7 +532,7 @@ export default function ClientDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Trash2 size={14} strokeWidth={1.5} />
+            <TrashCan size={14} />
             Excluir
           </button>
         </div>

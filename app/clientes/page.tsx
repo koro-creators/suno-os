@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Users } from 'lucide-react';
+import { Add, Group, Search } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import ClientCard from '@/components/clientes/ClientCard';
 import ClientDrawer from '@/components/clientes/ClientDrawer';
@@ -70,7 +70,7 @@ export default function ClientesPage() {
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
-            <Plus size={14} strokeWidth={2} />
+            <Add size={14} />
             Novo Cliente
           </button>
         </div>
@@ -79,7 +79,6 @@ export default function ClientesPage() {
         <div style={{ position: 'relative', maxWidth: 320, marginBottom: 20 }}>
           <Search
             size={14}
-            strokeWidth={1.5}
             style={{
               position: 'absolute',
               left: 12,
@@ -118,7 +117,7 @@ export default function ClientesPage() {
         {/* No data at all — rich empty state with CTA */}
         {clients.length === 0 && (
           <EmptyState
-            icon={Users}
+            icon={Group}
             title="Nenhum cliente cadastrado"
             description="Adicione um cliente para organizar suas skills e conteúdos."
             action={{ label: 'Novo cliente', onClick: () => router.push('/clientes/new') }}

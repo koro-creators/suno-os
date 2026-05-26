@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Star } from '@carbon/icons-react';
 import Toast from '@/components/ui/Toast';
 
 interface Integration {
   key: string;
   name: string;
   description: string;
-  icon: 'Sparkles';
+  icon: 'Star';
   valueMasked: string | null;
 }
 
@@ -17,13 +17,13 @@ const INTEGRATIONS: Integration[] = [
     key: 'gemini_api_key',
     name: 'Gemini API',
     description: 'Chave de API do Google Gemini para geração de conteúdo',
-    icon: 'Sparkles',
+    icon: 'Star',
     valueMasked: null,
   },
 ];
 
 function IntegrationIcon({ icon }: { icon: Integration['icon'] }) {
-  if (icon === 'Sparkles') return <Sparkles size={20} strokeWidth={1.5} />;
+  if (icon === 'Star') return <Star size={20} />;
   return null;
 }
 

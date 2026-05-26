@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare } from 'lucide-react';
+import { Chat } from '@carbon/icons-react';
 import { PromptTemplate } from '@/lib/types';
 
 interface MoonOption {
@@ -108,7 +108,7 @@ export default function PromptTemplateBar({
                   (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--deep)';
                 }}
               >
-                <MessageSquare size={14} strokeWidth={1.5} style={{ color: 'var(--sun)', flexShrink: 0, marginTop: 1 }} />
+                <Chat size={14} style={{ color: 'var(--sun)', flexShrink: 0, marginTop: 1 }} />
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                   {t.label}
                 </span>
