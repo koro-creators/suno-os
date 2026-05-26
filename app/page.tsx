@@ -8,6 +8,7 @@ import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
 import QuickStats from '@/components/solar/QuickStats';
 import { useAuth } from '@/contexts/AuthContext';
+import WelcomeScreen from '@/components/solar/WelcomeScreen';
 
 // Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
@@ -31,6 +32,20 @@ export default function Home() {
     const t = setTimeout(() => setLoading(false), 300);
     return () => clearTimeout(t);
   }, []);
+
+  // WelcomeScreen is shown when the solar system has no clients (defensive — static array
+  // is non-empty in the deployed mock, but handles a future empty-state gracefully).
+  if (clients.length === 0) {
+    return (
+      <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
+        <AppHeader
+          breadcrumbs={[{ label: 'Home', href: '/' }]}
+          rightLabel="0 clientes"
+        />
+        <WelcomeScreen />
+      </main>
+    );
+  }
 
   return (
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
