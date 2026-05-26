@@ -145,7 +145,6 @@ const CATEGORY_LABEL: Record<ToolDescriptor['category'], string> = {
 export default function NodePalette() {
   const [tools, setTools] = useState<ToolDescriptor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,9 +154,8 @@ export default function NodePalette() {
         setTools(list);
         setLoading(false);
       })
-      .catch((err: Error) => {
+      .catch(() => {
         if (cancelled) return;
-        setError(err.message);
         setLoading(false);
       });
     return () => {
@@ -215,12 +213,7 @@ export default function NodePalette() {
       {loading && (
         <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Carregando…</p>
       )}
-      {error && (
-        <p style={{ fontSize: 11, color: '#EF4444' }} role="alert">
-          {error}
-        </p>
-      )}
-      {!loading && !error &&
+      {!loading &&
         Object.entries(toolsByCategory).map(([category, list]) => (
           <div key={category}>
             <h3

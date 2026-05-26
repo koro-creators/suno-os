@@ -115,7 +115,7 @@ export default function WorkflowEditorPage() {
 
   const workflow = workflows.find((w) => w.id === workflowId);
 
-  const [migrationState, setMigrationState] = useState<'idle' | 'migrating' | 'ready' | 'error'>('idle');
+  const [migrationState, setMigrationState] = useState<'idle' | 'migrating' | 'ready'>('idle');
   const [migrationError, setMigrationError] = useState<string | null>(null);
   const [payload, setPayload] = useState<CanvasPayload | null>(null);
 
@@ -126,6 +126,7 @@ export default function WorkflowEditorPage() {
     let cancelled = false;
 
     async function prepare() {
+      setMigrationError(null);
       // Real-mode: trigger migrate-v2 if needed. On failure, fall back to the
       // local migration so the canvas always renders (canvas-conventions.md §mock-mode).
       if (apiAvailable()) {
