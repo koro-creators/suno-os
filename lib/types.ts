@@ -34,3 +34,11 @@ export interface PromptTemplate {
   label: string;
   prompt: string;
 }
+
+export interface RecentEntry {
+  label: string;
+  href: string;
+  color: string;
+  type: 'client' | 'skill';
+  visitedAt: number;
+}
