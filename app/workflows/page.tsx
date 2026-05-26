@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, LayoutGrid, List } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List, Zap } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowCard from '@/components/workflows/WorkflowCard';
 import WorkflowTable from '@/components/workflows/WorkflowTable';
 import WorkflowDrawer from '@/components/workflows/WorkflowDrawer';
 import WorkflowTemplates from '@/components/workflows/WorkflowTemplates';
+import EmptyState from '@/components/ui/EmptyState';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
 import { Workflow } from '@/lib/workflow-types';
@@ -228,15 +229,27 @@ export default function WorkflowsPage() {
           <WorkflowTemplates templates={WORKFLOW_TEMPLATES} />
         )}
 
+        {/* No data at all — rich empty state with CTA */}
+        {workflows.length === 0 && (
+          <EmptyState
+            icon={Zap}
+            title="Nenhum workflow criado"
+            description="Conecte skills em sequência para automatizar fluxos de criação de conteúdo."
+            action={{ label: 'Novo workflow', onClick: () => router.push('/workflows/new') }}
+          />
+        )}
+
         {/* Content: Table or Grid */}
-        {viewMode === 'table' ? (
+        {workflows.length > 0 && viewMode === 'table' && (
           <WorkflowTable
             workflows={filtered}
             onSelect={handleSelect}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
-        ) : (
+        )}
+
+        {workflows.length > 0 && viewMode === 'grid' && (
           <div
             style={{
               display: 'grid',
@@ -250,7 +263,8 @@ export default function WorkflowsPage() {
           </div>
         )}
 
-        {filtered.length === 0 && (
+        {/* Filters narrowed to zero — softer message, no CTA */}
+        {workflows.length > 0 && filtered.length === 0 && (
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 48 }}>
             Nenhum workflow encontrado.
           </p>

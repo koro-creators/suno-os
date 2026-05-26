@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, LayoutGrid, List } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List, Sparkles } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import SkillCard from '@/components/admin/SkillCard';
 import SkillsTable from '@/components/admin/SkillsTable';
 import SkillsSidebar from '@/components/admin/SkillsSidebar';
 import SkillDrawer from '@/components/admin/SkillDrawer';
+import EmptyState from '@/components/ui/EmptyState';
 import { useSkills } from '@/contexts/SkillsContext';
 import { SkillType } from '@/lib/types';
 import { SkillAdmin } from '@/lib/admin-types';
@@ -212,8 +213,18 @@ export default function SkillCatalogPage() {
             </div>
           </div>
 
+          {/* No data at all — rich empty state with CTA */}
+          {skills.length === 0 && (
+            <EmptyState
+              icon={Sparkles}
+              title="Nenhuma skill criada"
+              description="Crie sua primeira skill de IA para começar a trabalhar com clientes."
+              action={{ label: 'Nova skill', onClick: () => router.push('/skills/new') }}
+            />
+          )}
+
           {/* Table view */}
-          {viewMode === 'table' && (
+          {skills.length > 0 && viewMode === 'table' && (
             <SkillsTable
               skills={filtered}
               onSelect={setDrawerSkill}
@@ -224,7 +235,7 @@ export default function SkillCatalogPage() {
           )}
 
           {/* Grid view */}
-          {viewMode === 'grid' && (
+          {skills.length > 0 && viewMode === 'grid' && (
             <div
               style={{
                 display: 'grid',
@@ -238,7 +249,8 @@ export default function SkillCatalogPage() {
             </div>
           )}
 
-          {filtered.length === 0 && (
+          {/* Filters narrowed to zero — softer message, no CTA */}
+          {skills.length > 0 && filtered.length === 0 && (
             <p
               style={{
                 textAlign: 'center',
