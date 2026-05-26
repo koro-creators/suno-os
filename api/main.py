@@ -185,6 +185,11 @@ from reunioes.router import router as reunioes_router
 
 app.include_router(reunioes_router, prefix=f"{settings.API_PREFIX}/meetings")
 
+# Mount admin router (Phase 23 — SPEC-022 Configurações Admin)
+from admin.router import router as admin_router
+
+app.include_router(admin_router, prefix=f"{settings.API_PREFIX}/admin")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():

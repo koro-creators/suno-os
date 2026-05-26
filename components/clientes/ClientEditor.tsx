@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ClientAdmin } from '@/lib/client-types';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
+import { useAuth } from '@/contexts/AuthContext';
 import ClientEditorTabs from './ClientEditorTabs';
+import DriveTab from '@/components/admin/clientes/tabs/DriveTab';
 import Toast from '@/components/ui/Toast';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -75,6 +77,11 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
   const router = useRouter();
   const { skills } = useSkills();
   const { documents } = useBiblioteca();
+  const { isAdmin } = useAuth();
+
+  const editorTabs = isAdmin
+    ? ['Identidade', 'Skills', 'Biblioteca', 'Métricas', 'Drive']
+    : ['Identidade', 'Skills', 'Biblioteca', 'Métricas'];
 
   const [form, setForm] = useState<ClientAdmin>(initial);
   const [savedSnapshot, setSavedSnapshot] = useState<ClientAdmin>(initial);
@@ -232,7 +239,7 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
       </div>
 
       {/* Tabs */}
-      <ClientEditorTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <ClientEditorTabs activeTab={activeTab} onTabChange={setActiveTab} tabs={editorTabs} />
 
       {/* Tab: Identidade */}
       {activeTab === 'Identidade' && (
@@ -525,6 +532,11 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
             </span>
           </div>
         </div>
+      )}
+
+      {/* Tab: Drive (admin-only) */}
+      {activeTab === 'Drive' && isAdmin && (
+        <DriveTab clientId={initial.id} />
       )}
 
       {/* Toast */}

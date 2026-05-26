@@ -1,13 +1,19 @@
 'use client';
 
-const TABS = ['Identidade', 'Skills', 'Biblioteca', 'Métricas'];
+const DEFAULT_TABS = ['Identidade', 'Skills', 'Biblioteca', 'Métricas'];
 
 interface ClientEditorTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  /** Override the tab list — used to add admin-only tabs (e.g. 'Drive'). */
+  tabs?: string[];
 }
 
-export default function ClientEditorTabs({ activeTab, onTabChange }: ClientEditorTabsProps) {
+export default function ClientEditorTabs({
+  activeTab,
+  onTabChange,
+  tabs = DEFAULT_TABS,
+}: ClientEditorTabsProps) {
   return (
     <div
       role="tablist"
@@ -19,7 +25,7 @@ export default function ClientEditorTabs({ activeTab, onTabChange }: ClientEdito
         marginBottom: 24,
       }}
     >
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = activeTab === tab;
         return (
           <button
@@ -28,9 +34,9 @@ export default function ClientEditorTabs({ activeTab, onTabChange }: ClientEdito
             aria-selected={isActive}
             onClick={() => onTabChange(tab)}
             onKeyDown={(e) => {
-              const idx = TABS.indexOf(tab);
-              if (e.key === 'ArrowRight') onTabChange(TABS[(idx + 1) % TABS.length]);
-              if (e.key === 'ArrowLeft') onTabChange(TABS[(idx - 1 + TABS.length) % TABS.length]);
+              const idx = tabs.indexOf(tab);
+              if (e.key === 'ArrowRight') onTabChange(tabs[(idx + 1) % tabs.length]);
+              if (e.key === 'ArrowLeft') onTabChange(tabs[(idx - 1 + tabs.length) % tabs.length]);
             }}
             style={{
               padding: '10px 16px',
