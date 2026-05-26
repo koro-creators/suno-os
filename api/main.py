@@ -190,6 +190,11 @@ from agents.router import router as agents_router
 
 app.include_router(agents_router, prefix=f"{settings.API_PREFIX}/agents")
 
+# Mount admin router (Phase 23 — SPEC-022 Configurações Admin)
+from admin.router import router as admin_router
+
+app.include_router(admin_router, prefix=f"{settings.API_PREFIX}/admin")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
