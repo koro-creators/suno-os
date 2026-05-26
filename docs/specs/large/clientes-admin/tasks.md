@@ -30,7 +30,7 @@ upstream:
 | ID | Tarefa | Est. | FR/NFR coberto |
 |----|--------|:----:|----------------|
 | TASK-A01 | Migration: `clients` com enum status + índices (status, slug) | 0.5d | FR-CAD-001, FR-CAD-011, FR-CAD-021, ADR-LOCAL-03 |
-| TASK-A02 | Migration: view `client_metrics` com aggregation on `conversation_runs` + `feedbacks` | 0.5d | FR-CAD-016, FR-CAD-022, FR-CAD-023, ADR-LOCAL-04 |
+| TASK-A02 | Migration: adicionar `client_id` à tabela `conversations`; stub GET /metrics retorna zeros (Fase A); view `client_metrics` real em Fase C (pré-condição: spec HITL para `feedbacks`) | 0.75d | FR-CAD-016, FR-CAD-022, FR-CAD-023, ADR-LOCAL-04 |
 | TASK-A03 | Pydantic schemas: `ClientCreate`, `ClientUpdate`, `ClientSummary`, `ClientDetail`, `ClientMetrics` | 0.5d | FR-CAD-007, FR-CAD-008, FR-CAD-013 |
 | TASK-A04 | `GET /api/clients` com query params (status, skill_id, q, sort, limit, offset) | 0.5d | FR-CAD-001, FR-CAD-002, FR-CAD-003, FR-CAD-004 |
 | TASK-A05 | `GET /api/clients/{id}` retorna ClientDetail | 0.25d | FR-CAD-013 |

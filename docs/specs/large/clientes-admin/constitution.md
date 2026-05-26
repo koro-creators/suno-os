@@ -23,6 +23,7 @@ upstream:
   - docs/brd/parte3-requisitos.md (BR-004, BR-007, BR-015, BR-022)
   - docs/brd/parte4-regras.md (RN-006, RN-009)
   - docs/srd/parte7-ADRs.md (ADR-002)
+  - api/models/conversation.py (tabela conversations — extended by TASK-A05)
   - docs/superpowers/specs/2026-03-24-clientes-admin-design.md (protótipo de referência)
   - docs/specs/large/skills-admin/design.md (ADR-LOCAL-02: junction skill_clients compartilhada)
 ---

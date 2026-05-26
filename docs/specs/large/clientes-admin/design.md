@@ -20,6 +20,7 @@ upstream:
   - docs/brd/parte4-regras.md (RN-009)
   - docs/srd/parte7-ADRs.md (ADR-002)
   - docs/specs/large/skills-admin/design.md (ADR-LOCAL-02: junction skill_clients)
+  - api/models/conversation.py (tabela conversations existente — extended by TASK-A02)
 ---
 
 # Design — SPEC-018 — Clientes Admin
@@ -89,7 +90,21 @@ CREATE INDEX idx_clients_slug   ON clients(slug);
 
 ### 2.3. View `client_metrics`
 
+**Abordagem em 2 fases:**
+
+**Fase A (stub):** enquanto `conversation_runs` e `feedbacks` não existem, endpoint retorna zeros:
+```python
+# GET /api/clients/{id}/metrics — stub Fase A
+return { "total_sessions": 0, "total_feedbacks": 0, "average_score": 0,
+         "top_skill_slug": None, "last_activity": None }
+```
+
+**Fase C+ (view real):** criada após TASK-A02 adicionar `client_id` à tabela `conversations`
+e após spec HITL criar tabela `feedbacks`. View definitiva:
+
 ```sql
+-- Pré-condição: conversations.client_id (UUID FK → clients.id) adicionado via TASK-A02
+-- Pré-condição: tabela feedbacks criada por spec futura HITL/Chat
 CREATE VIEW client_metrics AS
 SELECT
   c.id                                    AS client_id,
@@ -98,16 +113,20 @@ SELECT
   ROUND(AVG(f.score), 2)                  AS average_score,
   (
     SELECT s.slug FROM skills s
-    JOIN conversation_runs cr2 ON cr2.skill_id = s.id
+    JOIN conversations cr2 ON cr2.skill_slug = s.slug
     WHERE cr2.client_id = c.id
-    GROUP BY s.id ORDER BY COUNT(*) DESC LIMIT 1
+    GROUP BY s.slug ORDER BY COUNT(*) DESC LIMIT 1
   )                                        AS top_skill_slug,
-  MAX(cr.started_at)                       AS last_activity
+  MAX(cr.created_at)                       AS last_activity
 FROM clients c
-LEFT JOIN conversation_runs cr ON cr.client_id = c.id
-LEFT JOIN feedbacks f          ON f.conversation_id = cr.id
+LEFT JOIN conversations cr ON cr.client_id = c.id
+LEFT JOIN feedbacks f      ON f.conversation_id = cr.id
 GROUP BY c.id;
+-- Índice necessário: CREATE INDEX idx_conversations_client ON conversations(client_id);
 ```
+
+**Nota de dependência:** tabela `conversations` existe (ver `api/models/conversation.py`).
+Coluna `client_id` será adicionada em TASK-A02. Tabela `feedbacks` é future work (spec HITL).
 
 ## 3. API Endpoints
 
@@ -269,9 +288,19 @@ const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
 - **Alternativas rejeitadas:**
   - *Colunas denormalizadas + trigger*: risco de inconsistência em falha do trigger; mais difícil de retroactive recalculation
   - *Cache Redis com TTL*: overhead de infraestrutura; sem benefício abaixo de 500 clientes
-- **Consequências:** ✅ Dados sempre frescos; ✅ Sem sync jobs; ⚠️ Latência da view cresce com volume de runs — monitorar via NFR-CAD-001 (≤800ms p95)
+- **Consequências:** ✅ Dados sempre frescos; ✅ Sem sync jobs; ⚠️ Latência da view cresce com volume de runs — monitorar via NFR-CAD-001 (≤800ms p95); ⚠️ View Fase C depende de `client_id` em `conversations` (TASK-A02) e de spec HITL para `feedbacks`
 
-<!-- REVIEW: ADR-LOCAL-01 a ADR-LOCAL-04 são as 4 decisões desta SPEC. Decisão sobre slug imutável após criação (não editável via PATCH) deveria ser ADR-LOCAL-05? -->
+### ADR-LOCAL-05 — Convenção EN para rotas de API, PT para rotas UI
+
+- **Status:** Aceita (v1.0)
+- **Contexto:** Rota UI é `/clientes` (PT, consistente com vocabulário Suno); rota API é `/api/clients` (EN). Backend existente usa EN em todas as rotas (`/api/workflows`, `/api/knowledge`, `/api/chat`) — ver `api/main.py`.
+- **Decisão:** Manter split intencional: UI routes em PT (slug do produto), API routes em EN (convenção backend). Não inventar `/api/clientes`.
+- **Alternativas rejeitadas:**
+  - *`/api/clientes` em PT*: inconsistente com todo o backend existente; quebraria convenção de `router.py` files
+  - *`/clients` na UI*: quebra identidade do produto em PT
+- **Consequências:** ✅ Backend coerente; ✅ UI coerente com vocabulário Suno; ⚠️ Diferença PT/EN precisa estar documentada (este ADR) para não causar confusão futura
+
+<!-- REVIEW: ADR-LOCAL-01 a ADR-LOCAL-05 cobrem todas as decisões desta SPEC? Decisão sobre slug imutável após criação (não editável via PATCH) — está implícita no contrato da API (§3.4 não inclui slug no body do PATCH) ou precisa de ADR-LOCAL-06? -->
 
 ## 6. Segurança — Caixa-preta
 

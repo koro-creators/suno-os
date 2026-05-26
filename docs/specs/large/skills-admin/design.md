@@ -19,6 +19,8 @@ upstream:
   - docs/prd/parte1-feature-map.md (FA-12-01, FA-09)
   - docs/brd/parte4-regras.md (RN-009)
   - docs/srd/parte7-ADRs.md (ADR-002)
+  - docs/specs/large/workflow-builder/design.md (SPEC-003: tabela workflows — dependency check de archive)
+  - docs/specs/large/workflow-builder-canvas/design.md (SPEC-005: workflow_steps — referenciada em TASK-B04/TASK-A07)
 ---
 
 # Design — SPEC-017 — Skills Admin

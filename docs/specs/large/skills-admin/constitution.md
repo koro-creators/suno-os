@@ -21,6 +21,8 @@ upstream:
   - docs/prd/parte1-feature-map.md (FA-09)
   - docs/brd/parte3-requisitos.md (BR-002, BR-004, BR-007, BR-015)
   - docs/brd/parte4-regras.md (RN-006, RN-009, RN-016)
+  - docs/specs/large/workflow-builder/design.md (SPEC-003: tabela workflows)
+  - docs/specs/large/workflow-builder-canvas/design.md (SPEC-005: workflow_steps)
   - docs/srd/parte7-ADRs.md (ADR-002)
   - docs/superpowers/specs/2026-03-23-bioma-zero-design.md (protótipo de referência — "Bioma Zero")
 ---
