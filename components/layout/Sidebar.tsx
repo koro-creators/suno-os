@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, Zap, Settings, Video, LogOut, type LucideIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, Zap, Settings, Video, CheckCircle, LogOut, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { label: 'Skills', icon: Sparkles, href: '/skills', adminOnly: true },
   { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca', adminOnly: true },
   { label: 'Workflows', icon: Zap, href: '/workflows', adminOnly: true },
+  { label: 'Aprovações', icon: CheckCircle, href: '/aprovacoes', adminOnly: true },
   { label: 'Reunioes', icon: Video, href: '/reunioes', adminOnly: true },
   { label: 'Configurações', icon: Settings, href: '/configuracoes', adminOnly: true },
 ];

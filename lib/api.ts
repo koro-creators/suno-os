@@ -378,6 +378,98 @@ export async function disconnectDrive(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// SPEC-004 — Approval Hierarchy API (Phase 20)
+// ---------------------------------------------------------------------------
+
+import type {
+  ApprovalSubmission,
+  ApprovalEvent,
+  ApprovalFilters,
+  ApprovalSubmitPayload,
+  ApprovalDecisionPayload,
+} from '@/lib/approval-types';
+
+async function approvalFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = getApiUrl(path);
+  const headers = await getHeaders();
+  const response = await fetch(url, {
+    ...init,
+    headers: { ...headers, ...(init?.headers ?? {}) },
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Approval API ${response.status}: ${text || response.statusText}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+/** Listar submissions do inbox com filtros opcionais. */
+export async function getApprovalInbox(filters?: ApprovalFilters): Promise<ApprovalSubmission[]> {
+  const params = new URLSearchParams();
+  if (filters?.client_id) params.set('client_id', filters.client_id);
+  if (filters?.skill_slug) params.set('skill_slug', filters.skill_slug);
+  if (filters?.urgency) params.set('urgency', filters.urgency);
+  if (filters?.status) params.set('status', filters.status);
+  const qs = params.toString();
+  return approvalFetch<ApprovalSubmission[]>(`/api/approvals${qs ? `?${qs}` : ''}`);
+}
+
+/** Buscar detalhe de uma submission. */
+export async function getApprovalRequest(id: string): Promise<ApprovalSubmission> {
+  return approvalFetch<ApprovalSubmission>(`/api/approvals/${id}`);
+}
+
+/** Submeter conteúdo para aprovação. */
+export async function submitApproval(payload: ApprovalSubmitPayload): Promise<ApprovalSubmission> {
+  return approvalFetch<ApprovalSubmission>('/api/approvals', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Aprovar uma submission. */
+export async function approveApproval(id: string, comment?: string): Promise<ApprovalSubmission> {
+  return approvalFetch<ApprovalSubmission>(`/api/approvals/${id}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
+/** Solicitar revisão de uma submission. */
+export async function requestRevision(id: string, comment?: string): Promise<ApprovalSubmission> {
+  return approvalFetch<ApprovalSubmission>(`/api/approvals/${id}/request-revision`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
+/** Rejeitar uma submission. */
+export async function rejectApproval(id: string, comment?: string): Promise<ApprovalSubmission> {
+  return approvalFetch<ApprovalSubmission>(`/api/approvals/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ comment }),
+  });
+}
+
+/** Buscar histórico de eventos de uma submission. */
+export async function getApprovalHistory(id: string): Promise<ApprovalEvent[]> {
+  const data = await approvalFetch<{ submission_id: string; events: ApprovalEvent[] }>(
+    `/api/approvals/${id}/history`,
+  );
+  return data.events;
+}
+
+/** Decisão unificada — delega para o endpoint correto. */
+export async function decideApproval(
+  id: string,
+  payload: ApprovalDecisionPayload,
+): Promise<ApprovalSubmission> {
+  if (payload.decision === 'APPROVE') return approveApproval(id, payload.comment);
+  if (payload.decision === 'REQUEST_CHANGES') return requestRevision(id, payload.comment);
+  return rejectApproval(id, payload.comment);
+}
+
+// ---------------------------------------------------------------------------
 // SPEC-005 TASK-C08b — tool catalog filtered by user RBAC
 // ---------------------------------------------------------------------------
 
