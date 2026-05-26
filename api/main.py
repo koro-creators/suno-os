@@ -185,6 +185,11 @@ from reunioes.router import router as reunioes_router
 
 app.include_router(reunioes_router, prefix=f"{settings.API_PREFIX}/meetings")
 
+# Mount agents router (Phase 22 — SPEC-021 FA-17 Agentes)
+from agents.router import router as agents_router
+
+app.include_router(agents_router, prefix=f"{settings.API_PREFIX}/agents")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
