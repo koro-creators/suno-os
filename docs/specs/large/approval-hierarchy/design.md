@@ -2,10 +2,10 @@
 spec-id: SPEC-004
 slug: approval-hierarchy
 artefato: design
-atualizada: 2026-05-15
+atualizada: 2026-05-26
 status: rascunho
 fase: Momento 2
-versao: 1.0
+versao: 1.1
 ---
 
 # Design — Aprovação Hierárquica (FA-13)
@@ -125,7 +125,7 @@ Os 8 componentes do CTM-08 do SRD §5.7 mapeados em módulos Python:
 | **ChainRouter** | `chain.py` | Resolve next approver: lê `approval_chain_levels` para `current_level_order + 1`, faz fallback se inativo, atualiza `approval_requests.current_level_order`, calcula `expires_at`, publica EV-31, NotificationDispatcher trigger |
 | **DecisionRecorder** | `decisions.py` | POST API-133: valida approver_id no chain level atual, INSERT `approval_decisions` (transação), UPDATE `approval_requests` (status / current_level_order / final_decision_id), publica EV-32/33/34, chama ValidatedStamp ou ChainRouter conforme caminho |
 | **ValidatedStamp** | `stamp.py` | UPDATE no subject (spark/turn/workflow_output) com `validated=true, approved_at, approved_by`. Polymorphic dispatch por `subject_type` |
-| **NotificationDispatcher** | `notifications.py` | Consumer de EV-31/32/33/34: in-app via WebSocket/SSE (futuro) ou polling — no MVP só publica no canal de notification do user; Slack via webhook se configurado; email via SendGrid |
+| **NotificationDispatcher** | `notifications.py` | Consumer de EV-31/32/33/34: in-app via polling — no MVP só publica no canal de notification do user; Slack via webhook (com link direto `request_url` ao T-30) se configurado; email via SendGrid (idem). Ver ADR-LOCAL-07 |
 
 ```mermaid
 graph TB
@@ -718,10 +718,29 @@ terminal states: AP, RJ, EX
 - **TODO-DESIGN-03.** Slack webhook por cliente: onde guardar? Tabela `client_notification_configs` (nova) ou JSONB em `clients.metadata`? Inclinação: tabela nova (auditável). Discutir com Eng.
 - **TODO-DESIGN-04.** `ApprovalRequestDetail` para Operacional: confirmar se ele vê `decisions_history` completo (com nomes de Sócios) ou só estado agregado. Inclinação: vê histórico (não revela infraestrutura, só pessoas com quem ele já interage). Validar com Guga.
 
-<!-- REVIEW: A arquitetura faz sentido para as restrições do projeto? Os 8 componentes do CTM-08 estão bem mapeados? Os ADR-LOCAL-01..04 são as 4 decisões certas para registrar? Algum trade-off não-óbvio que deveria ter virado ADR-LOCAL? -->
+
+### ADR-LOCAL-07 — Links diretos de ação em notificações de aprovação
+
+- **Status:** Aceita (adicionada em v1.1 a partir de FR-CAND-005 identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** O `NotificationDispatcher` dispara EV-31 (approver precisa agir) via Slack e email. Sem link direto, o approver precisa navegar manualmente até `/aprovacoes` e localizar a request — friction desnecessária que aumenta latência de decisão.
+- **Decisão:** Todo payload de EV-31 inclui um campo `request_url` gerado pelo `ChainRouter`:
+  ```python
+  request_url = f"{settings.FRONTEND_BASE_URL}/aprovacoes/{request_id}"
+  ```
+  O `NotificationDispatcher` inclui este link como botão CTA nas notificações Slack (Block Kit) e como link principal no template de email SendGrid. In-app, o InboxCard já navega para a mesma rota T-30.
+- **Alternativas consideradas:**
+  1. Não incluir link (approver navega pelo menu) → rejeitado: aumenta latência E2E de aprovação, especialmente via email.
+  2. Link de deep-link com token para clicar-e-aprovar sem login → rejeitado por violação da autenticação obrigatória (CTM-01); approver deve estar logado para decidir.
+- **Consequências:**
+  - ✅ Redução de friction: approver chega diretamente em T-30 via Slack/email.
+  - ✅ Implementação simples: 1 campo extra no payload EV-31 + template update.
+  - ⚠️ `settings.FRONTEND_BASE_URL` precisa estar configurado em `api/config.py` (compartilhado com `HITLResumeToken` da SPEC-005).
+
+<!-- REVIEW: A arquitetura faz sentido para as restrições do projeto? Os 8 componentes do CTM-08 estão bem mapeados? Os ADR-LOCAL-01..07 são as 7 decisões certas para registrar? Algum trade-off não-óbvio que deveria ter virado ADR-LOCAL? -->
 
 ## 12. Changelog
 
 | Versão | Data | Mudança |
 |--------|------|---------|
 | 1.0 | 2026-04-30 | Versão inicial — arquitetura CTM-08 mapeada para módulos Python, fluxos sequenciais, 4 ADRs locais, estratégia de testes, observabilidade, FSM formal |
+| 1.1 | 2026-05-26 | ADR-LOCAL-07 (links diretos `request_url` em notificações de aprovação, FR-CAND-005); atualização de §1.3 NotificationDispatcher |

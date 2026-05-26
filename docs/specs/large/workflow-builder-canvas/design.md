@@ -2,8 +2,8 @@
 spec-id: SPEC-005
 slug: workflow-builder-canvas
 artefato: design
-atualizada: 2026-05-15
-versao: 1.0
+atualizada: 2026-05-26
+versao: 1.1
 status: em-revisao
 ---
 
@@ -723,7 +723,69 @@ def _route_after_step(self, step_id: str):
     return route
 ```
 
-### 6.3. Validator (`validator.py`)
+**Cascade deactivation — `compute_skipped_steps` (executor.py).** Quando um nó `condition` toma `then` ou `else`, os nós que só eram atingíveis pelo caminho não-tomado recebem `status: skipped` em `step_logs`. Algoritmo DFS:
+
+```python
+def compute_skipped_steps(edges, condition_step_id, taken_handle) -> set[str]:
+    not_taken_handle = "else" if taken_handle == "then" else "then"
+    reachable_taken = _dfs(edges, condition_step_id, taken_handle)
+    reachable_not_taken = _dfs(edges, condition_step_id, not_taken_handle)
+    return reachable_not_taken - reachable_taken  # steps exclusivos do ramo não-tomado
+
+def _dfs(edges, start_id, start_handle=None) -> set[str]:
+    adj: dict[str, list[str]] = {}
+    for e in edges:
+        adj.setdefault(e["source_step_id"], []).append(e["target_step_id"])
+    visited: set[str] = set()
+    queue = [
+        e["target_step_id"] for e in edges
+        if e["source_step_id"] == start_id
+        and (start_handle is None or e["source_handle"] == start_handle)
+    ]
+    while queue:
+        node = queue.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+        queue.extend(adj.get(node, []))
+    return visited
+```
+
+O resultado é diferença dos conjuntos: nós atingíveis apenas pelo ramo não-tomado (excluindo nós que ambos os ramos alcançam antes de um merge). O executor marca esses step_ids com `status: skipped, skip_reason: branch_not_taken` em `step_logs`. A UI reflete via `ExecutionStateContext` (ADR-LOCAL-07).
+
+### 6.3. HITL Resume Token
+
+Quando um step `hitl` é alcançado, o executor pausa e emite um `HITLResumeToken` para o operador externo:
+
+```python
+@dataclass
+class HITLResumeToken:
+    thread_id: str
+    execution_id: str
+    workflow_id: str
+    step_id: str
+    resume_url: str   # POST /api/workflows/{workflow_id}/runs/{execution_id}/resume
+    ui_url: str       # https://sunos.suno.com.br/workflows/{workflow_id}/runs/{execution_id}
+    expires_at: str   # ISO 8601, default +48h
+    input_schema: dict
+
+def generate_resume_token(workflow_id, execution_id, step, thread_id) -> HITLResumeToken:
+    return HITLResumeToken(
+        thread_id=thread_id,
+        execution_id=execution_id,
+        workflow_id=workflow_id,
+        step_id=step["id"],
+        resume_url=f"{settings.API_BASE_URL}/api/workflows/{workflow_id}/runs/{execution_id}/resume",
+        ui_url=f"{settings.FRONTEND_BASE_URL}/workflows/{workflow_id}/runs/{execution_id}",
+        expires_at=(datetime.utcnow() + timedelta(hours=48)).isoformat(),
+        input_schema=step.get("hitl_input_schema", {}),
+    )
+```
+
+O token é enviado via `NotificationDispatcher` (Slack/email) e armazenado em `workflow_runs.hitl_token` para lookup quando o operador POST `/resume`. `thread_id` é o ID de suspensão do LangGraph (`graph.get_state(config).config["configurable"]["thread_id"]`) necessário para o `graph.ainvoke(resume_payload, config)` de retomada.
+
+
+### 6.4. Validator (`validator.py`)
 
 Validador retorna lista de `ValidationError`. **Os 5 primeiros (cycle/unauthorized_tool/max_nodes_exceeded/edge_to_nonexistent_handle/no_entry_node) bloqueiam o PUT**; os 2 últimos (fan_in_without_merge/merge_with_zero_inputs) só bloqueiam "Executar".
 
@@ -775,7 +837,7 @@ def hard_validate_for_put(workflow_id, user, candidate_definition) -> list[Valid
     return [e for e in all_errors if e.kind in HARD_BLOCKING_KINDS]
 ```
 
-### 6.4. Migration v1 → v2
+### 6.5. Migration v1 → v2
 
 ```python
 # migration_v1_v2.py
@@ -811,7 +873,7 @@ def migrate_workflow(workflow_id: UUID, db) -> MigrationResult:
     return MigrationResult(migrated=True, previously_migrated=False, edges_created=len(edges_to_create))
 ```
 
-### 6.5. Auto-layout server-side (~100 LoC)
+### 6.6. Auto-layout server-side (~100 LoC)
 
 Algoritmo Sugiyama simplificado:
 1. **Layer assignment.** BFS a partir de entry node; cada node ganha layer = max(predecessors_layer) + 1.
@@ -843,7 +905,7 @@ MLflow spans:
   - tag `compiler_version: v1|v2`
 - `workflow.execute` (parent)
   - `step.{step_id}` (child por node)
-    - tag `step_type`, `step_name`, `parallel_group_id` (para fan-out)
+    - tag `step_type`, `step_name`, `parallel_group_id` (para fan-out), `skip_reason` (se `status=skipped`)
 - `workflow.migration_v1_v2` (parent)
   - `migration.layered_layout`
   - `migration.create_edges`
@@ -883,10 +945,56 @@ Estruturado JSON: `workflow_id`, `run_id`, `step_id`, `compiler_version`, `actio
 - **TODO-DESIGN-C.** Templates atuais (4 em produção) têm que ser explicitamente migrados ou são pegos pela migration JIT como qualquer workflow? Inclinação: mesma migration. Confirmar que não há campos especiais nos templates que quebram.
 - **TODO-DESIGN-D.** Canvas em mobile (<768px) — read-only com aviso ou redirect? Inclinação: read-only com banner "Edição apenas em desktop". Confirmar.
 
-<!-- REVIEW: Os 5 ADR-LOCAL cobrem os trade-offs? Algum outro merece registro (ex: schema de auto-save — debounce 500ms vs throttle)? Os fluxos sequenciais cobrem todos os casos? -->
+
+### ADR-LOCAL-06 — Cascade deactivation: marcar `skipped` via DFS no executor
+
+- **Status:** Aceita (v1.1 — identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** Steps no ramo não-tomado de um `condition` ficavam com `status: null` em `step_logs`, tornando impossível para a UI distinguir "ainda não executou" de "foi pulado propositalmente". A UI precisava colorir corretamente esses nodes.
+- **Decisão:** Executor chama `compute_skipped_steps(edges, condition_step_id, taken_handle)` imediatamente após tomar uma branch. Nodes no resultado recebem `status: skipped, skip_reason: branch_not_taken` em `step_logs` antes do próximo step executar. `ExecutionStateContext` no frontend lê esse status e colore o nó em cinza.
+- **Alternativas consideradas:**
+  1. Marcar skipped só no final da execução — rejeitado: UI ficaria sem feedback durante execução longa.
+  2. Deixar sem marcação e UI inferir por ausência de log — rejeitado: impossível distinguir de "aguardando".
+- **Consequências:**
+  - ✅ UI sempre consistente: cada node está em `idle | running | completed | error | skipped`.
+  - ✅ DFS é O(V+E) e síncrono; overhead negligível.
+  - ⚠️ Nodes que ambas as branches alcançam (antes de merge) NÃO são marcados skipped (intersecção excluída pela operação de diferença de conjuntos).
+
+### ADR-LOCAL-07 — Canvas state: separação geometry vs. execution status
+
+- **Status:** Aceita (v1.1 — identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** `useNodesState` e `useEdgesState` do React Flow gerenciam posição e geometria. Sobrepor status de execução por node nesse mesmo estado causaria re-renders desnecessários e acoplamento entre domínios.
+- **Decisão:** Três camadas de estado distintas:
+  1. **Geometry** → `useNodesState` / `useEdgesState` (React Flow nativo)
+  2. **Execution per node** → `ExecutionStateContext`: `Map<step_id, 'idle'|'running'|'completed'|'error'|'skipped'>` atualizado via polling ou SSE de `workflow_runs/{id}/stream`
+  3. **Interaction** → `useState` local no `page.tsx` (panel aberto, step selecionado, etc.)
+- **Alternativas consideradas:**
+  1. Zustand global para tudo — rejeitado: overhead de store e acoplamento desnecessário para MVP.
+  2. Colocar execution status como custom data nos nodes do React Flow — rejeitado: força re-render do canvas inteiro a cada tick de polling.
+- **Consequências:**
+  - ✅ Polling/SSE de execution status não causa re-render do canvas.
+  - ✅ Cada camada evoluível independentemente.
+  - ⚠️ `ExecutionStateContext` precisa ser provido apenas na rota `/workflows/[workflowId]` — não global.
+
+### ADR-LOCAL-08 — 11 tipos de input MVP para NodeConfigDrawer
+
+- **Status:** Aceita (v1.1 — identificado em análise comparativa com simstudioai/sim).
+- **Contexto:** `NodeConfigDrawer` (painel lateral de configuração de step) precisava de tipos de input definidos antes da implementação; sem lista explícita, cada step seria implementado com inputs ad-hoc.
+- **Decisão:** 11 tipos MVP em `components/workflows/canvas/panels/inputs/`:
+  `ShortTextInput`, `LongTextInput`, `DropdownInput`, `ComboboxInput`, `ToggleInput`, `SliderInput`, `MessagesInput`, `VariableRefInput`, `WorkflowSelectInput`, `ToolSelectInput`, `ConditionExprInput`.
+  Cada type tem schema Zod próprio. Novos tipos pós-MVP adicionam arquivo sem quebrar existentes.
+- **Alternativas consideradas:**
+  1. JSON Schema form gerado automaticamente — rejeitado: perda de controle sobre UX por tipo.
+  2. Apenas `ShortText` e `Dropdown` no MVP — rejeitado: `ConditionExprInput` e `VariableRefInput` são bloqueantes para condition e LLM steps.
+- **Consequências:**
+  - ✅ Implementação consistente entre os 7 node types.
+  - ✅ Schema Zod por tipo valida antes de salvar.
+  - ⚠️ 11 componentes iniciais — mas cada um é ~40 LoC (simples).
+
+<!-- REVIEW: Os 8 ADR-LOCAL cobrem os trade-offs? Algum outro merece registro (ex: schema de auto-save — debounce 500ms vs throttle)? Os fluxos sequenciais cobrem todos os casos? -->
 
 ## 11. Changelog
 
 | Versão | Data | Mudança |
 |--------|------|---------|
 | 1.0 | 2026-04-30 | Versão inicial — substitui design.md da SPEC-003. Arquitetura canvas + 5 ADR-LOCAL (React Flow, auto-layout Python, retrocompat 1 release, merge any cancellation, ESLint enforcement) + estratégia de testes em 9 níveis |
+| 1.1 | 2026-05-26 | ADR-LOCAL-06 (cascade deactivation DFS), ADR-LOCAL-07 (ExecutionStateContext), ADR-LOCAL-08 (11 input types); §6.2 compute_skipped_steps; §6.3 HITLResumeToken; §6.3–6.5 renumerados; §8.1 skip_reason tag |
