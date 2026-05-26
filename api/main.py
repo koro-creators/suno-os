@@ -170,6 +170,16 @@ from drive.router import router as drive_router
 
 app.include_router(drive_router, prefix=settings.API_PREFIX)
 
+# Mount approval router (Phase 20 — SPEC-004 / FA-13 Aprovação Hierárquica)
+from approval.router import router as approval_router
+
+app.include_router(approval_router, prefix=settings.API_PREFIX)
+
+# Mount meetings router (Phase 21 — SPEC-016 Captura Seletiva de Reunioes)
+from reunioes.router import router as reunioes_router
+
+app.include_router(reunioes_router, prefix=f"{settings.API_PREFIX}/meetings")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
