@@ -126,19 +126,16 @@ export default function WorkflowEditorPage() {
     let cancelled = false;
 
     async function prepare() {
-      // Real-mode: trigger migrate-v2 if needed.
+      // Real-mode: trigger migrate-v2 if needed. On failure, fall back to the
+      // local migration so the canvas always renders (canvas-conventions.md §mock-mode).
       if (apiAvailable()) {
         try {
           setMigrationState('migrating');
           await migrateWorkflowV2(wf.id);
-          // The full v2 payload would normally come from a follow-up GET; in
-          // this iteration we still source steps from the local context but
-          // expect the server-stored edges/positions to overwrite next sync.
         } catch (err) {
           if (cancelled) return;
-          setMigrationState('error');
+          // Non-blocking: surface the warning but continue with local migration.
           setMigrationError(err instanceof Error ? err.message : String(err));
-          return;
         }
       }
       const steps = wf.steps as WorkflowStep[];
@@ -245,18 +242,18 @@ export default function WorkflowEditorPage() {
           Atualizando workflow para o novo canvas…
         </div>
       )}
-      {migrationState === 'error' && migrationError && (
+      {migrationError && migrationState === 'ready' && (
         <div
-          role="alert"
+          role="status"
           style={{
-            padding: '12px 16px',
+            padding: '10px 16px',
             fontSize: 12,
-            background: 'rgba(239,68,68,0.15)',
-            color: '#EF4444',
+            background: 'rgba(245,158,11,0.12)',
+            color: '#F59E0B',
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          Falha na migração: {migrationError}
+          Backend indisponível — exibindo versão local do canvas
         </div>
       )}
 
