@@ -64,13 +64,17 @@ export default function DriveConfigPage() {
     setErrorMessage(null);
     try {
       const { auth_url } = await startDriveAuth();
-      if (auth_url && auth_url !== '#mock-oauth-not-available') {
+      const isPlaceholder =
+        !auth_url ||
+        auth_url === '#mock-oauth-not-available' ||
+        auth_url === '#oauth-not-configured';
+      if (!isPlaceholder) {
         window.location.href = auth_url;
       } else {
-        // Mock-mode or placeholder URL
+        // Backend sentinel or mock-mode: credentials not configured yet
         setErrorMessage(
           apiAvailable()
-            ? 'Credenciais OAuth não configuradas. Configure GOOGLE_OAUTH_CLIENT_ID no backend.'
+            ? 'Credenciais OAuth não configuradas. Configure GOOGLE_OAUTH_CLIENT_ID e GOOGLE_OAUTH_CLIENT_SECRET em api/.env.'
             : 'Backend não disponível (modo mock). Configure NEXT_PUBLIC_API_URL para conectar.',
         );
       }

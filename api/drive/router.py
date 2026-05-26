@@ -138,13 +138,10 @@ async def drive_auth_start(current_user: str = Depends(get_current_user)) -> Dri
       )
       return DriveAuthResponse(auth_url=auth_url)
     """
-    # Placeholder — real credentials not yet configured (Phase 18 scaffolding)
-    placeholder_url = (
-        "https://accounts.google.com/o/oauth2/auth"
-        "?TODO=configure_credentials"
-        "&scope=https://www.googleapis.com/auth/drive.readonly"
-        "&hd=sunounited.com"
-    )
+    # Placeholder — real credentials not yet configured (Phase 18 scaffolding).
+    # Sentinel value "#oauth-not-configured" is recognized by the frontend
+    # to show a "configure credentials" message instead of navigating to Google.
+    placeholder_url = "#oauth-not-configured"
     logger.info("drive_auth_start: returning placeholder OAuth URL for user=%s", current_user)
     return DriveAuthResponse(auth_url=placeholder_url)
 
