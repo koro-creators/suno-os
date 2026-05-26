@@ -41,7 +41,7 @@ export default function ReunioesPage() {
   return (
     <>
       <AppHeader
-        breadcrumbs={[{ label: 'Reunioes', href: '/reunioes' }]}
+        breadcrumbs={[{ label: 'Reuniões', href: '/reunioes' }]}
         rightLabel="Admin"
       />
       <main
@@ -53,10 +53,10 @@ export default function ReunioesPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: '2rem', fontWeight: 300, color: 'var(--text-primary)', margin: 0, lineHeight: 1.2 }}>
-              Reunioes
+              Reuniões
             </h1>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-              {meetings.length} {meetings.length === 1 ? 'reuniao' : 'reunioes'}
+              {meetings.length} {meetings.length === 1 ? 'reunião' : 'reuniões'}
               {pendingCount > 0 && (
                 <span style={{ marginLeft: 8, color: '#FFC801' }}>
                   {pendingCount} aguardando curadoria
@@ -89,7 +89,7 @@ export default function ReunioesPage() {
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
             <Plus size={14} strokeWidth={2} />
-            Opt-in Nova Reuniao
+            Opt-in Nova Reunião
           </button>
         </div>
 
@@ -131,8 +131,8 @@ export default function ReunioesPage() {
             <Video size={32} strokeWidth={1} style={{ color: 'var(--text-muted)' }} />
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
               {search || clientFilter || statusFilter
-                ? 'Nenhuma reuniao encontrada com esses filtros.'
-                : 'Nenhuma reuniao capturada ainda.'}
+                ? 'Nenhuma reunião encontrada com esses filtros.'
+                : 'Nenhuma reunião capturada ainda.'}
             </p>
             {!search && !clientFilter && !statusFilter && (
               <button

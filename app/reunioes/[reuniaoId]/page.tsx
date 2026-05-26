@@ -1,19 +1,16 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, Check, Archive } from 'lucide-react';
 import AppHeader from '@/components/layout/AppHeader';
 import TranscricaoPanel from '@/components/reunioes/TranscricaoPanel';
 import { useMeetings } from '@/contexts/MeetingsContext';
 import { MeetingSegment } from '@/lib/meeting-types';
 
-interface Props {
-  params: Promise<{ reuniaoId: string }>;
-}
-
-export default function CuradoriaPage({ params }: Props) {
-  const { reuniaoId } = use(params);
+export default function CuradoriaPage() {
+  const params = useParams();
+  const reuniaoId = params.reuniaoId as string;
   const router = useRouter();
   const { getMeeting, curateMeeting, updateStatus } = useMeetings();
 
@@ -35,8 +32,8 @@ export default function CuradoriaPage({ params }: Props) {
       <>
         <AppHeader
           breadcrumbs={[
-            { label: 'Reunioes', href: '/reunioes' },
-            { label: 'Nao encontrada', href: '#' },
+            { label: 'Reuniões', href: '/reunioes' },
+            { label: 'Não encontrada', href: '#' },
           ]}
           rightLabel="Admin"
         />
@@ -56,7 +53,7 @@ export default function CuradoriaPage({ params }: Props) {
                 cursor: 'pointer',
               }}
             >
-              Voltar para Reunioes
+              Voltar para Reuniões
             </button>
           </div>
         </main>
@@ -112,7 +109,7 @@ export default function CuradoriaPage({ params }: Props) {
     <>
       <AppHeader
         breadcrumbs={[
-          { label: 'Reunioes', href: '/reunioes' },
+          { label: 'Reuniões', href: '/reunioes' },
           { label: meeting.title, href: `/reunioes/${meeting.id}` },
         ]}
         rightLabel="Admin"
@@ -142,7 +139,7 @@ export default function CuradoriaPage({ params }: Props) {
           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
         >
           <ArrowLeft size={14} strokeWidth={1.5} />
-          Todas as reunioes
+          Todas as reuniões
         </button>
 
         {/* Meeting header */}

@@ -20,7 +20,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca', adminOnly: true },
   { label: 'Workflows', icon: Zap, href: '/workflows', adminOnly: true },
   { label: 'Aprovações', icon: CheckCircle, href: '/aprovacoes', adminOnly: true },
-  { label: 'Reunioes', icon: Video, href: '/reunioes', adminOnly: true },
+  { label: 'Reuniões', icon: Video, href: '/reunioes', adminOnly: true },
   { label: 'Configurações', icon: Settings, href: '/configuracoes', adminOnly: true },
 ];
 
