@@ -6,8 +6,8 @@ nivel-sdd: spec-anchored
 tamanho: large
 status: rascunho
 criada: 2026-05-15
-atualizada: 2026-05-15
-versao: 1.0
+atualizada: 2026-05-26
+versao: 1.1
 ---
 
 # Design — FA-15 Onboarding com Oráculo do Cliente (SPEC-015)
@@ -31,7 +31,7 @@ versao: 1.0
         ├── OráculoAgent (LangGraph)
         │       ├── DriveDocProcessor (reutiliza api/chat/ingestion/)
         │       ├── WebSearchTool (allow-list enforced)
-        │       └── EntityGenerator (Gemini Flash)
+        │       └── EntityGenerator (LLMGraphTransformer — ADR-013)
         └── JobQueue (FastAPI BackgroundTasks v1; Cloud Tasks v2)
                 │
                 ▼
@@ -89,7 +89,7 @@ api/
     __init__.py
     agent.py            # LangGraph StateGraph do Oráculo
     web_search.py       # tool de pesquisa web com allow-list enforcement
-    entity_generator.py # geração de cada entidade via Gemini Flash
+    entity_generator.py # LLMGraphTransformer com allowed_nodes=ONTOLOGY_NODES, strict_mode=True (ADR-013)
     constants.py        # ONTOLOGY_ENTITY_TYPES, ENTITY_PROMPTS
 ```
 
@@ -203,6 +203,14 @@ clients (1) ──── (1) onboarding_jobs
 - **Decisão**: Wiki é a view das `wiki_entities` do cliente — mesmo modelo de dados que o Oráculo popula. A API da Biblioteca (`/api/knowledge/`) não é usada para entidades ontológicas.
 - **Alternativas rejeitadas**: Usar a Biblioteca — misturaria entidades ontológicas com documentos de referência, complicando o caixa-preta e o RBAC.
 - **Consequências**: ✅ Modelo limpo. ✅ RBAC simples (client_id + role check). ⚠️ Wiki não aparece em buscas da Biblioteca (desejável — caixa-preta).
+
+### ADR-LOCAL-06: LLMGraphTransformer como motor de extração (não Gemini Flash raw)
+
+- **Status**: Aceita (v1.1 — alinhada com ADR-013)
+- **Contexto**: v1.0 descrevia `entity_generator.py` como "geração de cada entidade via Gemini Flash" (chamada raw). ADR-013 estabelece LLMGraphTransformer como padrão de extração ontológica no sunOS.
+- **Decisão**: `entity_generator.py` usa `LLMGraphTransformer` com `allowed_nodes=ONTOLOGY_NODES` e `strict_mode=True`. `ONTOLOGY_NODES` = `["Posicionamento", "Persona", "Competidor", "Produto", "TomDeVoz", "Briefing"]`.
+- **Diferença de escopo**: O Oráculo usa LLMGraphTransformer para extrair as **6 entidades do perfil** do cliente (Drive + web). `knowledge_entities` (SPEC-002) usa o mesmo motor para extração contínua de toda a Biblioteca — tabelas distintas com propósitos distintos.
+- **Consequências**: ✅ Consistência de extração com SPEC-002; ✅ `strict_mode=True` evita entidades fora da ontologia; ⚠️ Requer spike de qualidade com docs PT-BR antes do Piloto (ADR-013 §6).
 
 ---
 

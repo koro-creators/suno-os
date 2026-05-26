@@ -100,12 +100,14 @@
 
 ### Phase 12: Sidebar Recentes Dinâmico
 > Fase de produto: **MVP** (refinamento UX)
+> SPEC-019 (sidebar-recentes): rascunho
 - [ ] Rastrear navegação real do usuário
 - [ ] Mostrar últimos clientes/skills visitados
 - [ ] Persistir em sessionStorage
 
 ### Phase 13: Busca Global
 > Fase de produto: **MVP** (refinamento UX)
+> SPEC-020 (busca-global): rascunho
 - [ ] Barra de busca unificada (Cmd+K)
 - [ ] Busca cross-feature: skills, documentos, clientes
 - [ ] Resultados agrupados por tipo
@@ -206,6 +208,13 @@
 | SPEC-018 | clientes-admin | FA-12-03 Clientes Admin — status enum + junction skill_clients | rascunho | Piloto |
 
 > IDs reservados (não criados ainda): SPEC-007 (Solar System navigation), SPEC-012, SPEC-013, SPEC-014.
+
+### Medium Specs
+
+| ID | Slug | Feature | Status |
+|----|------|---------|:------:|
+| SPEC-019 | sidebar-recentes | Phase 12 Sidebar Recentes Dinâmico | rascunho |
+| SPEC-020 | busca-global | Phase 13 Busca Global Cmd+K | rascunho |
 
 ### Legacy Design Specs (pré-SDD, sem artefato constitution)
 
