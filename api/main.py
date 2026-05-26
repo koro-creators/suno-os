@@ -165,6 +165,11 @@ from chat.conversations.router import router as conversations_router
 
 app.include_router(conversations_router, prefix=settings.API_PREFIX)
 
+# Mount drive router (Phase 18 — SPEC-006 FA-14 Drive scaffolding)
+from drive.router import router as drive_router
+
+app.include_router(drive_router, prefix=settings.API_PREFIX)
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():

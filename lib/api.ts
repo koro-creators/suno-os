@@ -313,6 +313,71 @@ export async function migrateWorkflowV2(workflowId: string): Promise<MigrateV2Re
 }
 
 // ---------------------------------------------------------------------------
+// SPEC-006 — Drive Read-Only (Phase 18 scaffolding)
+// ---------------------------------------------------------------------------
+
+export interface DriveStatusResponse {
+  connected: boolean;
+  email: string | null;
+  last_sync: string | null;
+  doc_count: number;
+}
+
+export interface DriveAuthResponse {
+  auth_url: string;
+}
+
+export interface DriveSyncResponse {
+  status: string;
+  job_id: string;
+}
+
+async function driveFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = getApiUrl(path);
+  const headers = await getHeaders();
+  const response = await fetch(url, {
+    ...init,
+    headers: { ...headers, ...(init?.headers ?? {}) },
+  });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Drive API ${response.status}: ${text || response.statusText}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+/** Get the current Drive OAuth connection status. */
+export async function getDriveStatus(): Promise<DriveStatusResponse> {
+  if (!apiAvailable()) {
+    // Mock-mode: no connection
+    return { connected: false, email: null, last_sync: null, doc_count: 0 };
+  }
+  return driveFetch<DriveStatusResponse>('/api/drive/status');
+}
+
+/** Start the Drive OAuth flow — returns the authorization URL. */
+export async function startDriveAuth(): Promise<DriveAuthResponse> {
+  if (!apiAvailable()) {
+    return { auth_url: '#mock-oauth-not-available' };
+  }
+  return driveFetch<DriveAuthResponse>('/api/drive/auth');
+}
+
+/** Trigger a manual Drive sync. */
+export async function triggerDriveSync(): Promise<DriveSyncResponse> {
+  if (!apiAvailable()) {
+    return { status: 'sync_started', job_id: 'mock-job-id' };
+  }
+  return driveFetch<DriveSyncResponse>('/api/drive/sync', { method: 'POST' });
+}
+
+/** Revoke the Drive OAuth connection. */
+export async function disconnectDrive(): Promise<void> {
+  if (!apiAvailable()) return;
+  await driveFetch<{ status: string }>('/api/drive/disconnect', { method: 'DELETE' });
+}
+
+// ---------------------------------------------------------------------------
 // SPEC-005 TASK-C08b — tool catalog filtered by user RBAC
 // ---------------------------------------------------------------------------
 

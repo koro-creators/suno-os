@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const PUBLIC_PATHS = ['/login'];
-const ADMIN_PATHS = ['/skills', '/biblioteca', '/clientes'];
+const ADMIN_PATHS = ['/skills', '/biblioteca', '/clientes', '/configuracoes'];
 
 function isAdminPath(pathname: string): boolean {
   return ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
