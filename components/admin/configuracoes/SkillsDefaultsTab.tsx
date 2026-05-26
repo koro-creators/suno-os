@@ -186,7 +186,7 @@ export default function SkillsDefaultsTab() {
                     }
                     onBlur={() => setEditingCell(null)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') setEditingCell(null);
+                      if (e.key === 'Enter') handleSave(d.skill_slug);
                     }}
                     style={{
                       width: 72,
@@ -230,7 +230,7 @@ export default function SkillsDefaultsTab() {
                     }
                     onBlur={() => setEditingCell(null)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') setEditingCell(null);
+                      if (e.key === 'Enter') handleSave(d.skill_slug);
                     }}
                     style={{
                       width: 80,

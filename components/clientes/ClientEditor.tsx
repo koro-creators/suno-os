@@ -77,11 +77,13 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
   const router = useRouter();
   const { skills } = useSkills();
   const { documents } = useBiblioteca();
-  const { isAdmin } = useAuth();
+  const { isAdmin, loading: authLoading } = useAuth();
 
-  const editorTabs = isAdmin
-    ? ['Identidade', 'Skills', 'Biblioteca', 'Métricas', 'Drive']
-    : ['Identidade', 'Skills', 'Biblioteca', 'Métricas'];
+  // Use base tabs while auth is resolving to avoid Drive tab flashing in/out
+  const editorTabs =
+    !authLoading && isAdmin
+      ? ['Identidade', 'Skills', 'Biblioteca', 'Métricas', 'Drive']
+      : ['Identidade', 'Skills', 'Biblioteca', 'Métricas'];
 
   const [form, setForm] = useState<ClientAdmin>(initial);
   const [savedSnapshot, setSavedSnapshot] = useState<ClientAdmin>(initial);
