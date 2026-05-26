@@ -66,12 +66,19 @@ export default function BibliotecaPage() {
       if (selectedTags.length > 0) {
         if (!doc.tags.some((t) => selectedTags.includes(t))) return false;
       }
-      // File type
+      // File type / docType
       if (selectedTypes.length > 0) {
-        const allowedExtensions = selectedTypes.flatMap(
-          (key) => TYPE_KEY_TO_EXTENSIONS[key] ?? [],
-        );
-        if (!doc.fileType || !allowedExtensions.includes(doc.fileType.toLowerCase())) return false;
+        const includesReuniao = selectedTypes.includes('reuniao');
+        const extensionKeys = selectedTypes.filter((k) => k !== 'reuniao');
+        const allowedExtensions = extensionKeys.flatMap((k) => TYPE_KEY_TO_EXTENSIONS[k] ?? []);
+        const isReuniao = doc.docType === 'reuniao';
+        const matchesReuniao = isReuniao && includesReuniao;
+        const matchesExtension =
+          !isReuniao &&
+          allowedExtensions.length > 0 &&
+          !!doc.fileType &&
+          allowedExtensions.includes(doc.fileType.toLowerCase());
+        if (!matchesReuniao && !matchesExtension) return false;
       }
       return true;
     });

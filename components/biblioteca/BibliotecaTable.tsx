@@ -171,7 +171,7 @@ export default function BibliotecaTable({
               >
                 {/* Type icon */}
                 <td style={{ ...tdStyle, width: 32, padding: '0 4px 0 8px' }}>
-                  <FileTypeIcon fileType={doc.fileType} size={16} />
+                  <FileTypeIcon fileType={doc.fileType} docType={doc.docType} size={16} />
                 </td>
 
                 {/* Title */}

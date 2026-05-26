@@ -29,4 +29,9 @@ export interface BibliotecaDocument {
   thumbnailUrl?: string;
   status?: KnowledgeStatus;
   fileSize?: number;
+  /** Phase 21 — Reuniões como sub-tipo da Biblioteca */
+  docType?: 'reuniao';
+  meetingDate?: string;
+  meetingParticipants?: string[];
+  meetingDuration?: string;
 }

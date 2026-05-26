@@ -12,12 +12,13 @@ const SCOPE_OPTIONS: { key: string; label: string; color: string }[] = [
   { key: 'samsung', label: 'Samsung', color: '#3B82F6' },
 ];
 
-const TYPE_OPTIONS: { key: string; label: string; fileType: string }[] = [
+const TYPE_OPTIONS: { key: string; label: string; fileType?: string; docType?: 'reuniao' }[] = [
   { key: 'pdf', label: 'PDF', fileType: 'pdf' },
   { key: 'image', label: 'Imagem', fileType: 'png' },
   { key: 'audio', label: 'Audio', fileType: 'mp3' },
   { key: 'video', label: 'Video', fileType: 'mp4' },
   { key: 'text', label: 'Texto', fileType: 'txt' },
+  { key: 'reuniao', label: 'Reuniões', docType: 'reuniao' },
 ];
 
 interface BibliotecaSidebarProps {
@@ -315,7 +316,7 @@ export default function BibliotecaSidebar({
                   onChange={() => toggleType(type.key)}
                   style={{ display: 'none' }}
                 />
-                <FileTypeIcon fileType={type.fileType} size={14} />
+                <FileTypeIcon fileType={type.fileType} docType={type.docType} size={14} />
                 {type.label}
               </label>
             );
