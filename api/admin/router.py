@@ -1,36 +1,126 @@
 """
 Admin router — SPEC-022 (Configurações Admin)
 
-Caixa-preta: 404 para não-admins (RN-009/010/011). In-memory mock store (Fase A).
-Firebase Custom Claim verification deferred to Fase B (PRE: Firebase Admin SDK).
+Middleware: _require_admin verifica Firebase Custom Claim admin=true (com fallback mock).
+Caixa-preta: resposta 404 para não-admins (nunca 403) — RN-009/010/011.
 """
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional
 
 from fastapi import APIRouter, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["Admin"])
 
 # ---------------------------------------------------------------------------
-# Auth guard (mock — real Firebase Custom Claim verification in Fase B)
-# ---------------------------------------------------------------------------
-
-
-def _require_admin(authorization: str | None = None) -> None:  # noqa: ARG001
-    """Mock guard. Production: verify Firebase Custom Claim admin=true → 404 if absent."""
-    pass
-
-
-# ---------------------------------------------------------------------------
-# In-memory stores (Fase A — replace with DB in Fase B)
+# Firebase Admin SDK — real verification with graceful dev fallback
 # ---------------------------------------------------------------------------
 
 UserRole = Literal["admin", "creator", "viewer"]
+
+_FIREBASE_ADMIN_AVAILABLE: bool = False
+
+try:
+    import firebase_admin  # noqa: F401
+    from firebase_admin import auth as firebase_auth
+    _FIREBASE_ADMIN_AVAILABLE = True
+except ImportError:
+    logger.warning("firebase_admin not installed — admin auth in mock mode")
+
+
+def _require_admin(authorization: str | None = None) -> str | None:
+    """
+    Verify Firebase JWT and check admin custom claim.
+    Falls back to mock (allow all) when Firebase not configured.
+    Caixa-preta: always 404, never 403 — RN-009/010/011.
+    """
+    if not _FIREBASE_ADMIN_AVAILABLE:
+        logger.debug("Firebase Admin SDK not available — admin auth in mock mode")
+        return None
+
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    token = authorization.removeprefix("Bearer ").strip()
+
+    try:
+        from core.firebase import get_firebase_app
+        app = get_firebase_app()
+    except Exception as exc:
+        logger.warning("Firebase app init failed — falling back to mock mode: %s", exc)
+        return None
+
+    try:
+        decoded = firebase_auth.verify_id_token(token, app=app)
+    except (
+        firebase_auth.InvalidIdTokenError,
+        firebase_auth.ExpiredIdTokenError,
+        firebase_auth.RevokedIdTokenError,
+        firebase_auth.CertificateFetchError,
+    ):
+        raise HTTPException(status_code=404, detail="Not found")
+    except Exception as exc:
+        logger.warning("Firebase token verification error: %s", exc)
+        raise HTTPException(status_code=404, detail="Not found")
+
+    if not decoded.get("admin"):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return decoded["uid"]
+
+
+def _sync_users_from_firebase() -> int:
+    """Pull real users from Firebase Auth into _users store. No-op if Firebase not configured."""
+    if not _FIREBASE_ADMIN_AVAILABLE:
+        return 0
+
+    try:
+        from core.firebase import get_firebase_app
+        app = get_firebase_app()
+    except Exception as exc:
+        logger.warning("Firebase app init failed during user sync: %s", exc)
+        return 0
+
+    try:
+        page = firebase_auth.list_users(app=app)
+        count = 0
+        for user in page.users:
+            custom_claims = user.custom_claims or {}
+            role: UserRole = custom_claims.get("role", "viewer")
+
+            def _ms_to_iso(ms: int | None) -> str | None:
+                if ms is None:
+                    return None
+                return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).isoformat()
+
+            _users[user.uid] = {
+                "uid": user.uid,
+                "name": user.display_name or user.email or user.uid,
+                "email": user.email or "",
+                "role": role,
+                "is_active": not user.disabled,
+                "last_access": _ms_to_iso(user.user_metadata.last_sign_in_time),
+                "created_at": _ms_to_iso(user.user_metadata.creation_time),
+            }
+            count += 1
+
+        logger.info("Synced %d users from Firebase Auth", count)
+        return count
+    except Exception as exc:
+        logger.warning("Firebase user sync failed (using mock data): %s", exc)
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# In-memory stores (Fase A — seeded with mock data; overwritten by Firebase sync)
+# ---------------------------------------------------------------------------
 
 _users: dict[str, dict] = {
     "uid-1": {
@@ -188,9 +278,9 @@ async def list_users(
     _require_admin(authorization)
     items = list(_users.values())
     if status == "active":
-        items = [u for u in items if u["is_active"]]
-    elif status == "suspended":
-        items = [u for u in items if not u["is_active"]]
+        items = [u for u in items if u.get("is_active")]
+    elif status in ("inactive", "suspended"):
+        items = [u for u in items if not u.get("is_active")]
     total = len(items)
     start = (page - 1) * per_page
     return {"items": items[start : start + per_page], "total": total}
@@ -235,6 +325,16 @@ async def invite_user(
     return {"status": "invited", "uid": new_uid}
 
 
+@router.post("/users/sync")
+async def sync_users_from_firebase(
+    authorization: Optional[str] = Header(default=None),
+):
+    """Sync user list from Firebase Auth. No-op in mock mode."""
+    _require_admin(authorization)
+    count = _sync_users_from_firebase()
+    return {"synced": count, "mode": "firebase" if count > 0 else "mock"}
+
+
 # ---------------------------------------------------------------------------
 # Integrations
 # ---------------------------------------------------------------------------
@@ -246,7 +346,7 @@ async def list_integrations(
 ) -> list[dict]:
     _require_admin(authorization)
     return [
-        {**v, "value_masked": None}  # never return value to frontend
+        {**v, "value_masked": v.get("value_masked")}  # never return raw value
         for v in _integrations.values()
     ]
 
