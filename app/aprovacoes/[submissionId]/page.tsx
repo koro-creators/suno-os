@@ -330,47 +330,147 @@ export default function SubmissionReviewPage() {
               )}
             </div>
 
-            {/* Conteúdo completo */}
-            <div
-              style={{
-                backgroundColor: 'var(--deep)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 12,
-                overflow: 'hidden',
-              }}
-            >
+            {/* Conteúdo completo — before/after quando original_content difere */}
+            {submission.original_content && submission.original_content !== submission.content ? (
               <div
                 style={{
-                  padding: '10px 16px',
-                  borderBottom: '1px solid var(--border-subtle)',
-                  fontSize: '0.72rem',
-                  fontWeight: 500,
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
                 }}
               >
-                Conteúdo submetido
-              </div>
-              <div style={{ padding: 20 }}>
-                {/* TODO: render markdown formatting when content uses structured formatting.
-                    New deps are prohibited (CLAUDE.md) — react-markdown is out for Phase 20.
-                    For Phase D+, evaluate a zero-dep markdown renderer or a light remark plugin. */}
-                <pre
+                <div
                   style={{
-                    margin: 0,
-                    fontSize: '0.85rem',
-                    color: 'var(--text-primary)',
-                    lineHeight: 1.7,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    fontFamily: 'inherit',
+                    padding: '10px 16px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    backgroundColor: 'var(--deep)',
                   }}
                 >
-                  {submission.content}
-                </pre>
+                  Comparação de conteúdo
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                  {/* Antes */}
+                  <div
+                    style={{
+                      backgroundColor: 'var(--deep)',
+                      borderRight: '1px solid var(--border-subtle)',
+                      padding: 20,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: 'var(--text-muted)',
+                      }}
+                    >
+                      Antes
+                    </span>
+                    <pre
+                      style={{
+                        margin: 0,
+                        fontSize: '0.85rem',
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.7,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {submission.original_content}
+                    </pre>
+                  </div>
+                  {/* Depois */}
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255,200,1,0.05)',
+                      border: '1px solid rgba(255,200,1,0.2)',
+                      margin: -1,
+                      padding: 20,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: 'var(--sun)',
+                      }}
+                    >
+                      Depois
+                    </span>
+                    <pre
+                      style={{
+                        margin: 0,
+                        fontSize: '0.85rem',
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.7,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {submission.content}
+                    </pre>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: 'var(--deep)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '10px 16px',
+                    borderBottom: '1px solid var(--border-subtle)',
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                  }}
+                >
+                  Conteúdo submetido
+                </div>
+                <div style={{ padding: 20 }}>
+                  {/* TODO: render markdown formatting when content uses structured formatting.
+                      New deps are prohibited (CLAUDE.md) — react-markdown is out for Phase 20.
+                      For Phase D+, evaluate a zero-dep markdown renderer or a light remark plugin. */}
+                  <pre
+                    style={{
+                      margin: 0,
+                      fontSize: '0.85rem',
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.7,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {submission.content}
+                  </pre>
+                </div>
+              </div>
+            )}
 
             {/* Histórico */}
             {events.length > 0 && (

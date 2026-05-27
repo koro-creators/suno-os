@@ -52,6 +52,8 @@ export const initialSubmissions: ApprovalSubmission[] = [
     skill_name: 'Blog Post',
     subject_type: 'workflow_output',
     subject_id: 'wfo-abc-003',
+    original_content:
+      'Título: O futuro do trabalho criativo\n\nA criatividade nunca foi tão valorizada quanto nos dias de hoje. Com a evolução das ferramentas digitais, profissionais criativos encontraram novas formas de expressar suas ideias e conectar-se com audiências globais. O caminho para o sucesso no mercado criativo exige dedicação, técnica e uma visão estratégica apurada.',
     content:
       'Título: O futuro do trabalho criativo\n\nA criatividade nunca foi tão valorizada quanto nos dias de hoje. Com a evolução das ferramentas digitais, profissionais criativos encontraram novas formas de expressar suas ideias e conectar-se com audiências globais.',
     status: 'CHANGES_REQUESTED',
