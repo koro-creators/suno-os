@@ -220,6 +220,11 @@ from approval.router import router as approval_router
 
 app.include_router(approval_router, prefix=settings.API_PREFIX)
 
+# Mount notifications router (Phase 20 — in-memory notification system)
+from notifications.router import router as notifications_router
+
+app.include_router(notifications_router, prefix=f"{settings.API_PREFIX}/notifications")
+
 # Mount meetings router (Phase 21 — SPEC-016 Captura Seletiva de Reunioes)
 from reunioes.router import router as reunioes_router
 

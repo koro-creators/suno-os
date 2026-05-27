@@ -305,6 +305,54 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
     }
 
 
+def add_reunion_context_to_oraculo(
+    client_id: str,
+    meeting_id: str,
+    selected_segments: list[dict],
+) -> None:
+    """
+    FA-15: Feed curated meeting segments into client's oráculo context.
+
+    Appends a "Briefings" context entry from selected reunion segments.
+    Caixa-preta: silently skips if client not found — never raises.
+    """
+    client = _clients.get(client_id)
+    if not client:
+        return  # caixa-preta: silently skip if client not in onboarding
+
+    key = f"{client_id}:Briefings"
+    entity = _wiki_entities.get(key)
+    if not entity:
+        return
+
+    # Collect text from segments marked as selected
+    reunion_text = "\n\n".join(
+        seg.get("text", "")
+        for seg in selected_segments
+        if seg.get("selected")
+    )
+    if not reunion_text:
+        return
+
+    existing = entity.get("content", "")
+    entity["content"] = existing + f"\n\n[Reunião {meeting_id}]:\n{reunion_text}"
+    entity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    _hitl_events.append({
+        "id": str(uuid.uuid4()),
+        "client_id": client_id,
+        "entity_type": "Briefings",
+        "action": "reunion_context_added",
+        "meeting_id": meeting_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    logger.info(
+        "FA-15: reunion %s context added to Briefings for client %s",
+        meeting_id,
+        client_id,
+    )
+
+
 async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
     """Entity regeneration after HITL rejection — uses oracle agent with fallback."""
     await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS * 2)
