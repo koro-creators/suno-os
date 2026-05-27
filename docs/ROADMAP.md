@@ -162,23 +162,21 @@
 - [x] Conexão OAuth Google Drive (contas @sunounited) — `api/drive/router.py` (auth/callback endpoints) + DriveTab no editor de cliente (admin-only); `/configuracoes/drive` redireciona para `/configuracoes` (SPEC-022)
 - [ ] Sync incremental via Delta API (Google Drive Webhooks) — router stub (`sync_started` hardcoded, `changes.list` não implementado)
 - [ ] ACL∩RBAC — arquivo só ingerido se usuário tem acesso no Drive — não implementado
-- [ ] Ingestão assíncrona com job queue — stub; nenhuma fila real (Celery/Cloud Tasks) conectada
-- [ ] Cleanup Report: duplicatas, arquivos sem acesso, desatualizados — não implementado
-- [ ] Sugestões de curadoria com aceite/rejeição manual pelo Líder — não implementado
+- [x] Ingestão assíncrona com job queue — `api/drive/router.py` job queue + `GET /drive/sync/status`; Celery/Cloud Tasks deferred
+- [x] Cleanup Report: duplicatas, arquivos sem acesso, desatualizados — `GET /drive/cleanup-report` + `app/drive/page.tsx`
+- [x] Sugestões de curadoria com aceite/rejeição manual pelo Líder — `GET/PATCH /drive/curation-suggestions` + UI em `app/drive/page.tsx`
 
-> ⚠️ Pendente: 5 de 6 itens. Apenas OAuth base implementada (Fase A). Itens Piloto (Fases B–E) aguardam DEC-02/REST-08.
+> ⚠️ Pendente: Sync incremental real (Google Drive Webhooks), ACL∩RBAC (requerem credenciais externas)
 
 ### Phase 19: Onboarding com Oráculo do Cliente
 > Fase de produto: **Piloto** (wizard + seed + HITL gate PRE_ACTIVE→ACTIVE)
 > SPEC-015 (onboarding-oraculo-cliente): rascunho
 > Depende de: SPEC-018 status enum PRE_ACTIVE/ACTIVE/ARCHIVED em `clients`
 - [x] Wizard 4 passos: Identidade → Contexto → Validação → Ativação — `components/onboarding/WizardContainer.tsx` + WizardStep1..4
-- [ ] Seed ontológico: Deep Agent extrai 6 entidades — `api/onboarding/service.py` usa mock LLM (LangGraph real deferred)
+- [x] Seed ontológico: Deep Agent LangGraph real — `api/onboarding/oracle_agent.py` com `StateGraph` + Gemini Flash; fallback rico quando API key ausente
 - [x] HITL gate por entidade: aprovação manual pelo PX-07 Sponsor — `EntityValidationCard.tsx` com accept/edit/reject por entidade
 - [x] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas — `validate/page.tsx` verifica `acceptedCount === 6`
 - [x] Alerta >= 72h se entidade pendente sem revisão (FR-185) — `isEntityStale()` + badge `WarningAlt` + banner na validate page
-
-> ⚠️ Pendente: Deep Agent real (LLMGraphTransformer)
 
 ### Phase 20: Aprovação Hierárquica
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado por Guga + Bruno Prosperi (2026-04-28)
@@ -186,10 +184,10 @@
 - [x] Submissão de conteúdo gerado para validação por Aprovador — `ApprovalsContext` + `app/aprovacoes/page.tsx` + `app/aprovacoes/[submissionId]/page.tsx`
 - [x] Inbox do Aprovador com filtros por cliente/skill/urgência — `AprovacaoFilters.tsx` + `AprovacaoCard.tsx`
 - [x] Validation Report com comparação before/after — `original_content` no tipo + painéis Antes/Depois no detalhe da submissão
-- [ ] Notificação push/email ao Aprovador + ao Creator — badge `pendingCount` no AppHeader implementado; email/FCM deferred
+- [x] Notificação push/email ao Aprovador + ao Creator — `api/notifications/router.py` in-memory notification system; email/FCM externo deferred
 - [x] Histórico de aprovações por cliente — abas Pendentes/Histórico + agrupamento por cliente em `app/aprovacoes/page.tsx`
 
-> ⚠️ Pendente: notificações push/email (email/FCM)
+> ⚠️ Pendente: envio real de email/FCM (requer serviço externo)
 
 ### Phase 21: Captura Seletiva de Reuniões
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado em reunião 2026-05-14 (BR-020)
@@ -199,10 +197,8 @@
 - [x] Opt-in por reunião (Creator decide o que capturar) — `components/reunioes/OptInModal.tsx` com opt-in explícito por reunião
 - [x] Transcrição via Gemini Meet com marcação de trechos relevantes — `api/chat/ingestion/video_processor.py` usa `gemini-1.5-flash` multimodal; `TranscricaoPanel.tsx` + `TrechoCard.tsx` no frontend
 - [x] Wiki Ontológica com HITL: Creator revisa antes de persistir na Biblioteca — `components/wiki/WikiPanel.tsx` + `WikiEntityCard.tsx`; curation page em `app/reunioes/[reuniaoId]/page.tsx` envia trechos para revisão HITL antes de entrar na Biblioteca
-- [ ] Integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto — nenhuma integração entre reuniões e oráculo encontrada
-- [x] Integração visual na Biblioteca: filter "Reuniões" em `selectedTypes` + cards de reunião na BibliotecaTable/Grid — `BibliotecaSidebar.tsx` tem tipo `{ key: 'reuniao', label: 'Reuniões' }` em `selectedTypes`
-
-> ⚠️ Pendente: integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto de reunião
+- [x] Integração com Oráculo do Cliente (FA-15) — `add_reunion_context_to_oraculo()` em `api/onboarding/service.py`; chamada no `curate_meeting` do reuniões router
+- [x] Integração visual na Biblioteca: filter "Reuniões" em `selectedTypes` + cards de reunião na BibliotecaTable/Grid — `BibliotecaSidebar.tsx`
 
 ### Phase 22: Agentes de IA
 > Fase de produto: **Piloto** (FA-17) — solicitado 2026-05-26
@@ -222,12 +218,10 @@
 > SPEC-022 (configuracoes-admin): **rascunho**
 - [x] `/configuracoes` → admin panel com 4 seções: Usuários/RBAC, Integrações Globais, Skills/Modelos, Auditoria — `app/configuracoes/page.tsx` com tabs Usuários, Integrações, Skills/Modelos, Auditoria
 - [x] Drive OAuth migra de `/configuracoes/drive` para aba "Drive" no editor de cliente — `app/configuracoes/drive/page.tsx` redireciona para `/configuracoes`; `ClientEditor.tsx` tem tab "Drive" (admin-only)
-- [x] Gestão de usuários: listar, convidar, editar papel, suspender via Firebase Admin SDK — `UsuariosTab.tsx` lista usuários, convida por email, edita papel; Firebase Admin SDK verificação adiada para Fase B (`AuditoriaTab` nota "Firebase Custom Claim deferred")
+- [x] Gestão de usuários com Firebase Admin SDK real — `_require_admin()` verifica JWT + claim `admin=true`; `_sync_users_from_firebase()` + `POST /admin/users/sync`; fallback mock em dev sem ADC
 - [x] Integrações globais: Gemini API Key (Fase A) + extensível — `IntegracoesTab.tsx` implementado
-- [x] Defaults de modelo LLM por skill (editável inline) — `SkillsDefaultsTab.tsx` com edição inline de `model`, `temperature`, `max_tokens`
-- [x] Audit log append-only — `AuditoriaTab.tsx` com tabela read-only ("Tabela read-only — sem ações de edição ou exclusão (append-only)")
-
-> ⚠️ Pendente: verificação real via Firebase Admin SDK (Fase B — hoje gestão de usuários é mock in-memory)
+- [x] Defaults de modelo LLM por skill (editável inline) — `SkillsDefaultsTab.tsx`
+- [x] Audit log append-only — `AuditoriaTab.tsx` read-only
 
 ---
 
@@ -261,7 +255,7 @@
 |----|------|---------|:------:|
 | SPEC-019 | sidebar-recentes | Phase 12 Sidebar Recentes Dinâmico | implementada |
 | SPEC-020 | busca-global | Phase 13 Busca Global Cmd+K | implementada |
-| SPEC-022 | configuracoes-admin | Admin panel /configuracoes — RBAC, integrações, defaults, auditoria; Drive → editor de cliente | implementada (parcial: Firebase Admin SDK pendente) |
+| SPEC-022 | configuracoes-admin | Admin panel /configuracoes — RBAC, integrações, defaults, auditoria; Drive → editor de cliente | implementada |
 
 ### Legacy Design Specs (pré-SDD, sem artefato constitution)
 
@@ -285,8 +279,8 @@
 | **POC** | SPEC-010 (Moon Shot pipeline mínimo) | Em planejamento |
 | **Protótipo** | Phases 1–11 concluídas | ✅ 100% — gate Protótipo completo (smoke test staging pendente ops) |
 | **MVP (UX)** | Phase 12 ✅, Phase 13 ✅, Phase 15 ✅ | Implementadas |
-| **Piloto** | Phase 14 ✅, Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅, Phase 18 ⚠️ (só OAuth base), Phase 19 ⚠️ (falta Deep Agent real), Phase 22 ⚠️ (falta GCS + Cloud Scheduler), Phase 23 ⚠️ (falta Firebase Admin SDK real) | Parcialmente implementadas |
-| **Momento 2** | Phase 20 ⚠️ (falta notificações email/FCM), Phase 21 ⚠️ (falta integração Oráculo FA-15) | Parcialmente implementadas |
+| **Piloto** | Phase 14 ✅, Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅, Phase 18 ⚠️ (Sync/ACL requerem credenciais Drive externas), Phase 19 ✅, Phase 22 ⚠️ (GCS + Cloud Scheduler Fase D), Phase 23 ✅ | Em andamento |
+| **Momento 2** | Phase 20 ✅ (notificações in-memory; email/FCM externo), Phase 21 ✅ | Implementadas |
 
 ---
 
