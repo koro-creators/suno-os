@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Star } from '@carbon/icons-react';
+import { Flash, TextScale } from '@carbon/icons-react';
 import Toast from '@/components/ui/Toast';
 
 interface Integration {
   key: string;
   name: string;
   description: string;
-  icon: 'Star';
+  icon: 'Flash' | 'TextScale';
   valueMasked: string | null;
 }
 
@@ -17,13 +17,21 @@ const INTEGRATIONS: Integration[] = [
     key: 'gemini_api_key',
     name: 'Gemini API',
     description: 'Chave de API do Google Gemini para geração de conteúdo',
-    icon: 'Star',
+    icon: 'Flash',
+    valueMasked: null,
+  },
+  {
+    key: 'openai_api_key',
+    name: 'OpenAI API',
+    description: 'Chave de API da OpenAI (GPT-4o, DALL-E)',
+    icon: 'TextScale',
     valueMasked: null,
   },
 ];
 
 function IntegrationIcon({ icon }: { icon: Integration['icon'] }) {
-  if (icon === 'Star') return <Star size={20} />;
+  if (icon === 'Flash') return <Flash size={20} />;
+  if (icon === 'TextScale') return <TextScale size={20} />;
   return null;
 }
 

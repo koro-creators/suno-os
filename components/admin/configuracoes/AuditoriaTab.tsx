@@ -74,12 +74,18 @@ function formatDetail(detail: Record<string, string>): string {
 export default function AuditoriaTab() {
   const [userFilter, setUserFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const filtered = MOCK_EVENTS.filter((e) => {
     const matchUser = !userFilter || e.actor_email.includes(userFilter.toLowerCase());
     const matchAction = !actionFilter || e.action === actionFilter;
-    return matchUser && matchAction;
+    const matchFrom = !fromDate || e.created_at >= fromDate;
+    const matchTo = !toDate || e.created_at <= toDate + 'T23:59:59Z';
+    return matchUser && matchAction && matchFrom && matchTo;
   });
+
+  const hasFilters = !!(userFilter || actionFilter || fromDate || toDate);
 
   const inputStyle: React.CSSProperties = {
     backgroundColor: 'transparent',
@@ -101,12 +107,8 @@ export default function AuditoriaTab() {
           value={userFilter}
           onChange={(e) => setUserFilter(e.target.value)}
           style={{ ...inputStyle, width: 200 }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'var(--sun)';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border-subtle)';
-          }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--sun)'; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
         />
         <select
           value={actionFilter}
@@ -119,11 +121,32 @@ export default function AuditoriaTab() {
             </option>
           ))}
         </select>
-        {(userFilter || actionFilter) && (
+        <input
+          type="date"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          title="De"
+          style={{ ...inputStyle, width: 140, colorScheme: 'dark' }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--sun)'; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+        />
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>até</span>
+        <input
+          type="date"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          title="Até"
+          style={{ ...inputStyle, width: 140, colorScheme: 'dark' }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--sun)'; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+        />
+        {hasFilters && (
           <button
             onClick={() => {
               setUserFilter('');
               setActionFilter('');
+              setFromDate('');
+              setToDate('');
             }}
             style={{
               padding: '6px 12px',
