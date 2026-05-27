@@ -1,6 +1,6 @@
 # sunOS — Roadmap
 
-> Última atualização: 2026-05-26. Alinhado com PRD Parte 5 (v1.2, 2026-05-14) e SPECs SDD existentes.
+> Última atualização: 2026-05-26 (Wave 1+2). Alinhado com PRD Parte 5 (v1.2, 2026-05-14) e SPECs SDD existentes.
 > Fases de produto: **POC → Protótipo → Piloto → Momento 2 → MVP** (mapeamento em `docs/prd/parte5-roadmap-fases.md §1.4`).
 
 ---
@@ -80,6 +80,12 @@
 - [x] RBAC com Firebase Custom Claims (admin/creator roles)
 - [x] AuthGuard + AuthProvider + AppShell components
 
+### Phase 14: Onboarding / Empty States (2026-05-26)
+> Fase de produto: **Piloto** (gate de adoção — PRD §5.7)
+- [x] Welcome screen para primeiro uso — WelcomeScreen com overlay mode + useFirstVisit hook
+- [x] Empty states ricos em todas as páginas admin — EmptyState component em uso
+- [x] Guia de getting started — GettingStartedGuide.tsx modal
+
 ---
 
 ## Em Progresso
@@ -137,11 +143,9 @@
 
 ### Phase 14: Onboarding / Empty States
 > Fase de produto: **Piloto** (gate de adoção — PRD §5.7)
-- [x] Welcome screen para primeiro uso — `components/solar/WelcomeScreen.tsx` renderizado em `app/page.tsx` (estado sem clientes)
+- [x] Welcome screen para primeiro uso — `components/solar/WelcomeScreen.tsx` com overlay mode + `hooks/useFirstVisit.ts`
 - [x] Empty states ricos em todas as páginas admin — `EmptyState` com ícone + título + CTA em Skills, Clientes e Biblioteca
-- [ ] Guia de getting started — nenhuma página ou componente de guia interativo implementado
-
-> ⚠️ Pendente: guia de getting started (nem página nem componente encontrado)
+- [x] Guia de getting started — `components/onboarding/GettingStartedGuide.tsx` modal com 4 passos
 
 ### Phase 16: Multimodal — Image Editor + VideoGen
 > Fase de produto: **Piloto** (Image) + **MVP** (Video) — bloqueado por **DEC-06** (business case)
@@ -168,24 +172,24 @@
 > Fase de produto: **Piloto** (wizard + seed + HITL gate PRE_ACTIVE→ACTIVE)
 > SPEC-015 (onboarding-oraculo-cliente): rascunho
 > Depende de: SPEC-018 status enum PRE_ACTIVE/ACTIVE/ARCHIVED em `clients`
-- [x] Wizard 4 passos: Identidade → Contexto → Validação → Ativação — `components/onboarding/WizardContainer.tsx` + WizardStep1..4; páginas em `app/clientes/[clientId]/onboarding/` (progress + validate)
-- [ ] Seed ontológico: Deep Agent extrai 6 entidades (Posicionamento, Personas, Competidores, Produtos, Tom, Briefings) — `api/onboarding/service.py` usa mock LLM ("Real LangGraph agent deferred"); geração de conteúdo é placeholder
-- [x] HITL gate por entidade: aprovação manual pelo PX-07 Sponsor — `EntityValidationCard.tsx` + `app/.../onboarding/validate/page.tsx` com accept/reject por entidade
-- [x] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas — validate/page.tsx verifica `acceptedCount === 6`, dispara transição e redireciona para wiki
-- [ ] Alerta >= 72h se entidade pendente sem revisão (FR-185) — nenhuma lógica de alerta por tempo encontrada (nem frontend nem backend)
+- [x] Wizard 4 passos: Identidade → Contexto → Validação → Ativação — `components/onboarding/WizardContainer.tsx` + WizardStep1..4
+- [ ] Seed ontológico: Deep Agent extrai 6 entidades — `api/onboarding/service.py` usa mock LLM (LangGraph real deferred)
+- [x] HITL gate por entidade: aprovação manual pelo PX-07 Sponsor — `EntityValidationCard.tsx` com accept/edit/reject por entidade
+- [x] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas — `validate/page.tsx` verifica `acceptedCount === 6`
+- [x] Alerta >= 72h se entidade pendente sem revisão (FR-185) — `isEntityStale()` + badge `WarningAlt` + banner na validate page
 
-> ⚠️ Pendente: Deep Agent real (LLMGraphTransformer) e alerta FR-185 (>= 72h sem revisão)
+> ⚠️ Pendente: Deep Agent real (LLMGraphTransformer)
 
 ### Phase 20: Aprovação Hierárquica
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado por Guga + Bruno Prosperi (2026-04-28)
 > SPEC-004 (approval-hierarchy): rascunho
-- [x] Submissão de conteúdo gerado para validação por Aprovador — `ApprovalsContext` com CRUD + `app/aprovacoes/page.tsx` + `app/aprovacoes/[submissionId]/page.tsx`
-- [x] Inbox do Aprovador com filtros por cliente/skill/urgência — `AprovacaoFilters.tsx` com filtros por `client_id`, `skill_slug`, `urgency`; `AprovacaoCard.tsx` para listagem
-- [ ] Validation Report com comparação before/after + comentários inline — página exibe o conteúdo submetido e `CommentThread` com histórico de eventos, mas sem comparação before/after estruturada
-- [ ] Notificação push/email ao Aprovador + ao Creator — não implementado (nenhum envio de email ou push no `api/approval/`)
-- [ ] Histórico de aprovações por cliente — inbox filtrável inclui aprovadas/rejeitadas; sem página dedicada de histórico por cliente
+- [x] Submissão de conteúdo gerado para validação por Aprovador — `ApprovalsContext` + `app/aprovacoes/page.tsx` + `app/aprovacoes/[submissionId]/page.tsx`
+- [x] Inbox do Aprovador com filtros por cliente/skill/urgência — `AprovacaoFilters.tsx` + `AprovacaoCard.tsx`
+- [x] Validation Report com comparação before/after — `original_content` no tipo + painéis Antes/Depois no detalhe da submissão
+- [ ] Notificação push/email ao Aprovador + ao Creator — badge `pendingCount` no AppHeader implementado; email/FCM deferred
+- [x] Histórico de aprovações por cliente — abas Pendentes/Histórico + agrupamento por cliente em `app/aprovacoes/page.tsx`
 
-> ⚠️ Pendente: comparação before/after no Validation Report, notificações push/email, e histórico paginado por cliente
+> ⚠️ Pendente: notificações push/email (email/FCM)
 
 ### Phase 21: Captura Seletiva de Reuniões
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado em reunião 2026-05-14 (BR-020)
@@ -203,15 +207,15 @@
 ### Phase 22: Agentes de IA
 > Fase de produto: **Piloto** (FA-17) — solicitado 2026-05-26
 > SPEC-021 (agentes): **rascunho**
-- [x] Listagem e CRUD de agentes (`/agentes`) — `app/agentes/page.tsx` + `app/agentes/[agentId]/page.tsx` + `app/agentes/new/` com AgentesCards + AgentDrawer
-- [x] Editor completo com 7 tabs (Configuração, Skills, Apps, Memória, Agendamento, Atividade, Clientes) — `components/admin/agentes/AgenteEditorTabs.tsx` + 7 tabs em `tabs/`
-- [ ] Upload file-based de memória contextual (GCS) — `api/agents/memory.py` explicitamente adia para Fase D (TASK-D06); `MemoriaTab.tsx` exibe arquivos mas sem upload real para GCS
-- [ ] Schedule: hourly/daily com seleção de dias/horário/timezone — `AgendamentoTab.tsx` e `schemas.py` modelam `frequency: hourly|daily`, mas `api/agents/router.py` só aceita triggers `manual`/`preview`; agendamento não executado
-- [x] Runtime LangGraph: Skills como tools, memory files como contexto — `api/agents/graph.py` usa `StateGraph` LangGraph + `skill_loader.py` como tools
-- [x] Preview sandboxed + execução manual + activity log — `api/agents/preview.py` (TTL 1h) + `AtividadeTab.tsx` com paginação e status de runs
-- [ ] Cloud Scheduler (Fase D — PRE-01 e PRE-04 resolvidos) — `api/agents/scheduler.py` não existe; nenhuma integração com Cloud Scheduler
+- [x] Listagem e CRUD de agentes (`/agentes`) — `app/agentes/page.tsx` + `app/agentes/[agentId]/page.tsx` + `app/agentes/new/`
+- [x] Editor completo com 7 tabs (Configuração, Skills, Apps, Memória, Agendamento, Atividade, Clientes)
+- [ ] Upload file-based de memória contextual (GCS) — `api/agents/memory.py` adia para Fase D (TASK-D06)
+- [x] Schedule: APScheduler implementado — `api/agents/scheduler.py` + endpoints `PATCH/GET /{agent_id}/schedule` + integração no lifespan
+- [x] Runtime LangGraph: Skills como tools, memory files como contexto — `api/agents/graph.py`
+- [x] Preview sandboxed + execução manual + activity log — `api/agents/preview.py` (TTL 1h) + `AtividadeTab.tsx`
+- [ ] Cloud Scheduler (Fase D — PRE-01 e PRE-04 resolvidos)
 
-> ⚠️ Pendente: GCS upload de memória (Fase D), agendamento real (Cloud Scheduler/APScheduler), runtime de schedule
+> ⚠️ Pendente: GCS upload de memória (Fase D), Cloud Scheduler (Fase D)
 
 ### Phase 23: Configurações Admin
 > Fase de produto: **Piloto** (FA-12 expansão) — solicitado 2026-05-26
@@ -280,9 +284,9 @@
 |-----------------|-----------------|:------:|
 | **POC** | SPEC-010 (Moon Shot pipeline mínimo) | Em planejamento |
 | **Protótipo** | Phases 1–11 concluídas | ✅ 100% — gate Protótipo completo (smoke test staging pendente ops) |
-| **MVP (UX)** | Phase 12 ✅ completa, Phase 13 ✅ completa, Phase 15 ✅ completa | Implementadas |
-| **Piloto** | Phase 14 ⚠️ (falta guia de getting started), Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅ completa, Phase 18 ⚠️ (só OAuth base), Phase 19 ⚠️ (falta Deep Agent real + alerta 72h), Phase 22 ⚠️ (falta GCS + schedule runtime), Phase 23 ⚠️ (falta Firebase Admin SDK real) | Parcialmente implementadas |
-| **Momento 2** | Phase 20 ⚠️ (falta notificações + before/after + histórico), Phase 21 ⚠️ (falta integração Oráculo FA-15) | Parcialmente implementadas |
+| **MVP (UX)** | Phase 12 ✅, Phase 13 ✅, Phase 15 ✅ | Implementadas |
+| **Piloto** | Phase 14 ✅, Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅, Phase 18 ⚠️ (só OAuth base), Phase 19 ⚠️ (falta Deep Agent real), Phase 22 ⚠️ (falta GCS + Cloud Scheduler), Phase 23 ⚠️ (falta Firebase Admin SDK real) | Parcialmente implementadas |
+| **Momento 2** | Phase 20 ⚠️ (falta notificações email/FCM), Phase 21 ⚠️ (falta integração Oráculo FA-15) | Parcialmente implementadas |
 
 ---
 
