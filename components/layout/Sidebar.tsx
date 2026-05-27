@@ -2,25 +2,25 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Globe, Users, BookOpen, Sparkles, Zap, Settings, Bot, CheckCircle, LogOut, type LucideIcon } from 'lucide-react';
+import { CarbonIconType, Book, Bot, CheckmarkFilled, ChevronLeft, ChevronRight, Flash, Globe, Group, Logout, Settings, Star } from '@carbon/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
 interface NavItemDef {
   label: string;
-  icon: LucideIcon;
+  icon: CarbonIconType;
   href?: string;
   adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItemDef[] = [
   { label: 'Home', icon: Globe, href: '/' },
-  { label: 'Clientes', icon: Users, href: '/clientes', adminOnly: true },
-  { label: 'Skills', icon: Sparkles, href: '/skills', adminOnly: true },
-  { label: 'Biblioteca', icon: BookOpen, href: '/biblioteca', adminOnly: true },
-  { label: 'Workflows', icon: Zap, href: '/workflows', adminOnly: true },
+  { label: 'Clientes', icon: Group, href: '/clientes', adminOnly: true },
+  { label: 'Skills', icon: Star, href: '/skills', adminOnly: true },
+  { label: 'Biblioteca', icon: Book, href: '/biblioteca', adminOnly: true },
+  { label: 'Workflows', icon: Flash, href: '/workflows', adminOnly: true },
   { label: 'Agentes', icon: Bot, href: '/agentes', adminOnly: true },
-  { label: 'Aprovações', icon: CheckCircle, href: '/aprovacoes', adminOnly: true },
+  { label: 'Aprovações', icon: CheckmarkFilled, href: '/aprovacoes', adminOnly: true },
   { label: 'Configurações', icon: Settings, href: '/configuracoes', adminOnly: true },
 ];
 
@@ -121,7 +121,7 @@ export default function Sidebar() {
                   (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
                 }}
               >
-                <Icon size={14} strokeWidth={1.5} />
+                <Icon size={14} />
               </div>
             );
           })}
@@ -162,7 +162,7 @@ export default function Sidebar() {
             (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
           }}
         >
-          <ChevronLeft size={14} strokeWidth={1.5} />
+          <ChevronLeft size={14} />
         </button>
       )}
 
@@ -321,7 +321,7 @@ export default function Sidebar() {
             onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
-            <LogOut size={14} strokeWidth={1.5} />
+            <Logout size={14} />
           </button>
         </div>
       )}
@@ -336,7 +336,7 @@ function NavItem({
   onClick,
 }: {
   label: string;
-  icon: LucideIcon;
+  icon: CarbonIconType;
   isActive: boolean;
   onClick: () => void;
 }) {
@@ -387,7 +387,6 @@ function NavItem({
     >
       <Icon
         size={14}
-        strokeWidth={1.5}
         style={{ color: isActive ? 'var(--sun)' : 'inherit', flexShrink: 0 }}
       />
       {label}

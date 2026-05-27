@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, XCircle, RotateCcw, AlertTriangle } from 'lucide-react';
+import { CheckmarkFilled, ErrorFilled, Renew, WarningAlt } from '@carbon/icons-react';
 import type { ApprovalSubmission, DecisionType } from '@/lib/approval-types';
 import { useApprovals } from '@/contexts/ApprovalsContext';
 
@@ -89,7 +89,7 @@ export default function ReviewPanel({ submission, onDecisionComplete }: ReviewPa
           textAlign: 'center',
         }}
       >
-        <CheckCircle size={24} strokeWidth={1.5} style={{ color: '#22C55E', marginBottom: 8 }} />
+        <CheckmarkFilled size={24} style={{ color: '#22C55E', marginBottom: 8 }} />
         <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', margin: 0 }}>
           Decisão registrada com sucesso.
         </p>
@@ -124,19 +124,19 @@ export default function ReviewPanel({ submission, onDecisionComplete }: ReviewPa
         {actionState === 'idle' && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <ActionButton
-              icon={<CheckCircle size={13} strokeWidth={1.5} />}
+              icon={<CheckmarkFilled size={13} />}
               label="Aprovar"
               color="#22C55E"
               onClick={() => handleSelectDecision('APPROVE')}
             />
             <ActionButton
-              icon={<RotateCcw size={13} strokeWidth={1.5} />}
+              icon={<Renew size={13} />}
               label="Solicitar revisão"
               color="#F97316"
               onClick={() => handleSelectDecision('REQUEST_CHANGES')}
             />
             <ActionButton
-              icon={<XCircle size={13} strokeWidth={1.5} />}
+              icon={<ErrorFilled size={13} />}
               label="Rejeitar"
               color="#EF4444"
               onClick={() => handleSelectDecision('REJECT')}
@@ -220,7 +220,7 @@ export default function ReviewPanel({ submission, onDecisionComplete }: ReviewPa
                     color: '#EF4444',
                   }}
                 >
-                  <AlertTriangle size={12} strokeWidth={1.5} />
+                  <WarningAlt size={12} />
                   {errorMsg}
                 </div>
               )}

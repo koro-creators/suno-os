@@ -11,7 +11,7 @@
  */
 
 import { useState } from 'react';
-import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Star, ThumbsDown, ThumbsUp } from '@carbon/icons-react';
 import AIBadge from './AIBadge';
 import AgentPersonaBadge, { type AgentPersona } from './AgentPersonaBadge';
 import BisociationZoneBadge from './BisociationZoneBadge';
@@ -155,7 +155,7 @@ export default function FaiscaCard({
               transition: 'all 150ms ease',
             }}
           >
-            <ThumbsDown size={14} strokeWidth={1.5} />
+            <ThumbsDown size={14} />
           </button>
 
           {/* Thumbs up */}
@@ -180,7 +180,7 @@ export default function FaiscaCard({
               transition: 'all 150ms ease',
             }}
           >
-            <ThumbsUp size={14} strokeWidth={1.5} />
+            <ThumbsUp size={14} />
           </button>
 
           {/* Star (manter na fogueira) */}
@@ -203,7 +203,7 @@ export default function FaiscaCard({
               transition: 'all 150ms ease',
             }}
           >
-            <Star size={14} strokeWidth={1.5} fill={starred ? 'var(--sun)' : 'none'} />
+            <Star size={14} fill={starred ? 'var(--sun)' : 'none'} />
           </button>
         </div>
       </footer>

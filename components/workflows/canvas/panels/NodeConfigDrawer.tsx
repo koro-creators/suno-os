@@ -22,7 +22,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { Close } from '@carbon/icons-react';
 import type { Node } from '@xyflow/react';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 
@@ -130,7 +130,7 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
             color: 'var(--text-muted)',
           }}
         >
-          <X size={14} strokeWidth={1.5} />
+          <Close size={14} />
         </button>
       </header>
 

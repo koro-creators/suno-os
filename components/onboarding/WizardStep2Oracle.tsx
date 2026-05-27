@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Add, Close } from '@carbon/icons-react';
 import { useOnboardingOraculo } from '@/contexts/OnboardingOraculoContext';
 
 export default function WizardStep2Oracle() {
@@ -108,7 +108,7 @@ export default function WizardStep2Oracle() {
               e.currentTarget.style.color = 'var(--text-secondary)';
             }}
           >
-            <Plus size={14} strokeWidth={1.5} />
+            <Add size={14} />
           </button>
         </div>
 
@@ -148,7 +148,7 @@ export default function WizardStep2Oracle() {
                   onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                 >
-                  <X size={10} strokeWidth={2} />
+                  <Close size={10} />
                 </button>
               </span>
             ))}

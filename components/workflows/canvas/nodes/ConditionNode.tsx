@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { GitBranch } from 'lucide-react';
+import { Branch } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -31,7 +31,7 @@ export default function ConditionNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={preview}
-      Icon={GitBranch}
+      Icon={Branch}
       borderColor={BORDER}
       accentColor="rgba(245,158,11,0.15)"
       sourceHandles={sources}

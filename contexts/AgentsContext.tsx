@@ -9,8 +9,10 @@ import {
   AgentAppConnection,
   MemoryFile,
   AgentSchedule,
+  AgentRun,
+  AgentRunResponse,
 } from '@/lib/agents-types';
-import { mockAgents } from '@/data/agents-admin';
+import { mockAgents, mockAgentRuns } from '@/data/agents-admin';
 
 interface AgentsContextType {
   agents: Agent[];
@@ -29,12 +31,16 @@ interface AgentsContextType {
   // Permissions
   addPermission: (agentId: string, permission: AgentPermission) => void;
   removePermission: (agentId: string, clientId: string) => void;
+  // Runs — Fase C
+  runAgent: (agentId: string, input: string, triggeredBy?: AgentRun['triggered_by']) => AgentRunResponse;
+  listRuns: (agentId: string) => AgentRun[];
 }
 
 const AgentsContext = createContext<AgentsContextType | null>(null);
 
 export function AgentsProvider({ children }: { children: ReactNode }) {
   const [agents, setAgents] = useState<Agent[]>(mockAgents);
+  const [runs, setRuns] = useState<Record<string, AgentRun[]>>(() => ({ ...mockAgentRuns }));
 
   const createAgent = (data: AgentCreate): Agent => {
     const agent: Agent = {
@@ -159,6 +165,61 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const runAgent = (
+    agentId: string,
+    input: string,
+    triggeredBy: AgentRun['triggered_by'] = 'manual',
+  ): AgentRunResponse => {
+    const runId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const run: AgentRun = {
+      id: runId,
+      status: 'pending',
+      triggered_by: triggeredBy,
+      client_id: null,
+      duration_ms: null,
+      started_at: now,
+      finished_at: null,
+      input: { text: input },
+      output: null,
+      error_message: null,
+    };
+
+    setRuns((prev) => ({ ...prev, [agentId]: [run, ...(prev[agentId] ?? [])] }));
+
+    // Simulate progression: pending → running → completed
+    setTimeout(() => {
+      setRuns((prev) => ({
+        ...prev,
+        [agentId]: (prev[agentId] ?? []).map((r) =>
+          r.id === runId ? { ...r, status: 'running' } : r,
+        ),
+      }));
+
+      setTimeout(() => {
+        const elapsed = Date.now() - new Date(now).getTime();
+        setRuns((prev) => ({
+          ...prev,
+          [agentId]: (prev[agentId] ?? []).map((r) =>
+            r.id === runId
+              ? {
+                  ...r,
+                  status: 'completed',
+                  output: { text: `[Mock] Agente processou: "${input}"` },
+                  duration_ms: elapsed,
+                  finished_at: new Date().toISOString(),
+                }
+              : r,
+          ),
+        }));
+      }, 2000);
+    }, 500);
+
+    return { run_id: runId };
+  };
+
+  const listRuns = (agentId: string): AgentRun[] => runs[agentId] ?? [];
+
   return (
     <AgentsContext.Provider
       value={{
@@ -173,6 +234,8 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
         updateSchedule,
         addPermission,
         removePermission,
+        runAgent,
+        listRuns,
       }}
     >
       {children}

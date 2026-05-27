@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, GripVertical, Settings, GitBranch } from 'lucide-react';
+import { Add, Branch, Draggable, Settings, TrashCan } from '@carbon/icons-react';
 import { Workflow, WorkflowStep } from '@/lib/workflow-types';
 import WorkflowStepEditor from './WorkflowStepEditor';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
@@ -322,7 +322,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
               (e.currentTarget as HTMLButtonElement).style.opacity = '1';
             }}
           >
-            <Plus size={12} strokeWidth={2} />
+            <Add size={12} />
             Adicionar
           </button>
         </div>
@@ -357,7 +357,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
                   (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-subtle)';
                 }}
               >
-                <GripVertical size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                <Draggable size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }}>
                   {idx + 1}
                 </span>
@@ -381,7 +381,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
                 </span>
                 {step.type === 'workflow' && step.workflow_id ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    <GitBranch size={12} strokeWidth={1.5} style={{ color: '#EC4899' }} />
+                    <Branch size={12} style={{ color: '#EC4899' }} />
                     {workflows.find((w) => w.id === step.workflow_id)?.name || step.workflow_id}
                   </span>
                 ) : step.tool_name ? (
@@ -405,7 +405,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
                   onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                 >
-                  <Settings size={14} strokeWidth={1.5} />
+                  <Settings size={14} />
                 </button>
                 <button
                   onClick={() => handleRemoveStep(step.id)}
@@ -423,7 +423,7 @@ export default function WorkflowBuilder({ initial, onSave, onDelete, isNew }: Wo
                   onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                 >
-                  <Trash2 size={14} strokeWidth={1.5} />
+                  <TrashCan size={14} />
                 </button>
               </div>
             );

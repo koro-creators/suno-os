@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sun, Moon, Settings } from 'lucide-react';
+import { Moon, Settings, Sun } from '@carbon/icons-react';
 import Logo from './Logo';
 import Breadcrumb from './Breadcrumb';
 import { useTheme } from './ThemeProvider';
@@ -74,7 +74,7 @@ export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: App
             (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
           }}
         >
-          <Settings size={12} strokeWidth={1.5} />
+          <Settings size={12} />
         </button>
 
         {/* Theme toggle */}
@@ -105,9 +105,9 @@ export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: App
           }}
         >
           {theme === 'dark' ? (
-            <Sun size={12} strokeWidth={1.5} />
+            <Sun size={12} />
           ) : (
-            <Moon size={12} strokeWidth={1.5} />
+            <Moon size={12} />
           )}
         </button>
 

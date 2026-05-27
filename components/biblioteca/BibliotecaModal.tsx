@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { X, Plus, Trash2, Upload } from 'lucide-react';
+import { Add, Close, TrashCan, Upload } from '@carbon/icons-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import FileTypeIcon from './FileTypeIcon';
 
@@ -197,7 +197,7 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
             display: 'flex',
           }}
         >
-          <X size={16} strokeWidth={1.5} />
+          <Close size={16} />
         </button>
 
         {/* Title */}
@@ -255,12 +255,12 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
                     onClick={(e) => { e.stopPropagation(); setUploadFile(null); setUploadProgress(null); }}
                     style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex' }}
                   >
-                    <X size={14} strokeWidth={1.5} />
+                    <Close size={14} />
                   </button>
                 </div>
               ) : (
                 <>
-                  <Upload size={20} strokeWidth={1.5} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
+                  <Upload size={20} style={{ color: 'var(--text-muted)', marginBottom: 6 }} />
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                     Arraste um arquivo ou clique para selecionar
                   </div>
@@ -375,7 +375,7 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
                       onClick={() => removeTag(tag)}
                       style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
                     >
-                      <X size={10} strokeWidth={2} />
+                      <Close size={10} />
                     </button>
                   </span>
                 ))}
@@ -461,7 +461,7 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
                     onClick={() => removeLink(idx)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}
                   >
-                    <Trash2 size={14} strokeWidth={1.5} />
+                    <TrashCan size={14} />
                   </button>
                 </div>
               ))}
@@ -482,7 +482,7 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
                 padding: '4px 0',
               }}
             >
-              <Plus size={12} strokeWidth={1.5} /> Adicionar link
+              <Add size={12} /> Adicionar link
             </button>
           </div>
 
@@ -527,7 +527,7 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
                     onClick={() => removeFile(idx)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}
                   >
-                    <Trash2 size={14} strokeWidth={1.5} />
+                    <TrashCan size={14} />
                   </button>
                 </div>
               ))}
@@ -548,7 +548,7 @@ export default function BibliotecaModal({ document, onSave, onClose, allTags }: 
                 padding: '4px 0',
               }}
             >
-              <Plus size={12} strokeWidth={1.5} /> Adicionar arquivo
+              <Add size={12} /> Adicionar arquivo
             </button>
           </div>
         </div>

@@ -5,7 +5,7 @@
  * ADR-LOCAL-05: Wiki is a view of wiki_entities (not Biblioteca).
  */
 
-import { ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Launch } from '@carbon/icons-react';
 import type { WikiEntity } from '@/lib/onboarding-types';
 import { useWikiOntologica } from '@/contexts/WikiOntologicaContext';
 import WikiEntityBadge from './WikiEntityBadge';
@@ -77,8 +77,8 @@ export default function WikiEntityCard({ entity }: Props) {
 
         <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
           {expanded
-            ? <ChevronUp size={14} strokeWidth={1.5} />
-            : <ChevronDown size={14} strokeWidth={1.5} />
+            ? <ChevronUp size={14} />
+            : <ChevronDown size={14} />
           }
         </span>
       </div>
@@ -132,9 +132,8 @@ export default function WikiEntityCard({ entity }: Props) {
                       border: '1px solid var(--border-subtle)',
                     }}
                   >
-                    <ExternalLink
+                    <Launch
                       size={12}
-                      strokeWidth={1.5}
                       style={{ color: 'var(--text-muted)', flexShrink: 0, marginTop: 1 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>

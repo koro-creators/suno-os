@@ -5,9 +5,9 @@ import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useToolStream } from '@/hooks/useToolStream';
-import { apiAvailable, getApiUrl } from '@/lib/api';
+import { apiAvailable, getApiUrl, getConversation } from '@/lib/api';
 import { useSkills } from '@/contexts/SkillsContext';
-import { MessageSquare, Type, ImageIcon } from 'lucide-react';
+import { Chat, Image, TextScale } from '@carbon/icons-react';
 import MessageBubble from './MessageBubble';
 import StreamingIndicator from './StreamingIndicator';
 import ChatInput from './ChatInput';
@@ -61,7 +61,11 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
   const [chatMode, setChatMode] = useState<ChatMode>('chat');
 
   const templates = getTemplatesForChat(skillSlug, moonSlug);
-  const { text: streamingText, isStreaming, startStream, startMockStream } = useToolStream();
+  const { text: streamingText, isStreaming, startStream, startMockStream, conversationId } = useToolStream();
+
+  // Persist conversation ID across sessions (localStorage per skill+client)
+  const convStorageKey = `sunos:conv:${clientSlug}:${skillSlug}`;
+  const [storedConvId, setStoredConvId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const responseIndexRef = useRef<Record<string, number>>({});
 
@@ -70,6 +74,29 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
   const skillConfig = skillsAdmin.find((s) => s.slug === skillSlug);
 
   const [selectedModel, setSelectedModel] = useState(skillConfig?.model || 'gemini-flash');
+
+  // Load previous conversation on mount
+  useEffect(() => {
+    const savedId = typeof window !== 'undefined' ? localStorage.getItem(convStorageKey) : null;
+    if (!savedId) return;
+    setStoredConvId(savedId);
+    getConversation(savedId, 'preview-user').then((conv) => {
+      if (conv && conv.messages.length > 0) {
+        setMessages(
+          conv.messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        );
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist new conversation ID when backend returns one
+  useEffect(() => {
+    if (conversationId && typeof window !== 'undefined') {
+      localStorage.setItem(convStorageKey, conversationId);
+      setStoredConvId(conversationId);
+    }
+  }, [conversationId, convStorageKey]);
 
   // Auto-scroll to bottom when messages change or while streaming
   useEffect(() => {
@@ -94,7 +121,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
           try {
             const response = await fetch(getApiUrl('/api/chat/generate-text'), {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-TextScale': 'application/json' },
               body: JSON.stringify({
                 prompt: `Crie 2 variações alternativas do seguinte texto, mantendo o mesmo objetivo e tom mas com abordagens criativas diferentes:\n\n${completedText}`,
                 content_type: 'custom',
@@ -146,6 +173,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
           maxTokens: skillConfig?.maxTokens ?? 4096,
           systemPrompt: skillConfig?.systemPrompt || undefined,
           contextDocuments: activeDocContents,
+          conversationId: storedConvId,
         });
       } else {
         // Mock fallback — same logic as before
@@ -168,7 +196,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
         }, 500);
       }
     },
-    [isStreaming, clientSlug, moonSlug, skillSlug, documents, activeDocIds, skillConfig, selectedModel, startStream, startMockStream],
+    [isStreaming, clientSlug, moonSlug, skillSlug, documents, activeDocIds, skillConfig, selectedModel, startStream, startMockStream, storedConvId],
   );
 
   async function handleGenerateVariation(msgIndex: number) {
@@ -178,7 +206,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
       try {
         const response = await fetch(getApiUrl('/api/chat/generate-text'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-TextScale': 'application/json' },
           body: JSON.stringify({
             prompt: `Crie 2 variações alternativas do seguinte texto, mantendo o mesmo objetivo e tom mas com abordagens criativas diferentes:\n\n${msg.content}`,
             content_type: 'custom',
@@ -257,9 +285,9 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
           borderBottom: '1px solid var(--border-subtle)',
         }}>
           {([
-            { mode: 'chat' as ChatMode, label: 'Chat', icon: MessageSquare },
-            { mode: 'text' as ChatMode, label: 'Texto', icon: Type },
-            { mode: 'image' as ChatMode, label: 'Imagem', icon: ImageIcon },
+            { mode: 'chat' as ChatMode, label: 'Chat', icon: Chat },
+            { mode: 'text' as ChatMode, label: 'Texto', icon: TextScale },
+            { mode: 'image' as ChatMode, label: 'Imagem', icon: Image },
           ]).map(({ mode, label, icon: Icon }) => (
             <button
               key={mode}
@@ -280,7 +308,7 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
                 transition: 'all 150ms ease',
               }}
             >
-              <Icon size={14} strokeWidth={1.5} />
+              <Icon size={14} />
               {label}
             </button>
           ))}

@@ -14,7 +14,7 @@
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Play, History } from 'lucide-react';
+import { Play, RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { apiAvailable, migrateWorkflowV2 } from '@/lib/api';
@@ -115,7 +115,7 @@ export default function WorkflowEditorPage() {
 
   const workflow = workflows.find((w) => w.id === workflowId);
 
-  const [migrationState, setMigrationState] = useState<'idle' | 'migrating' | 'ready' | 'error'>('idle');
+  const [migrationState, setMigrationState] = useState<'idle' | 'migrating' | 'ready'>('idle');
   const [migrationError, setMigrationError] = useState<string | null>(null);
   const [payload, setPayload] = useState<CanvasPayload | null>(null);
 
@@ -126,19 +126,17 @@ export default function WorkflowEditorPage() {
     let cancelled = false;
 
     async function prepare() {
-      // Real-mode: trigger migrate-v2 if needed.
+      setMigrationError(null);
+      // Real-mode: trigger migrate-v2 if needed. On failure, fall back to the
+      // local migration so the canvas always renders (canvas-conventions.md §mock-mode).
       if (apiAvailable()) {
         try {
           setMigrationState('migrating');
           await migrateWorkflowV2(wf.id);
-          // The full v2 payload would normally come from a follow-up GET; in
-          // this iteration we still source steps from the local context but
-          // expect the server-stored edges/positions to overwrite next sync.
         } catch (err) {
           if (cancelled) return;
-          setMigrationState('error');
+          // Non-blocking: surface the warning but continue with local migration.
           setMigrationError(err instanceof Error ? err.message : String(err));
-          return;
         }
       }
       const steps = wf.steps as WorkflowStep[];
@@ -210,7 +208,7 @@ export default function WorkflowEditorPage() {
                 cursor: 'pointer',
               }}
             >
-              <History size={14} strokeWidth={1.5} />
+              <RecentlyViewed size={14} />
               Histórico
             </button>
             <button
@@ -245,18 +243,18 @@ export default function WorkflowEditorPage() {
           Atualizando workflow para o novo canvas…
         </div>
       )}
-      {migrationState === 'error' && migrationError && (
+      {migrationError && migrationState === 'ready' && (
         <div
-          role="alert"
+          role="status"
           style={{
-            padding: '12px 16px',
+            padding: '10px 16px',
             fontSize: 12,
-            background: 'rgba(239,68,68,0.15)',
-            color: '#EF4444',
+            background: 'rgba(245,158,11,0.12)',
+            color: '#F59E0B',
             borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          Falha na migração: {migrationError}
+          Backend indisponível — exibindo versão local do canvas
         </div>
       )}
 

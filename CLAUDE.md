@@ -18,7 +18,7 @@ Frontend e backend no mesmo repo, deploy como serviços separados no Cloud Run.
 - Next.js 14 (App Router)
 - TypeScript (strict)
 - Tailwind CSS + CSS variables (design system)
-- Lucide React (icons)
+- @carbon/icons-react (icons — IBM Carbon Design System, flat line)
 - React Context (state management)
 - Porta: **3003** (3000 está ocupada)
 
@@ -56,7 +56,7 @@ Frontend e backend no mesmo repo, deploy como serviços separados no Cloud Run.
 - Use **inline styles** para layout de componentes (não Tailwind classes)
 - Border radius: 12px (cards), 8px (inputs), 9999px (pills)
 - Transições: 150ms ease (hover), 200ms ease (layout)
-- Icons: lucide-react, size 14, strokeWidth 1.5
+- Icons: `@carbon/icons-react`, prop `size={14}` (sem `strokeWidth` — Carbon é flat line); tipo `CarbonIconType`
 - Focus ring: `boxShadow: '0 0 0 2px rgba(255,200,1,0.15)'`
 - Ambos os temas (dark + light) devem funcionar via CSS variables
 

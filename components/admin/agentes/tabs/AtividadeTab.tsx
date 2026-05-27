@@ -1,21 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronRight } from '@carbon/icons-react';
 import { AgentRun } from '@/lib/agents-types';
-import { mockAgentRuns } from '@/data/agents-admin';
+import { useAgents } from '@/contexts/AgentsContext';
 
 const PAGE_SIZE = 20;
 
 type RunStatus = AgentRun['status'];
 
 const STATUS_CONFIG: Record<RunStatus, { label: string; color: string; bg: string }> = {
-  pending:   { label: 'Pendente',  color: '#F59E0B', bg: '#F59E0B22' },
+  pending:   { label: 'Pendente',   color: '#F59E0B', bg: '#F59E0B22' },
   running:   { label: 'Executando', color: '#3B82F6', bg: '#3B82F622' },
-  completed: { label: 'Concluído', color: '#10B981', bg: '#10B98122' },
-  failed:    { label: 'Falhou',    color: '#EF4444', bg: '#EF444422' },
-  timed_out: { label: 'Timeout',   color: '#6B7280', bg: '#6B728022' },
+  completed: { label: 'Concluído',  color: '#10B981', bg: '#10B98122' },
+  failed:    { label: 'Falhou',     color: '#EF4444', bg: '#EF444422' },
+  timed_out: { label: 'Timeout',    color: '#6B7280', bg: '#6B728022' },
 };
+
+const ACTIVE_STATUSES: RunStatus[] = ['pending', 'running'];
 
 function formatDuration(ms: number | null): string {
   if (ms === null) return '—';
@@ -44,12 +46,30 @@ interface Props {
 }
 
 export default function AtividadeTab({ agentId }: Props) {
+  const { listRuns } = useAgents();
+  const [runs, setRuns] = useState<AgentRun[]>(() => listRuns(agentId));
   const [page] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const hasActiveRef = useRef(false);
 
-  const allRuns = mockAgentRuns[agentId] ?? [];
-  const total = allRuns.length;
-  const runs = allRuns.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  useEffect(() => {
+    const load = () => {
+      const data = listRuns(agentId);
+      setRuns(data);
+      hasActiveRef.current = data.some((r) => ACTIVE_STATUSES.includes(r.status));
+    };
+
+    load();
+
+    const id = setInterval(() => {
+      if (hasActiveRef.current) load();
+    }, 2000);
+
+    return () => clearInterval(id);
+  }, [agentId, listRuns]);
+
+  const total = runs.length;
+  const visible = runs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   if (total === 0) {
     return (
@@ -73,7 +93,7 @@ export default function AtividadeTab({ agentId }: Props) {
           overflow: 'hidden',
         }}
       >
-        {/* Header row */}
+        {/* Header */}
         <div
           style={{
             display: 'grid',
@@ -94,10 +114,10 @@ export default function AtividadeTab({ agentId }: Props) {
           <span>Cliente</span>
         </div>
 
-        {runs.map((run, idx) => {
+        {visible.map((run, idx) => {
           const status = STATUS_CONFIG[run.status];
           const isExpanded = expandedId === run.id;
-          const isLast = idx === runs.length - 1;
+          const isLast = idx === visible.length - 1;
 
           return (
             <div key={run.id}>
@@ -132,9 +152,9 @@ export default function AtividadeTab({ agentId }: Props) {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {isExpanded ? (
-                    <ChevronDown size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    <ChevronDown size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   ) : (
-                    <ChevronRight size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    <ChevronRight size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   )}
                   {formatDatetime(run.started_at)}
                 </div>
@@ -154,16 +174,13 @@ export default function AtividadeTab({ agentId }: Props) {
                 </span>
                 <span>{formatDuration(run.duration_ms)}</span>
                 <span>{TRIGGER_LABELS[run.triggered_by]}</span>
-                <span style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
+                <span
+                  style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
                   {run.client_id ?? '—'}
                 </span>
               </div>
 
-              {/* Expanded detail */}
               {isExpanded && (
                 <div
                   style={{
@@ -177,37 +194,43 @@ export default function AtividadeTab({ agentId }: Props) {
                 >
                   {run.error_message && (
                     <div>
-                      <p style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', color: '#EF4444', margin: '0 0 4px' }}>
+                      <p
+                        style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          color: '#EF4444',
+                          margin: '0 0 4px',
+                        }}
+                      >
                         Erro
                       </p>
-                      <p style={{ fontSize: '0.78rem', color: '#EF4444', margin: 0, fontFamily: 'monospace' }}>
+                      <p
+                        style={{
+                          fontSize: '0.78rem',
+                          color: '#EF4444',
+                          margin: 0,
+                          fontFamily: 'monospace',
+                        }}
+                      >
                         {run.error_message}
                       </p>
                     </div>
                   )}
                   <div>
-                    <p style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 4px' }}>
+                    <p
+                      style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                        margin: '0 0 4px',
+                      }}
+                    >
                       Input
                     </p>
-                    <pre style={{
-                      fontSize: '0.72rem',
-                      color: 'var(--text-secondary)',
-                      margin: 0,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      maxHeight: 120,
-                      overflow: 'auto',
-                    }}>
-                      {JSON.stringify(run.input, null, 2).slice(0, 500)}
-                      {JSON.stringify(run.input, null, 2).length > 500 ? '…' : ''}
-                    </pre>
-                  </div>
-                  {run.output && (
-                    <div>
-                      <p style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', margin: '0 0 4px' }}>
-                        Output
-                      </p>
-                      <pre style={{
+                    <pre
+                      style={{
                         fontSize: '0.72rem',
                         color: 'var(--text-secondary)',
                         margin: 0,
@@ -215,7 +238,36 @@ export default function AtividadeTab({ agentId }: Props) {
                         wordBreak: 'break-word',
                         maxHeight: 120,
                         overflow: 'auto',
-                      }}>
+                      }}
+                    >
+                      {JSON.stringify(run.input, null, 2).slice(0, 500)}
+                      {JSON.stringify(run.input, null, 2).length > 500 ? '…' : ''}
+                    </pre>
+                  </div>
+                  {run.output && (
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          color: 'var(--text-muted)',
+                          margin: '0 0 4px',
+                        }}
+                      >
+                        Output
+                      </p>
+                      <pre
+                        style={{
+                          fontSize: '0.72rem',
+                          color: 'var(--text-secondary)',
+                          margin: 0,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                          maxHeight: 120,
+                          overflow: 'auto',
+                        }}
+                      >
                         {JSON.stringify(run.output, null, 2).slice(0, 500)}
                         {JSON.stringify(run.output, null, 2).length > 500 ? '…' : ''}
                       </pre>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FileText, Layers } from 'lucide-react';
+import { Document, Layers } from '@carbon/icons-react';
 import { WorkflowTemplate } from '@/lib/workflow-types';
 
 interface WorkflowTemplatesProps {
@@ -46,7 +46,7 @@ export default function WorkflowTemplates({ templates }: WorkflowTemplatesProps)
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <FileText size={14} strokeWidth={1.5} style={{ color: 'var(--sun)', flexShrink: 0 }} />
+              <Document size={14} style={{ color: 'var(--sun)', flexShrink: 0 }} />
               <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-primary)' }}>
                 {template.name}
               </span>
@@ -74,7 +74,7 @@ export default function WorkflowTemplates({ templates }: WorkflowTemplatesProps)
                   color: 'var(--text-muted)',
                 }}
               >
-                <Layers size={12} strokeWidth={1.5} />
+                <Layers size={12} />
                 {template.steps.length} steps
               </span>
               <button

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, Check, Archive } from 'lucide-react';
+import { Archive, ArrowLeft, Book, Checkmark } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import TranscricaoPanel from '@/components/reunioes/TranscricaoPanel';
 import { useMeetings } from '@/contexts/MeetingsContext';
@@ -138,7 +138,7 @@ export default function CuradoriaPage() {
           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
         >
-          <ArrowLeft size={14} strokeWidth={1.5} />
+          <ArrowLeft size={14} />
           Todas as reuniões
         </button>
 
@@ -202,7 +202,7 @@ export default function CuradoriaPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--twilight)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                 >
-                  <Archive size={12} strokeWidth={1.5} />
+                  <Archive size={12} />
                   Arquivar
                 </button>
               )}
@@ -235,7 +235,7 @@ export default function CuradoriaPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BookOpen size={14} strokeWidth={1.5} style={{ color: 'var(--sun)' }} />
+              <Book size={14} style={{ color: 'var(--sun)' }} />
               <h3 style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
                 Preview — Wiki
               </h3>
@@ -308,14 +308,14 @@ export default function CuradoriaPage() {
             >
               {saved ? (
                 <>
-                  <Check size={14} strokeWidth={2} />
+                  <Checkmark size={14} />
                   Salvo para revisao
                 </>
               ) : saving ? (
                 'Salvando...'
               ) : (
                 <>
-                  <BookOpen size={12} strokeWidth={1.5} />
+                  <Book size={12} />
                   Salvar para Wiki
                 </>
               )}

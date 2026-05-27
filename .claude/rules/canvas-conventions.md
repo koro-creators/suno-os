@@ -53,7 +53,7 @@ A **mesma matriz** vive em `api/workflows/validator.py:ALLOWED_SOURCE_HANDLES_BY
 Os 7 node types compartilham `components/workflows/canvas/nodes/NodeShell.tsx` (chrome: card + handles + ARIA + focus ring). Cada node concreto fica responsável só de:
 
 - Cor (border + accent)
-- Ícone (Lucide, size 14, strokeWidth 1.5)
+- Ícone (`@carbon/icons-react`, `size={14}`, sem `strokeWidth`)
 - Lista de `sourceHandles` (matrix acima)
 - Preview text (1 linha, truncado)
 

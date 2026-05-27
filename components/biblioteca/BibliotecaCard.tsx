@@ -314,7 +314,7 @@ export default function BibliotecaCard({
             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
           />
         ) : (
-          <FileTypeIcon fileType={doc.fileType} size={28} />
+          <FileTypeIcon fileType={doc.fileType} docType={doc.docType} size={28} />
         )}
       </div>
 
@@ -325,7 +325,22 @@ export default function BibliotecaCard({
           <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
             {doc.title}
           </span>
-          {doc.fileType && (
+          {doc.docType === 'reuniao' ? (
+            <span
+              style={{
+                fontSize: '0.55rem',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                padding: '1px 6px',
+                borderRadius: 9999,
+                border: '1px solid #06B6D4',
+                color: '#06B6D4',
+                letterSpacing: '0.04em',
+              }}
+            >
+              Reunião
+            </span>
+          ) : doc.fileType && (
             <span
               style={{
                 fontSize: '0.55rem',

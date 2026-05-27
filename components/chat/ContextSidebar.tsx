@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Search, X, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react';
+import { Add, ChevronDown, Close, Search, ThumbsDown, ThumbsUp } from '@carbon/icons-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import Toast from '@/components/ui/Toast';
@@ -123,7 +123,7 @@ export default function ContextSidebar({
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', flex: 1 }}
           >
             <SectionHeader color="var(--sun)" label="Biblioteca" />
-            <ChevronDown size={12} strokeWidth={1.5} style={{
+            <ChevronDown size={12} style={{
               color: 'var(--text-muted)',
               transform: collapsedSections['biblioteca'] ? 'rotate(-90deg)' : 'rotate(0)',
               transition: 'transform 150ms ease',
@@ -146,14 +146,14 @@ export default function ContextSidebar({
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--sun)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; }}
           >
-            {showSearch ? <X size={12} strokeWidth={1.5} /> : <Plus size={12} strokeWidth={1.5} />}
+            {showSearch ? <Close size={12} /> : <Add size={12} />}
           </button>
         </div>
 
         {!collapsedSections['biblioteca'] && showSearch && (
           <div style={{ marginBottom: 8 }}>
             <div style={{ position: 'relative', marginBottom: 6 }}>
-              <Search size={11} strokeWidth={1.5} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+              <Search size={11} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
               <input
                 type="text"
                 placeholder="Buscar contexto..."
@@ -223,7 +223,7 @@ export default function ContextSidebar({
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 8 }}
         >
           <SectionHeader color="var(--midia)" label="Agentes" />
-          <ChevronDown size={12} strokeWidth={1.5} style={{
+          <ChevronDown size={12} style={{
             color: 'var(--text-muted)',
             transform: collapsedSections['agentes'] ? 'rotate(-90deg)' : 'rotate(0)',
             transition: 'transform 150ms ease',
@@ -247,7 +247,7 @@ export default function ContextSidebar({
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 8 }}
         >
           <SectionHeader color="var(--planejamento)" label="Validação" />
-          <ChevronDown size={12} strokeWidth={1.5} style={{
+          <ChevronDown size={12} style={{
             color: 'var(--text-muted)',
             transform: collapsedSections['validacao'] ? 'rotate(-90deg)' : 'rotate(0)',
             transition: 'transform 150ms ease',
@@ -342,9 +342,9 @@ export default function ContextSidebar({
                   }}
                 >
                   {f.rating === 'up' ? (
-                    <ThumbsUp size={10} strokeWidth={1.5} style={{ color: '#10B981', flexShrink: 0, marginTop: 2 }} />
+                    <ThumbsUp size={10} style={{ color: '#10B981', flexShrink: 0, marginTop: 2 }} />
                   ) : (
-                    <ThumbsDown size={10} strokeWidth={1.5} style={{ color: '#EF4444', flexShrink: 0, marginTop: 2 }} />
+                    <ThumbsDown size={10} style={{ color: '#EF4444', flexShrink: 0, marginTop: 2 }} />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

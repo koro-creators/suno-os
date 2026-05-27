@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Copy, Check, Sparkles, Bookmark, BookmarkCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Bookmark, BookmarkFilled, Checkmark, Copy, Star, ThumbsDown, ThumbsUp } from '@carbon/icons-react';
 import { MessageFeedback } from '@/lib/feedback-types';
 
 interface ResultActionsProps {
@@ -83,7 +83,7 @@ export default function ResultActions({
           title={copied ? 'Copiado!' : 'Copiar'}
           aria-label={copied ? 'Copiado' : 'Copiar'}
         >
-          {copied ? <Check size={14} strokeWidth={1.5} /> : <Copy size={14} strokeWidth={1.5} />}
+          {copied ? <Checkmark size={14} /> : <Copy size={14} />}
         </button>
 
         {/* Generate variation */}
@@ -97,7 +97,7 @@ export default function ResultActions({
           title="Gerar variação"
           aria-label="Gerar variação"
         >
-          <Sparkles size={14} strokeWidth={1.5} />
+          <Star size={14} />
         </button>
 
         {/* Save / Bookmark */}
@@ -111,7 +111,7 @@ export default function ResultActions({
           title={isSaved ? 'Salvo' : 'Salvar'}
           aria-label={isSaved ? 'Salvo na Biblioteca' : 'Salvar na Biblioteca'}
         >
-          {isSaved ? <BookmarkCheck size={14} strokeWidth={1.5} /> : <Bookmark size={14} strokeWidth={1.5} />}
+          {isSaved ? <BookmarkFilled size={14} /> : <Bookmark size={14} />}
         </button>
 
         {/* Thumbs up */}
@@ -136,7 +136,7 @@ export default function ResultActions({
           onFocus={handleFocus}
           onBlur={handleBlur}
         >
-          <ThumbsUp size={14} strokeWidth={1.5} />
+          <ThumbsUp size={14} />
         </button>
 
         {/* Thumbs down */}
@@ -161,7 +161,7 @@ export default function ResultActions({
           onFocus={handleFocus}
           onBlur={handleBlur}
         >
-          <ThumbsDown size={14} strokeWidth={1.5} />
+          <ThumbsDown size={14} />
         </button>
       </div>
     </div>

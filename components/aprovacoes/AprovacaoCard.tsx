@@ -1,20 +1,20 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, AlertCircle, CheckCircle, XCircle, RotateCcw, Timer } from 'lucide-react';
+import { CheckmarkFilled, ErrorFilled, Renew, Time, Timer, Warning } from '@carbon/icons-react';
 import type { ApprovalSubmission, ApprovalStatus, Urgency } from '@/lib/approval-types';
 
 interface AprovacaoCardProps {
   submission: ApprovalSubmission;
 }
 
-const STATUS_CONFIG: Record<ApprovalStatus, { label: string; color: string; icon: typeof CheckCircle }> = {
+const STATUS_CONFIG: Record<ApprovalStatus, { label: string; color: string; icon: typeof CheckmarkFilled }> = {
   PENDING_VALIDATION: { label: 'Validando', color: 'var(--text-muted)', icon: Timer },
-  PENDING_APPROVAL: { label: 'Aguardando aprovação', color: '#FFC801', icon: Clock },
-  CHANGES_REQUESTED: { label: 'Revisão solicitada', color: '#F97316', icon: RotateCcw },
-  APPROVED: { label: 'Aprovado', color: '#22C55E', icon: CheckCircle },
-  REJECTED: { label: 'Rejeitado', color: '#EF4444', icon: XCircle },
-  EXPIRED: { label: 'Expirado', color: 'var(--text-muted)', icon: XCircle },
+  PENDING_APPROVAL: { label: 'Aguardando aprovação', color: '#FFC801', icon: Time },
+  CHANGES_REQUESTED: { label: 'Revisão solicitada', color: '#F97316', icon: Renew },
+  APPROVED: { label: 'Aprovado', color: '#22C55E', icon: CheckmarkFilled },
+  REJECTED: { label: 'Rejeitado', color: '#EF4444', icon: ErrorFilled },
+  EXPIRED: { label: 'Expirado', color: 'var(--text-muted)', icon: ErrorFilled },
 };
 
 const URGENCY_CONFIG: Record<Urgency, { label: string; color: string }> = {
@@ -97,7 +97,7 @@ export default function AprovacaoCard({ submission }: AprovacaoCardProps) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
           {submission.urgency === 'high' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <AlertCircle size={11} strokeWidth={1.5} style={{ color: urgencyCfg.color }} />
+              <Warning size={11} style={{ color: urgencyCfg.color }} />
               <span style={{ fontSize: '0.65rem', color: urgencyCfg.color, fontWeight: 500 }}>
                 {urgencyCfg.label}
               </span>
@@ -114,7 +114,7 @@ export default function AprovacaoCard({ submission }: AprovacaoCardProps) {
               padding: '2px 8px',
             }}
           >
-            <StatusIcon size={10} strokeWidth={1.5} style={{ color: statusCfg.color }} />
+            <StatusIcon size={10} style={{ color: statusCfg.color }} />
             <span style={{ fontSize: '0.65rem', color: statusCfg.color, fontWeight: 500 }}>
               {statusCfg.label}
             </span>

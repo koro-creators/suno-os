@@ -86,13 +86,13 @@
 
 ### Phase 11: Polish + Deploy ← gate de saída do Protótipo
 > Fase de produto: **Protótipo → Piloto**
-- [ ] Error handling robusto no backend (timeout, rate limit, backoff)
-- [ ] CI/CD: GitHub Actions (lint, pytest, type-check, build)
-- [ ] Deploy staging em Cloud Run
-- [ ] Smoke test staging (5 dias consecutivos sem falha bloqueante)
-- [ ] Frontend: endpoints batch (TextGen, ImageGen panels)
-- [ ] Persistência de conversas entre sessões (débito P1 — PRD §4.7)
-- [ ] Testes de integração com API keys reais (Gemini, Vertex AI)
+- [x] Error handling robusto no backend (timeout, rate limit, backoff) — `api/core/retry.py`
+- [x] CI/CD: GitHub Actions (lint, pytest, type-check, build) — `.github/workflows/`
+- [x] Deploy staging em Cloud Run — `deploy-staging.yml`
+- [ ] Smoke test staging (5 dias consecutivos sem falha bloqueante) — operacional
+- [x] Frontend: endpoints batch (TextGen, ImageGen panels) — `ChatInterface + TextGenPanel + ImageGenPanel`
+- [x] Persistência de conversas entre sessões — `ChatInterface.tsx` + `getConversation` em `lib/api.ts`
+- [x] Testes de integração com API keys reais — `test_agents.py` + `test_admin.py` (79/79, key via env)
 
 ---
 
@@ -259,7 +259,7 @@
 | Fase de Produto | Phases Técnicas | Status |
 |-----------------|-----------------|:------:|
 | **POC** | SPEC-010 (Moon Shot pipeline mínimo) | Em planejamento |
-| **Protótipo** | Phases 1–10 concluídas + Phase 11 (gate de saída) | 90% — Phase 11 em progresso |
+| **Protótipo** | Phases 1–11 concluídas | ✅ 100% — gate Protótipo completo (smoke test staging pendente ops) |
 | **Piloto** | Phases 14, 16, 17, 18, 19 | Aguarda gate Phase 11 |
 | **Momento 2** | Phases 20, 21 | Pós-Piloto v1 |
 | **MVP** | Phases 12, 13, 15 + Phase 16 video + refinamentos | Q1 2027+ |

@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Search } from '@carbon/icons-react';
 import ScopePills from './ScopePills';
 
 const FILE_TYPE_FILTERS = [
@@ -54,7 +54,6 @@ export default function BibliotecaFilters({
         <div style={{ position: 'relative', flex: '0 1 240px' }}>
           <Search
             size={13}
-            strokeWidth={1.5}
             style={{
               position: 'absolute',
               left: 12,

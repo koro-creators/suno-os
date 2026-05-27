@@ -11,20 +11,20 @@ interface SkillDefault {
   max_tokens: number;
 }
 
-const MODELS = ['gemini-2.0-flash', 'gpt-4o', 'claude-3-5-sonnet'];
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gpt-4o', 'claude-sonnet-4-5'];
 
 const INITIAL_DEFAULTS: SkillDefault[] = [
   {
     skill_slug: 'copy-social',
     skill_name: 'Copy Social',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     temperature: 0.7,
     max_tokens: 2048,
   },
   {
     skill_slug: 'plano-de-midia',
     skill_name: 'Plano de Mídia',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     temperature: 0.3,
     max_tokens: 4096,
   },

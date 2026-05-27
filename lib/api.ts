@@ -482,6 +482,40 @@ export interface ToolDescriptor {
   role_restriction: string[] | null;
 }
 
+// ---------------------------------------------------------------------------
+// Phase 11 — Conversation persistence (GET only; backend saves via chat runner)
+// ---------------------------------------------------------------------------
+
+export interface ConversationMessage {
+  role: string;
+  content: string;
+  timestamp: string | null;
+}
+
+export interface ConversationDetail {
+  id: string;
+  skill_slug: string | null;
+  title: string | null;
+  messages: ConversationMessage[];
+}
+
+export async function getConversation(
+  id: string,
+  userId: string,
+): Promise<ConversationDetail | null> {
+  if (!apiAvailable()) return null;
+  const url = getApiUrl(`/api/conversations/${id}`);
+  const headers = await getHeaders();
+  headers['X-User-ID'] = userId;
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) return null;
+    return res.json() as Promise<ConversationDetail>;
+  } catch {
+    return null;
+  }
+}
+
 export async function listAvailableTools(): Promise<ToolDescriptor[]> {
   if (!apiAvailable()) {
     // Mock fallback: front-end can still render the palette during dev

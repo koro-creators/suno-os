@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, Search, LayoutList, LayoutGrid, BookOpen } from 'lucide-react';
+import { Add, Book, Dashboard, Search, Task } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import BibliotecaCard from '@/components/biblioteca/BibliotecaCard';
 import BibliotecaTable from '@/components/biblioteca/BibliotecaTable';
@@ -66,12 +66,19 @@ export default function BibliotecaPage() {
       if (selectedTags.length > 0) {
         if (!doc.tags.some((t) => selectedTags.includes(t))) return false;
       }
-      // File type
+      // File type / docType
       if (selectedTypes.length > 0) {
-        const allowedExtensions = selectedTypes.flatMap(
-          (key) => TYPE_KEY_TO_EXTENSIONS[key] ?? [],
-        );
-        if (!doc.fileType || !allowedExtensions.includes(doc.fileType.toLowerCase())) return false;
+        const includesReuniao = selectedTypes.includes('reuniao');
+        const extensionKeys = selectedTypes.filter((k) => k !== 'reuniao');
+        const allowedExtensions = extensionKeys.flatMap((k) => TYPE_KEY_TO_EXTENSIONS[k] ?? []);
+        const isReuniao = doc.docType === 'reuniao';
+        const matchesReuniao = isReuniao && includesReuniao;
+        const matchesExtension =
+          !isReuniao &&
+          allowedExtensions.length > 0 &&
+          !!doc.fileType &&
+          allowedExtensions.includes(doc.fileType.toLowerCase());
+        if (!matchesReuniao && !matchesExtension) return false;
       }
       return true;
     });
@@ -175,7 +182,6 @@ export default function BibliotecaPage() {
               <div style={{ position: 'relative', width: 220 }}>
                 <Search
                   size={13}
-                  strokeWidth={1.5}
                   style={{
                     position: 'absolute',
                     left: 12,
@@ -236,7 +242,7 @@ export default function BibliotecaPage() {
                     transition: 'color 150ms ease',
                   }}
                 >
-                  <LayoutList size={16} strokeWidth={1.5} />
+                  <Task size={16} />
                 </button>
                 <button
                   onClick={() => setViewMode('grid')}
@@ -254,7 +260,7 @@ export default function BibliotecaPage() {
                     transition: 'color 150ms ease',
                   }}
                 >
-                  <LayoutGrid size={16} strokeWidth={1.5} />
+                  <Dashboard size={16} />
                 </button>
               </div>
 
@@ -283,7 +289,7 @@ export default function BibliotecaPage() {
                   (e.currentTarget as HTMLButtonElement).style.opacity = '1';
                 }}
               >
-                <Plus size={14} strokeWidth={2} />
+                <Add size={14} />
                 Novo Item
               </button>
             </div>
@@ -299,7 +305,7 @@ export default function BibliotecaPage() {
           {/* No data at all — rich empty state with CTA */}
           {documents.length === 0 && (
             <EmptyState
-              icon={BookOpen}
+              icon={Book}
               title="Biblioteca vazia"
               description="Adicione documentos, briefings e referências para enriquecer suas skills."
               action={{ label: 'Adicionar documento', onClick: () => setModalDoc(null) }}

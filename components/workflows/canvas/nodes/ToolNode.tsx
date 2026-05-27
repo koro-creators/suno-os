@@ -8,7 +8,7 @@
  */
 'use client';
 
-import { Wrench } from 'lucide-react';
+import { Tools } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -35,7 +35,7 @@ export default function ToolNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={d.tool_name ?? 'sem tool selecionada'}
-      Icon={Wrench}
+      Icon={Tools}
       borderColor={BORDER}
       accentColor="rgba(59,130,246,0.15)"
       sourceHandles={sources}

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from '@carbon/icons-react';
 import type { ApprovalFilters, ApprovalStatus, Urgency } from '@/lib/approval-types';
 
 interface AprovacaoFiltersProps {
@@ -48,7 +48,6 @@ function SelectWrapper({ children }: { children: React.ReactNode }) {
       {children}
       <ChevronDown
         size={12}
-        strokeWidth={1.5}
         style={{
           position: 'absolute',
           right: 8,

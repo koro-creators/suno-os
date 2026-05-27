@@ -1,9 +1,9 @@
 'use client';
 
-import { LucideIcon } from 'lucide-react';
+import type { CarbonIconType } from '@carbon/icons-react';
 
 export interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: CarbonIconType;
   title: string;
   description: string;
   action?: {
@@ -25,7 +25,7 @@ export default function EmptyState({ icon: Icon, title, description, action }: E
       }}
     >
       <div style={{ marginBottom: 16, color: 'var(--text-muted)' }}>
-        <Icon size={48} strokeWidth={1.5} />
+        <Icon size={48} />
       </div>
 
       <p

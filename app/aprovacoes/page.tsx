@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle } from 'lucide-react';
+import { CheckmarkFilled } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import AprovacaoCard from '@/components/aprovacoes/AprovacaoCard';
 import AprovacaoFilters from '@/components/aprovacoes/AprovacaoFilters';
@@ -161,9 +161,8 @@ export default function AprovacoesPage() {
               gap: 12,
             }}
           >
-            <CheckCircle
+            <CheckmarkFilled
               size={32}
-              strokeWidth={1}
               style={{ color: 'var(--text-muted)', opacity: 0.5 }}
             />
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>

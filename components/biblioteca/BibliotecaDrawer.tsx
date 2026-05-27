@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
-import { X, ExternalLink, Edit2, Trash2, Link } from 'lucide-react';
+import { Close, Edit, Launch, Link, TrashCan } from '@carbon/icons-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import FileTypeIcon from './FileTypeIcon';
 
@@ -133,7 +133,7 @@ export default function BibliotecaDrawer({
             flexShrink: 0,
           }}
         >
-          <FileTypeIcon fileType={doc.fileType} size={24} />
+          <FileTypeIcon fileType={doc.fileType} docType={doc.docType} size={24} />
           <h2
             style={{
               flex: 1,
@@ -168,7 +168,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} strokeWidth={1.5} />
+            <Close size={18} />
           </button>
         </div>
 
@@ -185,7 +185,22 @@ export default function BibliotecaDrawer({
         >
           {/* Metadata row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-            {doc.fileType && (
+            {doc.docType === 'reuniao' ? (
+              <span
+                style={{
+                  fontSize: '0.55rem',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  padding: '2px 8px',
+                  borderRadius: 9999,
+                  border: '1px solid #06B6D4',
+                  color: '#06B6D4',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Reunião
+              </span>
+            ) : doc.fileType && (
               <span
                 style={{
                   fontSize: '0.55rem',
@@ -231,6 +246,30 @@ export default function BibliotecaDrawer({
               Editado {timeAgo(doc.updatedAt)}
             </span>
           </div>
+
+          {/* Reunião metadata */}
+          {doc.docType === 'reuniao' && (doc.meetingDate || doc.meetingParticipants || doc.meetingDuration) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', borderRadius: 8, background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)' }}>
+              {doc.meetingDate && (
+                <div style={{ display: 'flex', gap: 8, fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)', minWidth: 80 }}>Data</span>
+                  <span>{new Date(doc.meetingDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                </div>
+              )}
+              {doc.meetingDuration && (
+                <div style={{ display: 'flex', gap: 8, fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)', minWidth: 80 }}>Duração</span>
+                  <span>{doc.meetingDuration}</span>
+                </div>
+              )}
+              {doc.meetingParticipants && doc.meetingParticipants.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)', minWidth: 80 }}>Participantes</span>
+                  <span>{doc.meetingParticipants.join(', ')}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Scope */}
           {doc.scope.length > 0 && (
@@ -317,7 +356,7 @@ export default function BibliotecaDrawer({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {doc.links.map((link, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <ExternalLink size={12} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    <Launch size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
                       {link.label}:
                     </span>
@@ -415,7 +454,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.opacity = '1';
             }}
           >
-            <Edit2 size={14} strokeWidth={1.5} />
+            <Edit size={14} />
             Editar
           </button>
           <button
@@ -444,7 +483,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Link size={14} strokeWidth={1.5} />
+            <Link size={14} />
             Copiar link
           </button>
           <button
@@ -470,7 +509,7 @@ export default function BibliotecaDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Trash2 size={14} strokeWidth={1.5} />
+            <TrashCan size={14} />
             Excluir
           </button>
         </div>

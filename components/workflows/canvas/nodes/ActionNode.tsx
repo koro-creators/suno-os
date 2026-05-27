@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { Zap } from 'lucide-react';
+import { Flash } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -30,7 +30,7 @@ export default function ActionNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={d.tool_name ?? 'sem action'}
-      Icon={Zap}
+      Icon={Flash}
       borderColor={BORDER}
       accentColor="rgba(34,197,94,0.15)"
       sourceHandles={sources}

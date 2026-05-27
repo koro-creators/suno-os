@@ -6,7 +6,7 @@
  * Placeholder shown when Drive is not connected.
  */
 
-import { FolderOpen, AlertCircle } from 'lucide-react';
+import { FolderOpen, Warning } from '@carbon/icons-react';
 
 export default function WizardStep3Drive() {
   return (
@@ -46,7 +46,7 @@ export default function WizardStep3Drive() {
             justifyContent: 'center',
           }}
         >
-          <FolderOpen size={20} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+          <FolderOpen size={20} style={{ color: 'var(--text-muted)' }} />
         </div>
         <div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: 6 }}>
@@ -68,7 +68,7 @@ export default function WizardStep3Drive() {
             border: '1px solid rgba(255,200,1,0.2)',
           }}
         >
-          <AlertCircle size={12} strokeWidth={1.5} style={{ color: 'var(--sun)', flexShrink: 0 }} />
+          <Warning size={12} style={{ color: 'var(--sun)', flexShrink: 0 }} />
           <span style={{ fontSize: '0.7rem', color: 'var(--sun)' }}>
             PRE-03: Drive Suno ainda não disponível
           </span>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Bot } from 'lucide-react';
+import { Add, Bot, Search } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import AgentesCards from '@/components/admin/agentes/AgentesCards';
 import AgentDrawer from '@/components/admin/agentes/AgentDrawer';
@@ -110,7 +110,7 @@ export default function AgentesPage() {
               (e.currentTarget as HTMLButtonElement).style.opacity = '1';
             }}
           >
-            <Plus size={14} strokeWidth={2} />
+            <Add size={14} />
             Novo Agente
           </button>
         </div>
@@ -119,7 +119,6 @@ export default function AgentesPage() {
         <div style={{ position: 'relative', maxWidth: 320, marginBottom: 16 }}>
           <Search
             size={14}
-            strokeWidth={1.5}
             style={{
               position: 'absolute',
               left: 12,
@@ -207,7 +206,7 @@ export default function AgentesPage() {
               color: 'var(--text-muted)',
             }}
           >
-            <Bot size={40} strokeWidth={1} style={{ opacity: 0.4 }} />
+            <Bot size={40} style={{ opacity: 0.4 }} />
             <p style={{ fontSize: '0.9rem', margin: 0 }}>Nenhum agente criado</p>
             <p style={{ fontSize: '0.8rem', margin: 0, color: 'var(--text-muted)' }}>
               Crie seu primeiro agente de IA.
@@ -229,7 +228,7 @@ export default function AgentesPage() {
                 cursor: 'pointer',
               }}
             >
-              <Plus size={14} strokeWidth={2} />
+              <Add size={14} />
               Novo Agente
             </button>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { Play } from 'lucide-react';
+import { Play } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowRunTimeline from '@/components/workflows/WorkflowRunTimeline';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
@@ -123,7 +123,7 @@ export default function WorkflowRunsPage() {
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
-            <Play size={14} strokeWidth={2} />
+            <Play size={14} />
             Executar Agora
           </button>
         </div>

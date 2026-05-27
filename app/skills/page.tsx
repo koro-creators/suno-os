@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, LayoutGrid, List, Sparkles } from 'lucide-react';
+import { Add, Dashboard, List, Search, Star } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import SkillCard from '@/components/admin/SkillCard';
 import SkillsTable from '@/components/admin/SkillsTable';
@@ -139,7 +139,7 @@ export default function SkillCatalogPage() {
                 (e.currentTarget as HTMLButtonElement).style.opacity = '1';
               }}
             >
-              <Plus size={14} strokeWidth={2} />
+              <Add size={14} />
               Novo Skill
             </button>
           </div>
@@ -156,7 +156,6 @@ export default function SkillCatalogPage() {
             <div style={{ position: 'relative', flex: '0 1 280px' }}>
               <Search
                 size={13}
-                strokeWidth={1.5}
                 style={{
                   position: 'absolute',
                   left: 12,
@@ -200,7 +199,7 @@ export default function SkillCatalogPage() {
                 aria-label="Visualizar como tabela"
                 aria-pressed={viewMode === 'table'}
               >
-                <List size={14} strokeWidth={1.5} />
+                <List size={14} />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
@@ -208,7 +207,7 @@ export default function SkillCatalogPage() {
                 aria-label="Visualizar como grade"
                 aria-pressed={viewMode === 'grid'}
               >
-                <LayoutGrid size={14} strokeWidth={1.5} />
+                <Dashboard size={14} />
               </button>
             </div>
           </div>
@@ -216,7 +215,7 @@ export default function SkillCatalogPage() {
           {/* No data at all — rich empty state with CTA */}
           {skills.length === 0 && (
             <EmptyState
-              icon={Sparkles}
+              icon={Star}
               title="Nenhuma skill criada"
               description="Crie sua primeira skill de IA para começar a trabalhar com clientes."
               action={{ label: 'Nova skill', onClick: () => router.push('/skills/new') }}

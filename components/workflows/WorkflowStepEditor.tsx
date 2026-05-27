@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, GitBranch } from 'lucide-react';
+import { Branch, Close } from '@carbon/icons-react';
 import { WorkflowStep } from '@/lib/workflow-types';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 
@@ -157,7 +157,7 @@ export default function WorkflowStepEditor({ step, onSave, onClose, currentWorkf
               padding: 4,
             }}
           >
-            <X size={14} strokeWidth={1.5} />
+            <Close size={14} />
           </button>
         </div>
 
@@ -313,7 +313,7 @@ export default function WorkflowStepEditor({ step, onSave, onClose, currentWorkf
                     gap: 8,
                   }}
                 >
-                  <GitBranch size={14} strokeWidth={1.5} style={{ color: '#EC4899', flexShrink: 0 }} />
+                  <Branch size={14} style={{ color: '#EC4899', flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 500 }}>
                       {selectedWorkflow.name}

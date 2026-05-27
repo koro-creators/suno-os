@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Clock, AlertCircle, RotateCcw, User, FileText } from 'lucide-react';
+import { ArrowLeft, Document, Renew, Time, User, Warning } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import ReviewPanel from '@/components/aprovacoes/ReviewPanel';
 import CommentThread from '@/components/aprovacoes/CommentThread';
@@ -129,7 +129,7 @@ export default function SubmissionReviewPage() {
             fontSize: '0.85rem',
           }}
         >
-          <FileText size={32} strokeWidth={1} style={{ opacity: 0.4 }} />
+          <Document size={32} style={{ opacity: 0.4 }} />
           <p>Submissão não encontrada.</p>
           <button
             onClick={() => router.push('/aprovacoes')}
@@ -206,7 +206,7 @@ export default function SubmissionReviewPage() {
           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
         >
-          <ArrowLeft size={13} strokeWidth={1.5} />
+          <ArrowLeft size={13} />
           Voltar para Aprovações
         </button>
 
@@ -273,7 +273,7 @@ export default function SubmissionReviewPage() {
                       flexShrink: 0,
                     }}
                   >
-                    <AlertCircle size={13} strokeWidth={1.5} />
+                    <Warning size={13} />
                     <span style={{ fontSize: '0.72rem', fontWeight: 500 }}>Alta urgência</span>
                   </div>
                 )}
@@ -289,11 +289,11 @@ export default function SubmissionReviewPage() {
                 }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <User size={11} strokeWidth={1.5} />
+                  <User size={11} />
                   {submission.submitted_by_name}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Clock size={11} strokeWidth={1.5} />
+                  <Time size={11} />
                   {formatDateTime(submission.created_at)}
                 </span>
                 {submission.round > 1 && (
@@ -305,7 +305,7 @@ export default function SubmissionReviewPage() {
                       color: '#F97316',
                     }}
                   >
-                    <RotateCcw size={11} strokeWidth={1.5} />
+                    <Renew size={11} />
                     Round {submission.round} de 3
                   </span>
                 )}

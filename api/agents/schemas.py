@@ -7,7 +7,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -111,3 +110,17 @@ class AgentRunSummary(BaseModel):
     started_at: datetime
     finished_at: datetime | None = None
     error_message: str | None = None
+
+
+class AgentRunDetail(AgentRunSummary):
+    input: dict
+    output: dict | None = None
+
+
+class AgentRunRequest(BaseModel):
+    input: str = Field(..., min_length=1, description="Text input for the agent")
+    client_id: str | None = None
+
+
+class RunResponse(BaseModel):
+    run_id: str

@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { Sparkles } from 'lucide-react';
+import { Star } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
 import { NodeShell, type HandleSpec } from './NodeShell';
 
@@ -34,7 +34,7 @@ export default function LLMNode({ data, selected }: NodeProps) {
     <NodeShell
       title={d.name}
       preview={preview}
-      Icon={Sparkles}
+      Icon={Star}
       borderColor={BORDER}
       accentColor="rgba(139,92,246,0.15)"
       sourceHandles={sources}

@@ -2,20 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  X,
-  Play,
-  Edit2,
-  Trash2,
-  Pause,
-  CheckCircle,
-  Wrench,
-  Brain,
-  Hand,
-  GitBranch,
-  Zap,
-  Link2,
-} from 'lucide-react';
+import { Branch, CheckmarkFilled, Close, Edit, Flash, Idea, Link, Pause, Play, Tools, TouchInteraction, TrashCan } from '@carbon/icons-react';
 import { Workflow, WorkflowStep } from '@/lib/workflow-types';
 import { clients } from '@/data/clients';
 
@@ -76,12 +63,12 @@ function formatDuration(ms: number): string {
 }
 
 const STEP_ICONS: Record<string, React.ReactNode> = {
-  tool: <Wrench size={14} strokeWidth={1.5} />,
-  llm: <Brain size={14} strokeWidth={1.5} />,
-  hitl: <Hand size={14} strokeWidth={1.5} />,
-  condition: <GitBranch size={14} strokeWidth={1.5} />,
-  action: <Zap size={14} strokeWidth={1.5} />,
-  workflow: <Link2 size={14} strokeWidth={1.5} />,
+  tool: <Tools size={14} />,
+  llm: <Idea size={14} />,
+  hitl: <TouchInteraction size={14} />,
+  condition: <Branch size={14} />,
+  action: <Flash size={14} />,
+  workflow: <Link size={14} />,
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -273,7 +260,7 @@ export default function WorkflowDrawer({
               e.currentTarget.style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} strokeWidth={1.5} />
+            <Close size={18} />
           </button>
         </div>
 
@@ -356,7 +343,7 @@ export default function WorkflowDrawer({
                     {i + 1}
                   </span>
                   <span style={{ color: 'var(--text-muted)', display: 'flex', flexShrink: 0 }}>
-                    {STEP_ICONS[step.type] || <Zap size={14} strokeWidth={1.5} />}
+                    {STEP_ICONS[step.type] || <Flash size={14} />}
                   </span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', flex: 1 }}>
                     {step.name}
@@ -397,7 +384,7 @@ export default function WorkflowDrawer({
                         border: '1px solid var(--border-subtle)',
                       }}
                     >
-                      <CheckCircle size={12} strokeWidth={1.5} style={{ color, flexShrink: 0 }} />
+                      <CheckmarkFilled size={12} style={{ color, flexShrink: 0 }} />
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', flex: 1 }}>
                         {timeAgo(run.date)}
                       </span>
@@ -463,7 +450,7 @@ export default function WorkflowDrawer({
               e.currentTarget.style.opacity = '1';
             }}
           >
-            <Play size={14} strokeWidth={1.5} />
+            <Play size={14} />
             Executar Agora
           </button>
 
@@ -491,7 +478,7 @@ export default function WorkflowDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Edit2 size={14} strokeWidth={1.5} />
+            <Edit size={14} />
             Editar
           </button>
 
@@ -521,12 +508,12 @@ export default function WorkflowDrawer({
           >
             {workflow.status === 'active' ? (
               <>
-                <Pause size={14} strokeWidth={1.5} />
+                <Pause size={14} />
                 Pausar
               </>
             ) : (
               <>
-                <Play size={14} strokeWidth={1.5} />
+                <Play size={14} />
                 Ativar
               </>
             )}
@@ -556,7 +543,7 @@ export default function WorkflowDrawer({
               e.currentTarget.style.borderColor = 'var(--border-subtle)';
             }}
           >
-            <Trash2 size={14} strokeWidth={1.5} />
+            <TrashCan size={14} />
             Excluir
           </button>
         </div>

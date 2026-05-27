@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import {
-  FileText, Image, Mic, Video, Search, Plus, Shield, Sparkles,
-  BookOpen, Users, Globe, LayoutDashboard, ChevronLeft, ChevronRight,
-  Heart, ThumbsUp, ThumbsDown, Copy, Bookmark, X, Trash2, GripVertical,
-  MoreHorizontal, Send, MessageCircle, Settings, Sun, Moon, Check,
-} from 'lucide-react';
+import {Add, Book, Bookmark, Chat, Checkmark, ChevronLeft, ChevronRight, Close, Copy, Document, Draggable, Globe, Group, Favorite, Image, Dashboard, Microphone, Moon, OverflowMenuHorizontal, Search, Security, Send, Settings, Star, Sun, ThumbsDown, ThumbsUp, TrashCan, Video} from '@carbon/icons-react';
 import Toast from '@/components/ui/Toast';
 import FileTypeIcon from '@/components/biblioteca/FileTypeIcon';
 
@@ -239,7 +234,7 @@ export default function DesignSystemPage() {
                 fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer',
                 minHeight: 44, transition: 'opacity 150ms ease',
               }}>
-                <Plus size={14} strokeWidth={2} /> Primário
+                <Add size={14} /> Primário
               </button>
 
               <button style={{
@@ -269,7 +264,7 @@ export default function DesignSystemPage() {
                 padding: '8px 16px', fontSize: '0.875rem', cursor: 'pointer',
                 minHeight: 44,
               }}>
-                <Trash2 size={14} strokeWidth={1.5} /> Destructive
+                <TrashCan size={14} /> Destructive
               </button>
             </div>
           </ComponentBox>
@@ -296,7 +291,7 @@ export default function DesignSystemPage() {
 
           <ComponentBox label="Icon Buttons">
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {[Settings, Search, Plus, X, Copy, Bookmark].map((Icon, i) => (
+              {[Settings, Search, Add, Close, Copy, Bookmark].map((Icon, i) => (
                 <button key={i} aria-label="icon" style={{
                   width: 36, height: 36, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', background: 'transparent',
@@ -304,7 +299,7 @@ export default function DesignSystemPage() {
                   color: 'var(--text-muted)', cursor: 'pointer',
                   transition: 'color 150ms ease, border-color 150ms ease',
                 }}>
-                  <Icon size={14} strokeWidth={1.5} />
+                  <Icon size={14} />
                 </button>
               ))}
             </div>
@@ -351,7 +346,7 @@ export default function DesignSystemPage() {
 
           <ComponentBox label="Search Input (Pill)">
             <div style={{ position: 'relative', maxWidth: 300 }}>
-              <Search size={13} strokeWidth={1.5} style={{
+              <Search size={13} style={{
                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                 color: 'var(--text-muted)', pointerEvents: 'none',
               }} />
@@ -535,19 +530,19 @@ export default function DesignSystemPage() {
           <ComponentBox label="14px / strokeWidth 1.5 (padrão)">
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               {[
-                { icon: Globe, name: 'Globe' }, { icon: Users, name: 'Users' },
-                { icon: Sparkles, name: 'Sparkles' }, { icon: BookOpen, name: 'BookOpen' },
-                { icon: Shield, name: 'Shield' }, { icon: Settings, name: 'Settings' },
-                { icon: Search, name: 'Search' }, { icon: Plus, name: 'Plus' },
-                { icon: X, name: 'X' }, { icon: Copy, name: 'Copy' },
+                { icon: Globe, name: 'Globe' }, { icon: Group, name: 'Group' },
+                { icon: Star, name: 'Star' }, { icon: Book, name: 'Book' },
+                { icon: Security, name: 'Security' }, { icon: Settings, name: 'Settings' },
+                { icon: Search, name: 'Search' }, { icon: Add, name: 'Add' },
+                { icon: Close, name: 'Close' }, { icon: Copy, name: 'Copy' },
                 { icon: Bookmark, name: 'Bookmark' }, { icon: Send, name: 'Send' },
-                { icon: Heart, name: 'Heart' }, { icon: ThumbsUp, name: 'ThumbsUp' },
-                { icon: ThumbsDown, name: 'ThumbsDown' }, { icon: Trash2, name: 'Trash2' },
-                { icon: GripVertical, name: 'GripVertical' }, { icon: MoreHorizontal, name: 'More' },
+                { icon: Favorite, name: 'Favorite' }, { icon: ThumbsUp, name: 'ThumbsUp' },
+                { icon: ThumbsDown, name: 'ThumbsDown' }, { icon: TrashCan, name: 'TrashCan' },
+                { icon: Draggable, name: 'Draggable' }, { icon: OverflowMenuHorizontal, name: 'More' },
                 { icon: ChevronLeft, name: 'ChevronL' }, { icon: ChevronRight, name: 'ChevronR' },
               ].map(({ icon: Icon, name }) => (
                 <div key={name} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <Icon size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+                  <Icon size={14} style={{ color: 'var(--text-muted)' }} />
                   <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)' }}>{name}</span>
                 </div>
               ))}
@@ -574,19 +569,19 @@ export default function DesignSystemPage() {
           <ComponentBox label="Action Buttons">
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <button style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.7rem' }}>
-                <Copy size={14} strokeWidth={1.5} /> Copiar
+                <Copy size={14} /> Copiar
               </button>
               <button style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.7rem' }}>
-                <Sparkles size={14} strokeWidth={1.5} /> Gerar variação
+                <Star size={14} /> Gerar variação
               </button>
               <button style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.7rem' }}>
-                <Bookmark size={14} strokeWidth={1.5} fill={saved ? 'var(--text-muted)' : 'none'} /> Salvar
+                <Bookmark size={14} fill={saved ? 'var(--text-muted)' : 'none'} /> Salvar
               </button>
               <button onClick={() => setLiked(!liked)} aria-pressed={liked} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
-                <ThumbsUp size={14} strokeWidth={1.5} style={{ color: liked ? '#10B981' : 'var(--text-muted)' }} />
+                <ThumbsUp size={14} style={{ color: liked ? '#10B981' : 'var(--text-muted)' }} />
               </button>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
-                <ThumbsDown size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+                <ThumbsDown size={14} style={{ color: 'var(--text-muted)' }} />
               </button>
             </div>
           </ComponentBox>

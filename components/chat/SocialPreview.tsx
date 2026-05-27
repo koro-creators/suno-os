@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles } from 'lucide-react';
+import { Star } from '@carbon/icons-react';
 
 type PreviewFormat = 'feed' | 'carousel' | 'stories' | 'post';
 
@@ -89,7 +89,7 @@ function CoverSlide({ title, subtitle, color, clientName, totalSlides, onGenerat
       )}
       {onGenerate && (
         <button onClick={onGenerate} style={{ position: 'absolute', bottom: 6, right: 6, display: 'flex', alignItems: 'center', gap: 2, fontSize: '0.45rem', color: '#fff', backgroundColor: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 4, padding: '2px 5px', cursor: 'pointer' }}>
-          <Sparkles size={7} strokeWidth={1.5} />Gerar
+          <Star size={7} />Gerar
         </button>
       )}
     </div>

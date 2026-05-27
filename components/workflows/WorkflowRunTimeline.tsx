@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
+import { CheckmarkFilled, ChevronDown, ChevronRight, ErrorFilled, InProgress, Time } from '@carbon/icons-react';
 import { WorkflowRun, StepLog } from '@/lib/workflow-types';
 
 const RUN_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
@@ -13,11 +13,11 @@ const RUN_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
 };
 
 function StatusIcon({ status }: { status: string }) {
-  if (status === 'completed') return <CheckCircle2 size={14} strokeWidth={1.5} style={{ color: '#22C55E' }} />;
-  if (status === 'failed') return <XCircle size={14} strokeWidth={1.5} style={{ color: '#EF4444' }} />;
-  if (status === 'running') return <Loader2 size={14} strokeWidth={1.5} style={{ color: '#3B82F6' }} />;
-  if (status === 'paused') return <Clock size={14} strokeWidth={1.5} style={{ color: '#F59E0B' }} />;
-  return <Clock size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />;
+  if (status === 'completed') return <CheckmarkFilled size={14} style={{ color: '#22C55E' }} />;
+  if (status === 'failed') return <ErrorFilled size={14} style={{ color: '#EF4444' }} />;
+  if (status === 'running') return <InProgress size={14} style={{ color: '#3B82F6' }} />;
+  if (status === 'paused') return <Time size={14} style={{ color: '#F59E0B' }} />;
+  return <Time size={14} style={{ color: 'var(--text-muted)' }} />;
 }
 
 function formatDuration(startedAt: string | null, completedAt: string | null): string {
@@ -100,9 +100,9 @@ function RunItem({ run }: { run: WorkflowRun }) {
         }}
       >
         {expanded ? (
-          <ChevronDown size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <ChevronDown size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
         ) : (
-          <ChevronRight size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <ChevronRight size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
         )}
         <StatusIcon status={run.status} />
         <span

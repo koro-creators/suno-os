@@ -49,6 +49,24 @@ def reset_workflow_store() -> Iterator[None]:
     wf_router._step_logs.clear()
 
 
+@pytest.fixture(autouse=True)
+def reset_agents_store() -> Iterator[None]:
+    """Reset agent and run in-memory stores before each test."""
+    try:
+        from api.agents.router import _agents
+        from api.agents.runner import _runs, _runs_by_agent
+
+        _agents.clear()
+        _runs.clear()
+        _runs_by_agent.clear()
+        yield
+        _agents.clear()
+        _runs.clear()
+        _runs_by_agent.clear()
+    except ImportError:
+        yield
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

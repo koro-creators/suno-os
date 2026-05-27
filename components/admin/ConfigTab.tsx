@@ -1,6 +1,6 @@
 'use client';
 
-import { Shield } from 'lucide-react';
+import { Security } from '@carbon/icons-react';
 import { SkillAdmin } from '@/lib/admin-types';
 
 const inputStyle: React.CSSProperties = {
@@ -106,7 +106,7 @@ export default function ConfigTab({ data, onChange }: ConfigTabProps) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: '0.7rem' }}>
-        <Shield size={12} strokeWidth={1.5} />
+        <Security size={12} />
         Configurações protegidas — não visíveis no frontend público
       </div>
     </div>

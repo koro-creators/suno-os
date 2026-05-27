@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Document } from '@carbon/icons-react';
 import { Meeting, MeetingSegment } from '@/lib/meeting-types';
 import TrechoCard from './TrechoCard';
 
@@ -43,12 +43,12 @@ export default function TranscricaoPanel({ meeting, segments, onSegmentToggle, o
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
+            <Document size={14} style={{ color: 'var(--text-muted)' }} />
             <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>Transcrição Completa</span>
           </div>
           {transcriptExpanded
-            ? <ChevronUp size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />
-            : <ChevronDown size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)' }} />}
+            ? <ChevronUp size={14} style={{ color: 'var(--text-muted)' }} />
+            : <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />}
         </button>
         {transcriptExpanded && (
           <div

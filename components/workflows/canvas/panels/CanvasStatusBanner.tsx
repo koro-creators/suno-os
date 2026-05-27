@@ -18,7 +18,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { CircleAlert, CheckCircle2, Loader2, Users } from 'lucide-react';
+import { CheckmarkFilled, Group, InProgress, Warning } from '@carbon/icons-react';
 import type { AutoSaveStatus } from '@/hooks/useWorkflowAutoSave';
 
 interface BannerProps {
@@ -58,7 +58,7 @@ export default function CanvasStatusBanner({
   if (concurrentEditUser && concurrentEditWithinMin !== null && concurrentEditWithinMin !== undefined && concurrentEditWithinMin <= 5) {
     return (
       <div role="status" aria-live="assertive" style={{ ...BAR, background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>
-        <Users size={14} strokeWidth={1.5} />
+        <Group size={14} />
         <span>
           {concurrentEditUser} editou há {concurrentEditWithinMin}min. Salvar pode sobrescrever alterações.
         </span>
@@ -70,7 +70,7 @@ export default function CanvasStatusBanner({
   if (hardErrorCount > 0) {
     return (
       <div role="alert" aria-live="assertive" style={{ ...BAR, background: 'rgba(239,68,68,0.15)', color: '#EF4444' }}>
-        <CircleAlert size={14} strokeWidth={1.5} />
+        <Warning size={14} />
         <span>
           {hardErrorCount === 1 ? '1 erro de validação' : `${hardErrorCount} erros de validação`}
           {hardErrorSample ? ` — ${hardErrorSample}` : ''}
@@ -84,21 +84,21 @@ export default function CanvasStatusBanner({
     case 'saving':
       return (
         <div role="status" aria-live="polite" style={{ ...BAR, background: 'rgba(59,130,246,0.10)', color: '#3B82F6' }}>
-          <Loader2 size={14} strokeWidth={1.5} className="spin" />
+          <InProgress size={14} className="spin" />
           <span>Salvando…</span>
         </div>
       );
     case 'saved':
       return (
         <div role="status" aria-live="polite" style={{ ...BAR, background: 'rgba(34,197,94,0.10)', color: '#22C55E' }}>
-          <CheckCircle2 size={14} strokeWidth={1.5} />
+          <CheckmarkFilled size={14} />
           <span>Salvo às {savedAt ? formatTime(savedAt) : '...'}</span>
         </div>
       );
     case 'error':
       return (
         <div role="alert" style={{ ...BAR, background: 'rgba(239,68,68,0.15)', color: '#EF4444' }}>
-          <CircleAlert size={14} strokeWidth={1.5} />
+          <Warning size={14} />
           <span>Erro ao salvar — {saveError?.message ?? 'tente novamente'}</span>
         </div>
       );

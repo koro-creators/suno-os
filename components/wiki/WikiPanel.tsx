@@ -6,7 +6,7 @@
  * Caixa-preta: this page is 404 for Operacional role.
  */
 
-import { BookOpen } from 'lucide-react';
+import { Book } from '@carbon/icons-react';
 import type { WikiEntity } from '@/lib/onboarding-types';
 import { WikiOntologicaProvider } from '@/contexts/WikiOntologicaContext';
 import WikiEntityCard from './WikiEntityCard';
@@ -31,7 +31,7 @@ export default function WikiPanel({ clientName, entities }: Props) {
             color: 'var(--text-muted)',
           }}
         >
-          <BookOpen size={32} strokeWidth={1} />
+          <Book size={32} />
           <p style={{ fontSize: '0.9rem' }}>Nenhuma entidade aprovada ainda.</p>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
             Complete a validação HITL para ver a Wiki Ontológica.
@@ -54,7 +54,7 @@ export default function WikiPanel({ clientName, entities }: Props) {
           {/* Header */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <BookOpen size={18} strokeWidth={1.5} style={{ color: 'var(--sun)' }} />
+              <Book size={18} style={{ color: 'var(--sun)' }} />
               <h1 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Wiki Ontológica
               </h1>

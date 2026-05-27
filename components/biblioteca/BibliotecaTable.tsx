@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { OverflowMenuHorizontal } from '@carbon/icons-react';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
 import FileTypeIcon from './FileTypeIcon';
 
@@ -171,7 +171,7 @@ export default function BibliotecaTable({
               >
                 {/* Type icon */}
                 <td style={{ ...tdStyle, width: 32, padding: '0 4px 0 8px' }}>
-                  <FileTypeIcon fileType={doc.fileType} size={16} />
+                  <FileTypeIcon fileType={doc.fileType} docType={doc.docType} size={16} />
                 </td>
 
                 {/* Title */}
@@ -285,7 +285,7 @@ export default function BibliotecaTable({
                     }}
                     aria-label="Acoes"
                   >
-                    <MoreHorizontal size={16} strokeWidth={1.5} />
+                    <OverflowMenuHorizontal size={16} />
                   </button>
 
                   {/* Dropdown menu */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { HardDrive, LinkIcon, Unlink, Loader2 } from 'lucide-react';
+import { DataBase, InProgress, Link, Unlink } from '@carbon/icons-react';
 
 export interface DriveConnectionCardProps {
   connected: boolean;
@@ -37,7 +37,7 @@ export default function DriveConnectionCard({
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <HardDrive size={14} strokeWidth={1.5} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+        <DataBase size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
         <h2
           style={{
             fontSize: '0.8rem',
@@ -128,9 +128,9 @@ export default function DriveConnectionCard({
             }}
           >
             {isLoading ? (
-              <Loader2 size={14} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+              <InProgress size={14} style={{ animation: 'spin 1s linear infinite' }} />
             ) : (
-              <LinkIcon size={14} strokeWidth={1.5} />
+              <Link size={14} />
             )}
             Conectar Google Drive (@sunounited)
           </button>
@@ -163,9 +163,9 @@ export default function DriveConnectionCard({
             }}
           >
             {isLoading ? (
-              <Loader2 size={14} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+              <InProgress size={14} style={{ animation: 'spin 1s linear infinite' }} />
             ) : (
-              <Unlink size={14} strokeWidth={1.5} />
+              <Unlink size={14} />
             )}
             Desconectar
           </button>
