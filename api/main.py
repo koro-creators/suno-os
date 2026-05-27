@@ -46,7 +46,26 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"MLflow initialization skipped: {e}")
 
+    # Start preview-runs cleanup loop (TASK-C12 — deletes TTL-expired runs every 30min)
+    import asyncio
+
+    async def _cleanup_previews_loop() -> None:
+        from agents.preview import cleanup_expired_previews
+
+        while True:
+            await asyncio.sleep(1800)  # 30 min
+            try:
+                n = cleanup_expired_previews()
+                if n:
+                    logger.info("Cleaned up %d expired preview runs", n)
+            except Exception as exc:
+                logger.warning("Preview cleanup error: %s", exc)
+
+    cleanup_task = asyncio.create_task(_cleanup_previews_loop())
+
     yield
+
+    cleanup_task.cancel()
 
     logger.info(f"Shutting down {settings.PROJECT_NAME}")
 

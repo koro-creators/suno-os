@@ -85,3 +85,12 @@ export interface AgentRun {
   output: Record<string, unknown> | null;
   error_message: string | null;
 }
+
+export interface AgentRunRequest {
+  input: string;
+  client_id?: string;
+}
+
+export interface AgentRunResponse {
+  run_id: string;
+}

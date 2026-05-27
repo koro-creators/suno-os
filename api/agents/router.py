@@ -1,13 +1,24 @@
-"""FastAPI router for Agents CRUD — SPEC-021 FA-17 (Fase A in-memory mock)."""
+"""FastAPI router for Agents — SPEC-021 FA-17 (Fases A + C in-memory)."""
 
 from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
-from .schemas import AgentCreate, AgentDetail, AgentSummary, AgentUpdate
+from .runner import create_run, execute_run, get_run, list_runs
+from .schemas import (
+    AgentCreate,
+    AgentDetail,
+    AgentRunDetail,
+    AgentRunRequest,
+    AgentRunSummary,
+    AgentSummary,
+    AgentUpdate,
+    RunResponse,
+)
 
 router = APIRouter(tags=["Agents"])
 
@@ -90,3 +101,64 @@ async def delete_agent(agent_id: str) -> dict:
     agent["status"] = "archived"
     agent["updated_at"] = datetime.now(timezone.utc).isoformat()
     return {"status": "archived"}
+
+
+# ---------------------------------------------------------------------------
+# Runs — TASK-C05, C06, C08
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{agent_id}/run", status_code=202, response_model=RunResponse)
+async def run_agent(
+    agent_id: str,
+    data: AgentRunRequest,
+    background_tasks: BackgroundTasks,
+    triggered_by: Annotated[str, Query()] = "manual",
+) -> dict:
+    """Dispatch agent execution as a background task.
+
+    Returns 202 immediately with run_id. Poll GET /runs/{run_id} for status.
+    Caixa-preta: archived agent → 404 (never expose 'archived' state to caller).
+    """
+    agent = _require_agent(agent_id)
+    if agent.get("status") == "archived":
+        raise HTTPException(status_code=404, detail="Not found")
+
+    valid_triggers = {"manual", "preview"}
+    safe_trigger = triggered_by if triggered_by in valid_triggers else "manual"
+
+    if safe_trigger == "preview":
+        from .preview import create_preview_run
+
+        run = create_preview_run(agent_id, data.input)
+    else:
+        run = create_run(
+            agent_id=agent_id,
+            triggered_by=safe_trigger,
+            input_text=data.input,
+            client_id=data.client_id,
+        )
+
+    background_tasks.add_task(execute_run, run["id"], agent)
+    return {"run_id": run["id"]}
+
+
+@router.get("/{agent_id}/runs", response_model=list[AgentRunSummary])
+async def list_agent_runs(
+    agent_id: str,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> list[dict]:
+    """List runs for an agent (newest first). Caixa-preta: 404 for unknown agent."""
+    _require_agent(agent_id)
+    return list_runs(agent_id, limit=limit, offset=offset)
+
+
+@router.get("/{agent_id}/runs/{run_id}", response_model=AgentRunDetail)
+async def get_agent_run(agent_id: str, run_id: str) -> dict:
+    """Get run detail including input/output. Caixa-preta: 404 for unknown."""
+    _require_agent(agent_id)
+    run = get_run(run_id)
+    if not run or run.get("agent_id") != agent_id:
+        raise HTTPException(status_code=404, detail="Not found")
+    return run
