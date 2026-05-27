@@ -487,12 +487,14 @@ export function OnboardingOraculoProvider({ children }: { children: ReactNode })
     if (!apiAvailable()) {
       // Mock-mode: build wiki from mockEntitiesRef state
       const now = new Date().toISOString();
+      // FR-185: backdate first entity so the stale alert is visible in mock mode
+      const staleTimestamp = new Date(Date.now() - 80 * 3600 * 1000).toISOString();
       const visibleStatuses: EntityStatus[] = includeGenerated
         ? ['generated', 'accepted']
         : ['accepted'];
       const mockWiki: WikiEntity[] = ONTOLOGY_ENTITY_TYPES
         .filter((t) => visibleStatuses.includes(mockEntitiesRef.current[t]))
-        .map((t) => ({
+        .map((t, idx) => ({
           id: `mock-${t}`,
           clientId: mockClientIdRef.current || 'mock',
           entityType: t,
@@ -500,7 +502,8 @@ export function OnboardingOraculoProvider({ children }: { children: ReactNode })
           provenance: [{ source: 'Briefing', excerpt: `Dado de onboarding para ${t}` }],
           status: mockEntitiesRef.current[t],
           badge: 'seed_auto' as const,
-          createdAt: now,
+          // First entity gets a backdated timestamp to demo the 72h staleness alert
+          createdAt: idx === 0 ? staleTimestamp : now,
           updatedAt: now,
         }));
       setWikiEntities(mockWiki);

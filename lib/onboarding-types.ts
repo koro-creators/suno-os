@@ -151,3 +151,21 @@ export interface WikiPageData {
   clientName: string;
   entities: WikiEntity[];
 }
+
+// ---------------------------------------------------------------------------
+// FR-185 — Staleness utility
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when a wiki entity has been waiting for review (status
+ * 'pending' or 'generated') for longer than `thresholdHours` (default 72h).
+ */
+export function isEntityStale(
+  entity: { status: EntityStatus; createdAt?: string | number },
+  thresholdHours = 72,
+): boolean {
+  if (entity.status !== 'pending' && entity.status !== 'generated') return false;
+  if (!entity.createdAt) return false;
+  const ageMs = Date.now() - new Date(entity.createdAt).getTime();
+  return ageMs >= thresholdHours * 3600 * 1000;
+}

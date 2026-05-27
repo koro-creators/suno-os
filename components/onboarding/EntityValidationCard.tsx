@@ -6,18 +6,20 @@
  */
 
 import { useState } from 'react';
-import { CheckmarkFilled, ChevronDown, ChevronUp, Edit, Renew } from '@carbon/icons-react';
+import { CheckmarkFilled, ChevronDown, ChevronUp, Edit, Renew, WarningAlt } from '@carbon/icons-react';
 import type { HITLAction, OntologyEntityType, EntityStatus, EntityBadge } from '@/lib/onboarding-types';
+import { isEntityStale } from '@/lib/onboarding-types';
 
 interface Props {
   entityType: OntologyEntityType;
   content: string;
   status: EntityStatus;
   badge: EntityBadge;
+  createdAt?: string;
   onValidate: (action: HITLAction, editedContent?: string) => Promise<void>;
 }
 
-export default function EntityValidationCard({ entityType, content, status, badge, onValidate }: Props) {
+export default function EntityValidationCard({ entityType, content, status, badge, createdAt, onValidate }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
@@ -26,6 +28,7 @@ export default function EntityValidationCard({ entityType, content, status, badg
   const isAccepted = status === 'accepted';
   const isRegenerating = status === 'regenerating';
   const isGenerated = status === 'generated';
+  const isStale = isEntityStale({ status, createdAt });
 
   const handleAction = async (action: HITLAction) => {
     if (isPending) return;
@@ -111,6 +114,16 @@ export default function EntityValidationCard({ entityType, content, status, badg
             }}
           >
             {badge === 'hitl' ? 'editado' : 'auto'}
+          </span>
+        )}
+
+        {/* FR-185: Stale alert icon */}
+        {isStale && (
+          <span
+            title="Aguardando revisão há mais de 72h"
+            style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', color: 'var(--sun)' }}
+          >
+            <WarningAlt size={14} />
           </span>
         )}
 
