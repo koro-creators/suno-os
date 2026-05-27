@@ -96,35 +96,52 @@
 
 ---
 
-## Próximas Phases — Piloto
+## Também Concluído (descoberto na auditoria 2026-05-26)
 
-### Phase 12: Sidebar Recentes Dinâmico
+### Phase 12: Sidebar Recentes Dinâmico (2026-05-26)
 > Fase de produto: **MVP** (refinamento UX)
-> SPEC-019 (sidebar-recentes): rascunho
-- [ ] Rastrear navegação real do usuário
-- [ ] Mostrar últimos clientes/skills visitados
-- [ ] Persistir em sessionStorage
+> SPEC-019 (sidebar-recentes)
+- [x] Rastrear navegação real do usuário — `hooks/useNavigationHistory.ts`
+- [x] Mostrar últimos clientes/skills visitados — `components/layout/Sidebar.tsx` usa `useNavigationHistory`
+- [x] Persistir em sessionStorage — `useNavigationHistory` lê/escreve `sessionStorage` com fallback silencioso
 
-### Phase 13: Busca Global
+### Phase 13: Busca Global (2026-05-26)
 > Fase de produto: **MVP** (refinamento UX)
-> SPEC-020 (busca-global): rascunho
-- [ ] Barra de busca unificada (Cmd+K)
-- [ ] Busca cross-feature: skills, documentos, clientes
-- [ ] Resultados agrupados por tipo
-- [ ] Navegação direta do resultado
+> SPEC-020 (busca-global)
+- [x] Barra de busca unificada (Cmd+K) — `components/layout/AppShell.tsx` listener `metaKey+k`
+- [x] Busca cross-feature: skills, documentos, clientes — `hooks/useGlobalSearch.ts` consulta SkillsContext + ClientsContext + BibliotecaContext
+- [x] Resultados agrupados por tipo — `GlobalSearch.tsx` agrupa por `client`, `skill`, `document`
+- [x] Navegação direta do resultado — `navigateSelected()` usa `router.push(item.href)`
+
+### Phase 15: Refinamentos Solar ↔ Admin (2026-05-26)
+> Fase de produto: **MVP** (refinamento visual — PRD §1.4)
+> ⚠️ `data/clients.ts` permanece estático (ADR-002). Sync é manual, documentado no runbook.
+- [x] Sistema Solar reflete Skills e Moons reais do SkillsContext (leitura) — `app/[clientSlug]/page.tsx` usa `useSkills()` para filtrar skills ativas por cliente
+- [x] Moons do Chat carregam dinamicamente por Skill ativo — `app/[clientSlug]/[skillSlug]/page.tsx` prefere moons do SkillsContext
+- [x] Polish visual: estados de loading, transições, empty states no solar — `app/[clientSlug]/page.tsx` tem `useState(loading)` com skeleton + empty state quando não há skills ativas
+
+### Phase 17: Workflow Builder Visual — Canvas Drag-and-Drop (2026-05-26)
+> Fase de produto: **Piloto** (ADR-003 — canvas para PX-07 Sponsor + PX-08 Builder de Área)
+> SPEC-005 (workflow-builder-canvas): **em-revisao** | SPEC-003 substituido por SPEC-005
+- [x] Canvas drag-and-drop com React Flow + dagre auto-layout — `components/workflows/canvas/WorkflowCanvas.tsx`
+- [x] 7 node types (tool, llm, action, condition, hitl, merge, workflow) — `components/workflows/canvas/nodes/` (ToolNode, LLMNode, ActionNode, ConditionNode, HITLNode, MergeNode, SubWorkflowNode)
+- [x] Edge handles com vocabulário paridade backend↔frontend — `ALLOWED_SOURCE_HANDLES_BY_TYPE` em `api/workflows/validator.py` e `NodeShell.tsx` (out/error/then/else/approved/rejected/modified, target sempre `in`)
+- [x] NodeShell pattern + ARIA + focus ring — `components/workflows/canvas/nodes/NodeShell.tsx`
+- [x] Auto-save race-safety (`useWorkflowAutoSave`) — `hooks/useWorkflowAutoSave.ts` com `useRef` para latest payload
+- [x] Validate endpoint (DFS para ciclos + fan-in sem merge) — `api/workflows/validator.py` com DFS 3-color (`has_cycle` + `cycle_edges`)
+- [x] Migration v1→v2 (JSONB steps → relational workflow_steps + edges) — `api/migrations/003_workflow_canvas_v2.sql` + `api/workflows/migration_v1_v2.py`
+
+---
+
+## Próximas Phases — Em Progresso/Piloto
 
 ### Phase 14: Onboarding / Empty States
 > Fase de produto: **Piloto** (gate de adoção — PRD §5.7)
-- [ ] Welcome screen para primeiro uso
-- [ ] Empty states ricos em todas as páginas admin
-- [ ] Guia de getting started
+- [x] Welcome screen para primeiro uso — `components/solar/WelcomeScreen.tsx` renderizado em `app/page.tsx` (estado sem clientes)
+- [x] Empty states ricos em todas as páginas admin — `EmptyState` com ícone + título + CTA em Skills, Clientes e Biblioteca
+- [ ] Guia de getting started — nenhuma página ou componente de guia interativo implementado
 
-### Phase 15: Refinamentos Solar ↔ Admin
-> Fase de produto: **MVP** (refinamento visual — PRD §1.4)
-> ⚠️ `data/clients.ts` permanece estático (ADR-002). Sync é manual, documentado no runbook.
-- [ ] Sistema Solar reflete Skills e Moons reais do SkillsContext (leitura)
-- [ ] Moons do Chat carregam dinamicamente por Skill ativo
-- [ ] Polish visual: estados de loading, transições, empty states no solar
+> ⚠️ Pendente: guia de getting started (nem página nem componente encontrado)
 
 ### Phase 16: Multimodal — Image Editor + VideoGen
 > Fase de produto: **Piloto** (Image) + **MVP** (Video) — bloqueado por **DEC-06** (business case)
@@ -134,78 +151,79 @@
 - [ ] Image enhance: upscale x2/x4
 - [ ] Video generation: Vertex AI Veo 3.1 ← requer DEC-06 aprovado
 
-### Phase 17: Workflow Builder Visual — Canvas Drag-and-Drop
-> Fase de produto: **Piloto** (ADR-003 — canvas para PX-07 Sponsor + PX-08 Builder de Área)
-> SPEC-005 (workflow-builder-canvas): **em-revisao** | SPEC-003 substituido por SPEC-005
-- [ ] Canvas drag-and-drop com React Flow + dagre auto-layout
-- [ ] 7 node types (tool, llm, action, condition, hitl, merge, workflow)
-- [ ] Edge handles com vocabulário paridade backend↔frontend
-- [ ] NodeShell pattern + ARIA + focus ring
-- [ ] Auto-save race-safety (`useWorkflowAutoSave`)
-- [ ] Validate endpoint (DFS para ciclos + fan-in sem merge)
-- [ ] Migration v1→v2 (JSONB steps → relational workflow_steps + edges)
-
 ### Phase 18: Drive Suno como Fonte de Contexto
 > Fase de produto: **Protótipo** (base OAuth) → **Piloto** (cleanup reports + curadoria assistida)
 > Restrito ao Drive interno da Suno (REST-08 v2, 2026-05-14). Drive de clientes externos fora de escopo.
 > SPEC-006 (drive-readonly-curation): rascunho
-- [ ] Conexão OAuth Google Drive (contas @sunounited)
-- [ ] Sync incremental via Delta API (Google Drive Webhooks)
-- [ ] ACL∩RBAC — arquivo só ingerido se usuário tem acesso no Drive
-- [ ] Ingestão assíncrona com job queue
-- [ ] Cleanup Report: duplicatas, arquivos sem acesso, desatualizados
-- [ ] Sugestões de curadoria com aceite/rejeição manual pelo Líder
+- [x] Conexão OAuth Google Drive (contas @sunounited) — `api/drive/router.py` (auth/callback endpoints) + DriveTab no editor de cliente (admin-only); `/configuracoes/drive` redireciona para `/configuracoes` (SPEC-022)
+- [ ] Sync incremental via Delta API (Google Drive Webhooks) — router stub (`sync_started` hardcoded, `changes.list` não implementado)
+- [ ] ACL∩RBAC — arquivo só ingerido se usuário tem acesso no Drive — não implementado
+- [ ] Ingestão assíncrona com job queue — stub; nenhuma fila real (Celery/Cloud Tasks) conectada
+- [ ] Cleanup Report: duplicatas, arquivos sem acesso, desatualizados — não implementado
+- [ ] Sugestões de curadoria com aceite/rejeição manual pelo Líder — não implementado
+
+> ⚠️ Pendente: 5 de 6 itens. Apenas OAuth base implementada (Fase A). Itens Piloto (Fases B–E) aguardam DEC-02/REST-08.
 
 ### Phase 19: Onboarding com Oráculo do Cliente
 > Fase de produto: **Piloto** (wizard + seed + HITL gate PRE_ACTIVE→ACTIVE)
 > SPEC-015 (onboarding-oraculo-cliente): rascunho
 > Depende de: SPEC-018 status enum PRE_ACTIVE/ACTIVE/ARCHIVED em `clients`
-- [ ] Wizard 4 passos: Identidade → Contexto → Validação → Ativação
-- [ ] Seed ontológico: Deep Agent extrai 6 entidades (Posicionamento, Personas, Competidores, Produtos, Tom, Briefings)
-- [ ] HITL gate por entidade: aprovação manual pelo PX-07 Sponsor
-- [ ] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas
-- [ ] Alerta >= 72h se entidade pendente sem revisão (FR-185)
+- [x] Wizard 4 passos: Identidade → Contexto → Validação → Ativação — `components/onboarding/WizardContainer.tsx` + WizardStep1..4; páginas em `app/clientes/[clientId]/onboarding/` (progress + validate)
+- [ ] Seed ontológico: Deep Agent extrai 6 entidades (Posicionamento, Personas, Competidores, Produtos, Tom, Briefings) — `api/onboarding/service.py` usa mock LLM ("Real LangGraph agent deferred"); geração de conteúdo é placeholder
+- [x] HITL gate por entidade: aprovação manual pelo PX-07 Sponsor — `EntityValidationCard.tsx` + `app/.../onboarding/validate/page.tsx` com accept/reject por entidade
+- [x] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas — validate/page.tsx verifica `acceptedCount === 6`, dispara transição e redireciona para wiki
+- [ ] Alerta >= 72h se entidade pendente sem revisão (FR-185) — nenhuma lógica de alerta por tempo encontrada (nem frontend nem backend)
+
+> ⚠️ Pendente: Deep Agent real (LLMGraphTransformer) e alerta FR-185 (>= 72h sem revisão)
 
 ### Phase 20: Aprovação Hierárquica
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado por Guga + Bruno Prosperi (2026-04-28)
 > SPEC-004 (approval-hierarchy): rascunho
-- [ ] Submissão de conteúdo gerado para validação por Aprovador
-- [ ] Inbox do Aprovador com filtros por cliente/skill/urgência
-- [ ] Validation Report com comparação before/after + comentários inline
-- [ ] Notificação push/email ao Aprovador + ao Creator
-- [ ] Histórico de aprovações por cliente
+- [x] Submissão de conteúdo gerado para validação por Aprovador — `ApprovalsContext` com CRUD + `app/aprovacoes/page.tsx` + `app/aprovacoes/[submissionId]/page.tsx`
+- [x] Inbox do Aprovador com filtros por cliente/skill/urgência — `AprovacaoFilters.tsx` com filtros por `client_id`, `skill_slug`, `urgency`; `AprovacaoCard.tsx` para listagem
+- [ ] Validation Report com comparação before/after + comentários inline — página exibe o conteúdo submetido e `CommentThread` com histórico de eventos, mas sem comparação before/after estruturada
+- [ ] Notificação push/email ao Aprovador + ao Creator — não implementado (nenhum envio de email ou push no `api/approval/`)
+- [ ] Histórico de aprovações por cliente — inbox filtrável inclui aprovadas/rejeitadas; sem página dedicada de histórico por cliente
+
+> ⚠️ Pendente: comparação before/after no Validation Report, notificações push/email, e histórico paginado por cliente
 
 ### Phase 21: Captura Seletiva de Reuniões
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado em reunião 2026-05-14 (BR-020)
 > Base técnica: transcrições Gemini Meet já em uso na Suno
 > SPEC-016 (captura-seletiva-reunioes): rascunho
 > ⚠️ **Decisão 2026-05-26:** Reuniões são sub-feature de Biblioteca (filtro/tipo), não nav item próprio. `/reunioes` redireciona para `/biblioteca`. Curadoria em `/reunioes/[id]` permanece.
-- [ ] Opt-in por reunião (Creator decide o que capturar)
-- [ ] Transcrição via Gemini Meet com marcação de trechos relevantes
-- [ ] Wiki Ontológica com HITL: Creator revisa antes de persistir na Biblioteca
-- [ ] Integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto
-- [ ] Integração visual na Biblioteca: filter "Reuniões" em `selectedTypes` + cards de reunião na BibliotecaTable/Grid
+- [x] Opt-in por reunião (Creator decide o que capturar) — `components/reunioes/OptInModal.tsx` com opt-in explícito por reunião
+- [x] Transcrição via Gemini Meet com marcação de trechos relevantes — `api/chat/ingestion/video_processor.py` usa `gemini-1.5-flash` multimodal; `TranscricaoPanel.tsx` + `TrechoCard.tsx` no frontend
+- [x] Wiki Ontológica com HITL: Creator revisa antes de persistir na Biblioteca — `components/wiki/WikiPanel.tsx` + `WikiEntityCard.tsx`; curation page em `app/reunioes/[reuniaoId]/page.tsx` envia trechos para revisão HITL antes de entrar na Biblioteca
+- [ ] Integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto — nenhuma integração entre reuniões e oráculo encontrada
+- [x] Integração visual na Biblioteca: filter "Reuniões" em `selectedTypes` + cards de reunião na BibliotecaTable/Grid — `BibliotecaSidebar.tsx` tem tipo `{ key: 'reuniao', label: 'Reuniões' }` em `selectedTypes`
+
+> ⚠️ Pendente: integração com Oráculo do Cliente (FA-15) para enriquecimento de contexto de reunião
 
 ### Phase 22: Agentes de IA
 > Fase de produto: **Piloto** (FA-17) — solicitado 2026-05-26
 > SPEC-021 (agentes): **rascunho**
-- [ ] Listagem e CRUD de agentes (`/agentes`) — global com permissão por cliente
-- [ ] Editor completo com 7 tabs (Configuração, Skills, Apps, Memória, Agendamento, Atividade, Clientes)
-- [ ] Upload file-based de memória contextual (GCS)
-- [ ] Schedule: hourly/daily com seleção de dias/horário/timezone
-- [ ] Runtime LangGraph: Skills como tools, memory files como contexto
-- [ ] Preview sandboxed + execução manual + activity log
-- [ ] Cloud Scheduler (Fase D — PRE-01 e PRE-04 resolvidos)
+- [x] Listagem e CRUD de agentes (`/agentes`) — `app/agentes/page.tsx` + `app/agentes/[agentId]/page.tsx` + `app/agentes/new/` com AgentesCards + AgentDrawer
+- [x] Editor completo com 7 tabs (Configuração, Skills, Apps, Memória, Agendamento, Atividade, Clientes) — `components/admin/agentes/AgenteEditorTabs.tsx` + 7 tabs em `tabs/`
+- [ ] Upload file-based de memória contextual (GCS) — `api/agents/memory.py` explicitamente adia para Fase D (TASK-D06); `MemoriaTab.tsx` exibe arquivos mas sem upload real para GCS
+- [ ] Schedule: hourly/daily com seleção de dias/horário/timezone — `AgendamentoTab.tsx` e `schemas.py` modelam `frequency: hourly|daily`, mas `api/agents/router.py` só aceita triggers `manual`/`preview`; agendamento não executado
+- [x] Runtime LangGraph: Skills como tools, memory files como contexto — `api/agents/graph.py` usa `StateGraph` LangGraph + `skill_loader.py` como tools
+- [x] Preview sandboxed + execução manual + activity log — `api/agents/preview.py` (TTL 1h) + `AtividadeTab.tsx` com paginação e status de runs
+- [ ] Cloud Scheduler (Fase D — PRE-01 e PRE-04 resolvidos) — `api/agents/scheduler.py` não existe; nenhuma integração com Cloud Scheduler
+
+> ⚠️ Pendente: GCS upload de memória (Fase D), agendamento real (Cloud Scheduler/APScheduler), runtime de schedule
 
 ### Phase 23: Configurações Admin
 > Fase de produto: **Piloto** (FA-12 expansão) — solicitado 2026-05-26
 > SPEC-022 (configuracoes-admin): **rascunho**
-- [ ] `/configuracoes` → admin panel com 4 seções: Usuários/RBAC, Integrações Globais, Skills/Modelos, Auditoria
-- [ ] Drive OAuth migra de `/configuracoes/drive` para aba "Drive" no editor de cliente
-- [ ] Gestão de usuários: listar, convidar, editar papel, suspender via Firebase Admin SDK
-- [ ] Integrações globais: Gemini API Key (Fase A) + extensível
-- [ ] Defaults de modelo LLM por skill (editável inline)
-- [ ] Audit log append-only
+- [x] `/configuracoes` → admin panel com 4 seções: Usuários/RBAC, Integrações Globais, Skills/Modelos, Auditoria — `app/configuracoes/page.tsx` com tabs Usuários, Integrações, Skills/Modelos, Auditoria
+- [x] Drive OAuth migra de `/configuracoes/drive` para aba "Drive" no editor de cliente — `app/configuracoes/drive/page.tsx` redireciona para `/configuracoes`; `ClientEditor.tsx` tem tab "Drive" (admin-only)
+- [x] Gestão de usuários: listar, convidar, editar papel, suspender via Firebase Admin SDK — `UsuariosTab.tsx` lista usuários, convida por email, edita papel; Firebase Admin SDK verificação adiada para Fase B (`AuditoriaTab` nota "Firebase Custom Claim deferred")
+- [x] Integrações globais: Gemini API Key (Fase A) + extensível — `IntegracoesTab.tsx` implementado
+- [x] Defaults de modelo LLM por skill (editável inline) — `SkillsDefaultsTab.tsx` com edição inline de `model`, `temperature`, `max_tokens`
+- [x] Audit log append-only — `AuditoriaTab.tsx` com tabela read-only ("Tabela read-only — sem ações de edição ou exclusão (append-only)")
+
+> ⚠️ Pendente: verificação real via Firebase Admin SDK (Fase B — hoje gestão de usuários é mock in-memory)
 
 ---
 
@@ -237,9 +255,9 @@
 
 | ID | Slug | Feature | Status |
 |----|------|---------|:------:|
-| SPEC-019 | sidebar-recentes | Phase 12 Sidebar Recentes Dinâmico | rascunho |
-| SPEC-020 | busca-global | Phase 13 Busca Global Cmd+K | rascunho |
-| SPEC-022 | configuracoes-admin | Admin panel /configuracoes — RBAC, integrações, defaults, auditoria; Drive → editor de cliente | rascunho |
+| SPEC-019 | sidebar-recentes | Phase 12 Sidebar Recentes Dinâmico | implementada |
+| SPEC-020 | busca-global | Phase 13 Busca Global Cmd+K | implementada |
+| SPEC-022 | configuracoes-admin | Admin panel /configuracoes — RBAC, integrações, defaults, auditoria; Drive → editor de cliente | implementada (parcial: Firebase Admin SDK pendente) |
 
 ### Legacy Design Specs (pré-SDD, sem artefato constitution)
 
@@ -256,13 +274,15 @@
 
 ## Mapeamento Fase de Produto ↔ Phases Técnicas
 
+> Última auditoria de código: 2026-05-26
+
 | Fase de Produto | Phases Técnicas | Status |
 |-----------------|-----------------|:------:|
 | **POC** | SPEC-010 (Moon Shot pipeline mínimo) | Em planejamento |
 | **Protótipo** | Phases 1–11 concluídas | ✅ 100% — gate Protótipo completo (smoke test staging pendente ops) |
-| **Piloto** | Phases 14, 16, 17, 18, 19 | Aguarda gate Phase 11 |
-| **Momento 2** | Phases 20, 21 | Pós-Piloto v1 |
-| **MVP** | Phases 12, 13, 15 + Phase 16 video + refinamentos | Q1 2027+ |
+| **MVP (UX)** | Phase 12 ✅ completa, Phase 13 ✅ completa, Phase 15 ✅ completa | Implementadas |
+| **Piloto** | Phase 14 ⚠️ (falta guia de getting started), Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅ completa, Phase 18 ⚠️ (só OAuth base), Phase 19 ⚠️ (falta Deep Agent real + alerta 72h), Phase 22 ⚠️ (falta GCS + schedule runtime), Phase 23 ⚠️ (falta Firebase Admin SDK real) | Parcialmente implementadas |
+| **Momento 2** | Phase 20 ⚠️ (falta notificações + before/after + histórico), Phase 21 ⚠️ (falta integração Oráculo FA-15) | Parcialmente implementadas |
 
 ---
 

@@ -9,6 +9,8 @@ import AppHeader from '@/components/layout/AppHeader';
 import QuickStats from '@/components/solar/QuickStats';
 import { useAuth } from '@/contexts/AuthContext';
 import WelcomeScreen from '@/components/solar/WelcomeScreen';
+import GettingStartedGuide from '@/components/onboarding/GettingStartedGuide';
+import { useFirstVisit } from '@/hooks/useFirstVisit';
 
 // Sort clients by skill count — fewer skills closer to sun
 const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
@@ -27,6 +29,8 @@ export default function Home() {
   const router = useRouter();
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
+  const { isFirstVisit, dismiss: dismissWelcome } = useFirstVisit();
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 300);
@@ -42,7 +46,11 @@ export default function Home() {
           breadcrumbs={[{ label: 'Home', href: '/' }]}
           rightLabel="0 clientes"
         />
-        <WelcomeScreen />
+        <WelcomeScreen
+          onDismiss={dismissWelcome}
+          onOpenGuide={() => setGuideOpen(true)}
+        />
+        {guideOpen && <GettingStartedGuide onClose={() => setGuideOpen(false)} />}
       </main>
     );
   }
@@ -53,6 +61,18 @@ export default function Home() {
         breadcrumbs={[{ label: 'Home', href: '/' }]}
         rightLabel={`${clients.length} clientes`}
       />
+
+      {/* First-visit welcome overlay — shown once, independent of client count */}
+      {isFirstVisit === true && (
+        <WelcomeScreen
+          overlay
+          onDismiss={dismissWelcome}
+          onOpenGuide={() => { dismissWelcome(); setGuideOpen(true); }}
+        />
+      )}
+
+      {/* Getting started guide modal */}
+      {guideOpen && <GettingStartedGuide onClose={() => setGuideOpen(false)} />}
 
       <QuickStats />
 

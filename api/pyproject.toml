@@ -32,6 +32,8 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "python-multipart>=0.0.26",
     "greenlet>=3.3.2",
+    # Scheduler
+    "apscheduler>=3.10.0",
 ]
 
 [dependency-groups]
