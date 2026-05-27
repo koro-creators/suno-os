@@ -34,7 +34,7 @@ from .service import (
     get_onboarding_status,
     get_wiki,
     regenerate_entity_stub,
-    run_oracle_stub,
+    run_oracle_agent,
     start_onboarding,
     validate_entity,
 )
@@ -106,8 +106,8 @@ async def start_onboarding_endpoint(
     from .service import get_client_by_slug
     client = get_client_by_slug(slug)
     if client:
-        background_tasks.add_task(run_oracle_stub, client["id"])
-        logger.info("Oracle stub job dispatched for client %s", slug)
+        background_tasks.add_task(run_oracle_agent, client["id"])
+        logger.info("Oracle agent job dispatched for client %s", slug)
 
     return StartOnboardingResponse(**result)
 
