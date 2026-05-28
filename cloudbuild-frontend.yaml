@@ -1,5 +1,5 @@
 # Cloud Build — sunOS Frontend (Next.js 14)
-# ADR-014: Cloud Run, southamerica-east1, standalone output
+# ADR-014: Cloud Run, us-west1, standalone output
 #
 # Trigger: push to main, paths: app/**, components/**, lib/**, public/**, next.config.mjs
 
@@ -73,9 +73,9 @@ images:
 
 substitutions:
   _SERVICE: 'sunos-frontend'
-  _REGION: 'southamerica-east1'
+  _REGION: 'us-west1'
   _GCP_PROJECT_ID: 'koro-creators'
-  _IMAGE: 'southamerica-east1-docker.pkg.dev/koro-creators/sunos/frontend'
+  _IMAGE: 'us-west1-docker.pkg.dev/koro-creators/sunos/frontend'
 
 options:
   machineType: 'E2_HIGHCPU_8'

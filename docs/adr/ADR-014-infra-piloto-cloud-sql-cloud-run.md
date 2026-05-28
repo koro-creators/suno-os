@@ -65,9 +65,9 @@ gs://sunos-{GCP_PROJECT_ID}/
 
 Um bucket com IAM granular por prefix. Não criar bucket por feature — overhead sem benefício.
 
-### 4. Região: `southamerica-east1` (São Paulo)
+### 4. Região: `us-west1` (Oregon)
 
-Usuários são 100% Brasil. `us-central1` (usado no cloudbuild.yaml existente) adiciona ~200ms de latência round-trip desnecessariamente.
+Consistência com os demais componentes GCP do stack Koro/Suno que já rodam em `us-west1`. Manter todos os serviços na mesma região elimina egress cross-region entre Cloud Run, Cloud SQL e GCS, e simplifica VPC Connector e regras de firewall.
 
 ### 5. Segurança mínima
 

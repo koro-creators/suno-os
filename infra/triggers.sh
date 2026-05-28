@@ -14,7 +14,7 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-koro-creators}"
-REGION="southamerica-east1"
+REGION="us-west1"
 REPO_OWNER="koro-creators"
 REPO_NAME="suno-os"
 BRANCH="^main$"

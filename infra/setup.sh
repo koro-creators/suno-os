@@ -10,7 +10,7 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-koro-creators}"
-REGION="southamerica-east1"
+REGION="us-west1"
 DB_INSTANCE="sunos-db"
 DB_NAME="sunos"
 DB_USER="sunos"
