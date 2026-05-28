@@ -25,13 +25,23 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const DEV_MOCK_USER = {
+  uid: 'dev-user',
+  email: 'dev@sunos.local',
+  displayName: 'Dev Admin',
+  photoURL: null,
+} as unknown as User;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isDev = process.env.NODE_ENV === 'development';
+
+  const [user, setUser] = useState<User | null>(isDev ? DEV_MOCK_USER : null);
+  const [role, setRole] = useState<UserRole | null>(isDev ? 'admin' : null);
+  const [loading, setLoading] = useState(!isDev);
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isDev) return;
     const { auth } = getFirebase();
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (!u) {
@@ -71,15 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
     return unsubscribe;
-  }, []);
+  }, [isDev]);
 
   async function signInWithGoogle() {
+    if (isDev) return;
     const { auth, googleProvider } = getFirebase();
     setAuthError(null);
     await signInWithPopup(auth, googleProvider);
   }
 
   async function signOut() {
+    if (isDev) return;
     const { auth } = getFirebase();
     await firebaseSignOut(auth);
     // Conversa fica no banco (dono = uid), mas os ponteiros locais não devem

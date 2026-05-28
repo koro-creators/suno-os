@@ -26,6 +26,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
+    if (isDev) return;
     if (!user && !isPublic) {
       router.replace('/login');
     }
@@ -35,7 +36,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (user && needsAdmin && !isAdmin) {
       router.replace('/');
     }
-  }, [user, loading, isPublic, needsAdmin, isAdmin, router]);
+  }, [user, loading, isPublic, needsAdmin, isAdmin, router, isDev]);
 
   if (!firebaseConfigured && !user && !loading) {
     return <>{children}</>;
