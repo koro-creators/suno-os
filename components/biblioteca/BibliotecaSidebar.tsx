@@ -324,6 +324,58 @@ export default function BibliotecaSidebar({
         </div>
       </CollapsibleSection>
 
+      {/* Conteúdo */}
+      <CollapsibleSection title="Conteúdo">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {(() => {
+            const checked = selectedTags.includes('reuniao');
+            return (
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 4px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  color: checked ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  transition: 'background-color 150ms ease',
+                }}
+              >
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: 3,
+                    border: checked ? '1.5px solid var(--sun)' : '1.5px solid var(--border-subtle)',
+                    backgroundColor: checked ? 'var(--sun)' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    transition: 'all 150ms ease',
+                  }}
+                >
+                  {checked && (
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3.2 5.7L6.5 2.3" stroke="var(--void)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleTag('reuniao')}
+                  style={{ display: 'none' }}
+                />
+                Reuniões
+              </label>
+            );
+          })()}
+        </div>
+      </CollapsibleSection>
+
       {/* Tags populares */}
       {popularTags.length > 0 && (
         <CollapsibleSection title="Tags populares">
