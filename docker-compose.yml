@@ -1,0 +1,77 @@
+# sunOS — ambiente de desenvolvimento completo (frontend + backend + postgres)
+#
+# Uso:
+#   docker compose up --build        # sobe os 3 serviços
+#   docker compose up -d postgres    # só o banco
+#   docker compose logs -f api       # acompanha logs da API
+#
+# Frontend:  http://localhost:3003
+# API:       http://localhost:8080  (docs em /docs)
+# Postgres:  localhost:5432  (sunos / sunos_dev_pass / sunos_db)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sunos-postgres
+    environment:
+      POSTGRES_USER: sunos
+      POSTGRES_PASSWORD: sunos_dev_pass
+      POSTGRES_DB: sunos_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sunos -d sunos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    container_name: sunos-api
+    ports:
+      - "8080:8080"
+    environment:
+      ENVIRONMENT: local
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      # Dentro da rede do compose o host do banco é o nome do serviço "postgres"
+      DATABASE_URL: postgresql+asyncpg://sunos:sunos_dev_pass@postgres:5432/sunos_db
+      ALLOWED_ORIGINS: http://localhost:3003,http://localhost:3000
+      # Firebase/MLflow são inicializados de forma tolerante (try/except) e
+      # podem ficar vazios em dev. Preencha via .env se precisar.
+      FIREBASE_USE_ADC: "false"
+    env_file:
+      - ./api/.env
+    volumes:
+      # Hot-reload: monta o código, mas preserva site-packages da imagem
+      - ./api:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sunos-frontend
+    ports:
+      - "3003:3003"
+    environment:
+      # Acessado pelo navegador no host → localhost
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    volumes:
+      # Hot-reload: monta o código, mas preserva node_modules e .next da imagem
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
