@@ -1,0 +1,27 @@
+# Dockerfile de desenvolvimento — sunOS API (FastAPI + LangGraph)
+# Hot-reload via uvicorn --reload; código montado por volume no compose.
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH="/root/.local/bin:$PATH"
+
+# Dependências de sistema + uv (gerenciador de pacotes)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+ && curl -LsSf https://astral.sh/uv/install.sh | sh \
+ && rm -rf /var/lib/apt/lists/*
+
+# Instala dependências a partir do pyproject.toml (camada cacheável)
+COPY pyproject.toml ./
+RUN uv pip install --system -r pyproject.toml
+
+EXPOSE 8080
+
+# Código é montado por volume (ver docker-compose.yml); --reload observa mudanças
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
