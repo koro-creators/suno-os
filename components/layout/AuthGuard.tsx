@@ -23,6 +23,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const needsAdmin = isAdminPath(pathname);
 
   useEffect(() => {
+    if (isDev) return;
     if (loading) return;
     if (!user && !isPublic) {
       router.replace('/login');
@@ -33,7 +34,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (user && needsAdmin && !isAdmin) {
       router.replace('/');
     }
-  }, [user, loading, isPublic, needsAdmin, isAdmin, router]);
+  }, [isDev, user, loading, isPublic, needsAdmin, isAdmin, router]);
 
   if (isDev && !user && !loading) {
     return <>{children}</>;

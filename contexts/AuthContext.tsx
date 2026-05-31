@@ -7,7 +7,7 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
-import { getFirebase } from '@/lib/firebase';
+import { getFirebase, isFirebaseConfigured } from '@/lib/firebase';
 
 export type UserRole = 'admin' | 'creator';
 
@@ -28,6 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      setLoading(false);
+      return;
+    }
     const { auth } = getFirebase();
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
@@ -43,11 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signInWithGoogle() {
+    if (!isFirebaseConfigured()) return;
     const { auth, googleProvider } = getFirebase();
     await signInWithPopup(auth, googleProvider);
   }
 
   async function signOut() {
+    if (!isFirebaseConfigured()) return;
     const { auth } = getFirebase();
     await firebaseSignOut(auth);
   }

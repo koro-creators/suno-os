@@ -10,6 +10,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+/** Returns true only when all required Firebase env vars are present. */
+export function isFirebaseConfigured(): boolean {
+  return !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+}
+
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let googleProvider: GoogleAuthProvider | undefined;

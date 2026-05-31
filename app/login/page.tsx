@@ -1,9 +1,21 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const { signInWithGoogle } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      router.replace('/');
+    }
+  }, [router]);
+
+  if (!isFirebaseConfigured()) return null;
 
   return (
     <div
@@ -17,7 +29,6 @@ export default function LoginPage() {
         gap: 32,
       }}
     >
-      {/* Logo */}
       <div style={{ textAlign: 'center' }}>
         <h1
           style={{
@@ -41,7 +52,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Login button */}
       <button
         onClick={signInWithGoogle}
         style={{
