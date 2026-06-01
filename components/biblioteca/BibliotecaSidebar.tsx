@@ -3,14 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from '@carbon/icons-react';
 import FileTypeIcon from './FileTypeIcon';
-
-const SCOPE_OPTIONS: { key: string; label: string; color: string }[] = [
-  { key: 'suno', label: 'Suno', color: 'var(--sun)' },
-  { key: 'vivo', label: 'Vivo', color: '#8B5CF6' },
-  { key: 'americanas', label: 'Americanas', color: '#F97316' },
-  { key: 'sicredi', label: 'Sicredi', color: '#22C55E' },
-  { key: 'samsung', label: 'Samsung', color: '#3B82F6' },
-];
+import { useClients } from '@/contexts/ClientsContext';
 
 const TYPE_OPTIONS: { key: string; label: string; fileType?: string; docType?: 'reuniao' }[] = [
   { key: 'pdf', label: 'PDF', fileType: 'pdf' },
@@ -90,6 +83,12 @@ export default function BibliotecaSidebar({
   onTagsChange,
   popularTags,
 }: BibliotecaSidebarProps) {
+  const { clients } = useClients();
+  const scopeOptions = [
+    { key: 'suno', label: 'Suno', color: 'var(--sun)' },
+    ...clients.map((c) => ({ key: c.slug, label: c.name, color: c.color })),
+  ];
+
   const activeCount =
     selectedScopes.length + selectedTypes.length + selectedTags.length;
 
@@ -195,7 +194,7 @@ export default function BibliotecaSidebar({
       {/* Escopo */}
       <CollapsibleSection title="Escopo">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {SCOPE_OPTIONS.map((scope) => {
+          {scopeOptions.map((scope) => {
             const checked = selectedScopes.includes(scope.key);
             return (
               <label
