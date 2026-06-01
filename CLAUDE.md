@@ -1,8 +1,59 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # sunOS — Project Conventions
 
 ## Overview
 
 Protótipo navegável do sunOS, plataforma interna de IA da Suno United Creators. Organiza skills de IA por cliente usando metáfora de sistema solar.
+
+## Commands
+
+### Docker (ambiente completo — recomendado)
+
+```bash
+# Primeira vez: copiar o .env do backend
+cp api/.env.example api/.env   # preencher API keys se precisar de LLM real
+
+# Subir tudo (frontend :3003 + api :8080 + postgres :5432)
+docker compose up --build -d
+
+# Acompanhar logs
+docker compose logs -f frontend
+docker compose logs -f api
+
+# Status
+docker compose ps
+```
+
+### Frontend (local sem Docker)
+
+```bash
+npm install
+npm run dev -- -p 3003        # hot-reload em localhost:3003
+npx tsc --noEmit              # type-check (rodar após qualquer mudança)
+npm run lint                  # ESLint
+npm run build                 # build de produção (detecta erros de build)
+```
+
+> **Dev sem auth:** sem `NEXT_PUBLIC_FIREBASE_API_KEY` no ambiente, o frontend sobe direto sem tela de login — `AuthContext` detecta Firebase não configurado e `AuthGuard` pula todos os redirects quando `NODE_ENV=development`.
+
+### Backend (local sem Docker)
+
+```bash
+cd api
+uv pip install --system -r pyproject.toml   # instalar deps (usa uv)
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+
+# Testes
+uv run pytest                              # todos os testes
+uv run pytest tests/test_canvas_phase_a.py -v   # arquivo específico
+
+# Lint / format
+uv run ruff check .
+uv run ruff format .
+```
 
 ## Monorepo Structure
 
@@ -95,8 +146,8 @@ api/                    # Backend (FastAPI + LangGraph) — deploy separado
 - **NÃO modifique `data/clients.ts`** — é o source do sistema solar e deve permanecer intacto
 - **NÃO instale novas dependências** sem necessidade (Tailwind + Lucide já estão)
 - **NÃO mude o visual** das páginas existentes do sistema solar (Home, Client, Skill, Moon)
-- **NÃO use `.env` files no frontend** — tudo é mocado (exceto `NEXT_PUBLIC_API_URL` para backend)
-- **Backend** usa `.env` em `api/` (ver `api/.env.example`)
+- **NÃO use `.env` files no frontend** — tudo é mocado (exceto `NEXT_PUBLIC_API_URL` para backend; Firebase vars são opcionais — ausência ativa modo sem-auth)
+- **Backend** usa `.env` em `api/` (copiar de `api/.env.example`; nunca commitar)
 - Sempre verifique com `npx tsc --noEmit` após mudanças
 
 ## Admin CRUD Pattern
@@ -129,7 +180,7 @@ Padrões críticos extraídos das SPECs vivas em arquivos modulares. Consultar q
 ## Custom Slash Commands (`.claude/commands/`)
 
 - **`/project:new-spec`** — invoca skill `sdd-koro` com convenções sunOS pré-carregadas
-- **`/project:dev`** — inicia frontend em `npm run dev -- -p 3005` (3003 padrão fica ocupada)
+- **`/project:dev`** — inicia frontend em `npm run dev -- -p 3005` (use quando 3003 já está ocupada pelo Docker)
 - **`/project:check-canvas`** — TypeScript + ESLint + canvas-imports + bundle audit em sequência
 - **`/project:handoff`** — cria handoff doc seguindo a convenção abaixo
 

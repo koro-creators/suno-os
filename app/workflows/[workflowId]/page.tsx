@@ -120,23 +120,27 @@ export default function WorkflowEditorPage() {
   const [payload, setPayload] = useState<CanvasPayload | null>(null);
 
   // Build the canvas payload either from server (real-mode) or local (mock-mode).
+  // Depends on workflowId (stable string) not the workflow object, which changes
+  // reference every time WorkflowsContext updates (e.g. auto-save), causing a loop.
   useEffect(() => {
     if (!workflow) return;
-    const wf = workflow; // narrow once for the closure below
+    const wf = workflow;
     let cancelled = false;
 
     async function prepare() {
       setMigrationError(null);
-      // Real-mode: trigger migrate-v2 if needed. On failure, fall back to the
-      // local migration so the canvas always renders (canvas-conventions.md §mock-mode).
       if (apiAvailable()) {
         try {
           setMigrationState('migrating');
           await migrateWorkflowV2(wf.id);
         } catch (err) {
           if (cancelled) return;
-          // Non-blocking: surface the warning but continue with local migration.
-          setMigrationError(err instanceof Error ? err.message : String(err));
+          // 404 = endpoint not implemented yet / workflow not in DB — expected in
+          // dev/mock mode. Don't surface as "backend indisponível".
+          const msg = err instanceof Error ? err.message : String(err);
+          if (!msg.includes('404')) {
+            setMigrationError(msg);
+          }
         }
       }
       const steps = wf.steps as WorkflowStep[];
@@ -156,7 +160,8 @@ export default function WorkflowEditorPage() {
     return () => {
       cancelled = true;
     };
-  }, [workflow]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowId]);
 
   const onPersistSteps = useMemo(
     () => async (steps: WorkflowStepV2[]) => {
