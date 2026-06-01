@@ -202,7 +202,7 @@ export default function Home() {
             zIndex: 0,
           }}
         >
-          <div style={{ fontSize: '12rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.04em', opacity: 0.06 }}>LUIS</div>
+          <div style={{ fontSize: '12rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.04em', opacity: 0.8 }}>LUIS</div>
         </div>
 
         {/* Editorial typography */}
