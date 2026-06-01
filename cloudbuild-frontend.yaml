@@ -63,7 +63,7 @@ steps:
       - '--port'
       - '3000'
       - '--set-env-vars'
-      - 'NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1,NEXT_PUBLIC_API_URL=https://sunos-api-${_GCP_PROJECT_ID}.${_REGION}.run.app'
+      - 'NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1,NEXT_PUBLIC_API_URL=https://sunos-api-mx3edyv2za-uw.a.run.app'
       - '--labels'
       - 'app=sunos,env=production,service=sunos-frontend,managed-by=cloud-build'
 
