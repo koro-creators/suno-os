@@ -63,28 +63,35 @@ done
 
 # Backend SA: Cloud SQL client + GCS object admin + Secret Manager accessor
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_BACKEND}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/cloudsql.client" --quiet
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_BACKEND}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/storage.objectAdmin" --quiet
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_BACKEND}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor" --quiet
 
 # Frontend SA: minimal (no DB, no secrets directly)
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_FRONTEND}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/run.invoker" --quiet
 
 # Cloud Build SA: deploy to Cloud Run + push to Artifact Registry
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_CLOUDBUILD}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/run.admin" --quiet
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_CLOUDBUILD}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/artifactregistry.writer" --quiet
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --condition=None \
   --member="serviceAccount:${SA_CLOUDBUILD}@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/iam.serviceAccountUser" --quiet
 
