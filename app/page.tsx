@@ -190,6 +190,21 @@ export default function Home() {
           );
         })()}
 
+        {/* LUIS — large editorial text */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none',
+            userSelect: 'none',
+            zIndex: 0,
+          }}
+        >
+          <div style={{ fontSize: '12rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.04em', opacity: 0.06 }}>LUIS</div>
+        </div>
+
         {/* Editorial typography */}
         <div
           style={{
