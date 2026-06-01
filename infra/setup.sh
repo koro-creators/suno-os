@@ -112,18 +112,20 @@ INSTANCE_STATE="$(gcloud sql instances describe "${DB_INSTANCE}" \
   --format='value(state)' 2>/dev/null || echo "MISSING")"
 
 if [[ "${INSTANCE_STATE}" == "MISSING" ]]; then
+  # Piloto: IP público com senha forte (32 chars) + SSL obrigatório (ADR-014)
+  # Cloud Run conecta via IP público — asyncpg não suporta Unix socket do proxy
+  # Migrar para VPC peering + IP privado na Fase D (quando volume justificar)
   gcloud sql instances create "${DB_INSTANCE}" \
     --database-version=POSTGRES_15 \
     --tier=db-g1-small \
     --region="${REGION}" \
-    --no-assign-ip \
-    --enable-google-private-path \
     --storage-auto-increase \
     --storage-size=20GB \
     --storage-type=SSD \
     --backup-start-time=03:00 \
     --maintenance-window-day=SUN \
     --maintenance-window-hour=4 \
+    --authorized-networks="0.0.0.0/0" \
     --quiet
   echo "  Cloud SQL instance criada."
 else
