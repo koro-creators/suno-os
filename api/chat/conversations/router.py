@@ -11,12 +11,10 @@ Security (caixa-preta / RN-009):
     users' conversations.
 """
 
-from __future__ import annotations
-
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from core.auth import get_current_user_id
