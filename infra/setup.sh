@@ -108,19 +108,36 @@ gcloud compute networks vpc-access connectors create "${VPC_CONNECTOR}" \
 # 5. Cloud SQL — PostgreSQL 15 + pgvector
 # ─────────────────────────────────────────────────────────
 echo "▶ Creating Cloud SQL instance: ${DB_INSTANCE} (this takes ~5 min)..."
-gcloud sql instances create "${DB_INSTANCE}" \
-  --database-version=POSTGRES_15 \
-  --tier=db-g1-small \
-  --region="${REGION}" \
-  --no-assign-ip \
-  --enable-google-private-path \
-  --storage-auto-increase \
-  --storage-size=20GB \
-  --storage-type=SSD \
-  --backup-start-time=03:00 \
-  --maintenance-window-day=SUN \
-  --maintenance-window-hour=4 \
-  --quiet 2>/dev/null || echo "  (already exists)"
+INSTANCE_STATE="$(gcloud sql instances describe "${DB_INSTANCE}" \
+  --format='value(state)' 2>/dev/null || echo "MISSING")"
+
+if [[ "${INSTANCE_STATE}" == "MISSING" ]]; then
+  gcloud sql instances create "${DB_INSTANCE}" \
+    --database-version=POSTGRES_15 \
+    --tier=db-g1-small \
+    --region="${REGION}" \
+    --no-assign-ip \
+    --enable-google-private-path \
+    --storage-auto-increase \
+    --storage-size=20GB \
+    --storage-type=SSD \
+    --backup-start-time=03:00 \
+    --maintenance-window-day=SUN \
+    --maintenance-window-hour=4 \
+    --quiet
+  echo "  Cloud SQL instance criada."
+else
+  echo "  (já existe — state: ${INSTANCE_STATE})"
+fi
+
+# Aguardar instância ficar RUNNABLE
+echo "▶ Aguardando Cloud SQL ficar RUNNABLE..."
+for i in $(seq 1 30); do
+  STATE="$(gcloud sql instances describe "${DB_INSTANCE}" --format='value(state)' 2>/dev/null)"
+  echo "  state: ${STATE} (${i}/30)"
+  [[ "${STATE}" == "RUNNABLE" ]] && break
+  sleep 10
+done
 
 echo "▶ Creating database and user..."
 gcloud sql databases create "${DB_NAME}" \
@@ -133,9 +150,12 @@ gcloud sql users create "${DB_USER}" \
   --quiet 2>/dev/null || echo "  (user already exists — password NOT updated)"
 
 INSTANCE_IP="$(gcloud sql instances describe "${DB_INSTANCE}" \
-  --format='value(ipAddresses[0].ipAddress)')"
+  --format='value(ipAddresses[0].ipAddress)' 2>/dev/null || echo "IP_PENDENTE")"
 DATABASE_URL="postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${INSTANCE_IP}/${DB_NAME}"
-echo "  DATABASE_URL (save this → Secret Manager): ${DATABASE_URL}"
+echo ""
+echo "  ⚠️  DATABASE_URL (salve isso → Secret Manager):"
+echo "  ${DATABASE_URL}"
+echo ""
 
 echo "▶ Enabling pgvector extension (run after first DB connection)..."
 echo "  SQL: CREATE EXTENSION IF NOT EXISTS vector;"
