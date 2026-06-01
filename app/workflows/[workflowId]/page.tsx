@@ -120,11 +120,9 @@ export default function WorkflowEditorPage() {
   const [payload, setPayload] = useState<CanvasPayload | null>(null);
 
   // Build the canvas payload either from server (real-mode) or local (mock-mode).
-  // Dependency is workflowId (stable string), not workflow (object recreated on
-  // every auto-save), to prevent an infinite re-migration loop.
   useEffect(() => {
     if (!workflow) return;
-    const wf = workflow;
+    const wf = workflow; // narrow once for the closure below
     let cancelled = false;
 
     async function prepare() {
@@ -158,8 +156,7 @@ export default function WorkflowEditorPage() {
     return () => {
       cancelled = true;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflowId]);
+  }, [workflow]);
 
   const onPersistSteps = useMemo(
     () => async (steps: WorkflowStepV2[]) => {
