@@ -86,6 +86,20 @@ def reset_admin_store():
     _audit_log.clear()
 
 
+@pytest.fixture(autouse=True)
+def _force_admin_mock_mode(monkeypatch):
+    """Pin admin auth to mock mode for the CRUD/audit suite.
+
+    The CI image installs firebase_admin, which flips
+    ``_FIREBASE_ADMIN_AVAILABLE`` to True; ``_require_admin`` then rejects the
+    unauthenticated TestClient with 404 (caixa-preta). These tests exercise the
+    in-memory CRUD/audit logic, not Firebase verification, so we force the
+    no-Firebase fallback path the same way a dev environment without
+    credentials behaves.
+    """
+    monkeypatch.setattr("api.admin.router._FIREBASE_ADMIN_AVAILABLE", False)
+
+
 @pytest.fixture
 def client() -> TestClient:
     app = FastAPI()
