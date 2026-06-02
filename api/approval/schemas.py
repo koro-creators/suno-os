@@ -11,7 +11,6 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Enums de domínio (UPPER_SNAKE_CASE conforme constitution §5.3)
 # ---------------------------------------------------------------------------
@@ -64,7 +63,9 @@ class ApprovalSubmitRequest(BaseModel):
     skill_slug: str
     subject_type: SubjectType
     subject_id: str
-    content: str = Field(..., min_length=1, description="Conteúdo a ser aprovado (subject_snapshot)")
+    content: str = Field(
+        ..., min_length=1, description="Conteúdo a ser aprovado (subject_snapshot)"
+    )
     urgency: Urgency = Urgency.normal
     comment: Optional[str] = None
 

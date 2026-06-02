@@ -73,7 +73,9 @@ def _get_llm(model: str = "gemini-flash", temperature: float = 0.7) -> Any:
     # Fallback: always use Gemini Flash if available
     if settings.GOOGLE_API_KEY:
         if model != "gemini-flash":
-            logger.warning("API key for model '%s' not configured, falling back to Gemini Flash", model)
+            logger.warning(
+                "API key for model '%s' not configured, falling back to Gemini Flash", model
+            )
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         return ChatGoogleGenerativeAI(
@@ -186,7 +188,8 @@ async def _persist_conversation(
                 db.execute(
                     text(
                         """
-                        INSERT INTO conversations (id, user_id, skill_slug, messages, created_at, last_message_at)
+                        INSERT INTO conversations
+                            (id, user_id, skill_slug, messages, created_at, last_message_at)
                         VALUES (:id, :user_id, :skill_slug, :messages::jsonb, :now, :now)
                         ON CONFLICT (id) DO UPDATE
                         SET messages = conversations.messages || :messages::jsonb,

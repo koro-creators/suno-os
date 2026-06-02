@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 class OracleState(TypedDict):
     client_id: str
     client_name: str
-    brand_context: str      # wizard step 2 (contexto de marca)
-    wizard_briefing: str    # texto livre do wizard
-    entity_type: str        # which entity to extract
+    brand_context: str  # wizard step 2 (contexto de marca)
+    wizard_briefing: str  # texto livre do wizard
+    entity_type: str  # which entity to extract
     generated_content: str
     error: Optional[str]
 
@@ -46,27 +46,33 @@ _FALLBACK_TEMPLATES: dict[str, str] = {
     "Persona": (
         "O público principal de {name} é composto por profissionais e entusiastas "
         "que valorizam qualidade e autenticidade. "
-        "São pessoas conectadas, exigentes e dispostas a investir em experiências que agreguem valor real à sua rotina."
+        "São pessoas conectadas, exigentes e dispostas a investir em experiências "
+        "que agreguem valor real à sua rotina."
     ),
     "Competidor": (
-        "{name} opera em um mercado com concorrentes consolidados que disputam atenção por preço ou volume. "
-        "O diferencial competitivo da marca está na profundidade de conteúdo e na curadoria da experiência, "
+        "{name} opera em um mercado com concorrentes consolidados que disputam "
+        "atenção por preço ou volume. "
+        "O diferencial competitivo da marca está na profundidade de conteúdo e na "
+        "curadoria da experiência, "
         "o que cria uma barreira difícil de replicar apenas com escala."
     ),
     "Produto": (
-        "O portfólio de {name} reúne soluções desenvolvidas para atender às necessidades específicas de seu público, "
+        "O portfólio de {name} reúne soluções desenvolvidas para atender às "
+        "necessidades específicas de seu público, "
         "com foco em resultado prático e experiência de uso. "
         "Cada produto carrega a identidade da marca: clara, direta e comprometida com a entrega."
     ),
     "TomDeVoz": (
         "{name} comunica-se de forma direta, acolhedora e sem jargões desnecessários. "
         "O tom é confiante sem ser arrogante, próximo sem ser informal demais — "
-        "a voz de quem conhece profundamente o assunto e sabe traduzir isso para quem está aprendendo."
+        "a voz de quem conhece profundamente o assunto e sabe traduzir isso para "
+        "quem está aprendendo."
     ),
     "Briefing": (
         "{name} tem como norte criar conteúdo que informe, engaje e converta, "
         "sempre alinhado à sua proposta de valor central. "
-        "Cada briefing deve refletir clareza de objetivo, linguagem adequada à persona e chamada para ação relevante."
+        "Cada briefing deve refletir clareza de objetivo, linguagem adequada à "
+        "persona e chamada para ação relevante."
     ),
 }
 
@@ -100,10 +106,13 @@ def _get_llm():
 
     try:
         from langchain_google_genai import ChatGoogleGenerativeAI
+
         _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.7)
         logger.info("Oracle agent: Gemini Flash LLM initialized")
     except ImportError:
-        logger.warning("langchain_google_genai not available — oracle agent will use local fallback")
+        logger.warning(
+            "langchain_google_genai not available — oracle agent will use local fallback"
+        )
         _llm = None
     except Exception as exc:
         logger.warning("Oracle agent: LLM init failed (%s) — will use local fallback", exc)
@@ -119,27 +128,33 @@ def _get_llm():
 _ENTITY_PROMPTS: dict[str, str] = {
     "Posicionamento": (
         "Elabore o posicionamento estratégico da marca. "
-        "Descreva em 2-3 parágrafos: proposta de valor, diferenciais competitivos e como a marca se apresenta no mercado."
+        "Descreva em 2-3 parágrafos: proposta de valor, diferenciais competitivos "
+        "e como a marca se apresenta no mercado."
     ),
     "Persona": (
         "Descreva a persona principal do público da marca. "
-        "Inclua: perfil demográfico, comportamentos, dores, motivações e como a marca resolve seus problemas."
+        "Inclua: perfil demográfico, comportamentos, dores, motivações e como a "
+        "marca resolve seus problemas."
     ),
     "Competidor": (
         "Analise o cenário competitivo da marca. "
-        "Descreva os principais tipos de concorrentes, como a marca se diferencia e quais são seus pontos fortes frente à concorrência."
+        "Descreva os principais tipos de concorrentes, como a marca se diferencia "
+        "e quais são seus pontos fortes frente à concorrência."
     ),
     "Produto": (
         "Descreva o portfólio de produtos ou serviços da marca. "
-        "Inclua: categorias principais, proposta de cada produto, benefícios para o usuário e como se relacionam com o posicionamento."
+        "Inclua: categorias principais, proposta de cada produto, benefícios para "
+        "o usuário e como se relacionam com o posicionamento."
     ),
     "TomDeVoz": (
         "Defina o tom de voz da marca. "
-        "Inclua: adjetivos que descrevem a voz, o que evitar na comunicação, exemplos de como falar e como não falar, e o estilo de escrita preferido."
+        "Inclua: adjetivos que descrevem a voz, o que evitar na comunicação, "
+        "exemplos de como falar e como não falar, e o estilo de escrita preferido."
     ),
     "Briefing": (
         "Crie um briefing padrão para produção de conteúdo da marca. "
-        "Inclua: objetivos de comunicação, mensagens-chave, estrutura sugerida de conteúdo e diretrizes de chamada para ação."
+        "Inclua: objetivos de comunicação, mensagens-chave, estrutura sugerida de "
+        "conteúdo e diretrizes de chamada para ação."
     ),
 }
 
@@ -156,23 +171,23 @@ def _build_prompt(state: OracleState) -> str:
     )
 
     parts = [
-        f"Você é um especialista em estratégia de marca e comunicação.",
-        f"",
+        "Você é um especialista em estratégia de marca e comunicação.",
+        "",
         f"MARCA: {client_name}",
     ]
 
     if brand_context:
-        parts += [f"", f"CONTEXTO DA MARCA:", brand_context]
+        parts += ["", "CONTEXTO DA MARCA:", brand_context]
 
     if wizard_briefing:
-        parts += [f"", f"BRIEFING DO WIZARD:", wizard_briefing]
+        parts += ["", "BRIEFING DO WIZARD:", wizard_briefing]
 
     parts += [
-        f"",
+        "",
         f"TAREFA: {instruction}",
-        f"",
-        f"Escreva em português brasileiro, de forma clara e direta. "
-        f"Máximo 3 parágrafos. Sem títulos ou bullets — apenas texto corrido.",
+        "",
+        "Escreva em português brasileiro, de forma clara e direta. "
+        "Máximo 3 parágrafos. Sem títulos ou bullets — apenas texto corrido.",
     ]
 
     return "\n".join(parts)
@@ -199,6 +214,7 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
 
     try:
         from langchain_core.messages import HumanMessage
+
         prompt = _build_prompt(state)
         response = await llm.ainvoke([HumanMessage(content=prompt)])
         content = (response.content or "").strip()
@@ -209,7 +225,9 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
     except Exception as exc:
         logger.warning(
             "Oracle agent: Gemini call failed for %s/%s (%s) — using fallback",
-            client_name, entity_type, exc,
+            client_name,
+            entity_type,
+            exc,
         )
         return {
             **state,

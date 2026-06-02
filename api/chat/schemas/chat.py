@@ -6,7 +6,9 @@ from pydantic import BaseModel, Field
 
 # Type aliases for shared enums (RN-007/008 — fix INC-API-07/08)
 ChatModel = Literal["gemini-flash", "gemini-pro", "gpt-4o", "claude"]
-ImageModel = Literal["imagen-4-standard", "imagen-4-fast", "imagen-4-ultra", "nano-banana", "dall-e-3"]
+ImageModel = Literal[
+    "imagen-4-standard", "imagen-4-fast", "imagen-4-ultra", "nano-banana", "dall-e-3"
+]
 AspectRatio = Literal["1:1", "16:9", "9:16", "4:3"]
 ContentType = Literal["social_post", "article", "caption", "email", "script", "custom"]
 Tone = Literal["formal", "casual", "professional", "creative", "friendly"]
@@ -30,7 +32,10 @@ class ChatRequest(BaseModel):
     # Quando informado, restringe context injection ao cliente correspondente.
     client_slug: str | None = Field(
         default=None,
-        description="Multi-tenant slug do cliente (Vivo, Sicredi, Americanas, etc.). Opcional na fase atual; obrigatório a partir do Piloto.",
+        description=(
+            "Multi-tenant slug do cliente (Vivo, Sicredi, Americanas, etc.). "
+            "Opcional na fase atual; obrigatório a partir do Piloto."
+        ),
     )
 
 

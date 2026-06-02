@@ -15,9 +15,7 @@ def get_firebase_app() -> firebase_admin.App:
         return _app
 
     if settings.FIREBASE_USE_ADC:
-        _app = firebase_admin.initialize_app(
-            options={"projectId": settings.FIREBASE_PROJECT_ID}
-        )
+        _app = firebase_admin.initialize_app(options={"projectId": settings.FIREBASE_PROJECT_ID})
     else:
         cred = credentials.ApplicationDefault()
         _app = firebase_admin.initialize_app(cred)

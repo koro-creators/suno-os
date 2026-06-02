@@ -3,6 +3,7 @@
 Fase D: read from GCS paths stored in agent_memory_files (TASK-D06).
 Fase C: no-op — returns empty string.
 """
+
 from __future__ import annotations
 
 

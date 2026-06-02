@@ -29,7 +29,8 @@ class ContentCreatorAgent(BaseAgent):
         return (
             "Você é um produtor de conteúdo criativo da Suno United Creators, uma agência "
             "de publicidade e comunicação integrada. Seu nome é sunOS e você faz parte de "
-            "uma plataforma interna de IA que organiza skills (habilidades) de criação por cliente.\n\n"
+            "uma plataforma interna de IA que organiza skills (habilidades) de criação "
+            "por cliente.\n\n"
             "## Suas Capacidades\n\n"
             "Você pode criar:\n"
             "- Copy para redes sociais (Instagram, LinkedIn, Twitter/X, TikTok)\n"
@@ -42,13 +43,16 @@ class ContentCreatorAgent(BaseAgent):
             "- Relatórios de performance e insights\n\n"
             "## Uso de Ferramentas\n\n"
             "Use as ferramentas disponíveis quando necessário:\n"
-            "- **chat_completion**: para raciocínio profundo, análise complexa ou brainstorming interno\n"
+            "- **chat_completion**: para raciocínio profundo, análise complexa ou "
+            "brainstorming interno\n"
             "- **generate_text**: para gerar conteúdo formatado e estruturado\n"
             "- **enhance_prompt**: para melhorar prompts antes de gerar conteúdo\n"
             "- **web_search**: para pesquisar tendências, referências e dados atualizados\n"
-            "- **search_knowledge**: para buscar documentos relevantes na base de conhecimento (Biblioteca)\n"
+            "- **search_knowledge**: para buscar documentos relevantes na base de "
+            "conhecimento (Biblioteca)\n"
             "- **read_full_document**: para ler o conteúdo completo de um documento da Biblioteca\n"
-            "- **find_related_documents**: para encontrar documentos relacionados por similaridade\n\n"
+            "- **find_related_documents**: para encontrar documentos relacionados "
+            "por similaridade\n\n"
             "## Diretrizes\n\n"
             "- Sempre responda em Português (Brasil)\n"
             "- Siga as diretrizes e referências da skill ativa\n"
@@ -60,8 +64,8 @@ class ContentCreatorAgent(BaseAgent):
         )
 
     def get_tools(self) -> list:
-        from chat.tools import ALL_TOOLS
         from chat.knowledge.document_search import KNOWLEDGE_TOOLS
+        from chat.tools import ALL_TOOLS
 
         return ALL_TOOLS + KNOWLEDGE_TOOLS
 
@@ -80,9 +84,15 @@ class ContentCreatorAgent(BaseAgent):
         if active_skill:
             skill_content = skill_loader.load(active_skill)
             if skill_content:
-                logger.info("Loaded skill '%s' with %d references", active_skill, len(skill_content.references))
+                logger.info(
+                    "Loaded skill '%s' with %d references",
+                    active_skill,
+                    len(skill_content.references),
+                )
             else:
-                logger.warning("Skill '%s' not found, proceeding without skill context", active_skill)
+                logger.warning(
+                    "Skill '%s' not found, proceeding without skill context", active_skill
+                )
 
         # 2. Build extra context from context_documents and system_prompt override
         ctx_parts: list[str] = []
@@ -93,7 +103,9 @@ class ContentCreatorAgent(BaseAgent):
 
         context_documents = state.get("context_documents") or []
         if context_documents:
-            ctx_parts.append("## Documentos de Contexto\n\n" + "\n\n---\n\n".join(context_documents))
+            ctx_parts.append(
+                "## Documentos de Contexto\n\n" + "\n\n---\n\n".join(context_documents)
+            )
 
         extra_context = "\n\n".join(ctx_parts)
 

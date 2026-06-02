@@ -7,9 +7,7 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def retry_on_error(
-    max_retries: int = 3, base_delay: float = 1.0, max_delay: float = 30.0
-):
+def retry_on_error(max_retries: int = 3, base_delay: float = 1.0, max_delay: float = 30.0):
     """Retry decorator with exponential backoff for LLM API calls."""
 
     def decorator(func):

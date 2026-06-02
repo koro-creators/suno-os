@@ -28,9 +28,7 @@ LENGTHS = {
 }
 
 
-def _build_generation_prompt(
-    prompt: str, content_type: str, tone: str, length: str
-) -> str:
+def _build_generation_prompt(prompt: str, content_type: str, tone: str, length: str) -> str:
     """Build a structured system prompt for text generation."""
     type_desc = CONTENT_TYPES.get(content_type, CONTENT_TYPES["social_post"])
     tone_desc = TONES.get(tone, TONES["creative"])

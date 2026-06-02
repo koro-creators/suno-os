@@ -32,7 +32,8 @@ def _transcribe_video(file_path: str) -> str:
         response = model.generate_content(
             [
                 "Analise este video. Faca uma transcricao do audio e descreva os elementos visuais "
-                "importantes (cenas, textos na tela, graficos). Organize por timestamps a cada 2 minutos.",
+                "importantes (cenas, textos na tela, graficos). "
+                "Organize por timestamps a cada 2 minutos.",
                 video_file,
             ]
         )

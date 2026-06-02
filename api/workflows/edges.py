@@ -61,7 +61,8 @@ def _step_ids(workflow: dict) -> set[str]:
 def _check_handles(edge: WorkflowEdge, *, idx: int) -> None:
     if edge.source_handle not in ALLOWED_SOURCE_HANDLES:
         raise EdgeValidationError(
-            f"edge[{idx}]: source_handle '{edge.source_handle}' not in {sorted(ALLOWED_SOURCE_HANDLES)}",
+            f"edge[{idx}]: source_handle '{edge.source_handle}' "
+            f"not in {sorted(ALLOWED_SOURCE_HANDLES)}",
             edge_index=idx,
         )
     if edge.target_handle not in ALLOWED_TARGET_HANDLES:

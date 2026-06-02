@@ -19,6 +19,7 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 try:
     from notifications.router import _create_notification_internal
+
     _NOTIFICATIONS_AVAILABLE = True
 except ImportError:
     _NOTIFICATIONS_AVAILABLE = False
@@ -27,10 +28,9 @@ from .schemas import (
     ApprovalDecisionRequest,
     ApprovalEventResponse,
     ApprovalHistoryResponse,
+    ApprovalStatus,
     ApprovalSubmissionResponse,
     ApprovalSubmitRequest,
-    ApprovalStatus,
-    DecisionType,
     EventAction,
     Urgency,
 )
@@ -61,8 +61,9 @@ def _resolve_actor(request: Request, authorization: Optional[str]) -> dict:
     # Tenta decodificar o Firebase JWT (best-effort; sem falhar no MVP)
     if authorization and authorization.startswith("Bearer "):
         try:
-            from core.firebase import get_firebase_app
             import firebase_admin.auth as fb_auth
+
+            from core.firebase import get_firebase_app
 
             get_firebase_app()
             token = authorization.removeprefix("Bearer ").strip()
@@ -324,7 +325,9 @@ async def approve_submission(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/approvals/{submission_id}/request-revision", response_model=ApprovalSubmissionResponse)
+@router.post(
+    "/approvals/{submission_id}/request-revision", response_model=ApprovalSubmissionResponse
+)
 async def request_revision(
     submission_id: str,
     request: Request,

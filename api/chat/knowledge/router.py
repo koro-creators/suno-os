@@ -26,10 +26,18 @@ router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
 # Max upload size: 50 MB
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024
 ALLOWED_EXTENSIONS = {
-    "pdf", "docx", "txt", "md",
-    "png", "jpg", "jpeg", "webp",
-    "mp3", "wav",
-    "mp4", "mov",
+    "pdf",
+    "docx",
+    "txt",
+    "md",
+    "png",
+    "jpg",
+    "jpeg",
+    "webp",
+    "mp3",
+    "wav",
+    "mp4",
+    "mov",
 }
 
 # Local storage fallback when GCS is not configured
@@ -84,7 +92,10 @@ async def upload_document(
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail=f"Tipo de arquivo '{ext}' nao permitido. Tipos aceitos: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+            detail=(
+                f"Tipo de arquivo '{ext}' nao permitido. "
+                f"Tipos aceitos: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+            ),
         )
 
     # Read file and check size
@@ -103,7 +114,10 @@ async def upload_document(
     if len(tag_list) < 2:
         raise HTTPException(
             status_code=400,
-            detail="Metadados obrigatórios: forneça no mínimo 2 tags (separadas por vírgula). RN-006/FR-001.",
+            detail=(
+                "Metadados obrigatórios: forneça no mínimo 2 tags "
+                "(separadas por vírgula). RN-006/FR-001."
+            ),
         )
     if len(description.strip()) < 50:
         raise HTTPException(
@@ -129,9 +143,11 @@ async def upload_document(
                 text(
                     """
                     INSERT INTO knowledge_documents
-                        (id, title, description, file_type, file_size, file_url, tags, scope, status, created_by)
+                        (id, title, description, file_type, file_size, file_url,
+                         tags, scope, status, created_by)
                     VALUES
-                        (:id, :title, :description, :file_type, :file_size, :file_url, :tags, :scope, 'processing', :created_by)
+                        (:id, :title, :description, :file_type, :file_size, :file_url,
+                         :tags, :scope, 'processing', :created_by)
                     """
                 ),
                 {

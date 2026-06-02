@@ -30,6 +30,7 @@ _FIREBASE_ADMIN_AVAILABLE: bool = False
 try:
     import firebase_admin  # noqa: F401
     from firebase_admin import auth as firebase_auth
+
     _FIREBASE_ADMIN_AVAILABLE = True
 except ImportError:
     logger.warning("firebase_admin not installed — admin auth in mock mode")
@@ -52,6 +53,7 @@ def _require_admin(authorization: str | None = None) -> str | None:
 
     try:
         from core.firebase import get_firebase_app
+
         app = get_firebase_app()
     except Exception as exc:
         logger.warning("Firebase app init failed — falling back to mock mode: %s", exc)
@@ -83,6 +85,7 @@ def _sync_users_from_firebase() -> int:
 
     try:
         from core.firebase import get_firebase_app
+
         app = get_firebase_app()
     except Exception as exc:
         logger.warning("Firebase app init failed during user sync: %s", exc)

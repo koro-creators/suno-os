@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Query
 
 from .schemas import (
     ClientCreate,
@@ -104,6 +104,7 @@ async def start_onboarding_endpoint(
 
     # Get client_id for the background task
     from .service import get_client_by_slug
+
     client = get_client_by_slug(slug)
     if client:
         background_tasks.add_task(run_oracle_agent, client["id"])
@@ -147,6 +148,7 @@ async def validate_entity_endpoint(
     # If rejected, schedule regeneration
     if data.action == "reject_regenerate":
         from .service import get_client_by_slug
+
         client = get_client_by_slug(slug)
         if client:
             background_tasks.add_task(regenerate_entity_stub, client["id"], entity_type)

@@ -50,7 +50,9 @@ def search_knowledge(
     from chat.knowledge.vector_store import search_similar
 
     query_embedding = embed_query(query)
-    results = _run_async(search_similar(query_embedding, limit=limit, scope=scope, file_type=file_type))
+    results = _run_async(
+        search_similar(query_embedding, limit=limit, scope=scope, file_type=file_type)
+    )
 
     if not results:
         return "Nenhum documento encontrado na base de conhecimento para essa busca."
@@ -89,7 +91,8 @@ def read_full_document(doc_id: str) -> str:
 
             result = await session.execute(
                 text(
-                    "SELECT title, file_type, content_text, tags, scope FROM knowledge_documents WHERE id = :doc_id"
+                    "SELECT title, file_type, content_text, tags, scope "
+                    "FROM knowledge_documents WHERE id = :doc_id"
                 ),
                 {"doc_id": doc_id},
             )

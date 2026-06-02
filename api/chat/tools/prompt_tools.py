@@ -44,14 +44,13 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no markdown fences
 
 
 @tool
-def enhance_prompt(
-    prompt: str, target_tool: str = "chat", context: str = ""
-) -> str:
-    """Enhance a user prompt to get better results from AI tools. Returns enhanced prompt with reasoning."""
+def enhance_prompt(prompt: str, target_tool: str = "chat", context: str = "") -> str:
+    """Enhance a user prompt to get better results from AI tools.
+
+    Returns enhanced prompt with reasoning.
+    """
     try:
-        target_instruction = TARGET_INSTRUCTIONS.get(
-            target_tool, TARGET_INSTRUCTIONS["chat"]
-        )
+        target_instruction = TARGET_INSTRUCTIONS.get(target_tool, TARGET_INSTRUCTIONS["chat"])
 
         system = SYSTEM_PROMPT.format(
             target_instruction=target_instruction,
@@ -76,7 +75,9 @@ def enhance_prompt(
             return json.dumps(parsed, ensure_ascii=False, indent=2)
         except json.JSONDecodeError:
             # LLM sometimes wraps in markdown fences — try stripping them.
-            cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            cleaned = (
+                raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            )
             try:
                 parsed = json.loads(cleaned)
                 return json.dumps(parsed, ensure_ascii=False, indent=2)

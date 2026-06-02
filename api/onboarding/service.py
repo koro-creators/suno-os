@@ -187,9 +187,12 @@ async def run_oracle_agent(client_id: str) -> None:
             except Exception as exc:
                 logger.warning(
                     "Oracle agent: invoke_oracle failed for %s/%s (%s)",
-                    client["slug"], entity_type, exc,
+                    client["slug"],
+                    entity_type,
+                    exc,
                 )
                 from .oracle_agent import _fallback_content
+
                 content = _fallback_content(entity_type, client["name"])
                 provenance_source = "Fallback local"
 
@@ -198,7 +201,9 @@ async def run_oracle_agent(client_id: str) -> None:
             entity["provenance"] = [
                 {
                     "source": provenance_source,
-                    "excerpt": f"Gerado a partir de brand_context + wizard_briefing para {entity_type}",
+                    "excerpt": (
+                        f"Gerado a partir de brand_context + wizard_briefing para {entity_type}"
+                    ),
                 }
             ]
             entity["updated_at"] = _now_iso()
@@ -227,7 +232,9 @@ def start_onboarding(slug: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def validate_entity(slug: str, entity_type: str, action: str, edited_content: str | None, user_id: str) -> dict:
+def validate_entity(
+    slug: str, entity_type: str, action: str, edited_content: str | None, user_id: str
+) -> dict:
     client = require_client_by_slug(slug)
     client_id = client["id"]
 
@@ -242,8 +249,7 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
 
     if entity["status"] not in ("generated", "accepted"):
         raise HTTPException(
-            status_code=409,
-            detail=f"Entidade {entity_type} ainda não foi gerada pelo Oráculo"
+            status_code=409, detail=f"Entidade {entity_type} ainda não foi gerada pelo Oráculo"
         )
 
     before_content = entity["content"]
@@ -256,7 +262,9 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
 
     elif action == "edit_accept":
         if not edited_content:
-            raise HTTPException(status_code=422, detail="edited_content é obrigatório para edit_accept")
+            raise HTTPException(
+                status_code=422, detail="edited_content é obrigatório para edit_accept"
+            )
         entity["content"] = edited_content
         entity["status"] = "accepted"
         entity["badge"] = "hitl"
@@ -272,24 +280,23 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
         raise HTTPException(status_code=400, detail=f"Ação inválida: {action}")
 
     # Append-only audit log (constitution §2.4)
-    _hitl_events.append({
-        "id": str(uuid.uuid4()),
-        "client_id": client_id,
-        "entity_type": entity_type,
-        "action": action,
-        "before_content": before_content,
-        "after_content": entity["content"],
-        "user_id": user_id,
-        "timestamp_utc": now,
-    })
+    _hitl_events.append(
+        {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "entity_type": entity_type,
+            "action": action,
+            "before_content": before_content,
+            "after_content": entity["content"],
+            "user_id": user_id,
+            "timestamp_utc": now,
+        }
+    )
 
     # Check HITL gate: are ALL 6 entities accepted? (ADR-LOCAL-04)
     client_status_result = None
     if action in ("accept", "edit_accept"):
-        all_entities = [
-            _wiki_entities.get(f"{client_id}:{et}")
-            for et in ONTOLOGY_ENTITY_TYPES
-        ]
+        all_entities = [_wiki_entities.get(f"{client_id}:{et}") for et in ONTOLOGY_ENTITY_TYPES]
         all_accepted = all(e is not None and e["status"] == "accepted" for e in all_entities)
         if all_accepted and client["status"] == "PRE_ACTIVE":
             client["status"] = "ACTIVE"
@@ -327,9 +334,7 @@ def add_reunion_context_to_oraculo(
 
     # Collect text from segments marked as selected
     reunion_text = "\n\n".join(
-        seg.get("text", "")
-        for seg in selected_segments
-        if seg.get("selected")
+        seg.get("text", "") for seg in selected_segments if seg.get("selected")
     )
     if not reunion_text:
         return
@@ -338,14 +343,16 @@ def add_reunion_context_to_oraculo(
     entity["content"] = existing + f"\n\n[Reunião {meeting_id}]:\n{reunion_text}"
     entity["updated_at"] = datetime.now(timezone.utc).isoformat()
 
-    _hitl_events.append({
-        "id": str(uuid.uuid4()),
-        "client_id": client_id,
-        "entity_type": "Briefings",
-        "action": "reunion_context_added",
-        "meeting_id": meeting_id,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    _hitl_events.append(
+        {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "entity_type": "Briefings",
+            "action": "reunion_context_added",
+            "meeting_id": meeting_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
     logger.info(
         "FA-15: reunion %s context added to Briefings for client %s",
         meeting_id,
@@ -377,6 +384,7 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
                 "Oracle agent: regeneration failed for %s/%s (%s)", client_id, entity_type, exc
             )
             from .oracle_agent import _fallback_content
+
             content = _fallback_content(entity_type, client_name)
             provenance_source = "Fallback local"
 

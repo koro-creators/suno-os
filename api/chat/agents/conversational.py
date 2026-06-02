@@ -61,9 +61,7 @@ class ConversationalAgent(BaseAgent):
     async def invoke(self, state: SunosChatState) -> SunosChatState:
         llm = self._llm
         if llm is None:
-            state["messages"] = state.get("messages", []) + [
-                AIMessage(content=FALLBACK_MESSAGE)
-            ]
+            state["messages"] = state.get("messages", []) + [AIMessage(content=FALLBACK_MESSAGE)]
             state["current_agent"] = self.name
             return state
 
@@ -75,9 +73,7 @@ class ConversationalAgent(BaseAgent):
         # Simple LLM call (no ReAct, no tools)
         response = await llm.ainvoke(messages)
 
-        state["messages"] = state.get("messages", []) + [
-            AIMessage(content=response.content or "")
-        ]
+        state["messages"] = state.get("messages", []) + [AIMessage(content=response.content or "")]
         state["current_agent"] = self.name
 
         return state

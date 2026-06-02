@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
-
 from fastapi.responses import StreamingResponse
 
 from .schemas import (
@@ -273,9 +272,7 @@ async def delete_workflow(workflow_id: str):
         raise HTTPException(status_code=404, detail="Workflow not found")
 
     # Remove associated runs and step logs
-    run_ids_to_remove = [
-        r["id"] for r in _runs.values() if r["workflow_id"] == workflow_id
-    ]
+    run_ids_to_remove = [r["id"] for r in _runs.values() if r["workflow_id"] == workflow_id]
     for run_id in run_ids_to_remove:
         _step_logs.pop(run_id, None)
         _runs.pop(run_id, None)
@@ -550,9 +547,27 @@ _TEMPLATES = [
         "name": "Relatorio Mensal",
         "description": "Gera report de performance e envia para Slack",
         "steps": [
-            {"id": "s1", "name": "Buscar dados", "type": "tool", "tool_name": "query_data", "config": {"query": "metricas do mes"}},
-            {"id": "s2", "name": "Gerar analise", "type": "llm", "prompt": "Analise os dados: {{previous}}", "config": {}},
-            {"id": "s3", "name": "Enviar para Slack", "type": "action", "tool_name": "send_slack", "config": {"channel": "#reports"}},
+            {
+                "id": "s1",
+                "name": "Buscar dados",
+                "type": "tool",
+                "tool_name": "query_data",
+                "config": {"query": "metricas do mes"},
+            },
+            {
+                "id": "s2",
+                "name": "Gerar analise",
+                "type": "llm",
+                "prompt": "Analise os dados: {{previous}}",
+                "config": {},
+            },
+            {
+                "id": "s3",
+                "name": "Enviar para Slack",
+                "type": "action",
+                "tool_name": "send_slack",
+                "config": {"channel": "#reports"},
+            },
         ],
     },
     {
@@ -560,10 +575,36 @@ _TEMPLATES = [
         "name": "Briefing Criativo",
         "description": "Coleta dados do cliente, pesquisa referencias e gera briefing completo",
         "steps": [
-            {"id": "s1", "name": "Coletar dados do cliente", "type": "tool", "tool_name": "search_knowledge", "config": {"query": "dados do cliente"}},
-            {"id": "s2", "name": "Pesquisar referencias", "type": "tool", "tool_name": "search_knowledge", "config": {"query": "referencias criativas"}},
-            {"id": "s3", "name": "Gerar briefing", "type": "llm", "prompt": "Com base nos dados: {{steps.s1}} e referencias: {{steps.s2}}, gere um briefing criativo.", "config": {}},
-            {"id": "s4", "name": "Revisao humana", "type": "hitl", "config": {"review_instructions": "Valide o briefing gerado"}},
+            {
+                "id": "s1",
+                "name": "Coletar dados do cliente",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {"query": "dados do cliente"},
+            },
+            {
+                "id": "s2",
+                "name": "Pesquisar referencias",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {"query": "referencias criativas"},
+            },
+            {
+                "id": "s3",
+                "name": "Gerar briefing",
+                "type": "llm",
+                "prompt": (
+                    "Com base nos dados: {{steps.s1}} e referencias: {{steps.s2}}, "
+                    "gere um briefing criativo."
+                ),
+                "config": {},
+            },
+            {
+                "id": "s4",
+                "name": "Revisao humana",
+                "type": "hitl",
+                "config": {"review_instructions": "Valide o briefing gerado"},
+            },
         ],
     },
     {
@@ -571,9 +612,27 @@ _TEMPLATES = [
         "name": "Monitor de Redes Sociais",
         "description": "Monitora mencoes, analisa sentimento e dispara alerta se negativo",
         "steps": [
-            {"id": "s1", "name": "Coletar mencoes", "type": "tool", "tool_name": "search_knowledge", "config": {"query": "mencoes recentes"}},
-            {"id": "s2", "name": "Analisar sentimento", "type": "llm", "prompt": "Analise o sentimento: {{previous}}", "config": {}},
-            {"id": "s3", "name": "Registrar resultado", "type": "action", "tool_name": "log_result", "config": {}},
+            {
+                "id": "s1",
+                "name": "Coletar mencoes",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {"query": "mencoes recentes"},
+            },
+            {
+                "id": "s2",
+                "name": "Analisar sentimento",
+                "type": "llm",
+                "prompt": "Analise o sentimento: {{previous}}",
+                "config": {},
+            },
+            {
+                "id": "s3",
+                "name": "Registrar resultado",
+                "type": "action",
+                "tool_name": "log_result",
+                "config": {},
+            },
         ],
     },
     {
@@ -581,11 +640,40 @@ _TEMPLATES = [
         "name": "Pesquisa de Mercado",
         "description": "Busca tendencias, analisa concorrentes e gera insights acionaveis",
         "steps": [
-            {"id": "s1", "name": "Buscar tendencias", "type": "tool", "tool_name": "search_knowledge", "config": {"query": "tendencias de mercado"}},
-            {"id": "s2", "name": "Analisar concorrentes", "type": "tool", "tool_name": "search_knowledge", "config": {"query": "analise concorrentes"}},
-            {"id": "s3", "name": "Gerar insights", "type": "llm", "prompt": "Insights sobre {{steps.s1}} e {{steps.s2}}", "config": {}},
-            {"id": "s4", "name": "Revisar insights", "type": "hitl", "config": {"review_instructions": "Valide os insights"}},
-            {"id": "s5", "name": "Enviar por email", "type": "action", "tool_name": "send_email", "config": {"to": "team@example.com"}},
+            {
+                "id": "s1",
+                "name": "Buscar tendencias",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {"query": "tendencias de mercado"},
+            },
+            {
+                "id": "s2",
+                "name": "Analisar concorrentes",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {"query": "analise concorrentes"},
+            },
+            {
+                "id": "s3",
+                "name": "Gerar insights",
+                "type": "llm",
+                "prompt": "Insights sobre {{steps.s1}} e {{steps.s2}}",
+                "config": {},
+            },
+            {
+                "id": "s4",
+                "name": "Revisar insights",
+                "type": "hitl",
+                "config": {"review_instructions": "Valide os insights"},
+            },
+            {
+                "id": "s5",
+                "name": "Enviar por email",
+                "type": "action",
+                "tool_name": "send_email",
+                "config": {"to": "team@example.com"},
+            },
         ],
     },
 ]
@@ -631,7 +719,8 @@ async def set_workflow_edges(workflow_id: str, req: SetEdgesRequest) -> list[Wor
     is enforced on PUT /api/workflows/{id} (TASK-B01b).
     """
     _require_workflow(workflow_id)
-    from .edges import EdgeValidationError, set_edges as _set_edges
+    from .edges import EdgeValidationError
+    from .edges import set_edges as _set_edges
 
     try:
         persisted = _set_edges(workflow_id, req.edges, _workflows)

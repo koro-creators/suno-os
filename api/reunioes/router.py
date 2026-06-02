@@ -9,18 +9,9 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-
-from fastapi import APIRouter, Header, HTTPException
 from typing import Optional
 
-logger = logging.getLogger(__name__)
-
-# FA-15: Oráculo integration (graceful guard — silently disabled if onboarding not present)
-try:
-    from onboarding.service import add_reunion_context_to_oraculo
-    _ORACULO_AVAILABLE = True
-except ImportError:
-    _ORACULO_AVAILABLE = False
+from fastapi import APIRouter, Header, HTTPException
 
 from .schemas import (
     CurateRequest,
@@ -31,6 +22,16 @@ from .schemas import (
     MeetingSegmentResponse,
     MeetingUpdate,
 )
+
+# FA-15: Oráculo integration (graceful guard — silently disabled if onboarding not present)
+try:
+    from onboarding.service import add_reunion_context_to_oraculo
+
+    _ORACULO_AVAILABLE = True
+except ImportError:
+    _ORACULO_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Meetings"])
 
@@ -254,7 +255,10 @@ async def curate_meeting(
         meeting_id=meeting_id,
         selected_count=selected_count,
         status="curated",
-        message=f"{selected_count} trecho(s) enviado(s) para revisao HITL antes de entrar na Biblioteca.",
+        message=(
+            f"{selected_count} trecho(s) enviado(s) para revisao HITL "
+            "antes de entrar na Biblioteca."
+        ),
     )
 
 

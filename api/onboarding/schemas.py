@@ -9,13 +9,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from .constants import (
-    CLIENT_STATUS_VALUES,
-    ENTITY_STATUS_VALUES,
-    HITL_ACTIONS,
-    ONTOLOGY_ENTITY_TYPES,
-)
-
 # ---------------------------------------------------------------------------
 # Shared type aliases
 # ---------------------------------------------------------------------------
@@ -116,9 +109,7 @@ class ValidateEntityRequest(BaseModel):
 
     @field_validator("edited_content")
     @classmethod
-    def edited_content_required_for_edit_accept(
-        cls, v: str | None, info: Any
-    ) -> str | None:
+    def edited_content_required_for_edit_accept(cls, v: str | None, info: Any) -> str | None:
         action = info.data.get("action")
         if action == "edit_accept" and not v:
             raise ValueError("edited_content is required when action is 'edit_accept'")

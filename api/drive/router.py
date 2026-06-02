@@ -204,7 +204,11 @@ async def _run_sync_job(user_id: str, job_id: str) -> None:
     _sync_jobs[user_id]["done_at"] = now
     _files_store[user_id] = [
         {"id": "stub-file-1", "name": "Briefing Santander Q1.pdf", "mime_type": "application/pdf"},
-        {"id": "stub-file-2", "name": "Plano de Mídia Maio.xlsx", "mime_type": "application/vnd.ms-excel"},
+        {
+            "id": "stub-file-2",
+            "name": "Plano de Mídia Maio.xlsx",
+            "mime_type": "application/vnd.ms-excel",
+        },
         {"id": "stub-file-3", "name": "Tom de Voz Global Suno.pdf", "mime_type": "application/pdf"},
     ]
     if user_id in _stub_connections:
@@ -300,7 +304,11 @@ async def get_cleanup_report(current_user: str = Depends(get_current_user)) -> d
             },
         ],
         "no_access": [
-            {"id": "file-n1", "name": "Estratégia 2025 (restrito).pdf", "owner": "externo@cliente.com"},
+            {
+                "id": "file-n1",
+                "name": "Estratégia 2025 (restrito).pdf",
+                "owner": "externo@cliente.com",
+            },
             {"id": "file-n2", "name": "Contrato NDA.docx", "owner": "juridico@suno.com.br"},
         ],
         "outdated": [
@@ -375,8 +383,7 @@ async def get_curation_suggestions(current_user: str = Depends(get_current_user)
         },
     ]
     suggestions = [
-        {**s, "status": _curation_decisions.get(s["id"], s["status"])}
-        for s in base_suggestions
+        {**s, "status": _curation_decisions.get(s["id"], s["status"])} for s in base_suggestions
     ]
     return {"suggestions": suggestions}
 
@@ -408,7 +415,9 @@ async def decide_curation_suggestion(
 
 
 @router.delete("/disconnect", response_model=DriveDisconnectResponse, summary="Desconectar Drive")
-async def drive_disconnect(current_user: str = Depends(get_current_user)) -> DriveDisconnectResponse:
+async def drive_disconnect(
+    current_user: str = Depends(get_current_user),
+) -> DriveDisconnectResponse:
     """Revoke the Drive OAuth connection for the authenticated user.
 
     Follows FR-178: sets revoked_at timestamp; drive_documents for this user

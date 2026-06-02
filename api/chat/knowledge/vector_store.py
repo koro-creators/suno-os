@@ -59,7 +59,8 @@ async def upsert_chunks(
             await session.execute(
                 text(
                     """
-                    INSERT INTO knowledge_chunks (id, document_id, chunk_index, content, embedding, metadata)
+                    INSERT INTO knowledge_chunks
+                        (id, document_id, chunk_index, content, embedding, metadata)
                     VALUES (:id, :doc_id, :chunk_index, :content, :embedding, :metadata)
                     """
                 ),
@@ -76,7 +77,8 @@ async def upsert_chunks(
         # Update document chunks_count
         await session.execute(
             text(
-                "UPDATE knowledge_documents SET chunks_count = :count, updated_at = NOW() WHERE id = :doc_id"
+                "UPDATE knowledge_documents SET chunks_count = :count, updated_at = NOW() "
+                "WHERE id = :doc_id"
             ),
             {"count": len(chunks), "doc_id": doc_id},
         )

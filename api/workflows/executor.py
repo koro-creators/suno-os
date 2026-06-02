@@ -137,9 +137,7 @@ class WorkflowExecutor:
             )
             return result
         except asyncio.TimeoutError:
-            raise RuntimeError(
-                f"Workflow execution timed out after {max_time}s"
-            )
+            raise RuntimeError(f"Workflow execution timed out after {max_time}s")
 
     async def run_stream(
         self,
@@ -186,9 +184,7 @@ class WorkflowExecutor:
         try:
             step_start = time.time()
 
-            async for event in graph.astream(
-                initial_state, config, stream_mode="updates"
-            ):
+            async for event in graph.astream(initial_state, config, stream_mode="updates"):
                 # Check overall timeout
                 elapsed = time.time() - step_start
                 if elapsed > max_time:

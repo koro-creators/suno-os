@@ -70,9 +70,7 @@ async def run_scheduled_agent(agent_id: str) -> None:
     _agents = _get_agents_store()
     agent = _agents.get(agent_id)
     if not agent:
-        logger.warning(
-            "Scheduled run skipped: agent %s not found in store", agent_id
-        )
+        logger.warning("Scheduled run skipped: agent %s not found in store", agent_id)
         return
 
     if agent.get("status") != "active":
@@ -100,7 +98,9 @@ async def run_scheduled_agent(agent_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _build_trigger(frequency: str, days_of_week: list[int] | None, time_of_day: str | None, timezone_str: str):
+def _build_trigger(
+    frequency: str, days_of_week: list[int] | None, time_of_day: str | None, timezone_str: str
+):
     """Return the appropriate APScheduler trigger for the given config."""
     if frequency == "hourly":
         return IntervalTrigger(hours=1, timezone=timezone_str)

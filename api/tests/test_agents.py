@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -36,6 +35,7 @@ def _get_all_agents_stores() -> list[dict]:
     if not stores:
         # Fallback: import fresh
         from api.agents import router as ag_router
+
         stores.append(ag_router._agents)
     return stores
 
@@ -50,6 +50,7 @@ def _get_live_agents_store() -> dict:
         if mod is not None:
             return mod._agents  # type: ignore[attr-defined]
     from api.agents import router as ag_router
+
     return ag_router._agents
 
 
@@ -112,6 +113,7 @@ class TestAgentCRUD:
 
     def test_require_agent_raises_404(self):
         import sys
+
         from fastapi import HTTPException
 
         mod = sys.modules.get("agents.router") or sys.modules.get("api.agents.router")
@@ -306,6 +308,7 @@ class TestScheduleEndpoint:
 
     def _client(self):
         from fastapi.testclient import TestClient
+
         from main import app  # noqa: PLC0415
 
         return TestClient(app, raise_server_exceptions=True)
