@@ -17,14 +17,20 @@ from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException, Request
 
+try:
+    from notifications.router import _create_notification_internal
+
+    _NOTIFICATIONS_AVAILABLE = True
+except ImportError:
+    _NOTIFICATIONS_AVAILABLE = False
+
 from .schemas import (
     ApprovalDecisionRequest,
     ApprovalEventResponse,
     ApprovalHistoryResponse,
+    ApprovalStatus,
     ApprovalSubmissionResponse,
     ApprovalSubmitRequest,
-    ApprovalStatus,
-    DecisionType,
     EventAction,
     Urgency,
 )
@@ -55,8 +61,9 @@ def _resolve_actor(request: Request, authorization: Optional[str]) -> dict:
     # Tenta decodificar o Firebase JWT (best-effort; sem falhar no MVP)
     if authorization and authorization.startswith("Bearer "):
         try:
-            from core.firebase import get_firebase_app
             import firebase_admin.auth as fb_auth
+
+            from core.firebase import get_firebase_app
 
             get_firebase_app()
             token = authorization.removeprefix("Bearer ").strip()
@@ -111,6 +118,30 @@ def _require_submission(submission_id: str, actor: dict) -> dict:
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _notify_creator(sub: dict, notif_type: str, title: str, body: str) -> None:
+    """
+    Enviar notificação ao creator da submission (fire-and-forget).
+
+    Silently skips if notifications module is unavailable or creator unknown.
+    Nunca bloqueia a transição de status principal.
+    """
+    if not _NOTIFICATIONS_AVAILABLE:
+        return
+    try:
+        creator_id = sub.get("submitted_by")
+        if not creator_id or creator_id == "anonymous":
+            return
+        _create_notification_internal(
+            user_id=creator_id,
+            notif_type=notif_type,
+            title=title,
+            body=body,
+            submission_id=sub.get("id"),
+        )
+    except Exception:
+        pass  # Notification failure never blocks approval flow
 
 
 def _sub_to_response(sub: dict) -> ApprovalSubmissionResponse:
@@ -279,6 +310,13 @@ async def approve_submission(
     }
     _events.setdefault(submission_id, []).append(evt)
 
+    _notify_creator(
+        sub,
+        notif_type="approval_decision",
+        title="Submissão aprovada",
+        body="Sua submissão foi aprovada.",
+    )
+
     return _sub_to_response(sub)
 
 
@@ -287,7 +325,9 @@ async def approve_submission(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/approvals/{submission_id}/request-revision", response_model=ApprovalSubmissionResponse)
+@router.post(
+    "/approvals/{submission_id}/request-revision", response_model=ApprovalSubmissionResponse
+)
 async def request_revision(
     submission_id: str,
     request: Request,
@@ -313,9 +353,13 @@ async def request_revision(
         # Anti-loop: 3ª revisão → EXPIRED (RN-025)
         sub["status"] = ApprovalStatus.EXPIRED
         action = EventAction.REQUEST_CHANGES
+        notif_title = "Submissão expirada"
+        notif_body = "Sua submissão atingiu o limite de rodadas de revisão e foi expirada."
     else:
         sub["status"] = ApprovalStatus.CHANGES_REQUESTED
         action = EventAction.REQUEST_CHANGES
+        notif_title = "Revisão solicitada"
+        notif_body = "Sua submissão precisa de ajustes antes de ser aprovada."
 
     sub["updated_at"] = now
 
@@ -329,6 +373,13 @@ async def request_revision(
         "timestamp": now,
     }
     _events.setdefault(submission_id, []).append(evt)
+
+    _notify_creator(
+        sub,
+        notif_type="changes_requested",
+        title=notif_title,
+        body=notif_body,
+    )
 
     return _sub_to_response(sub)
 
@@ -367,6 +418,13 @@ async def reject_submission(
         "timestamp": now,
     }
     _events.setdefault(submission_id, []).append(evt)
+
+    _notify_creator(
+        sub,
+        notif_type="approval_decision",
+        title="Submissão rejeitada",
+        body="Sua submissão foi rejeitada.",
+    )
 
     return _sub_to_response(sub)
 

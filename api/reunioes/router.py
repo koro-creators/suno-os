@@ -6,11 +6,12 @@ X-Client-ID header for Phase 21). Cross-client requests return 404, never 403.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException
-from typing import Optional
 
 from .schemas import (
     CurateRequest,
@@ -21,6 +22,16 @@ from .schemas import (
     MeetingSegmentResponse,
     MeetingUpdate,
 )
+
+# FA-15: Oráculo integration (graceful guard — silently disabled if onboarding not present)
+try:
+    from onboarding.service import add_reunion_context_to_oraculo
+
+    _ORACULO_AVAILABLE = True
+except ImportError:
+    _ORACULO_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Meetings"])
 
@@ -224,11 +235,30 @@ async def curate_meeting(
     meeting["updated_at"] = now
 
     selected_count = sum(1 for s in updated_segments if s.get("selected"))
+
+    # FA-15: Feed selected segments into client's Oráculo Briefings context
+    if _ORACULO_AVAILABLE and selected_count > 0:
+        try:
+            add_reunion_context_to_oraculo(
+                client_id=meeting["client_id"],
+                meeting_id=meeting_id,
+                selected_segments=updated_segments,
+            )
+        except Exception:
+            # Oráculo enrichment is best-effort — never blocks curation response
+            logger.warning(
+                "FA-15: failed to add reunion %s context to oráculo (non-fatal)",
+                meeting_id,
+            )
+
     return CurateResponse(
         meeting_id=meeting_id,
         selected_count=selected_count,
         status="curated",
-        message=f"{selected_count} trecho(s) enviado(s) para revisao HITL antes de entrar na Biblioteca.",
+        message=(
+            f"{selected_count} trecho(s) enviado(s) para revisao HITL "
+            "antes de entrar na Biblioteca."
+        ),
     )
 
 

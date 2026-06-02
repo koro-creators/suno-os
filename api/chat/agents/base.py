@@ -126,9 +126,7 @@ class BaseAgent(ABC):
                     )
                 )
         else:
-            logger.warning(
-                "%s: ReAct loop hit max rounds (%d)", self.name, MAX_REACT_ROUNDS
-            )
+            logger.warning("%s: ReAct loop hit max rounds (%d)", self.name, MAX_REACT_ROUNDS)
 
         final_text = ""
         for msg in reversed(messages):

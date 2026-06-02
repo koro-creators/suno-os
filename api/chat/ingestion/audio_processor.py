@@ -31,7 +31,8 @@ def _transcribe_audio(file_path: str) -> str:
         audio_file = genai.upload_file(file_path)
         response = model.generate_content(
             [
-                "Transcreva o audio a seguir em portugues. Inclua timestamps aproximados a cada 2 minutos.",
+                "Transcreva o audio a seguir em portugues. "
+                "Inclua timestamps aproximados a cada 2 minutos.",
                 audio_file,
             ]
         )

@@ -2,6 +2,7 @@
 
 In-memory store (Fase C). DB persistence deferred to Fase D.
 """
+
 from __future__ import annotations
 
 import time
@@ -70,9 +71,7 @@ def execute_run(run_id: str, agent: dict) -> None:
         from .memory import load_memory_context
         from .skill_loader import skill_to_tool
 
-        skill_tools = [
-            skill_to_tool(slug) for slug in (agent.get("assigned_skills") or [])
-        ]
+        skill_tools = [skill_to_tool(slug) for slug in (agent.get("assigned_skills") or [])]
         memory_ctx = load_memory_context(agent["id"])
         graph = build_agent_graph(
             instructions=agent.get("instructions", ""),

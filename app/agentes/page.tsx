@@ -6,6 +6,7 @@ import { Add, Bot, Search } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import AgentesCards from '@/components/admin/agentes/AgentesCards';
 import AgentDrawer from '@/components/admin/agentes/AgentDrawer';
+import EmptyState from '@/components/ui/EmptyState';
 import { useAgents } from '@/contexts/AgentsContext';
 import { Agent, AgentStatus } from '@/lib/agents-types';
 
@@ -196,42 +197,12 @@ export default function AgentesPage() {
 
         {/* Empty state */}
         {agents.length === 0 && (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 12,
-              paddingTop: 80,
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Bot size={40} style={{ opacity: 0.4 }} />
-            <p style={{ fontSize: '0.9rem', margin: 0 }}>Nenhum agente criado</p>
-            <p style={{ fontSize: '0.8rem', margin: 0, color: 'var(--text-muted)' }}>
-              Crie seu primeiro agente de IA.
-            </p>
-            <button
-              onClick={() => router.push('/agentes/new')}
-              style={{
-                marginTop: 8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                backgroundColor: 'var(--sun)',
-                color: 'var(--void)',
-                border: 'none',
-                borderRadius: 9999,
-                padding: '8px 16px',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              <Add size={14} />
-              Novo Agente
-            </button>
-          </div>
+          <EmptyState
+            icon={Bot}
+            title="Nenhum agente criado"
+            description="Crie seu primeiro agente de IA para automatizar tarefas e fluxos de trabalho."
+            action={{ label: 'Novo Agente', onClick: () => router.push('/agentes/new') }}
+          />
         )}
 
         {/* Cards grid */}

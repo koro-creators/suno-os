@@ -2,6 +2,7 @@
 Trajectory evaluation -- checks if the agent followed the correct flow.
 Used for CI validation that routing and agent selection work correctly.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -60,9 +61,12 @@ def evaluate_trajectory(
             passed = False
             break
 
+    flow_status = (
+        "flow matches expected pattern" if passed else "flow diverged from expected pattern"
+    )
     return TrajectoryResult(
         passed=passed,
         expected_flow=expected_flow,
         actual_flow=actual_flow,
-        reasoning=f"Intent '{intent}': {'flow matches expected pattern' if passed else 'flow diverged from expected pattern'}",
+        reasoning=f"Intent '{intent}': {flow_status}",
     )

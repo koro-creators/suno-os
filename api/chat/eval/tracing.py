@@ -1,4 +1,5 @@
 """MLflow tracing decorator for chat turns. No-op when MLflow is unavailable."""
+
 from __future__ import annotations
 
 import functools
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 def trace_chat_turn(func):
     """Decorator that logs each chat turn to MLflow. No-op if MLflow unavailable."""
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         start = time.monotonic()
@@ -26,12 +28,14 @@ def trace_chat_turn(func):
 
         try:
             with mlflow.start_run(nested=True, run_name=f"sunos-chat-{str(conversation_id)[:8]}"):
-                mlflow.log_params({
-                    "message": str(message)[:500],
-                    "skill_slug": skill_slug,
-                    "model": model,
-                    "conversation_id": str(conversation_id) if conversation_id else "new",
-                })
+                mlflow.log_params(
+                    {
+                        "message": str(message)[:500],
+                        "skill_slug": skill_slug,
+                        "model": model,
+                        "conversation_id": str(conversation_id) if conversation_id else "new",
+                    }
+                )
 
                 result = await func(*args, **kwargs)
 

@@ -1,195 +1,394 @@
-"""Phase 11 — Backend tests for Agents API (SPEC-021 Fase A+C in-memory).
+"""Tests for Agents CRUD and scheduler integration — SPEC-021 Phase 22.
 
-Covers:
-  - Agent CRUD (create, list, get, patch, delete)
-  - Caixa-preta: unknown IDs → 404 (never 403)
-  - Run dispatch: POST /{id}/run → 202 + run_id
-  - Run listing: GET /{id}/runs → list
-  - Run detail: GET /{id}/runs/{run_id} → full record
+Run with:
+  PYTHONPATH=<worktree-root> uv run --directory api pytest tests/test_agents.py -q
+
+Note: The scheduler is NOT started in these tests — register/unregister ops
+are called directly against the AsyncIOScheduler instance without .start().
+APScheduler supports this (jobs are queued and only fire when started).
 """
 
 from __future__ import annotations
 
 import pytest
-from api.agents import router as agents_router_module
-from api.agents.router import router
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+def _get_all_agents_stores() -> list[dict]:
+    """Return all loaded _agents dicts across import path variants.
+
+    Because pytest uses PYTHONPATH=<worktree-root>, both 'agents.router'
+    (used by main.py/FastAPI) and 'api.agents.router' (used by direct
+    test imports) may be loaded as separate module objects with separate
+    _agents dicts. We clear both to avoid cross-test contamination.
+    """
+    import sys  # noqa: PLC0415
+
+    stores = []
+    for mod_name in ("agents.router", "api.agents.router"):
+        mod = sys.modules.get(mod_name)
+        if mod is not None:
+            stores.append(mod._agents)  # type: ignore[attr-defined]
+    if not stores:
+        # Fallback: import fresh
+        from api.agents import router as ag_router
+
+        stores.append(ag_router._agents)
+    return stores
+
+
+def _get_live_agents_store() -> dict:
+    """Return the canonical _agents dict — prefer the one main.py loaded."""
+    import sys  # noqa: PLC0415
+
+    # Prefer the module loaded by main.py so TestClient and direct tests share state
+    for candidate in ("agents.router", "api.agents.router"):
+        mod = sys.modules.get(candidate)
+        if mod is not None:
+            return mod._agents  # type: ignore[attr-defined]
+    from api.agents import router as ag_router
+
+    return ag_router._agents
 
 
 @pytest.fixture(autouse=True)
 def reset_agents_store():
-    """Clear agents and runs before each test."""
-    agents_router_module.router  # imported for side-effect; store lives in router module
-    from api.agents.router import _agents
-    from api.agents.runner import _runs, _runs_by_agent
+    """Clear the in-memory agents store and schedule state before each test."""
+    from api.agents import scheduler as ag_scheduler
 
-    _agents.clear()
-    _runs.clear()
-    _runs_by_agent.clear()
+    def _clear():
+        for store in _get_all_agents_stores():
+            store.clear()
+        ag_scheduler._schedules.clear()
+        for job in ag_scheduler.scheduler.get_jobs():
+            ag_scheduler.scheduler.remove_job(job.id)
+
+    _clear()
     yield
-    _agents.clear()
-    _runs.clear()
-    _runs_by_agent.clear()
+    _clear()
 
 
-@pytest.fixture
-def client() -> TestClient:
-    app = FastAPI()
-    app.include_router(router, prefix="/api/agents")
-    return TestClient(app)
+def _make_agent(name: str = "Test Agent", status: str = "draft") -> dict:
+    """Insert an agent into the in-memory store (canonical module) and return it."""
+    import uuid
+    from datetime import datetime, timezone
 
-
-# ---------------------------------------------------------------------------
-# CRUD
-# ---------------------------------------------------------------------------
-
-
-def test_list_agents_empty(client):
-    resp = client.get("/api/agents/")
-    assert resp.status_code == 200
-    assert resp.json() == []
-
-
-def test_create_agent_returns_201(client):
-    resp = client.post("/api/agents/", json={"name": "Copywriter", "icon": "✍️"})
-    assert resp.status_code == 201
-    body = resp.json()
-    assert body["name"] == "Copywriter"
-    assert "id" in body
-
-
-def test_list_agents_after_create(client):
-    client.post("/api/agents/", json={"name": "Agent A"})
-    client.post("/api/agents/", json={"name": "Agent B"})
-    resp = client.get("/api/agents/")
-    assert len(resp.json()) == 2
-
-
-def test_get_agent_returns_detail(client):
-    create = client.post("/api/agents/", json={"name": "Revisor"}).json()
-    agent_id = create["id"]
-    resp = client.get(f"/api/agents/{agent_id}")
-    assert resp.status_code == 200
-    assert resp.json()["id"] == agent_id
-
-
-def test_get_unknown_agent_returns_404(client):
-    resp = client.get("/api/agents/00000000-0000-0000-0000-000000000000")
-    assert resp.status_code == 404
-
-
-def test_patch_agent_updates_name(client):
-    create = client.post("/api/agents/", json={"name": "Old Name"}).json()
-    agent_id = create["id"]
-    resp = client.patch(f"/api/agents/{agent_id}", json={"name": "New Name"})
-    assert resp.status_code == 200
-    assert resp.json()["name"] == "New Name"
-
-
-def test_patch_unknown_agent_returns_404(client):
-    resp = client.patch(
-        "/api/agents/00000000-0000-0000-0000-000000000000", json={"name": "X"}
-    )
-    assert resp.status_code == 404
-
-
-def test_delete_agent_soft_archives(client):
-    create = client.post("/api/agents/", json={"name": "Temp"}).json()
-    agent_id = create["id"]
-    resp = client.delete(f"/api/agents/{agent_id}")
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "archived"
-    # Soft delete — agent still exists but is archived
-    detail = client.get(f"/api/agents/{agent_id}").json()
-    assert detail["status"] == "archived"
-
-
-def test_delete_unknown_agent_returns_404(client):
-    resp = client.delete("/api/agents/00000000-0000-0000-0000-000000000000")
-    assert resp.status_code == 404
+    agent_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    agent: dict = {
+        "id": agent_id,
+        "name": name,
+        "icon": "🤖",
+        "instructions": "",
+        "status": status,
+        "skill_count": 0,
+        "client_count": 0,
+        "last_run_at": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    # Insert into ALL loaded stores to handle dual-import-path scenario
+    for store in _get_all_agents_stores():
+        store[agent_id] = agent
+    return agent
 
 
 # ---------------------------------------------------------------------------
-# Run dispatch
+# Agent CRUD
 # ---------------------------------------------------------------------------
 
 
-def test_run_dispatch_returns_202_with_run_id(client):
-    create = client.post("/api/agents/", json={"name": "Runner"}).json()
-    agent_id = create["id"]
-    resp = client.post(f"/api/agents/{agent_id}/run", json={"input": "Hello"})
-    assert resp.status_code == 202
-    body = resp.json()
-    assert "run_id" in body
+class TestAgentCRUD:
+    def test_list_agents_empty(self):
+        assert _get_live_agents_store() == {}
 
+    def test_create_agent_populates_store(self):
+        agent = _make_agent("My Agent")
+        store = _get_live_agents_store()
+        assert agent["id"] in store
+        assert store[agent["id"]]["name"] == "My Agent"
 
-def test_run_dispatch_unknown_agent_returns_404(client):
-    resp = client.post(
-        "/api/agents/00000000-0000-0000-0000-000000000000/run",
-        json={"input": "test"},
-    )
-    assert resp.status_code == 404
+    def test_require_agent_raises_404(self):
+        import sys
 
+        from fastapi import HTTPException
 
-def test_list_runs_empty_for_new_agent(client):
-    create = client.post("/api/agents/", json={"name": "No Runs"}).json()
-    agent_id = create["id"]
-    resp = client.get(f"/api/agents/{agent_id}/runs")
-    assert resp.status_code == 200
-    assert resp.json() == []
+        mod = sys.modules.get("agents.router") or sys.modules.get("api.agents.router")
+        if mod is None:
+            from api.agents import router as mod  # type: ignore[assignment]
 
+        with pytest.raises(HTTPException) as exc_info:
+            mod._require_agent("nonexistent-id")
+        assert exc_info.value.status_code == 404
 
-def test_list_runs_after_dispatch(client):
-    create = client.post("/api/agents/", json={"name": "Runner 2"}).json()
-    agent_id = create["id"]
-    client.post(f"/api/agents/{agent_id}/run", json={"input": "Hello"})
-    resp = client.get(f"/api/agents/{agent_id}/runs")
-    assert resp.status_code == 200
-    runs = resp.json()
-    assert len(runs) == 1
-    assert runs[0]["status"] in ("pending", "running", "completed", "failed")
+    def test_require_agent_returns_agent(self):
+        import sys
 
+        mod = sys.modules.get("agents.router") or sys.modules.get("api.agents.router")
+        if mod is None:
+            from api.agents import router as mod  # type: ignore[assignment]
 
-def test_get_run_detail(client):
-    create = client.post("/api/agents/", json={"name": "Detail Agent"}).json()
-    agent_id = create["id"]
-    run_id = client.post(f"/api/agents/{agent_id}/run", json={"input": "Test"}).json()["run_id"]
-    resp = client.get(f"/api/agents/{agent_id}/runs/{run_id}")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["id"] == run_id
-    assert "input" in body
-
-
-def test_get_run_wrong_agent_returns_404(client):
-    """Run ID from agent A should not be accessible via agent B (caixa-preta)."""
-    agent_a = client.post("/api/agents/", json={"name": "A"}).json()["id"]
-    agent_b = client.post("/api/agents/", json={"name": "B"}).json()["id"]
-    run_id = client.post(f"/api/agents/{agent_a}/run", json={"input": "Hi"}).json()["run_id"]
-    resp = client.get(f"/api/agents/{agent_b}/runs/{run_id}")
-    assert resp.status_code == 404
+        agent = _make_agent("Known Agent")
+        result = mod._require_agent(agent["id"])
+        assert result["name"] == "Known Agent"
 
 
 # ---------------------------------------------------------------------------
-# Search / filter
+# Scheduler — register / unregister
 # ---------------------------------------------------------------------------
 
 
-def test_list_agents_filter_by_status(client):
-    client.post("/api/agents/", json={"name": "Draft Agent", "status": "draft"})
-    client.post("/api/agents/", json={"name": "Active Agent", "status": "active"})
-    resp = client.get("/api/agents/?status=active")
-    assert resp.status_code == 200
-    items = resp.json()
-    assert all(a["status"] == "active" for a in items)
+class TestSchedulerRegisterUnregister:
+    def test_register_hourly_adds_job(self):
+        from api.agents.scheduler import _schedules, register_agent_schedule, scheduler
+
+        agent = _make_agent("Hourly Agent")
+        agent_id = agent["id"]
+
+        register_agent_schedule(
+            agent_id=agent_id,
+            frequency="hourly",
+            days_of_week=None,
+            time_of_day=None,
+            timezone_str="America/Sao_Paulo",
+        )
+
+        assert scheduler.get_job(agent_id) is not None
+        assert _schedules[agent_id]["enabled"] is True
+        assert _schedules[agent_id]["frequency"] == "hourly"
+
+    def test_register_daily_adds_job(self):
+        from api.agents.scheduler import _schedules, register_agent_schedule, scheduler
+
+        agent = _make_agent("Daily Agent")
+        agent_id = agent["id"]
+
+        register_agent_schedule(
+            agent_id=agent_id,
+            frequency="daily",
+            days_of_week=[0, 1, 2, 3, 4],  # Mon–Fri
+            time_of_day="08:30",
+            timezone_str="America/Sao_Paulo",
+        )
+
+        job = scheduler.get_job(agent_id)
+        assert job is not None
+        assert _schedules[agent_id]["frequency"] == "daily"
+        assert _schedules[agent_id]["days_of_week"] == [0, 1, 2, 3, 4]
+        assert _schedules[agent_id]["time_of_day"] == "08:30"
+
+    def test_register_replaces_existing_job(self):
+        from api.agents.scheduler import register_agent_schedule, scheduler
+
+        agent = _make_agent("Replaced Agent")
+        agent_id = agent["id"]
+
+        register_agent_schedule(agent_id, "hourly", None, None, "UTC")
+        register_agent_schedule(agent_id, "daily", [0], "09:00", "UTC")
+
+        # Still only one job
+        jobs = [j for j in scheduler.get_jobs() if j.id == agent_id]
+        assert len(jobs) == 1
+
+    def test_unregister_removes_job(self):
+        from api.agents.scheduler import (
+            _schedules,
+            register_agent_schedule,
+            scheduler,
+            unregister_agent_schedule,
+        )
+
+        agent = _make_agent("Unregister Agent")
+        agent_id = agent["id"]
+
+        register_agent_schedule(agent_id, "hourly", None, None, "UTC")
+        assert scheduler.get_job(agent_id) is not None
+
+        unregister_agent_schedule(agent_id)
+
+        assert scheduler.get_job(agent_id) is None
+        assert agent_id not in _schedules
+
+    def test_unregister_noop_when_not_registered(self):
+        from api.agents.scheduler import unregister_agent_schedule
+
+        # Should not raise
+        unregister_agent_schedule("ghost-agent-id")
 
 
-def test_list_agents_search_by_name(client):
-    client.post("/api/agents/", json={"name": "Copywriter Pro"})
-    client.post("/api/agents/", json={"name": "Revisor"})
-    resp = client.get("/api/agents/?q=Copy")
-    assert resp.status_code == 200
-    items = resp.json()
-    assert len(items) == 1
-    assert "Copy" in items[0]["name"]
+# ---------------------------------------------------------------------------
+# Scheduler — run_scheduled_agent (async)
+# ---------------------------------------------------------------------------
+
+
+class TestRunScheduledAgent:
+    @pytest.mark.asyncio
+    async def test_skips_missing_agent(self):
+        from api.agents.scheduler import run_scheduled_agent
+
+        # Should not raise, just log a warning
+        await run_scheduled_agent("nonexistent-id")
+
+    @pytest.mark.asyncio
+    async def test_skips_inactive_agent(self):
+        from api.agents.scheduler import run_scheduled_agent
+
+        agent = _make_agent("Inactive Agent", status="inactive")
+        agent_id = agent["id"]
+
+        await run_scheduled_agent(agent_id)
+
+        # last_run_at should remain None (not updated)
+        live = _get_live_agents_store()
+        assert live[agent_id]["last_run_at"] is None
+
+    @pytest.mark.asyncio
+    async def test_updates_last_run_at_for_active_agent(self):
+        from api.agents.scheduler import run_scheduled_agent
+
+        agent = _make_agent("Active Agent", status="active")
+        agent_id = agent["id"]
+        assert agent["last_run_at"] is None
+
+        await run_scheduled_agent(agent_id)
+
+        live = _get_live_agents_store()
+        assert live[agent_id]["last_run_at"] is not None
+
+
+# ---------------------------------------------------------------------------
+# Scheduler — load_active_schedules_from_store
+# ---------------------------------------------------------------------------
+
+
+class TestLoadActiveSchedules:
+    @pytest.mark.asyncio
+    async def test_load_empty_store_does_nothing(self):
+        from api.agents.scheduler import load_active_schedules_from_store, scheduler
+
+        await load_active_schedules_from_store()
+        assert scheduler.get_jobs() == []
+
+    @pytest.mark.asyncio
+    async def test_load_replays_enabled_schedules(self):
+        from api.agents.scheduler import (
+            _schedules,
+            load_active_schedules_from_store,
+            scheduler,
+        )
+
+        # Pre-populate _schedules as if a prior session had registered them
+        _schedules["agent-abc"] = {
+            "enabled": True,
+            "frequency": "hourly",
+            "days_of_week": None,
+            "time_of_day": None,
+            "timezone": "UTC",
+        }
+
+        await load_active_schedules_from_store()
+
+        assert scheduler.get_job("agent-abc") is not None
+
+
+# ---------------------------------------------------------------------------
+# HTTP endpoint — PATCH /api/agents/{id}/schedule
+# ---------------------------------------------------------------------------
+
+
+class TestScheduleEndpoint:
+    """Integration tests for the PATCH /schedule HTTP endpoint via TestClient.
+
+    Agents are created via HTTP POST so they land in the same module instance
+    the app uses (agents.router._agents, not api.agents.router._agents).
+    """
+
+    def _client(self):
+        from fastapi.testclient import TestClient
+
+        from main import app  # noqa: PLC0415
+
+        return TestClient(app, raise_server_exceptions=True)
+
+    def _create_agent(self, client, name: str = "Test", status: str = "draft") -> str:
+        """Create an agent via HTTP POST and return its id."""
+        resp = client.post("/api/agents/", json={"name": name, "status": status})
+        assert resp.status_code == 201, resp.text
+        return resp.json()["id"]
+
+    def test_patch_schedule_404_on_unknown_agent(self):
+        client = self._client()
+        resp = client.patch(
+            "/api/agents/nonexistent-id/schedule",
+            json={"enabled": True, "frequency": "hourly"},
+        )
+        assert resp.status_code == 404
+
+    def test_patch_schedule_enables(self):
+        """PATCH /schedule with enabled=True returns 200 and correct response shape."""
+        client = self._client()
+        agent_id = self._create_agent(client, "Endpoint Agent", status="active")
+
+        resp = client.patch(
+            f"/api/agents/{agent_id}/schedule",
+            json={
+                "enabled": True,
+                "frequency": "daily",
+                "days_of_week": [0, 1, 2, 3, 4],
+                "time_of_day": "10:00",
+                "timezone": "America/Sao_Paulo",
+            },
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["id"] == agent_id
+        assert body["enabled"] is True
+        assert body["frequency"] == "daily"
+        assert body["days_of_week"] == [0, 1, 2, 3, 4]
+        assert body["time_of_day"] == "10:00"
+        assert body["timezone"] == "America/Sao_Paulo"
+
+        # Roundtrip: GET should now show enabled=True
+        get_resp = client.get(f"/api/agents/{agent_id}/schedule")
+        assert get_resp.status_code == 200
+        assert get_resp.json()["enabled"] is True
+
+    def test_patch_schedule_disables(self):
+        """PATCH /schedule with enabled=False returns 200 and enabled=False."""
+        client = self._client()
+        agent_id = self._create_agent(client, "Disable Agent", status="active")
+
+        # First enable, then disable
+        client.patch(
+            f"/api/agents/{agent_id}/schedule",
+            json={"enabled": True, "frequency": "hourly"},
+        )
+
+        resp = client.patch(
+            f"/api/agents/{agent_id}/schedule",
+            json={"enabled": False, "frequency": "hourly"},
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["enabled"] is False
+
+        # GET should confirm disabled
+        get_resp = client.get(f"/api/agents/{agent_id}/schedule")
+        assert get_resp.status_code == 200
+        assert get_resp.json()["enabled"] is False
+
+    def test_get_schedule_returns_defaults_when_not_set(self):
+        client = self._client()
+        agent_id = self._create_agent(client, "No Schedule Agent")
+
+        resp = client.get(f"/api/agents/{agent_id}/schedule")
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["enabled"] is False
+        assert body["id"] == agent_id

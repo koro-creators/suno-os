@@ -73,7 +73,10 @@ def chat_completion(
     temperature: float = 0.7,
     system_prompt: str = "",
 ) -> str:
-    """Send a message to an LLM and get a response. Used for general conversation and content generation."""
+    """Send a message to an LLM and get a response.
+
+    Used for general conversation and content generation.
+    """
     try:
         llm = _get_llm(model, temperature)
 

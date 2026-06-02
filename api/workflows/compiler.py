@@ -171,9 +171,7 @@ class WorkflowCompiler:
     # it can never collide with a user step id.
     _ERROR_ROUTE_KEY = "__error_route__"
 
-    def _compile_v2_with_edges(
-        self, definition: dict, edges: list[dict]
-    ) -> CompiledStateGraph:
+    def _compile_v2_with_edges(self, definition: dict, edges: list[dict]) -> CompiledStateGraph:
         """Build the StateGraph from explicit edges (SPEC-005 constitution §2)."""
         steps: list[dict] = definition.get("steps", [])
         graph = StateGraph(WorkflowState)
@@ -207,9 +205,7 @@ class WorkflowCompiler:
         # Stable order — guarantees deterministic StateGraph construction so
         # the v1↔v2 byte-equivalence test (CA-26) is reliable.
         for src in edges_by_source:
-            edges_by_source[src].sort(
-                key=lambda e: (e["source_handle"], e["target_step_id"])
-            )
+            edges_by_source[src].sort(key=lambda e: (e["source_handle"], e["target_step_id"]))
 
         in_degree: dict[str, int] = {sid: 0 for sid in steps_by_id}
         for edge in edges:
@@ -274,15 +270,11 @@ class WorkflowCompiler:
                 "operator": "eq",
                 "value": None,
             }
-            graph.add_conditional_edges(
-                src_id, self._make_condition(cond), mapping
-            )
+            graph.add_conditional_edges(src_id, self._make_condition(cond), mapping)
             return
 
         if src_type == "hitl":
-            mapping = {
-                edge["source_handle"]: edge["target_step_id"] for edge in source_edges
-            }
+            mapping = {edge["source_handle"]: edge["target_step_id"] for edge in source_edges}
             mapping.setdefault("approved", END)
 
             def hitl_router(state: WorkflowState, _src=src_id, _map=mapping) -> str:
@@ -348,9 +340,7 @@ class WorkflowCompiler:
     # Wrappers for v2 special semantics
     # ------------------------------------------------------------------
 
-    def _wrap_with_error_routing(
-        self, step: dict, base_fn: Callable
-    ) -> Callable:
+    def _wrap_with_error_routing(self, step: dict, base_fn: Callable) -> Callable:
         """Wrap a node fn so that exceptions emit an error-route marker.
 
         Without this wrapper, an exception inside `base_fn` would propagate
@@ -379,9 +369,7 @@ class WorkflowCompiler:
 
         return wrapped
 
-    def _make_merge_any_node(
-        self, step: dict, base_fn: Callable
-    ) -> Callable:
+    def _make_merge_any_node(self, step: dict, base_fn: Callable) -> Callable:
         """Merge node with `merge_policy='any'`.
 
         Limitation (documented in ADR-LOCAL-04): LangGraph natively waits
@@ -432,9 +420,7 @@ class WorkflowCompiler:
         step_config = step.get("config", {})
 
         async def node_fn(state: WorkflowState) -> dict:
-            resolved_config = self._resolve_templates(
-                step_config, state.get("steps_output", {})
-            )
+            resolved_config = self._resolve_templates(step_config, state.get("steps_output", {}))
 
             if step_type == "tool":
                 tool_name = step.get("tool_name", "")
@@ -451,6 +437,7 @@ class WorkflowCompiler:
                 )
                 # LLM call via langchain — resolve model alias
                 from langchain_google_genai import ChatGoogleGenerativeAI
+
                 from config import settings
 
                 MODEL_MAP = {
@@ -510,9 +497,7 @@ class WorkflowCompiler:
                     # 2. Verificar depth ANTES de compilar
                     current_depth = state.get("_depth", 0)
                     if current_depth >= 3:
-                        result = {
-                            "error": "max_depth_exceeded: maximum nesting depth is 3"
-                        }
+                        result = {"error": "max_depth_exceeded: maximum nesting depth is 3"}
                     else:
                         # 3. Resolver input_mapping templates
                         resolved_mapping = self._resolve_templates(
@@ -527,16 +512,13 @@ class WorkflowCompiler:
                         # 5. Criar state inicial do sub-workflow e executar
                         sub_state = {
                             "workflow_id": target_wf_id,
-                            "run_id": state.get("run_id", "")
-                            + f"_sub_{step_id}",
+                            "run_id": state.get("run_id", "") + f"_sub_{step_id}",
                             "steps_output": {},
                             "current_step": "",
                             "status": "running",
                             "messages": [],
                             "human_input": None,
-                            "started_at": datetime.now(
-                                timezone.utc
-                            ).isoformat(),
+                            "started_at": datetime.now(timezone.utc).isoformat(),
                             "model": sub_definition.get(
                                 "default_model",
                                 state.get("model", "gemini-flash"),
@@ -548,11 +530,7 @@ class WorkflowCompiler:
                         sub_result = await sub_graph.ainvoke(sub_state)
                         # Pegar o final output (ultimo valor em steps_output)
                         sub_outputs = sub_result.get("steps_output", {})
-                        result = (
-                            list(sub_outputs.values())[-1]
-                            if sub_outputs
-                            else sub_result
-                        )
+                        result = list(sub_outputs.values())[-1] if sub_outputs else sub_result
 
             else:
                 result = {"error": f"Unknown step type: {step_type}"}
@@ -594,9 +572,7 @@ class WorkflowCompiler:
     # Template resolution
     # ------------------------------------------------------------------
 
-    def _resolve_templates(
-        self, config: dict, steps_output: dict
-    ) -> dict:
+    def _resolve_templates(self, config: dict, steps_output: dict) -> dict:
         """Resolve template references in config values."""
         resolved = {}
         for key, val in config.items():

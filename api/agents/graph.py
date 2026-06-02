@@ -1,4 +1,5 @@
 """LangGraph ReAct agent graph — SPEC-021 TASK-C03."""
+
 from __future__ import annotations
 
 import operator

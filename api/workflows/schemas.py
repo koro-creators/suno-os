@@ -13,9 +13,7 @@ from pydantic import BaseModel, Field
 
 # Source handles allowed by spec.md §4.1 + design.md §2.1 CHECK constraint.
 # `success` was removed (constitution §2 — `out` is universal).
-SourceHandle = Literal[
-    "out", "error", "then", "else", "approved", "rejected", "modified"
-]
+SourceHandle = Literal["out", "error", "then", "else", "approved", "rejected", "modified"]
 TargetHandle = Literal["in"]
 MergePolicy = Literal["all", "any"]
 ValidationErrorKind = Literal[
@@ -41,7 +39,9 @@ class WorkflowStep(BaseModel):
     tool_name: str | None = None
     prompt: str | None = None
     workflow_id: str | None = None  # For type="workflow": ID of sub-workflow to execute
-    input_mapping: dict[str, str] | None = None  # For type="workflow": map parent output → child input
+    input_mapping: dict[str, str] | None = (
+        None  # For type="workflow": map parent output → child input
+    )
     config: dict[str, Any] = {}
     next_step: str | None = None
     condition: dict[str, Any] | None = None

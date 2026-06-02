@@ -7,6 +7,7 @@ import AppHeader from '@/components/layout/AppHeader';
 import FilterPills from '@/components/solar/FilterPills';
 import { getClientBySlug, getSkillTypeColor } from '@/lib/utils';
 import type { Skill } from '@/lib/types';
+import { useSkills } from '@/contexts/SkillsContext';
 
 // Skill size based on moon count: 45-90px
 function skillSize(moonCount: number): number {
@@ -28,6 +29,7 @@ export default function ClientPage({
     redirect('/');
   }
 
+  const { skills: adminSkills } = useSkills();
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +37,12 @@ export default function ClientPage({
     const t = setTimeout(() => setLoading(false), 300);
     return () => clearTimeout(t);
   }, []);
+
+  // Skills from SkillsContext that are active and assigned to this client
+  const activeContextSkills = adminSkills.filter(
+    (s) => s.status === 'active' && s.assignedClients.includes(clientSlug)
+  );
+  const activeContextCount = activeContextSkills.length;
 
   const filteredSkills = activeFilter
     ? client.skills.filter((s) => s.type === activeFilter)
@@ -56,7 +64,7 @@ export default function ClientPage({
           { label: 'Home', href: '/' },
           { label: client.name, href: `/${clientSlug}` },
         ]}
-        rightLabel={`${client.skills.length} skills`}
+        rightLabel={`${activeContextCount} skills`}
       />
 
       <div id="main-content" className="flex-1 relative min-h-0">
@@ -160,6 +168,57 @@ export default function ClientPage({
               );
             })}
 
+        {/* Empty state — shown when SkillsContext has no active skills for this client */}
+        {!loading && activeContextCount === 0 && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+              pointerEvents: 'none',
+              userSelect: 'none',
+              zIndex: 20,
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                border: '1px dashed var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--text-muted)',
+                  opacity: 0.4,
+                }}
+              />
+            </div>
+            <span
+              style={{
+                fontSize: '0.6rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: 'var(--text-muted)',
+              }}
+            >
+              Nenhuma skill ativa
+            </span>
+          </div>
+        )}
+
         <FilterPills
           types={['criacao', 'midia', 'planejamento']}
           activeType={activeFilter}
@@ -180,7 +239,7 @@ export default function ClientPage({
           <div style={{ fontSize: '3rem', fontWeight: 200, color: 'var(--editorial-text)', lineHeight: 1, letterSpacing: '-0.02em' }}>02</div>
           <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--editorial-label)', marginTop: 4 }}>Bioma</div>
           <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>
-            {client.skills.length} skills &middot; {totalAreas} áreas
+            {activeContextCount} skills &middot; {totalAreas} áreas
           </div>
         </div>
       </div>

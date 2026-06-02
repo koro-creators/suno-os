@@ -2,6 +2,7 @@
 
 Cleanup task in main.py lifespan (TASK-C12).
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone

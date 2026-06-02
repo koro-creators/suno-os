@@ -32,7 +32,8 @@ async def _get_document(doc_id: str) -> dict | None:
         try:
             result = await session.execute(
                 text(
-                    "SELECT id, title, file_type, file_url, content_text FROM knowledge_documents WHERE id = :doc_id"
+                    "SELECT id, title, file_type, file_url, content_text "
+                    "FROM knowledge_documents WHERE id = :doc_id"
                 ),
                 {"doc_id": doc_id},
             )

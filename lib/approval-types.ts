@@ -36,6 +36,7 @@ export interface ApprovalSubmission {
   subject_type: SubjectType;
   subject_id: string;
   content: string;           // subject_snapshot.content (truncável na listagem)
+  original_content?: string; // conteúdo antes da última edição (para diff before/after)
   status: ApprovalStatus;
   urgency: Urgency;
   submitted_by: string;      // user id

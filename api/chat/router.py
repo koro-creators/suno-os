@@ -47,10 +47,16 @@ async def chat_stream(request: ChatRequest):
             ):
                 yield f"event: {event.event}\ndata: {json.dumps(event.data)}\n\n"
         except asyncio.TimeoutError:
-            yield f'event: error\ndata: {json.dumps({"message": "Request timed out. Please try again."})}\n\n'
+            yield (
+                f"event: error\ndata: "
+                f"{json.dumps({'message': 'Request timed out. Please try again.'})}\n\n"
+            )
         except Exception as exc:
             logger.error("chat_stream: %s", exc, exc_info=True)
-            yield f'event: error\ndata: {json.dumps({"message": "An error occurred. Please try again."})}\n\n'
+            yield (
+                f"event: error\ndata: "
+                f"{json.dumps({'message': 'An error occurred. Please try again.'})}\n\n"
+            )
 
     return StreamingResponse(
         event_generator(),

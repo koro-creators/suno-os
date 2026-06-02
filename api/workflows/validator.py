@@ -67,9 +67,7 @@ def _build_adjacency(
     out_adj: dict[str, list[tuple[str, str]]] = defaultdict(list)
     in_degree: dict[str, int] = defaultdict(int)
     for edge in edges:
-        out_adj[edge["source_step_id"]].append(
-            (edge["target_step_id"], edge.get("edge_id", ""))
-        )
+        out_adj[edge["source_step_id"]].append((edge["target_step_id"], edge.get("edge_id", "")))
         in_degree[edge["target_step_id"]] += 1
     return out_adj, in_degree
 
@@ -112,9 +110,7 @@ def cycle_edges(edges: list[dict]) -> list[str]:
     cyclic: set[str] = set()
     for start in sorted({e["source_step_id"] for e in edges}):
         # Tarjan-lite: DFS from `start` looking for path back to `start`.
-        stack: list[tuple[str, list[tuple[str, str]]]] = [
-            (start, list(out_adj.get(start, [])))
-        ]
+        stack: list[tuple[str, list[tuple[str, str]]]] = [(start, list(out_adj.get(start, [])))]
         path_edges: list[str] = []
         on_path: set[str] = {start}
         while stack:

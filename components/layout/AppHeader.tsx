@@ -2,10 +2,12 @@
 
 import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Moon, Settings, Sun } from '@carbon/icons-react';
+import { Moon, Notification, Settings, Sun } from '@carbon/icons-react';
 import Logo from './Logo';
 import Breadcrumb from './Breadcrumb';
 import { useTheme } from './ThemeProvider';
+import { useAuth } from '@/contexts/AuthContext';
+import { useApprovals } from '@/contexts/ApprovalsContext';
 
 interface AppHeaderProps {
   breadcrumbs: { label: string; href: string }[];
@@ -16,6 +18,8 @@ interface AppHeaderProps {
 export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: AppHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const { isAdmin } = useAuth();
+  const { pendingCount } = useApprovals();
 
   return (
     <header
@@ -46,6 +50,56 @@ export default function AppHeader({ breadcrumbs, rightLabel, rightSection }: App
           >
             {rightLabel}
           </span>
+        )}
+
+        {/* Notification bell — admin only */}
+        {isAdmin && (
+          <button
+            aria-label="Aprovações pendentes"
+            title="Aprovações pendentes"
+            onClick={() => router.push('/aprovacoes')}
+            style={{
+              position: 'relative',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'transparent',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '9999px',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'color 200ms ease, border-color 200ms ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
+            }}
+          >
+            <Notification size={14} />
+            {pendingCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  background: '#dc2626',
+                  borderRadius: 9999,
+                  fontSize: '0.65rem',
+                  padding: '1px 5px',
+                  color: '#fff',
+                  lineHeight: 1,
+                  pointerEvents: 'none',
+                }}
+              >
+                {pendingCount}
+              </span>
+            )}
+          </button>
         )}
 
         {/* Skills */}

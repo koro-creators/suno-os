@@ -64,11 +64,7 @@ def _format_results(results: list[dict]) -> str:
 
     lines = []
     for i, r in enumerate(results, 1):
-        lines.append(
-            f"[{i}] {r['title']}\n"
-            f"    {r['snippet']}\n"
-            f"    URL: {r['url']}"
-        )
+        lines.append(f"[{i}] {r['title']}\n    {r['snippet']}\n    URL: {r['url']}")
     return "\n\n".join(lines)
 
 

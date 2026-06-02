@@ -16,16 +16,17 @@ test_canvas_phase_b.py.
 from __future__ import annotations
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from api.workflows.router import router
 from api.workflows.schemas import (
     SetEdgesRequest,
-    ValidationError as WfValidationError,
     WorkflowEdge,
     WorkflowStepV2,
 )
+from api.workflows.schemas import (
+    ValidationError as WfValidationError,
+)
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -71,9 +72,7 @@ def test_set_edges_returns_200_on_existing_workflow(client, seed_workflow_v2_lin
 
 
 def test_delete_edge_404_on_missing_workflow(client):
-    response = client.delete(
-        "/api/workflows/00000000-0000-0000-0000-000000000000/edges/abc"
-    )
+    response = client.delete("/api/workflows/00000000-0000-0000-0000-000000000000/edges/abc")
     assert response.status_code == 404
 
 

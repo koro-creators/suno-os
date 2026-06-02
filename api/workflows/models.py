@@ -70,7 +70,9 @@ class WorkflowRun(Base):
         ForeignKey("workflows.id", ondelete="CASCADE"),
         nullable=False,
     )
-    status = Column(String(20), nullable=False, default="pending")  # pending|running|paused|completed|failed
+    status = Column(
+        String(20), nullable=False, default="pending"
+    )  # pending|running|paused|completed|failed
     trigger = Column(String(20), nullable=False, default="manual")  # manual|scheduler|api
     started_at = Column(TIMESTAMP(timezone=True))
     completed_at = Column(TIMESTAMP(timezone=True))

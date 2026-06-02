@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 
 from .constants import ONTOLOGY_ENTITY_TYPES, ORACLE_STUB_DELAY_SECONDS
+from .oracle_agent import invoke_oracle
 
 logger = logging.getLogger(__name__)
 
@@ -142,55 +143,79 @@ def get_onboarding_status(slug: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-async def run_oracle_stub(client_id: str) -> None:
+async def run_oracle_agent(client_id: str) -> None:
     """
-    Stub Oráculo: simulates entity generation with delay.
-    Real LangGraph agent (LLMGraphTransformer) is implemented separately.
-    Populates wiki_entities with placeholder content.
+    Oracle agent: LangGraph StateGraph (Gemini Flash) for entity extraction.
+    Falls back to rich local content if LLM unavailable.
+    Keeps job status/progress logic identical to former stub.
     """
     job = _jobs.get(client_id)
     client = _clients.get(client_id)
     if not job or not client:
-        logger.error("Oracle stub: client_id %s not found", client_id)
+        logger.error("Oracle agent: client_id %s not found", client_id)
         return
 
-    logger.info("Oracle stub started for client %s", client["slug"])
+    logger.info("Oracle agent started for client %s", client["slug"])
     job["drive_sync_status"] = "running"
     job["started_at"] = _now_iso()
 
-    # Simulate Drive sync (brief)
+    # Simulate Drive sync phase (brief delay — mirrors former stub cadence)
     await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)
     job["drive_sync_status"] = "done"
     job["oracle_status"] = "running"
 
-    # Generate each entity sequentially with delay
+    brand_context = client.get("brand_context", "")
+    wizard_briefing = client.get("wizard_briefing", "")
+
+    # Generate each entity sequentially
     for entity_type in ONTOLOGY_ENTITY_TYPES:
         job["current_entity"] = entity_type
-        await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)
+        await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)  # keeps progressive UI polling
 
         key = f"{client_id}:{entity_type}"
         entity = _wiki_entities.get(key)
         if entity:
+            try:
+                content = await invoke_oracle(
+                    client_id=client_id,
+                    client_name=client["name"],
+                    entity_type=entity_type,
+                    brand_context=brand_context,
+                    wizard_briefing=wizard_briefing,
+                )
+                provenance_source = "Oráculo Gemini"
+            except Exception as exc:
+                logger.warning(
+                    "Oracle agent: invoke_oracle failed for %s/%s (%s)",
+                    client["slug"],
+                    entity_type,
+                    exc,
+                )
+                from .oracle_agent import _fallback_content
+
+                content = _fallback_content(entity_type, client["name"])
+                provenance_source = "Fallback local"
+
             entity["status"] = "generated"
-            entity["content"] = (
-                f"[Conteúdo gerado pelo Oráculo para {entity_type} — "
-                f"cliente {client['name']}. "
-                f"Este é um placeholder do stub. "
-                f"O agente LangGraph real será implementado separadamente.]"
-            )
+            entity["content"] = content
             entity["provenance"] = [
-                {"source": "Briefing", "excerpt": f"Dados do wizard para {entity_type}"}
+                {
+                    "source": provenance_source,
+                    "excerpt": (
+                        f"Gerado a partir de brand_context + wizard_briefing para {entity_type}"
+                    ),
+                }
             ]
             entity["updated_at"] = _now_iso()
 
         job["entities"][entity_type] = "generated"
         job["entities_done"] += 1
-        logger.info("Oracle stub: entity %s generated for %s", entity_type, client["slug"])
+        logger.info("Oracle agent: entity %s generated for %s", entity_type, client["slug"])
 
     job["current_entity"] = None
     job["oracle_status"] = "done"
     job["completed_at"] = _now_iso()
-    logger.info("Oracle stub completed for client %s", client["slug"])
+    logger.info("Oracle agent completed for client %s", client["slug"])
 
 
 def start_onboarding(slug: str) -> dict:
@@ -207,7 +232,9 @@ def start_onboarding(slug: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def validate_entity(slug: str, entity_type: str, action: str, edited_content: str | None, user_id: str) -> dict:
+def validate_entity(
+    slug: str, entity_type: str, action: str, edited_content: str | None, user_id: str
+) -> dict:
     client = require_client_by_slug(slug)
     client_id = client["id"]
 
@@ -222,8 +249,7 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
 
     if entity["status"] not in ("generated", "accepted"):
         raise HTTPException(
-            status_code=409,
-            detail=f"Entidade {entity_type} ainda não foi gerada pelo Oráculo"
+            status_code=409, detail=f"Entidade {entity_type} ainda não foi gerada pelo Oráculo"
         )
 
     before_content = entity["content"]
@@ -236,7 +262,9 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
 
     elif action == "edit_accept":
         if not edited_content:
-            raise HTTPException(status_code=422, detail="edited_content é obrigatório para edit_accept")
+            raise HTTPException(
+                status_code=422, detail="edited_content é obrigatório para edit_accept"
+            )
         entity["content"] = edited_content
         entity["status"] = "accepted"
         entity["badge"] = "hitl"
@@ -252,24 +280,23 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
         raise HTTPException(status_code=400, detail=f"Ação inválida: {action}")
 
     # Append-only audit log (constitution §2.4)
-    _hitl_events.append({
-        "id": str(uuid.uuid4()),
-        "client_id": client_id,
-        "entity_type": entity_type,
-        "action": action,
-        "before_content": before_content,
-        "after_content": entity["content"],
-        "user_id": user_id,
-        "timestamp_utc": now,
-    })
+    _hitl_events.append(
+        {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "entity_type": entity_type,
+            "action": action,
+            "before_content": before_content,
+            "after_content": entity["content"],
+            "user_id": user_id,
+            "timestamp_utc": now,
+        }
+    )
 
     # Check HITL gate: are ALL 6 entities accepted? (ADR-LOCAL-04)
     client_status_result = None
     if action in ("accept", "edit_accept"):
-        all_entities = [
-            _wiki_entities.get(f"{client_id}:{et}")
-            for et in ONTOLOGY_ENTITY_TYPES
-        ]
+        all_entities = [_wiki_entities.get(f"{client_id}:{et}") for et in ONTOLOGY_ENTITY_TYPES]
         all_accepted = all(e is not None and e["status"] == "accepted" for e in all_entities)
         if all_accepted and client["status"] == "PRE_ACTIVE":
             client["status"] = "ACTIVE"
@@ -285,26 +312,95 @@ def validate_entity(slug: str, entity_type: str, action: str, edited_content: st
     }
 
 
+def add_reunion_context_to_oraculo(
+    client_id: str,
+    meeting_id: str,
+    selected_segments: list[dict],
+) -> None:
+    """
+    FA-15: Feed curated meeting segments into client's oráculo context.
+
+    Appends a "Briefings" context entry from selected reunion segments.
+    Caixa-preta: silently skips if client not found — never raises.
+    """
+    client = _clients.get(client_id)
+    if not client:
+        return  # caixa-preta: silently skip if client not in onboarding
+
+    key = f"{client_id}:Briefings"
+    entity = _wiki_entities.get(key)
+    if not entity:
+        return
+
+    # Collect text from segments marked as selected
+    reunion_text = "\n\n".join(
+        seg.get("text", "") for seg in selected_segments if seg.get("selected")
+    )
+    if not reunion_text:
+        return
+
+    existing = entity.get("content", "")
+    entity["content"] = existing + f"\n\n[Reunião {meeting_id}]:\n{reunion_text}"
+    entity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    _hitl_events.append(
+        {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "entity_type": "Briefings",
+            "action": "reunion_context_added",
+            "meeting_id": meeting_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+    logger.info(
+        "FA-15: reunion %s context added to Briefings for client %s",
+        meeting_id,
+        client_id,
+    )
+
+
 async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
-    """Stub for entity regeneration after rejection."""
+    """Entity regeneration after HITL rejection — uses oracle agent with fallback."""
     await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS * 2)
+    client = _clients.get(client_id)
     key = f"{client_id}:{entity_type}"
     entity = _wiki_entities.get(key)
     if entity:
+        client_name = client["name"] if client else client_id
+        brand_context = client.get("brand_context", "") if client else ""
+        wizard_briefing = client.get("wizard_briefing", "") if client else ""
+        try:
+            content = await invoke_oracle(
+                client_id=client_id,
+                client_name=client_name,
+                entity_type=entity_type,
+                brand_context=brand_context,
+                wizard_briefing=wizard_briefing,
+            )
+            provenance_source = "Oráculo Gemini"
+        except Exception as exc:
+            logger.warning(
+                "Oracle agent: regeneration failed for %s/%s (%s)", client_id, entity_type, exc
+            )
+            from .oracle_agent import _fallback_content
+
+            content = _fallback_content(entity_type, client_name)
+            provenance_source = "Fallback local"
+
         entity["status"] = "generated"
-        entity["content"] = (
-            f"[Conteúdo regenerado pelo Oráculo para {entity_type} — "
-            f"versão revisada após rejeição HITL. "
-            f"Placeholder do stub.]"
-        )
+        entity["content"] = content
         entity["provenance"] = [
-            {"source": "Briefing", "excerpt": f"Regenerado após rejeição de {entity_type}"}
+            {
+                "source": provenance_source,
+                "excerpt": f"Regenerado após rejeição HITL de {entity_type}",
+            }
         ]
         entity["badge"] = "seed_auto"
         entity["updated_at"] = _now_iso()
     if client_id in _jobs:
         _jobs[client_id]["entities"][entity_type] = "generated"
-    logger.info("Oracle stub: entity %s regenerated for client %s", entity_type, client_id)
+    logger.info("Oracle agent: entity %s regenerated for client %s", entity_type, client_id)
 
 
 # ---------------------------------------------------------------------------

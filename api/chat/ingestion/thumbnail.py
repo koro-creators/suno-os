@@ -46,7 +46,7 @@ async def _update_thumbnail_url(doc_id: str, thumbnail_path: str) -> None:
 def _generate_pdf_thumbnail(file_path: str, output_path: str) -> bool:
     """Render first page of PDF as thumbnail."""
     try:
-        from PIL import Image
+        from PIL import Image  # noqa: F401  — availability probe; ImportError handled below
 
         # Try pdf2image first
         try:
@@ -105,9 +105,12 @@ def _generate_video_thumbnail(file_path: str, output_path: str) -> bool:
         result = subprocess.run(
             [
                 "ffmpeg",
-                "-i", file_path,
-                "-vframes", "1",
-                "-vf", f"scale={THUMBNAIL_SIZE[0]}:{THUMBNAIL_SIZE[1]}:force_original_aspect_ratio=decrease",
+                "-i",
+                file_path,
+                "-vframes",
+                "1",
+                "-vf",
+                f"scale={THUMBNAIL_SIZE[0]}:{THUMBNAIL_SIZE[1]}:force_original_aspect_ratio=decrease",
                 "-y",
                 output_path,
             ],
@@ -120,9 +123,7 @@ def _generate_video_thumbnail(file_path: str, output_path: str) -> bool:
         return False
 
 
-async def generate_thumbnail(
-    doc_id: str, file_path: str, file_type: str
-) -> str | None:
+async def generate_thumbnail(doc_id: str, file_path: str, file_type: str) -> str | None:
     """Generate a thumbnail for a document.
 
     Returns the thumbnail path if successful, None otherwise.

@@ -48,9 +48,7 @@ class SkillLoader:
     def list_skills(self) -> list[str]:
         """List all available skill slugs."""
         return [
-            d.name
-            for d in self._skills_dir.iterdir()
-            if d.is_dir() and (d / "SKILL.md").exists()
+            d.name for d in self._skills_dir.iterdir() if d.is_dir() and (d / "SKILL.md").exists()
         ]
 
 

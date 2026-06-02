@@ -36,17 +36,12 @@ class WorkflowScheduler:
 
                 self._client = scheduler_v1.CloudSchedulerClient()
             except ImportError:
-                logger.warning(
-                    "google-cloud-scheduler not installed, using mock scheduler"
-                )
+                logger.warning("google-cloud-scheduler not installed, using mock scheduler")
                 return None
         return self._client
 
     def _job_name(self, workflow_id: str) -> str:
-        return (
-            f"projects/{self.project_id}/locations/{self.location}"
-            f"/jobs/workflow-{workflow_id}"
-        )
+        return f"projects/{self.project_id}/locations/{self.location}/jobs/workflow-{workflow_id}"
 
     async def create_or_update(
         self,
@@ -74,9 +69,7 @@ class WorkflowScheduler:
 
         parent = f"projects/{self.project_id}/locations/{self.location}"
         job_name = self._job_name(workflow_id)
-        target_url = (
-            f"{self.api_base_url}/api/workflows/{workflow_id}/run"
-        )
+        target_url = f"{self.api_base_url}/api/workflows/{workflow_id}/run"
 
         job = scheduler_v1.Job(
             name=job_name,
@@ -108,9 +101,7 @@ class WorkflowScheduler:
         """Delete a Cloud Scheduler job."""
         client = self._get_client()
         if not client:
-            logger.info(
-                "Mock: deleted schedule for workflow %s", workflow_id
-            )
+            logger.info("Mock: deleted schedule for workflow %s", workflow_id)
             return
 
         job_name = self._job_name(workflow_id)

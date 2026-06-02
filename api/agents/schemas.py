@@ -84,6 +84,16 @@ class MemoryFileOut(BaseModel):
     created_at: datetime
 
 
+class AgentScheduleConfig(BaseModel):
+    """Input schema for PATCH /agents/{id}/schedule."""
+
+    enabled: bool
+    frequency: Literal["hourly", "daily"] = "daily"
+    days_of_week: list[int] | None = None  # 0=Mon … 6=Sun (ISO weekday-1)
+    time_of_day: str | None = None  # "HH:MM" 24h
+    timezone: str = "America/Sao_Paulo"
+
+
 class AgentScheduleOut(BaseModel):
     id: str
     frequency: Literal["hourly", "daily"]

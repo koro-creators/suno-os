@@ -4,6 +4,7 @@ PRE-04 blocker: Skills Admin not in DB yet (SPEC-017). Mock tools returned.
 When SPEC-017 is implemented: query DB for skill's SKILL.md + references/,
 build a real tool that calls the chat graph with skill context injected.
 """
+
 from __future__ import annotations
 
 from langchain_core.tools import StructuredTool

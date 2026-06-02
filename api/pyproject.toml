@@ -32,6 +32,8 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "python-multipart>=0.0.26",
     "greenlet>=3.3.2",
+    # Scheduler
+    "apscheduler>=3.10.0",
 ]
 
 [dependency-groups]
@@ -51,6 +53,13 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+# Package __init__ files re-export symbols for the public API surface.
+"__init__.py" = ["F401"]
+# main.py mounts routers after app creation (deliberate ordering, keeps each
+# router's import + include_router visually grouped with its comment).
+"main.py" = ["E402"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["chat", "models", "core", "config.py", "main.py"]

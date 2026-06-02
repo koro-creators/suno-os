@@ -13,13 +13,15 @@ import { useParams, useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
 import EntityValidationCard from '@/components/onboarding/EntityValidationCard';
 import { useOnboardingOraculo } from '@/contexts/OnboardingOraculoContext';
-import { ONTOLOGY_ENTITY_TYPES, type EntityBadge, type EntityStatus, type HITLAction, type OntologyEntityType, type WikiEntity } from '@/lib/onboarding-types';
+import { ONTOLOGY_ENTITY_TYPES, type EntityBadge, type EntityStatus, type HITLAction, type OntologyEntityType, type WikiEntity, isEntityStale } from '@/lib/onboarding-types';
+import { WarningAlt } from '@carbon/icons-react';
 import { apiAvailable } from '@/lib/api';
 
 interface LocalEntityState {
   content: string;
   status: EntityStatus;
   badge: EntityBadge;
+  createdAt?: string;
 }
 
 function buildInitialEntityState(jobStatus: { entities: Record<OntologyEntityType, EntityStatus> } | null): Record<OntologyEntityType, LocalEntityState> {
@@ -92,6 +94,7 @@ export default function OnboardingValidatePage() {
               content: entity.content,
               status: entity.status,
               badge: entity.badge,
+              createdAt: entity.createdAt,
             };
           }
         }
@@ -135,6 +138,11 @@ export default function OnboardingValidatePage() {
 
   const acceptedCount = ONTOLOGY_ENTITY_TYPES.filter(
     (et) => entityStates[et]?.status === 'accepted'
+  ).length;
+
+  // FR-185: stale entity count for banner
+  const staleCount = ONTOLOGY_ENTITY_TYPES.filter(
+    (et) => isEntityStale(entityStates[et] ?? { status: 'pending' })
   ).length;
 
   return (
@@ -191,6 +199,27 @@ export default function OnboardingValidatePage() {
             </div>
           )}
 
+          {/* FR-185: stale entities banner */}
+          {staleCount > 0 && (
+            <div
+              style={{
+                background: 'rgba(255,200,1,0.08)',
+                border: '1px solid rgba(255,200,1,0.3)',
+                borderRadius: 8,
+                padding: '10px 14px',
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: '0.85rem',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <WarningAlt size={16} style={{ color: 'var(--sun)', flexShrink: 0 }} />
+              {staleCount} entidade{staleCount > 1 ? 's' : ''} aguarda{staleCount > 1 ? 'm' : ''} revisão há mais de 72h
+            </div>
+          )}
+
           {/* Progress bar */}
           <div style={{ marginBottom: 24 }}>
             <div
@@ -224,6 +253,7 @@ export default function OnboardingValidatePage() {
                   content={state.content}
                   status={state.status}
                   badge={state.badge}
+                  createdAt={state.createdAt}
                   onValidate={(action, editedContent) =>
                     handleValidate(et, action, editedContent)
                   }

@@ -63,11 +63,32 @@ async def lifespan(app: FastAPI):
 
     cleanup_task = asyncio.create_task(_cleanup_previews_loop())
 
+    # Start APScheduler for agent scheduled runs (Phase 22 — SPEC-021)
+    try:
+        from agents.scheduler import load_active_schedules_from_store, scheduler
+
+        if not scheduler.running:
+            scheduler.start()
+        await load_active_schedules_from_store()
+        logger.info("Agent scheduler started")
+    except Exception as e:
+        logger.warning(f"Agent scheduler initialization skipped: {e}")
+
     yield
 
     cleanup_task.cancel()
 
     logger.info(f"Shutting down {settings.PROJECT_NAME}")
+
+    # Shutdown APScheduler
+    try:
+        from agents.scheduler import scheduler
+
+        if scheduler.running:
+            scheduler.shutdown(wait=False)
+            logger.info("Agent scheduler stopped")
+    except Exception as e:
+        logger.warning(f"Agent scheduler shutdown error: {e}")
 
 
 app = FastAPI(
@@ -198,6 +219,11 @@ app.include_router(onboarding_router, prefix=settings.API_PREFIX)
 from approval.router import router as approval_router
 
 app.include_router(approval_router, prefix=settings.API_PREFIX)
+
+# Mount notifications router (Phase 20 — in-memory notification system)
+from notifications.router import router as notifications_router
+
+app.include_router(notifications_router, prefix=f"{settings.API_PREFIX}/notifications")
 
 # Mount meetings router (Phase 21 — SPEC-016 Captura Seletiva de Reunioes)
 from reunioes.router import router as reunioes_router

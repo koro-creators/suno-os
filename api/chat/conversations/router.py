@@ -17,7 +17,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -41,19 +41,17 @@ def _get_current_user_id(
     Placeholder implementation: reads the ``X-User-ID`` header.
     Must be replaced with proper Firebase JWT verification before production.
     """
-    from fastapi import Request
 
     # This import is deferred to avoid a circular dep at module-load time.
     return ""
 
 
-async def get_current_user_id(request: "Request") -> str:  # type: ignore[name-defined]
+async def get_current_user_id(request: Request) -> str:
     """FastAPI dependency that extracts the user ID from the X-User-ID header.
 
     In production, replace this with Firebase Admin SDK token verification.
     Returns 401 if the header is missing.
     """
-    from fastapi import Request  # noqa: F811 — local import for type clarity
 
     user_id = request.headers.get("X-User-ID", "").strip()
     if not user_id:
@@ -174,7 +172,7 @@ async def list_conversations(
     ``limit`` / ``offset``.
     """
     try:
-        from sqlalchemy import create_engine, text
+        from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
 
         from config import settings
@@ -220,9 +218,9 @@ async def list_conversations(
 
     # Fallback: in-memory store
     user_convs = [
-        v for v in _memory_store.values()
-        if v.get("user_id") == user_id
-        and (skill_slug is None or v.get("skill_slug") == skill_slug)
+        v
+        for v in _memory_store.values()
+        if v.get("user_id") == user_id and (skill_slug is None or v.get("skill_slug") == skill_slug)
     ]
     user_convs.sort(key=lambda c: c.get("last_message_at") or 0, reverse=True)
     total = len(user_convs)

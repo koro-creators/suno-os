@@ -15,6 +15,8 @@ from .schemas import (
     AgentRunDetail,
     AgentRunRequest,
     AgentRunSummary,
+    AgentScheduleConfig,
+    AgentScheduleOut,
     AgentSummary,
     AgentUpdate,
     RunResponse,
@@ -162,3 +164,78 @@ async def get_agent_run(agent_id: str, run_id: str) -> dict:
     if not run or run.get("agent_id") != agent_id:
         raise HTTPException(status_code=404, detail="Not found")
     return run
+
+
+# ---------------------------------------------------------------------------
+# Schedule sub-resource (Phase 22 — SPEC-021)
+# ---------------------------------------------------------------------------
+
+
+@router.patch("/{agent_id}/schedule", response_model=AgentScheduleOut)
+async def update_agent_schedule(agent_id: str, data: AgentScheduleConfig) -> dict:
+    """Activate or deactivate the agent's recurring schedule."""
+    _require_agent(agent_id)
+
+    from .scheduler import (  # noqa: PLC0415
+        _schedules,
+        register_agent_schedule,
+        unregister_agent_schedule,
+    )
+
+    if data.enabled:
+        register_agent_schedule(
+            agent_id=agent_id,
+            frequency=data.frequency,
+            days_of_week=data.days_of_week,
+            time_of_day=data.time_of_day,
+            timezone_str=data.timezone,
+        )
+    else:
+        unregister_agent_schedule(agent_id)
+
+    cfg = _schedules.get(agent_id, {})
+    return {
+        "id": agent_id,
+        "frequency": cfg.get("frequency", data.frequency),
+        "days_of_week": cfg.get("days_of_week"),
+        "time_of_day": cfg.get("time_of_day"),
+        "minute_offset": 0,
+        "timezone": cfg.get("timezone", data.timezone),
+        "enabled": cfg.get("enabled", False),
+        "last_run_at": None,
+        "next_run_at": None,
+    }
+
+
+@router.get("/{agent_id}/schedule", response_model=AgentScheduleOut)
+async def get_agent_schedule(agent_id: str) -> dict:
+    """Return current schedule state for an agent."""
+    _require_agent(agent_id)
+
+    from .scheduler import _schedules  # noqa: PLC0415
+
+    cfg = _schedules.get(agent_id)
+    if cfg is None:
+        return {
+            "id": agent_id,
+            "frequency": "daily",
+            "days_of_week": None,
+            "time_of_day": None,
+            "minute_offset": 0,
+            "timezone": "America/Sao_Paulo",
+            "enabled": False,
+            "last_run_at": None,
+            "next_run_at": None,
+        }
+
+    return {
+        "id": agent_id,
+        "frequency": cfg["frequency"],
+        "days_of_week": cfg.get("days_of_week"),
+        "time_of_day": cfg.get("time_of_day"),
+        "minute_offset": 0,
+        "timezone": cfg.get("timezone", "America/Sao_Paulo"),
+        "enabled": cfg.get("enabled", False),
+        "last_run_at": None,
+        "next_run_at": None,
+    }

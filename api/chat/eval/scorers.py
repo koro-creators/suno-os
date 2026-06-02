@@ -3,6 +3,7 @@ Quality scorers for sunOS chat outputs.
 Each scorer takes (input, output) and returns a score 0-1 with reasoning.
 Used with eval datasets for CI quality checks.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,7 +46,9 @@ def format_scorer(output_text: str, expected_format: str) -> ScoreResult:
     format_checks = {
         "social_post": lambda t: len(t) < 2000 and not t.startswith("#"),
         "article": lambda t: len(t) > 200 and "\n" in t,
-        "script": lambda t: any(kw in t.lower() for kw in ["cena", "locu\u00e7\u00e3o", "corta", "fade"]),
+        "script": lambda t: any(
+            kw in t.lower() for kw in ["cena", "locu\u00e7\u00e3o", "corta", "fade"]
+        ),
         "radio": lambda t: any(kw in t.lower() for kw in ["loc:", "trilha:", "efeito:", "tempo:"]),
         "media_plan": lambda t: any(kw in t.lower() for kw in ["budget", "canal", "kpi", "cpm"]),
     }

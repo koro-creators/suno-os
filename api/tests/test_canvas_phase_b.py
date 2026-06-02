@@ -17,19 +17,18 @@ attribute LangGraph exposes for graph shape comparison.
 from __future__ import annotations
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from api.workflows.auto_layout import layered_layout
 from api.workflows.migration_v1_v2 import migrate_workflow
 from api.workflows.router import router
 from api.workflows.validator import (
     HARD_KINDS,
     cycle_edges,
-    has_cycle,
     hard_validate_for_put,
+    has_cycle,
     validate,
 )
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -91,18 +90,14 @@ def test_edges_post_rejects_missing_step_ref(client, seed_workflow_v2_linear):
 def test_edges_delete_returns_204(client, seed_workflow_v2_linear):
     initial = client.get(f"/api/workflows/{seed_workflow_v2_linear}/edges").json()
     target = initial[0]["edge_id"]
-    response = client.delete(
-        f"/api/workflows/{seed_workflow_v2_linear}/edges/{target}"
-    )
+    response = client.delete(f"/api/workflows/{seed_workflow_v2_linear}/edges/{target}")
     assert response.status_code == 204
     remaining = client.get(f"/api/workflows/{seed_workflow_v2_linear}/edges").json()
     assert len(remaining) == 1
 
 
 def test_edges_delete_404_on_missing_edge(client, seed_workflow_v2_linear):
-    response = client.delete(
-        f"/api/workflows/{seed_workflow_v2_linear}/edges/nonexistent-uuid"
-    )
+    response = client.delete(f"/api/workflows/{seed_workflow_v2_linear}/edges/nonexistent-uuid")
     assert response.status_code == 404
 
 
@@ -163,8 +158,20 @@ def test_validator_detects_cycle():
         {"id": "b", "type": "tool", "config": {}},
     ]
     edges = [
-        {"edge_id": "e1", "source_step_id": "a", "source_handle": "out", "target_step_id": "b", "target_handle": "in"},
-        {"edge_id": "e2", "source_step_id": "b", "source_handle": "out", "target_step_id": "a", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "a",
+            "source_handle": "out",
+            "target_step_id": "b",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e2",
+            "source_step_id": "b",
+            "source_handle": "out",
+            "target_step_id": "a",
+            "target_handle": "in",
+        },
     ]
     errors, warnings = validate(_wf(steps, edges))
     assert any(e.kind == "cycle" for e in errors)
@@ -184,8 +191,20 @@ def test_validator_no_entry_node_when_every_node_has_inbound():
         {"id": "b", "type": "tool", "config": {}},
     ]
     edges = [
-        {"edge_id": "e1", "source_step_id": "a", "source_handle": "out", "target_step_id": "b", "target_handle": "in"},
-        {"edge_id": "e2", "source_step_id": "b", "source_handle": "out", "target_step_id": "a", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "a",
+            "source_handle": "out",
+            "target_step_id": "b",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e2",
+            "source_step_id": "b",
+            "source_handle": "out",
+            "target_step_id": "a",
+            "target_handle": "in",
+        },
     ]
     errors, _ = validate(_wf(steps, edges))
     kinds = [e.kind for e in errors]
@@ -200,7 +219,13 @@ def test_validator_edge_to_nonexistent_handle_for_tool_type():
         {"id": "b", "type": "tool", "config": {}},
     ]
     edges = [
-        {"edge_id": "e1", "source_step_id": "a", "source_handle": "then", "target_step_id": "b", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "a",
+            "source_handle": "then",
+            "target_step_id": "b",
+            "target_handle": "in",
+        },
     ]
     errors, _ = validate(_wf(steps, edges))
     assert any(e.kind == "edge_to_nonexistent_handle" for e in errors)
@@ -214,8 +239,20 @@ def test_validator_fan_in_without_merge_is_soft():
         {"id": "c", "type": "tool", "config": {}},  # NOT merge
     ]
     edges = [
-        {"edge_id": "e1", "source_step_id": "a", "source_handle": "out", "target_step_id": "c", "target_handle": "in"},
-        {"edge_id": "e2", "source_step_id": "b", "source_handle": "out", "target_step_id": "c", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "a",
+            "source_handle": "out",
+            "target_step_id": "c",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e2",
+            "source_step_id": "b",
+            "source_handle": "out",
+            "target_step_id": "c",
+            "target_handle": "in",
+        },
     ]
     errors, warnings = validate(_wf(steps, edges))
     assert any(w.kind == "fan_in_without_merge" for w in warnings)
@@ -247,9 +284,27 @@ def test_hard_validate_filters_to_blocking_set():
     ]
     # Cycle (hard) AND fan_in_without_merge (soft) — only cycle should surface.
     edges = [
-        {"edge_id": "e1", "source_step_id": "a", "source_handle": "out", "target_step_id": "b", "target_handle": "in"},
-        {"edge_id": "e2", "source_step_id": "b", "source_handle": "out", "target_step_id": "a", "target_handle": "in"},
-        {"edge_id": "e3", "source_step_id": "c", "source_handle": "out", "target_step_id": "b", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "a",
+            "source_handle": "out",
+            "target_step_id": "b",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e2",
+            "source_step_id": "b",
+            "source_handle": "out",
+            "target_step_id": "a",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e3",
+            "source_step_id": "c",
+            "source_handle": "out",
+            "target_step_id": "b",
+            "target_handle": "in",
+        },
     ]
     hard = hard_validate_for_put(_wf(steps, edges))
     assert all(e.kind in HARD_KINDS for e in hard)
@@ -258,14 +313,18 @@ def test_hard_validate_filters_to_blocking_set():
 
 
 def test_has_cycle_helper():
-    assert has_cycle([
-        {"source_step_id": "a", "target_step_id": "b"},
-        {"source_step_id": "b", "target_step_id": "a"},
-    ])
-    assert not has_cycle([
-        {"source_step_id": "a", "target_step_id": "b"},
-        {"source_step_id": "b", "target_step_id": "c"},
-    ])
+    assert has_cycle(
+        [
+            {"source_step_id": "a", "target_step_id": "b"},
+            {"source_step_id": "b", "target_step_id": "a"},
+        ]
+    )
+    assert not has_cycle(
+        [
+            {"source_step_id": "a", "target_step_id": "b"},
+            {"source_step_id": "b", "target_step_id": "c"},
+        ]
+    )
 
 
 def test_cycle_edges_returns_offenders():
@@ -401,8 +460,22 @@ def test_compiler_v1_v2_byte_equivalence_linear():
 
     v1_definition = {
         "steps": [
-            {"id": "s1", "name": "A", "type": "tool", "tool_name": "search_knowledge", "config": {}, "next_step": "s2"},
-            {"id": "s2", "name": "B", "type": "tool", "tool_name": "search_knowledge", "config": {}, "next_step": "s3"},
+            {
+                "id": "s1",
+                "name": "A",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {},
+                "next_step": "s2",
+            },
+            {
+                "id": "s2",
+                "name": "B",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {},
+                "next_step": "s3",
+            },
             {"id": "s3", "name": "C", "type": "action", "config": {}},
         ],
         "default_model": "gemini-flash",
@@ -410,8 +483,20 @@ def test_compiler_v1_v2_byte_equivalence_linear():
     }
     # Equivalent v2 form.
     v2_edges = [
-        {"edge_id": "e1", "source_step_id": "s1", "source_handle": "out", "target_step_id": "s2", "target_handle": "in"},
-        {"edge_id": "e2", "source_step_id": "s2", "source_handle": "out", "target_step_id": "s3", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "s1",
+            "source_handle": "out",
+            "target_step_id": "s2",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e2",
+            "source_step_id": "s2",
+            "source_handle": "out",
+            "target_step_id": "s3",
+            "target_handle": "in",
+        },
     ]
 
     compiler = WorkflowCompiler()
@@ -440,10 +525,34 @@ def test_compiler_v2_fanout_creates_parallel_edges():
         "max_execution_time": 300,
     }
     edges = [
-        {"edge_id": "e1", "source_step_id": "a", "source_handle": "out", "target_step_id": "b", "target_handle": "in"},
-        {"edge_id": "e2", "source_step_id": "a", "source_handle": "out", "target_step_id": "c", "target_handle": "in"},
-        {"edge_id": "e3", "source_step_id": "b", "source_handle": "out", "target_step_id": "m", "target_handle": "in"},
-        {"edge_id": "e4", "source_step_id": "c", "source_handle": "out", "target_step_id": "m", "target_handle": "in"},
+        {
+            "edge_id": "e1",
+            "source_step_id": "a",
+            "source_handle": "out",
+            "target_step_id": "b",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e2",
+            "source_step_id": "a",
+            "source_handle": "out",
+            "target_step_id": "c",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e3",
+            "source_step_id": "b",
+            "source_handle": "out",
+            "target_step_id": "m",
+            "target_handle": "in",
+        },
+        {
+            "edge_id": "e4",
+            "source_step_id": "c",
+            "source_handle": "out",
+            "target_step_id": "m",
+            "target_handle": "in",
+        },
     ]
     compiler = WorkflowCompiler()
     graph = compiler.compile(definition, edges=edges)
@@ -471,7 +580,13 @@ def test_put_blocks_when_steps_create_unauthorized_tool(client, seed_workflow_v2
     """
     body = {
         "steps": [
-            {"id": f"s{i}", "name": f"Step {i}", "type": "tool", "tool_name": "search_knowledge", "config": {}}
+            {
+                "id": f"s{i}",
+                "name": f"Step {i}",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {},
+            }
             for i in range(25)
         ]
     }
@@ -483,8 +598,20 @@ def test_put_blocks_when_steps_create_unauthorized_tool(client, seed_workflow_v2
 def test_put_passes_for_valid_replacement(client, seed_workflow_v2_linear):
     body = {
         "steps": [
-            {"id": "s1", "name": "Renamed", "type": "tool", "tool_name": "search_knowledge", "config": {}},
-            {"id": "s2", "name": "Step 2", "type": "tool", "tool_name": "search_knowledge", "config": {}},
+            {
+                "id": "s1",
+                "name": "Renamed",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {},
+            },
+            {
+                "id": "s2",
+                "name": "Step 2",
+                "type": "tool",
+                "tool_name": "search_knowledge",
+                "config": {},
+            },
             {"id": "s3", "name": "Step 3", "type": "action", "config": {}},
         ]
     }

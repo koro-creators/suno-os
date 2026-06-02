@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import type {
   ApprovalSubmission,
   ApprovalEvent,
@@ -16,6 +16,8 @@ interface ApprovalsContextValue {
   events: ApprovalEvent[];
   loading: boolean;
   error: string | null;
+  /** Número de submissões aguardando aprovação (PENDING_APPROVAL) */
+  pendingCount: number;
   /** Listar submissions (com filtros opcionais) — retorna subset local */
   getFiltered: (filters?: ApprovalFilters) => ApprovalSubmission[];
   /** Buscar detalhe de uma submission */
@@ -35,6 +37,11 @@ export function ApprovalsProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<ApprovalEvent[]>(initialApprovalEvents);
   const [loading] = useState(false);
   const [error] = useState<string | null>(null);
+
+  const pendingCount = useMemo(
+    () => submissions.filter((s) => s.status === 'PENDING_APPROVAL').length,
+    [submissions],
+  );
 
   const getFiltered = useCallback(
     (filters?: ApprovalFilters): ApprovalSubmission[] => {
@@ -179,7 +186,7 @@ export function ApprovalsProvider({ children }: { children: ReactNode }) {
 
   return (
     <ApprovalsContext.Provider
-      value={{ submissions, events, loading, error, getFiltered, getSubmission, getEvents, submitForApproval, decide }}
+      value={{ submissions, events, loading, error, pendingCount, getFiltered, getSubmission, getEvents, submitForApproval, decide }}
     >
       {children}
     </ApprovalsContext.Provider>

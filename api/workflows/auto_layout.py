@@ -38,9 +38,7 @@ X_STEP = 220  # px between columns (constitution §5.1; node width 220)
 Y_STEP = 120  # px between layers (height 80 + padding)
 
 
-def layered_layout(
-    steps: Iterable[dict], edges: Iterable[dict]
-) -> dict[str, dict[str, int]]:
+def layered_layout(steps: Iterable[dict], edges: Iterable[dict]) -> dict[str, dict[str, int]]:
     """Compute (x, y) for each step deterministically.
 
     `steps` is the JSONB step list (each dict has at least an `id`).
@@ -53,9 +51,7 @@ def layered_layout(
 
     out_adj: dict[str, list[str]] = defaultdict(list)
     in_degree: dict[str, int] = {sid: 0 for sid in step_ids}
-    edge_pairs = sorted(
-        (e["source_step_id"], e["target_step_id"]) for e in edges
-    )
+    edge_pairs = sorted((e["source_step_id"], e["target_step_id"]) for e in edges)
     for src, tgt in edge_pairs:
         if src not in in_degree or tgt not in in_degree:
             # Edge points to a step that no longer exists; ignore for layout.
