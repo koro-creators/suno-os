@@ -1,0 +1,87 @@
+# Deploy do backend (sunos-api) para Cloud Run em produção (us-west1).
+# Dispara automaticamente em push na main quando api/ muda.
+# Requer secrets: WIF_PROVIDER, WIF_SERVICE_ACCOUNT (Workload Identity Federation).
+name: Deploy — API (prod)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Motivo do deploy manual'
+        required: false
+        default: 'Deploy manual da API'
+
+# Evita deploys concorrentes pisando um no outro; cancela o run anterior.
+concurrency:
+  group: deploy-api-prod
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: koro-creators
+  REGION: us-west1
+  SERVICE: sunos-api
+  IMAGE: us-west1-docker.pkg.dev/koro-creators/sunos/api
+  RUNTIME_SA: sunos-backend@koro-creators.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    name: Build & deploy sunos-api
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        working-directory: api
+        run: |
+          docker build \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t "$IMAGE:${{ github.sha }}" \
+            -t "$IMAGE:latest" \
+            -f Dockerfile .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE:${{ github.sha }}" \
+            --region "$REGION" \
+            --platform managed \
+            --service-account "$RUNTIME_SA" \
+            --port 8080 \
+            --cpu 2 \
+            --memory 2Gi \
+            --min-instances 1 \
+            --max-instances 10 \
+            --timeout 300 \
+            --set-env-vars "ENVIRONMENT=production,GCP_PROJECT_ID=${GCP_PROJECT_ID},GCP_REGION=${REGION},FIREBASE_PROJECT_ID=toolbox-67a0e,LANGFUSE_HOST=https://cloud.langfuse.com" \
+            --set-secrets "DATABASE_URL=sunos-database-url:latest,GOOGLE_API_KEY=sunos-google-api-key:latest,LANGFUSE_SECRET_KEY=sunos-langfuse-secret-key:latest,LANGFUSE_PUBLIC_KEY=sunos-langfuse-public-key:latest" \
+            --labels "app=sunos,env=production,service=sunos-api"
+
+      - name: Smoke test (/health)
+        run: |
+          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/health")
+          echo "GET $URL/health -> $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "Smoke test falhou: $STATUS"; exit 1; fi

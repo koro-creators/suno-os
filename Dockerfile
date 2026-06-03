@@ -1,0 +1,47 @@
+# Dockerfile do frontend sunOS (Next.js 14 standalone) — Cloud Run: sunos-frontend (us-west1)
+# Build: docker build -t <img> --build-arg NEXT_PUBLIC_API_URL=<api-url> .
+#
+# NEXT_PUBLIC_API_URL é inlined em build-time (variáveis NEXT_PUBLIC_* entram no
+# bundle durante `next build`); por isso vem como --build-arg, não só env de runtime.
+
+# ── Stage 1: deps ────────────────────────────────────────────────
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# ── Stage 2: builder ─────────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# ── Stage 3: runner ──────────────────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+# Non-root user
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
+
+# Standalone output: server.js + traced node_modules, static assets e public/
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
