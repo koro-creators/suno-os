@@ -1,0 +1,87 @@
+# Deploy do frontend (sunos-frontend) para Cloud Run em produção (us-west1).
+# Dispara automaticamente em push na main quando o código do frontend muda
+# (tudo que não for exclusivamente api/, docs/, .claude/ ou *.md).
+# Requer secrets: WIF_PROVIDER, WIF_SERVICE_ACCOUNT.
+name: Deploy — Frontend (prod)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'api/**'
+      - 'docs/**'
+      - '.claude/**'
+      - '**/*.md'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Motivo do deploy manual'
+        required: false
+        default: 'Deploy manual do frontend'
+
+concurrency:
+  group: deploy-frontend-prod
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT_ID: koro-creators
+  REGION: us-west1
+  SERVICE: sunos-frontend
+  IMAGE: us-west1-docker.pkg.dev/koro-creators/sunos/frontend
+  RUNTIME_SA: sunos-frontend@koro-creators.iam.gserviceaccount.com
+  # NEXT_PUBLIC_* é inlined no bundle em build-time — precisa ser build-arg.
+  NEXT_PUBLIC_API_URL: https://sunos-api-mx3edyv2za-uw.a.run.app
+
+jobs:
+  deploy:
+    name: Build & deploy sunos-frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL="$NEXT_PUBLIC_API_URL" \
+            -t "$IMAGE:${{ github.sha }}" \
+            -t "$IMAGE:latest" \
+            -f Dockerfile .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE:${{ github.sha }}" \
+            --region "$REGION" \
+            --platform managed \
+            --service-account "$RUNTIME_SA" \
+            --port 3000 \
+            --cpu 1 \
+            --memory 512Mi \
+            --max-instances 5 \
+            --set-env-vars "NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1,NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" \
+            --labels "app=sunos,env=production,service=sunos-frontend"
+
+      - name: Smoke test (/)
+        run: |
+          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/")
+          echo "GET $URL/ -> $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "Smoke test falhou: $STATUS"; exit 1; fi

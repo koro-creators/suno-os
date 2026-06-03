@@ -43,12 +43,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy application code
-COPY chat/ chat/
-COPY models/ models/
-COPY core/ core/
-COPY config.py ./
-COPY main.py ./
+# Copy application code — all backend modules (admin, agents, approval, chat,
+# core, drive, models, notifications, onboarding, reunioes, tools, workflows,
+# config.py, main.py). See .dockerignore for what is excluded (tests, caches).
+COPY . .
 
 # Switch to non-root user
 USER appuser
