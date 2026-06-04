@@ -516,6 +516,69 @@ export async function getConversation(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Admin — Users (DB-backed; autorização via users.role no backend)
+// ---------------------------------------------------------------------------
+
+export interface AdminUser {
+  uid: string;
+  name: string | null;
+  email: string;
+  role: 'admin' | 'creator' | 'viewer';
+  is_active: boolean;
+  last_access: string | null;
+  created_at?: string | null;
+}
+
+export async function listAdminUsers(status?: string): Promise<AdminUser[]> {
+  if (!apiAvailable()) return [];
+  const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+  const url = getApiUrl(`/api/admin/users${qs}`);
+  const headers = await getHeaders();
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.items ?? []) as AdminUser[];
+  } catch {
+    return [];
+  }
+}
+
+export async function updateAdminUser(
+  uid: string,
+  updates: { role?: 'admin' | 'creator' | 'viewer'; is_active?: boolean },
+): Promise<AdminUser | null> {
+  if (!apiAvailable()) return null;
+  const url = getApiUrl(`/api/admin/users/${uid}`);
+  const headers = await getHeaders();
+  headers['Content-Type'] = 'application/json';
+  try {
+    const res = await fetch(url, { method: 'PATCH', headers, body: JSON.stringify(updates) });
+    if (!res.ok) return null;
+    return (await res.json()) as AdminUser;
+  } catch {
+    return null;
+  }
+}
+
+export async function inviteAdminUser(
+  email: string,
+  role: 'admin' | 'creator' | 'viewer',
+): Promise<{ status: string; uid: string } | null> {
+  if (!apiAvailable()) return null;
+  const url = getApiUrl('/api/admin/users/invite');
+  const headers = await getHeaders();
+  headers['Content-Type'] = 'application/json';
+  try {
+    const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ email, role }) });
+    if (!res.ok) return null;
+    return (await res.json()) as { status: string; uid: string };
+  } catch {
+    return null;
+  }
+}
+
 export async function listAvailableTools(): Promise<ToolDescriptor[]> {
   if (!apiAvailable()) {
     // Mock fallback: front-end can still render the palette during dev

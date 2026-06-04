@@ -21,7 +21,13 @@ from __future__ import annotations
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
+from sqlalchemy.orm import Session
+
+try:
+    from core.db import get_session
+except ImportError:  # test import root (repo root on sys.path)
+    from api.core.db import get_session
 
 from .schemas import (
     ClientCreate,
@@ -112,13 +118,13 @@ def _is_operacional(authorization: str | None) -> bool:
 @router.get("/clients", response_model=ClientListResponse)
 async def list_clients_endpoint(
     status: Annotated[str | None, Query(description="Filtrar por status (e.g. PRE_ACTIVE)")] = None,
-    authorization: Annotated[str | None, Header()] = None,
+    session: Session = Depends(get_session),
 ) -> ClientListResponse:
     """
     List clients. Admins see all; can filter by status.
     Useful for the Admin panel PRE_ACTIVE alert (CA-19).
     """
-    items_raw = await list_clients(status)
+    items_raw = list_clients(session, status)
     items = [
         ClientSummary(
             id=c["id"],
@@ -141,12 +147,15 @@ async def list_clients_endpoint(
 
 
 @router.post("/clients", response_model=ClientCreateResponse, status_code=201)
-async def create_client_endpoint(data: ClientCreate) -> ClientCreateResponse:
+async def create_client_endpoint(
+    data: ClientCreate,
+    session: Session = Depends(get_session),
+) -> ClientCreateResponse:
     """
     Create a new client in PRE_ACTIVE status.
     Does NOT start the Oráculo job — call /onboarding/start separately.
     """
-    client, job_id = await create_client(data.model_dump())
+    client, job_id = create_client(session, data.model_dump())
     return ClientCreateResponse(
         id=client["id"],
         slug=client["slug"],
@@ -165,13 +174,16 @@ async def create_client_endpoint(data: ClientCreate) -> ClientCreateResponse:
     "/clients/{slug}/onboarding/status",
     response_model=OnboardingStatusResponse,
 )
-async def get_onboarding_status_endpoint(slug: str) -> OnboardingStatusResponse:
+async def get_onboarding_status_endpoint(
+    slug: str,
+    session: Session = Depends(get_session),
+) -> OnboardingStatusResponse:
     """
     Poll onboarding job status.
     Frontend polls every 5s (ADR-LOCAL-01).
     """
-    status_data = await get_onboarding_status(slug)
-    return OnboardingStatusResponse(**status_data)
+    status = get_onboarding_status(session, slug)
+    return OnboardingStatusResponse(**status)
 
 
 # ---------------------------------------------------------------------------
@@ -186,15 +198,16 @@ async def get_onboarding_status_endpoint(slug: str) -> OnboardingStatusResponse:
 async def start_onboarding_endpoint(
     slug: str,
     background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
 ) -> StartOnboardingResponse:
     """
     Dispatch the Oráculo job as a BackgroundTask.
     Constitution §1.1: never block HTTP waiting for Oráculo.
     ADR-LOCAL-02: FastAPI BackgroundTasks for v1.
     """
-    result = await start_onboarding(slug)
+    result = start_onboarding(session, slug)
 
-    client = await get_client_by_slug(slug)
+    client = get_client_by_slug(session, slug)
     if client:
         background_tasks.add_task(run_oracle_agent, client["id"])
         logger.info("Oracle agent job dispatched for client %s", slug)
@@ -216,6 +229,7 @@ async def validate_entity_endpoint(
     entity_type: str,
     data: ValidateEntityRequest,
     background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
     authorization: Annotated[str | None, Header()] = None,
 ) -> ValidateEntityResponse:
     """
@@ -225,7 +239,8 @@ async def validate_entity_endpoint(
     """
     user_id = _get_user_id(authorization)
 
-    result = await validate_entity(
+    result = validate_entity(
+        session,
         slug=slug,
         entity_type=entity_type,
         action=data.action,
@@ -234,7 +249,7 @@ async def validate_entity_endpoint(
     )
 
     if data.action == "reject_regenerate":
-        client = await get_client_by_slug(slug)
+        client = get_client_by_slug(session, slug)
         if client:
             background_tasks.add_task(regenerate_entity_stub, client["id"], entity_type)
             logger.info("Regeneration scheduled for %s/%s", slug, entity_type)
@@ -253,6 +268,7 @@ async def validate_entity_endpoint(
 )
 async def get_wiki_endpoint(
     slug: str,
+    session: Session = Depends(get_session),
     include_generated: bool = Query(
         False,
         description=(
@@ -272,7 +288,7 @@ async def get_wiki_endpoint(
     if _is_operacional(authorization):
         raise HTTPException(status_code=404, detail="Recurso não disponível")
 
-    wiki = await get_wiki(slug, include_generated=include_generated)
+    wiki = get_wiki(session, slug, include_generated=include_generated)
 
     entities = [
         WikiEntityResponse(
@@ -310,6 +326,7 @@ async def direct_edit_wiki_entity_endpoint(
     slug: str,
     entity_type: str,
     data: DirectEditRequest,
+    session: Session = Depends(get_session),
     authorization: Annotated[str | None, Header()] = None,
 ) -> DirectEditResponse:
     """
@@ -322,7 +339,8 @@ async def direct_edit_wiki_entity_endpoint(
         raise HTTPException(status_code=404, detail="Recurso não disponível")
 
     user_id = _get_user_id(authorization)
-    result = await direct_edit_wiki_entity(
+    result = direct_edit_wiki_entity(
+        session,
         slug=slug,
         entity_type=entity_type,
         content=data.content,
@@ -342,6 +360,7 @@ async def direct_edit_wiki_entity_endpoint(
 )
 async def get_wiki_audit_endpoint(
     slug: str,
+    session: Session = Depends(get_session),
     authorization: Annotated[str | None, Header()] = None,
 ) -> WikiAuditResponse:
     """
@@ -351,11 +370,11 @@ async def get_wiki_audit_endpoint(
     if _is_operacional(authorization):
         raise HTTPException(status_code=404, detail="Recurso não disponível")
 
-    client = await get_client_by_slug(slug)
+    client = get_client_by_slug(session, slug)
     if not client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
-    events_raw = await get_wiki_audit(slug)
+    events_raw = get_wiki_audit(session, slug)
     events = [HitlEventResponse(**e) for e in events_raw]
 
     return WikiAuditResponse(

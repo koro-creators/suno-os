@@ -17,9 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy dependency manifests and install
-COPY pyproject.toml uv.lock ./
-RUN uv pip install --system -r pyproject.toml || uv sync --no-dev --python /usr/local/bin/python
+# Copy dependency manifest and install.
+# Instala direto do pyproject.toml (sem uv.lock — não há lockfile versionado;
+# mesmo comando do Dockerfile.dev). Reprodutibilidade via lockfile fica como
+# melhoria futura (gerar uv.lock e reintroduzir o COPY).
+COPY pyproject.toml ./
+RUN uv pip install --system -r pyproject.toml
 
 # ── Stage 2: Runtime ────────────────────────────────────────────
 FROM python:3.11-slim
