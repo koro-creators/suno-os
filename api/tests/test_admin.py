@@ -22,6 +22,7 @@ import pytest
 # get_session é importado do MÓDULO do router (não de admin.db) para casar com o
 # objeto exato que os endpoints referenciam em Depends — senão o override falha
 # quando o router resolve o import por um caminho diferente (admin.db vs api.admin.db).
+from api.admin import repository
 from api.admin.router import _integrations, get_session, router
 from api.models.audit import AuditEvent  # noqa: F401 — registers table on Base.metadata
 from api.models.base import Base
@@ -139,6 +140,25 @@ def client(db_sessionmaker) -> TestClient:
 # ---------------------------------------------------------------------------
 # Users
 # ---------------------------------------------------------------------------
+
+
+def test_authz_lookup_by_uid_and_email(db_sessionmaker):
+    """Autorização DB-driven: role resolvido por uid ou email (ponte de bootstrap)."""
+    s = db_sessionmaker()
+    try:
+        by_uid = repository.get_user_for_auth(s, "uid-1", None)
+        assert by_uid is not None and by_uid["role"] == "admin"
+
+        by_email = repository.get_user_for_auth(s, None, "ana@suno.com.br")
+        assert by_email is not None and by_email["role"] == "creator"
+
+        # uid inexistente cai no email (bootstrap antes do primeiro login)
+        bridge = repository.get_user_for_auth(s, "uid-desconhecido", "carlos@suno.com.br")
+        assert bridge is not None and bridge["uid"] == "uid-3"
+
+        assert repository.get_user_for_auth(s, "nope", "nope@x.com") is None
+    finally:
+        s.close()
 
 
 def test_list_users_returns_all_three(client):

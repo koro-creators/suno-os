@@ -43,6 +43,21 @@ def list_users(
     return [u.to_dict() for u in items], total
 
 
+def get_user_for_auth(session: Session, uid: str | None, email: str | None) -> dict | None:
+    """Resolve o usuário autenticado para AUTORIZAÇÃO (role vem do banco).
+
+    Casa por `uid` (Firebase UID = PK) e, como ponte de bootstrap, por `email`
+    (permite pré-provisionar acesso antes do primeiro login, quando o uid real
+    ainda não é conhecido).
+    """
+    user = None
+    if uid:
+        user = session.get(User, uid)
+    if user is None and email:
+        user = session.query(User).filter(User.email == email).first()
+    return user.to_dict() if user else None
+
+
 def update_user(session: Session, uid: str, updates: dict) -> dict | None:
     """Patch role/is_active. Returns the updated dict, or None if not found."""
     user = session.get(User, uid)

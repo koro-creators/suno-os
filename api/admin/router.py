@@ -43,10 +43,15 @@ except ImportError:
     logger.warning("firebase_admin not installed — admin auth in mock mode")
 
 
-def _require_admin(authorization: str | None = None) -> str | None:
+def _require_admin(session: Session, authorization: str | None = None) -> str | None:
     """
-    Verify Firebase JWT and check admin custom claim.
-    Falls back to mock (allow all) when Firebase not configured.
+    Autenticação via Firebase (só prova identidade) + AUTORIZAÇÃO via nosso banco.
+
+    O Firebase apenas verifica o token e devolve uid/email. A permissão (role
+    'admin') vem da tabela `users` do Postgres — NÃO de custom claim do Firebase.
+    Assim, "dar acesso" = uma linha em users (role='admin'), gerida por nós.
+
+    Falls back to mock (allow all) when Firebase not configured (dev/testes).
     Caixa-preta: always 404, never 403 — RN-009/010/011.
     """
     if not _FIREBASE_ADMIN_AVAILABLE:
@@ -79,10 +84,12 @@ def _require_admin(authorization: str | None = None) -> str | None:
         logger.warning("Firebase token verification error: %s", exc)
         raise HTTPException(status_code=404, detail="Not found")
 
-    if not decoded.get("admin"):
+    # Autorização: role vem do NOSSO banco (users), resolvido por uid ou email.
+    user = repository.get_user_for_auth(session, decoded.get("uid"), decoded.get("email"))
+    if not user or user.get("role") != "admin" or not user.get("is_active"):
         raise HTTPException(status_code=404, detail="Not found")
 
-    return decoded["uid"]
+    return decoded.get("uid")
 
 
 def _sync_users_from_firebase(session: Session) -> int:
@@ -221,7 +228,7 @@ async def list_users(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    _require_admin(authorization)
+    _require_admin(session, authorization)
     items, total = repository.list_users(session, status=status, page=page, per_page=per_page)
     return {"items": items, "total": total}
 
@@ -233,7 +240,7 @@ async def update_user(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    actor = _require_admin(authorization)
+    actor = _require_admin(session, authorization)
     updates = {k: v for k, v in data.model_dump().items() if v is not None}
     user = repository.update_user(session, uid, updates)
     if user is None:
@@ -257,7 +264,7 @@ async def invite_user(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    actor = _require_admin(authorization)
+    actor = _require_admin(session, authorization)
     new_uid = repository.create_invited_user(session, data.email, data.role)
     repository.record_audit(
         session,
@@ -277,7 +284,7 @@ async def sync_users_from_firebase(
     session: Session = Depends(get_session),
 ):
     """Sync user list from Firebase Auth into the DB. No-op in mock mode."""
-    _require_admin(authorization)
+    _require_admin(session, authorization)
     count = _sync_users_from_firebase(session)
     return {"synced": count, "mode": "firebase" if count > 0 else "mock"}
 
@@ -290,8 +297,9 @@ async def sync_users_from_firebase(
 @router.get("/integrations")
 async def list_integrations(
     authorization: Annotated[str | None, Header()] = None,
+    session: Session = Depends(get_session),
 ) -> list[dict]:
-    _require_admin(authorization)
+    _require_admin(session, authorization)
     return [
         {**v, "value_masked": v.get("value_masked")}  # never return raw value
         for v in _integrations.values()
@@ -305,7 +313,7 @@ async def update_integration(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    actor = _require_admin(authorization)
+    actor = _require_admin(session, authorization)
     if key not in _integrations:
         raise HTTPException(status_code=404, detail="Not found")
     last4 = data.value[-4:] if len(data.value) >= 4 else data.value
@@ -331,8 +339,9 @@ async def update_integration(
 @router.get("/skills/defaults")
 async def get_skill_defaults(
     authorization: Annotated[str | None, Header()] = None,
+    session: Session = Depends(get_session),
 ) -> list[dict]:
-    _require_admin(authorization)
+    _require_admin(session, authorization)
     return list(_skill_defaults.values())
 
 
@@ -343,7 +352,7 @@ async def update_skill_default(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    actor = _require_admin(authorization)
+    actor = _require_admin(session, authorization)
     if skill_slug not in _skill_defaults:
         raise HTTPException(status_code=404, detail="Not found")
     _skill_defaults[skill_slug].update(
@@ -382,7 +391,7 @@ async def get_audit_log(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
 ) -> dict:
-    _require_admin(authorization)
+    _require_admin(session, authorization)
     items, total = repository.list_audit(
         session,
         page=page,
