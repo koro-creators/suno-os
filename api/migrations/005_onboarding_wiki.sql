@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS wiki_entities (
   badge VARCHAR(30) NOT NULL DEFAULT 'seed_auto',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  updated_by UUID REFERENCES users(id),
+  -- Firebase UID (string). Sem FK: o registro de usuários é gerido pelo Firebase
+  -- e a tabela users usa PK `uid` TEXT (ver 011_users.sql + caixa-preta).
+  updated_by TEXT,
   CONSTRAINT wiki_entities_entity_type_check
     CHECK (entity_type IN ('Posicionamento','Persona','Competidor','Produto','TomDeVoz','Briefing')),
   CONSTRAINT wiki_entities_status_check

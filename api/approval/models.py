@@ -11,10 +11,14 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text, Uuid
 
-from models.base import Base
+# Import relativo p/ casar a base por-pacote (evita registro duplo da tabela
+# quando o módulo é carregado sob dois nomes: approval.models vs api.approval.models).
+try:
+    from ..models.base import Base
+except ImportError:  # app root: approval/ e models/ são top-level (sem pai comum)
+    from models.base import Base
 
 
 def _now() -> datetime:
@@ -31,7 +35,7 @@ class ApprovalSubmission(Base):
 
     __tablename__ = "approval_submissions"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     client_id = Column(String(255), nullable=False, index=True)
     client_name = Column(String(255), nullable=False)
     skill_slug = Column(String(100), nullable=False)
@@ -82,7 +86,7 @@ class ApprovalEvent(Base):
 
     __tablename__ = "approval_events"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     submission_id = Column(String(255), nullable=False, index=True)
     action = Column(
         Enum(

@@ -7,11 +7,11 @@ X-Client-ID header for Phase 21). Cross-client requests return 404, never 403.
 from __future__ import annotations
 
 import logging
-import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
+from sqlalchemy.orm import Session
 
 from .schemas import (
     CurateRequest,
@@ -22,6 +22,13 @@ from .schemas import (
     MeetingSegmentResponse,
     MeetingUpdate,
 )
+
+try:
+    from core.db import get_session
+    from reunioes import repository
+except ImportError:  # test import root (repo root on sys.path)
+    from api.core.db import get_session
+    from api.reunioes import repository
 
 # FA-15: Oráculo integration (graceful guard — silently disabled if onboarding not present)
 try:
@@ -34,11 +41,6 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Meetings"])
-
-# ---------------------------------------------------------------------------
-# In-memory store (Phase 21 stub — replace with DB in Phase D)
-# ---------------------------------------------------------------------------
-_meetings: dict[str, dict] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -82,18 +84,6 @@ def _get_client_id(x_client_id: Optional[str]) -> str:
     return x_client_id or "default"
 
 
-def _require_meeting(meeting_id: str, client_id: str) -> dict:
-    """Fetch meeting by ID, applying caixa-preta cross-client guard (RN-010/011).
-
-    Returns 404 regardless of whether the meeting exists or belongs to another
-    client — never distinguishes the two cases to the caller.
-    """
-    meeting = _meetings.get(meeting_id)
-    if not meeting or meeting["client_id"] != client_id:
-        raise HTTPException(status_code=404, detail="Reuniao nao encontrada")
-    return meeting
-
-
 def _meeting_to_response(m: dict) -> MeetingResponse:
     segments = [
         MeetingSegmentResponse(
@@ -133,16 +123,14 @@ def _meeting_to_response(m: dict) -> MeetingResponse:
 async def list_meetings(
     status: Optional[str] = None,
     x_client_id: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
 ) -> MeetingListResponse:
     """List meetings for the current client.
 
     Filtered by client_id from X-Client-ID header (Phase 21 stub).
     """
     client_id = _get_client_id(x_client_id)
-    items = [m for m in _meetings.values() if m["client_id"] == client_id]
-    if status:
-        items = [m for m in items if m["status"] == status]
-    items.sort(key=lambda m: m["created_at"], reverse=True)
+    items = repository.list_meetings(session, client_id, status)
     return MeetingListResponse(
         meetings=[_meeting_to_response(m) for m in items],
         total=len(items),
@@ -153,6 +141,7 @@ async def list_meetings(
 async def create_meeting(
     req: MeetingCreate,
     x_client_id: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
 ) -> MeetingResponse:
     """Create a new meeting (opt-in). source_type = UPLOAD only in Phase 21."""
     client_id = _get_client_id(x_client_id)
@@ -160,26 +149,18 @@ async def create_meeting(
         # Cross-client guard: 404 not 403 (caixa-preta, RN-011)
         raise HTTPException(status_code=404, detail="Reuniao nao encontrada")
 
-    now = _now()
-    meeting_id = str(uuid.uuid4())
-    segments = _split_transcript_into_segments(meeting_id, req.transcript)
-
-    meeting: dict = {
-        "id": meeting_id,
-        "client_id": req.client_id,
-        "title": req.title,
-        "meet_link": req.meet_link,
-        "transcript": req.transcript,
-        "status": "pending_review",
-        "created_by": "admin",  # TODO: resolve from JWT
-        "created_at": now,
-        "updated_at": now,
-        "duration_minutes": req.duration_minutes,
-        "participants": req.participants,
-        "segments": segments,
-    }
-
-    _meetings[meeting_id] = meeting
+    segments = _split_transcript_into_segments("seg", req.transcript)
+    meeting = repository.create_meeting(
+        session,
+        client_id=req.client_id,
+        title=req.title,
+        transcript=req.transcript,
+        meet_link=req.meet_link,
+        duration_minutes=req.duration_minutes,
+        participants=req.participants,
+        created_by="admin",  # TODO: resolve from JWT
+        segments=segments,
+    )
     return _meeting_to_response(meeting)
 
 
@@ -187,13 +168,16 @@ async def create_meeting(
 async def get_meeting(
     meeting_id: str,
     x_client_id: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
 ) -> MeetingResponse:
     """Get meeting detail with transcript and segments.
 
     Returns 404 for meetings belonging to other clients (caixa-preta, RN-011).
     """
     client_id = _get_client_id(x_client_id)
-    meeting = _require_meeting(meeting_id, client_id)
+    meeting = repository.get_meeting(session, meeting_id, client_id)
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Reuniao nao encontrada")
     return _meeting_to_response(meeting)
 
 
@@ -202,6 +186,7 @@ async def curate_meeting(
     meeting_id: str,
     req: CurateRequest,
     x_client_id: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
 ) -> CurateResponse:
     """Save selected segments for Wiki review (HITL pre-step).
 
@@ -210,31 +195,21 @@ async def curate_meeting(
     readiness for review, not direct insertion into the knowledge base.
     """
     client_id = _get_client_id(x_client_id)
-    meeting = _require_meeting(meeting_id, client_id)
+    segment_updates = {
+        s.id: {"selected": s.selected, "context_note": s.context_note} for s in req.segments
+    }
+    meeting = repository.curate_meeting(
+        session,
+        meeting_id=meeting_id,
+        client_id=client_id,
+        segment_updates=segment_updates,
+        curated_by="admin",  # TODO: resolve from JWT
+    )
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Reuniao nao encontrada")
 
-    now = _now()
-    segment_updates = {s.id: s for s in req.segments}
-    updated_segments = []
-    for seg in meeting.get("segments", []):
-        update = segment_updates.get(seg["id"])
-        if update:
-            updated_segments.append(
-                {
-                    **seg,
-                    "selected": update.selected,
-                    "context_note": update.context_note,
-                    "curated_by": "admin",  # TODO: resolve from JWT
-                    "curated_at": now,
-                }
-            )
-        else:
-            updated_segments.append(seg)
-
-    meeting["segments"] = updated_segments
-    meeting["status"] = "curated"
-    meeting["updated_at"] = now
-
-    selected_count = sum(1 for s in updated_segments if s.get("selected"))
+    selected_segments = [s for s in meeting["segments"] if s.get("selected")]
+    selected_count = len(selected_segments)
 
     # FA-15: Feed selected segments into client's Oráculo Briefings context
     if _ORACULO_AVAILABLE and selected_count > 0:
@@ -242,7 +217,7 @@ async def curate_meeting(
             add_reunion_context_to_oraculo(
                 client_id=meeting["client_id"],
                 meeting_id=meeting_id,
-                selected_segments=updated_segments,
+                selected_segments=selected_segments,
             )
         except Exception:
             # Oráculo enrichment is best-effort — never blocks curation response
@@ -267,12 +242,14 @@ async def update_meeting_status(
     meeting_id: str,
     req: MeetingUpdate,
     x_client_id: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
 ) -> MeetingResponse:
     """Update meeting status (e.g. archive)."""
     client_id = _get_client_id(x_client_id)
-    meeting = _require_meeting(meeting_id, client_id)
-
-    if req.status is not None:
-        meeting["status"] = req.status
-    meeting["updated_at"] = _now()
+    if req.status is None:
+        meeting = repository.get_meeting(session, meeting_id, client_id)
+    else:
+        meeting = repository.update_status(session, meeting_id, client_id, req.status)
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Reuniao nao encontrada")
     return _meeting_to_response(meeting)
