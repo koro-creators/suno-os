@@ -40,41 +40,37 @@ class OracleState(TypedDict):
 # ---------------------------------------------------------------------------
 
 _FALLBACK_TEMPLATES: dict[str, str] = {
-    "Posicionamento": (
-        "{name} é uma marca que se posiciona como referência em seu segmento, "
-        "combinando expertise técnica com comunicação acessível. "
-        "Seu diferencial está na consistência de entrega e no relacionamento próximo com o público."
+    "Perfil do Cliente": (
+        "{name} é uma organização com atuação consolidada em seu setor, "
+        "reconhecida pela consistência de entrega e pelo relacionamento próximo com clientes e parceiros. "
+        "Seu perfil combina expertise técnica com comunicação acessível, posicionando-se como referência em sua área."
     ),
-    "Persona": (
-        "O público principal de {name} é composto por profissionais e entusiastas "
-        "que valorizam qualidade e autenticidade. "
-        "São pessoas conectadas, exigentes e dispostas a investir em experiências "
-        "que agreguem valor real à sua rotina."
+    "Mercado e Setor": (
+        "O mercado em que {name} atua é dinâmico e competitivo, com tendências de consolidação "
+        "e crescente digitalização dos processos. "
+        "O setor apresenta oportunidades relevantes para marcas que souberem combinar credibilidade, "
+        "agilidade e presença digital consistente."
     ),
-    "Competidor": (
-        "{name} opera em um mercado com concorrentes consolidados que disputam "
-        "atenção por preço ou volume. "
-        "O diferencial competitivo da marca está na profundidade de conteúdo e na "
-        "curadoria da experiência, "
-        "o que cria uma barreira difícil de replicar apenas com escala."
+    "Concorrentes Diretos": (
+        "{name} compete com players estabelecidos que disputam atenção por preço ou volume. "
+        "O diferencial competitivo da marca está na profundidade de conteúdo e na curadoria da experiência, "
+        "criando uma barreira difícil de replicar apenas com escala ou commoditização."
     ),
-    "Produto": (
-        "O portfólio de {name} reúne soluções desenvolvidas para atender às "
-        "necessidades específicas de seu público, "
-        "com foco em resultado prático e experiência de uso. "
-        "Cada produto carrega a identidade da marca: clara, direta e comprometida com a entrega."
+    "Personas-Alvo": (
+        "O público principal de {name} é composto por profissionais e tomadores de decisão "
+        "que valorizam qualidade, confiabilidade e resultados mensuráveis. "
+        "São pessoas conectadas, exigentes e dispostas a investir em soluções que agreguem valor real à sua rotina e negócio."
     ),
-    "TomDeVoz": (
-        "{name} comunica-se de forma direta, acolhedora e sem jargões desnecessários. "
-        "O tom é confiante sem ser arrogante, próximo sem ser informal demais — "
-        "a voz de quem conhece profundamente o assunto e sabe traduzir isso para "
-        "quem está aprendendo."
+    "Histórico de Campanhas": (
+        "{name} possui histórico de comunicação focado em construção de autoridade e geração de demanda. "
+        "As campanhas anteriores priorizaram conteúdo educativo, cases de sucesso e presença em canais digitais relevantes "
+        "para o público-alvo, com resultados consistentes de engajamento e conversão."
     ),
-    "Briefing": (
-        "{name} tem como norte criar conteúdo que informe, engaje e converta, "
-        "sempre alinhado à sua proposta de valor central. "
-        "Cada briefing deve refletir clareza de objetivo, linguagem adequada à "
-        "persona e chamada para ação relevante."
+    "Restrições Legais e Contratuais": (
+        "A comunicação de {name} deve observar as diretrizes regulatórias do setor, "
+        "evitando afirmações não comprovadas, comparações diretas com concorrentes sem embasamento e "
+        "promessas de resultado que possam configurar publicidade enganosa. "
+        "Todo conteúdo deve estar alinhado com as políticas internas de compliance e comunicação institucional."
     ),
 }
 
@@ -128,35 +124,42 @@ def _get_llm():
 # ---------------------------------------------------------------------------
 
 _ENTITY_PROMPTS: dict[str, str] = {
-    "Posicionamento": (
-        "Elabore o posicionamento estratégico da marca. "
-        "Descreva em 2-3 parágrafos: proposta de valor, diferenciais competitivos "
-        "e como a marca se apresenta no mercado."
+    "Perfil do Cliente": (
+        "Elabore um perfil completo desta organização. "
+        "Inclua: histórico e fundação, porte e estrutura, principais produtos ou serviços, "
+        "missão e valores declarados, presença geográfica e canais de atuação. "
+        "Mínimo 100 palavras."
     ),
-    "Persona": (
-        "Descreva a persona principal do público da marca. "
-        "Inclua: perfil demográfico, comportamentos, dores, motivações e como a "
-        "marca resolve seus problemas."
+    "Mercado e Setor": (
+        "Analise o mercado e setor em que esta organização atua. "
+        "Inclua: tamanho e crescimento do mercado, principais tendências, "
+        "oportunidades e ameaças do setor, regulações relevantes e dinâmicas de demanda. "
+        "Mínimo 100 palavras."
     ),
-    "Competidor": (
-        "Analise o cenário competitivo da marca. "
-        "Descreva os principais tipos de concorrentes, como a marca se diferencia "
-        "e quais são seus pontos fortes frente à concorrência."
+    "Concorrentes Diretos": (
+        "Identifique e analise os principais concorrentes diretos desta organização. "
+        "Para cada concorrente relevante: nome, posicionamento, pontos fortes e fracos, "
+        "e como a organização se diferencia. Inclua também concorrentes indiretos relevantes. "
+        "Mínimo 100 palavras."
     ),
-    "Produto": (
-        "Descreva o portfólio de produtos ou serviços da marca. "
-        "Inclua: categorias principais, proposta de cada produto, benefícios para "
-        "o usuário e como se relacionam com o posicionamento."
+    "Personas-Alvo": (
+        "Descreva as personas-alvo desta organização. "
+        "Para cada persona: perfil demográfico e profissional, comportamentos, "
+        "dores e desafios, motivações de compra, canais preferidos e como a organização resolve seus problemas. "
+        "Mínimo 100 palavras."
     ),
-    "TomDeVoz": (
-        "Defina o tom de voz da marca. "
-        "Inclua: adjetivos que descrevem a voz, o que evitar na comunicação, "
-        "exemplos de como falar e como não falar, e o estilo de escrita preferido."
+    "Histórico de Campanhas": (
+        "Descreva o histórico de campanhas e comunicação desta organização. "
+        "Inclua: campanhas relevantes já realizadas, canais utilizados, mensagens-chave, "
+        "tom de voz praticado, resultados obtidos e aprendizados. "
+        "Se não houver histórico disponível, descreva o tipo de comunicação praticada. "
+        "Mínimo 100 palavras."
     ),
-    "Briefing": (
-        "Crie um briefing padrão para produção de conteúdo da marca. "
-        "Inclua: objetivos de comunicação, mensagens-chave, estrutura sugerida de "
-        "conteúdo e diretrizes de chamada para ação."
+    "Restrições Legais e Contratuais": (
+        "Liste as restrições legais, regulatórias e contratuais que impactam a comunicação desta organização. "
+        "Inclua: restrições do setor regulado, claims proibidos ou que exigem comprovação, "
+        "obrigações de disclaimer, políticas internas de compliance e quaisquer limitações contratuais. "
+        "Mínimo 100 palavras."
     ),
 }
 

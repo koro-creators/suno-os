@@ -7,12 +7,12 @@
 // ---------------------------------------------------------------------------
 
 export const ONTOLOGY_ENTITY_TYPES = [
-  'Posicionamento',
-  'Persona',
-  'Competidor',
-  'Produto',
-  'TomDeVoz',
-  'Briefing',
+  'Perfil do Cliente',
+  'Mercado e Setor',
+  'Concorrentes Diretos',
+  'Personas-Alvo',
+  'Histórico de Campanhas',
+  'Restrições Legais e Contratuais',
 ] as const;
 
 export type OntologyEntityType = (typeof ONTOLOGY_ENTITY_TYPES)[number];

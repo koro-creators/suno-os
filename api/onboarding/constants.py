@@ -7,12 +7,12 @@ IMPORTANT: Keep in sync with lib/onboarding-types.ts (ONTOLOGY_ENTITY_TYPES).
 # Ordered list of entity types — UI derives its card order from this.
 # Constitution §6.8: "não hardcodar número de entidades — UI deriva dela".
 ONTOLOGY_ENTITY_TYPES: list[str] = [
-    "Posicionamento",
-    "Persona",
-    "Competidor",
-    "Produto",
-    "TomDeVoz",
-    "Briefing",
+    "Perfil do Cliente",
+    "Mercado e Setor",
+    "Concorrentes Diretos",
+    "Personas-Alvo",
+    "Histórico de Campanhas",
+    "Restrições Legais e Contratuais",
 ]
 
 # Valid entity status values
