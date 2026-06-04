@@ -24,9 +24,11 @@ except ImportError:
     _NOTIFICATIONS_AVAILABLE = False
 
 try:
+    from admin.repository import get_user_for_auth
     from approval import repository
     from core.db import get_session
 except ImportError:  # test import root (repo root on sys.path)
+    from api.admin.repository import get_user_for_auth
     from api.approval import repository
     from api.core.db import get_session
 
@@ -49,34 +51,41 @@ router = APIRouter(tags=["Approval"])
 # ---------------------------------------------------------------------------
 
 
-def _resolve_actor(request: Request, authorization: Optional[str]) -> dict:
+def _resolve_actor(session, request: Request, authorization: Optional[str]) -> dict:
     """
-    Resolve o actor do JWT.
+    Resolve o actor: Firebase AUTENTICA (token → uid/email); a AUTORIZAÇÃO
+    (is_admin) vem da tabela `users` do nosso banco — não de claim do JWT.
 
-    Phase 20: se Firebase Auth não estiver disponível, aceita o header
-    X-Debug-Admin para testes locais (apenas quando DEBUG=True).
-    Em produção, o Auth Gateway (CTM-01) valida o JWT antes de chegar aqui.
+    Em dev/testes (DEBUG=True), aceita o header X-Debug-Admin como atalho.
     """
-    # Tenta decodificar o Firebase JWT (best-effort; sem falhar no MVP)
     if authorization and authorization.startswith("Bearer "):
         try:
             import firebase_admin.auth as fb_auth
 
-            from core.firebase import get_firebase_app
+            try:
+                from core.firebase import get_firebase_app
+            except ImportError:  # test import root
+                from api.core.firebase import get_firebase_app
 
-            get_firebase_app()
+            app = get_firebase_app()
             token = authorization.removeprefix("Bearer ").strip()
-            decoded = fb_auth.verify_id_token(token)
+            decoded = fb_auth.verify_id_token(token, app=app)
+            # Role do NOSSO banco (não de custom claim)
+            user = get_user_for_auth(session, decoded.get("uid"), decoded.get("email"))
+            is_admin = bool(user and user.get("role") == "admin" and user.get("is_active"))
             return {
                 "uid": decoded.get("uid", "unknown"),
-                "name": decoded.get("name", "Usuário"),
-                "is_admin": decoded.get("role") == "admin",
-                "client_id": decoded.get("client_id"),
+                "name": (user or {}).get("name") or decoded.get("name", "Usuário"),
+                "is_admin": is_admin,
+                "client_id": None,  # users ainda não tem client_id (multi-tenant futuro)
             }
         except Exception:
             pass
 
-    from config import settings
+    try:
+        from config import settings
+    except ImportError:  # test import root
+        from api.config import settings
 
     if settings.DEBUG:
         debug_admin = request.headers.get("X-Debug-Admin")
@@ -168,7 +177,7 @@ async def list_approvals(
     Acesso restrito a admins (P3 Líder / P4 Admin — FA-09 RBAC).
     Caixa-preta: 404 para não-admins.
     """
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     _require_admin(actor)
 
     results = repository.list_submissions(
@@ -199,7 +208,7 @@ async def submit_approval(
     Retorna 201 PENDING_VALIDATION em ≤2s (constitution §3.2).
     Validação roda async (BrandValidator + PortuguêsValidator — Phase D+).
     """
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     # Qualquer usuário autenticado pode submeter; verificação de chain ocorre no domain
 
     sub = repository.create_submission(
@@ -242,7 +251,7 @@ async def get_approval(
     Detalhe de uma submission.
     Caixa-preta: 404 para não-admin e para cross-client.
     """
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     _require_admin(actor)
     sub = _require_submission(session, submission_id, actor)
     return _sub_to_response(sub)
@@ -267,7 +276,7 @@ async def approve_submission(
     DecisionRecorder valida que approver é humano (constitution §1.1).
     Phase 20: qualquer admin pode aprovar (chain config chega na Phase D+).
     """
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     _require_admin(actor)
     sub = _require_submission(session, submission_id, actor)
 
@@ -319,7 +328,7 @@ async def request_revision(
 
     Anti-loop RN-025: round 3 → EXPIRED automaticamente.
     """
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     _require_admin(actor)
     sub = _require_submission(session, submission_id, actor)
 
@@ -372,7 +381,7 @@ async def reject_submission(
     session: Session = Depends(get_session),
 ):
     """Rejeitar submission com motivo obrigatório."""
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     _require_admin(actor)
     sub = _require_submission(session, submission_id, actor)
 
@@ -412,7 +421,7 @@ async def get_approval_history(
     session: Session = Depends(get_session),
 ):
     """Histórico de eventos (append-only) de uma submission."""
-    actor = _resolve_actor(request, authorization)
+    actor = _resolve_actor(session, request, authorization)
     _require_admin(actor)
     _require_submission(session, submission_id, actor)
 
