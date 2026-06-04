@@ -16,6 +16,9 @@ dependencies = [
     # Database
     "sqlalchemy>=2.0.25",
     "asyncpg>=0.30.0",
+    # Driver síncrono — usado pelo padrão create_engine(DATABASE_URL sem +asyncpg)
+    # (admin/db.py e demais routers). Sem ele a persistência cai no fallback.
+    "psycopg2-binary>=2.9.9",
     # Pydantic
     "pydantic>=2.7.0",
     "pydantic-settings>=2.2.0",

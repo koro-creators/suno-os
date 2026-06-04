@@ -3,7 +3,7 @@
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE knowledge_documents (
+CREATE TABLE IF NOT EXISTS knowledge_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     description TEXT,
@@ -22,7 +22,7 @@ CREATE TABLE knowledge_documents (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE knowledge_chunks (
+CREATE TABLE IF NOT EXISTS knowledge_chunks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     document_id UUID REFERENCES knowledge_documents(id) ON DELETE CASCADE,
     chunk_index INT NOT NULL,
@@ -32,4 +32,5 @@ CREATE TABLE knowledge_chunks (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX ON knowledge_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_embedding
+    ON knowledge_chunks USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);

@@ -1,54 +1,64 @@
-"""Phase 11 — Backend tests for Admin API (SPEC-022 Fase A in-memory).
+"""Phase 11 — Backend tests for Admin API.
+
+Users e audit foram promovidos para o Postgres (SPEC-022 Fase B). Os endpoints
+exigem banco (sem fallback mock), então estes testes injetam uma sessão SQLite
+em memória via ``app.dependency_overrides`` e semeiam os 3 usuários de
+referência — sem mockar os dados in-memory do router.
 
 Covers:
-  - Users: list, filter, patch role/status, invite
-  - Integrations: list, update (masked value)
-  - Skills defaults: list, update
-  - Audit log: list, filter by user/action/date
+  - Users: list, filter, patch role/status, invite (DB-backed)
+  - Integrations: list, update (masked value) — dados in-memory, audit no DB
+  - Skills defaults: list, update — dados in-memory, audit no DB
+  - Audit log: list, filter by user/action/date (DB-backed)
 """
 
 from __future__ import annotations
 
+import copy
+from datetime import datetime, timezone
+
 import pytest
-from api.admin.router import (
-    _audit_log,
-    _integrations,
-    _users,
-    router,
-)
+
+# get_session é importado do MÓDULO do router (não de admin.db) para casar com o
+# objeto exato que os endpoints referenciam em Depends — senão o override falha
+# quando o router resolve o import por um caminho diferente (admin.db vs api.admin.db).
+from api.admin.router import _integrations, get_session, router
+from api.models.audit import AuditEvent  # noqa: F401 — registers table on Base.metadata
+from api.models.base import Base
+from api.models.user import User
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-# Snapshot of initial seed data to restore between tests
-_USERS_SEED = {
-    "uid-1": {
+# Reference users seeded into the SQLite DB before each test.
+_USERS_SEED = [
+    {
         "uid": "uid-1",
         "name": "Heitor Miranda",
         "email": "heitor@suno.com.br",
         "role": "admin",
         "is_active": True,
-        "last_access": "2026-05-26T14:00:00Z",
-        "created_at": "2026-01-10T09:00:00Z",
+        "created_at": datetime(2026, 1, 10, 9, tzinfo=timezone.utc),
     },
-    "uid-2": {
+    {
         "uid": "uid-2",
         "name": "Ana Silva",
         "email": "ana@suno.com.br",
         "role": "creator",
         "is_active": True,
-        "last_access": "2026-05-25T10:30:00Z",
-        "created_at": "2026-02-14T11:00:00Z",
+        "created_at": datetime(2026, 2, 14, 11, tzinfo=timezone.utc),
     },
-    "uid-3": {
+    {
         "uid": "uid-3",
         "name": "Carlos Melo",
         "email": "carlos@suno.com.br",
         "role": "viewer",
         "is_active": False,
-        "last_access": "2026-05-10T08:00:00Z",
-        "created_at": "2026-03-01T09:00:00Z",
+        "created_at": datetime(2026, 3, 1, 9, tzinfo=timezone.utc),
     },
-}
+]
 
 _INTEGRATIONS_SEED = {
     "gemini_api_key": {
@@ -70,20 +80,12 @@ _INTEGRATIONS_SEED = {
 
 @pytest.fixture(autouse=True)
 def reset_admin_store():
-    """Restore the in-memory stores to seed state before each test."""
-    import copy
-
-    _users.clear()
-    _users.update(copy.deepcopy(_USERS_SEED))
+    """Restore the in-memory integration store to seed state before each test."""
     _integrations.clear()
     _integrations.update(copy.deepcopy(_INTEGRATIONS_SEED))
-    _audit_log.clear()
     yield
-    _users.clear()
-    _users.update(copy.deepcopy(_USERS_SEED))
     _integrations.clear()
     _integrations.update(copy.deepcopy(_INTEGRATIONS_SEED))
-    _audit_log.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -93,17 +95,44 @@ def _force_admin_mock_mode(monkeypatch):
     The CI image installs firebase_admin, which flips
     ``_FIREBASE_ADMIN_AVAILABLE`` to True; ``_require_admin`` then rejects the
     unauthenticated TestClient with 404 (caixa-preta). These tests exercise the
-    in-memory CRUD/audit logic, not Firebase verification, so we force the
-    no-Firebase fallback path the same way a dev environment without
-    credentials behaves.
+    CRUD/audit logic, not Firebase verification, so we force the no-Firebase
+    fallback path the same way a dev environment without credentials behaves.
     """
     monkeypatch.setattr("api.admin.router._FIREBASE_ADMIN_AVAILABLE", False)
 
 
 @pytest.fixture
-def client() -> TestClient:
+def db_sessionmaker():
+    """Fresh in-memory SQLite DB per test (users + audit_events tables)."""
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine, tables=[User.__table__, AuditEvent.__table__])
+    TestSession = sessionmaker(bind=engine)
+
+    seed = TestSession()
+    seed.add_all([User(**row) for row in _USERS_SEED])
+    seed.commit()
+    seed.close()
+
+    yield TestSession
+    engine.dispose()
+
+
+@pytest.fixture
+def client(db_sessionmaker) -> TestClient:
+    def _override_session():
+        session = db_sessionmaker()
+        try:
+            yield session
+        finally:
+            session.close()
+
     app = FastAPI()
     app.include_router(router, prefix="/api/admin")
+    app.dependency_overrides[get_session] = _override_session
     return TestClient(app)
 
 

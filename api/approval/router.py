@@ -11,11 +11,10 @@ Phase 20: usa in-memory store. DB persistence chega na Phase D+.
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from sqlalchemy.orm import Session
 
 try:
     from notifications.router import _create_notification_internal
@@ -23,6 +22,13 @@ try:
     _NOTIFICATIONS_AVAILABLE = True
 except ImportError:
     _NOTIFICATIONS_AVAILABLE = False
+
+try:
+    from approval import repository
+    from core.db import get_session
+except ImportError:  # test import root (repo root on sys.path)
+    from api.approval import repository
+    from api.core.db import get_session
 
 from .schemas import (
     ApprovalDecisionRequest,
@@ -36,13 +42,6 @@ from .schemas import (
 )
 
 router = APIRouter(tags=["Approval"])
-
-# ---------------------------------------------------------------------------
-# In-memory store (Phase 20 — substituído por DB na Phase D+)
-# ---------------------------------------------------------------------------
-
-_submissions: dict[str, dict] = {}
-_events: dict[str, list[dict]] = {}  # submission_id → list of events
 
 
 # ---------------------------------------------------------------------------
@@ -102,22 +101,18 @@ def _require_admin(actor: dict) -> None:
         raise HTTPException(status_code=404, detail="Not found")
 
 
-def _require_submission(submission_id: str, actor: dict) -> dict:
+def _require_submission(session: Session, submission_id: str, actor: dict) -> dict:
     """
     Busca submission com cross-client guard.
     404 quando não existe OU quando actor não tem permissão (caixa-preta).
     """
-    sub = _submissions.get(submission_id)
+    sub = repository.get_submission(session, submission_id)
     if not sub:
         raise HTTPException(status_code=404, detail="Not found")
     # Cross-client guard: admin vê todos; usuário comum só vê do seu client_id
     if not actor["is_admin"] and actor.get("client_id") and sub["client_id"] != actor["client_id"]:
         raise HTTPException(status_code=404, detail="Not found")
     return sub
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 def _notify_creator(sub: dict, notif_type: str, title: str, body: str) -> None:
@@ -165,6 +160,7 @@ async def list_approvals(
     urgency: Optional[Urgency] = None,
     status: Optional[ApprovalStatus] = None,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """
     Listar submissions de aprovação (inbox do aprovador).
@@ -175,18 +171,13 @@ async def list_approvals(
     actor = _resolve_actor(request, authorization)
     _require_admin(actor)
 
-    results = list(_submissions.values())
-
-    if client_id:
-        results = [s for s in results if s["client_id"] == client_id]
-    if skill_slug:
-        results = [s for s in results if s["skill_slug"] == skill_slug]
-    if urgency:
-        results = [s for s in results if s["urgency"] == urgency]
-    if status:
-        results = [s for s in results if s["status"] == status]
-
-    results.sort(key=lambda s: s["created_at"], reverse=True)
+    results = repository.list_submissions(
+        session,
+        client_id=client_id,
+        skill_slug=skill_slug,
+        urgency=urgency,
+        status=status,
+    )
     return [_sub_to_response(s) for s in results]
 
 
@@ -200,6 +191,7 @@ async def submit_approval(
     request: Request,
     body: ApprovalSubmitRequest,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """
     Submeter conteúdo para aprovação (T-31).
@@ -210,40 +202,26 @@ async def submit_approval(
     actor = _resolve_actor(request, authorization)
     # Qualquer usuário autenticado pode submeter; verificação de chain ocorre no domain
 
-    now = _now()
-    sub_id = str(uuid.uuid4())
-
-    sub = {
-        "id": sub_id,
-        "client_id": body.client_id,
-        "client_name": body.client_id,  # Phase 20: sem lookup de nome
-        "skill_slug": body.skill_slug,
-        "skill_name": body.skill_slug,
-        "subject_type": body.subject_type,
-        "subject_id": body.subject_id,
-        "content": body.content,
-        "status": ApprovalStatus.PENDING_VALIDATION,
-        "urgency": body.urgency,
-        "submitted_by": actor["uid"],
-        "submitted_by_name": actor["name"],
-        "assigned_approver": None,
-        "comment": body.comment,
-        "round": 1,
-        "created_at": now,
-        "updated_at": now,
-    }
-    _submissions[sub_id] = sub
-
-    evt = {
-        "id": str(uuid.uuid4()),
-        "submission_id": sub_id,
-        "action": EventAction.SUBMITTED,
-        "comment": None,
-        "user_id": actor["uid"],
-        "user_name": actor["name"],
-        "timestamp": now,
-    }
-    _events.setdefault(sub_id, []).append(evt)
+    sub = repository.create_submission(
+        session,
+        client_id=body.client_id,
+        skill_slug=body.skill_slug,
+        subject_type=body.subject_type,
+        subject_id=body.subject_id,
+        content=body.content,
+        urgency=body.urgency,
+        submitted_by=actor["uid"],
+        submitted_by_name=actor["name"],
+        comment=body.comment,
+    )
+    repository.add_event(
+        session,
+        submission_id=sub["id"],
+        action=EventAction.SUBMITTED,
+        comment=None,
+        user_id=actor["uid"],
+        user_name=actor["name"],
+    )
 
     return _sub_to_response(sub)
 
@@ -258,6 +236,7 @@ async def get_approval(
     submission_id: str,
     request: Request,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """
     Detalhe de uma submission.
@@ -265,7 +244,7 @@ async def get_approval(
     """
     actor = _resolve_actor(request, authorization)
     _require_admin(actor)
-    sub = _require_submission(submission_id, actor)
+    sub = _require_submission(session, submission_id, actor)
     return _sub_to_response(sub)
 
 
@@ -280,6 +259,7 @@ async def approve_submission(
     request: Request,
     body: ApprovalDecisionRequest,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """
     Aprovar submission.
@@ -289,26 +269,25 @@ async def approve_submission(
     """
     actor = _resolve_actor(request, authorization)
     _require_admin(actor)
-    sub = _require_submission(submission_id, actor)
+    sub = _require_submission(session, submission_id, actor)
 
     if sub["status"] not in ("PENDING_APPROVAL", "PENDING_VALIDATION"):
         raise HTTPException(status_code=422, detail="Submission não está pendente de aprovação.")
 
-    now = _now()
-    sub["status"] = ApprovalStatus.APPROVED
-    sub["assigned_approver"] = actor["uid"]
-    sub["updated_at"] = now
-
-    evt = {
-        "id": str(uuid.uuid4()),
-        "submission_id": submission_id,
-        "action": EventAction.APPROVE,
-        "comment": body.comment,
-        "user_id": actor["uid"],
-        "user_name": actor["name"],
-        "timestamp": now,
-    }
-    _events.setdefault(submission_id, []).append(evt)
+    sub = repository.update_submission(
+        session,
+        submission_id,
+        status=ApprovalStatus.APPROVED,
+        assigned_approver=actor["uid"],
+    )
+    repository.add_event(
+        session,
+        submission_id=submission_id,
+        action=EventAction.APPROVE,
+        comment=body.comment,
+        user_id=actor["uid"],
+        user_name=actor["name"],
+    )
 
     _notify_creator(
         sub,
@@ -333,6 +312,7 @@ async def request_revision(
     request: Request,
     body: ApprovalDecisionRequest,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """
     Solicitar revisão (REQUEST_CHANGES).
@@ -341,38 +321,32 @@ async def request_revision(
     """
     actor = _resolve_actor(request, authorization)
     _require_admin(actor)
-    sub = _require_submission(submission_id, actor)
+    sub = _require_submission(session, submission_id, actor)
 
     if sub["status"] not in ("PENDING_APPROVAL", "PENDING_VALIDATION"):
         raise HTTPException(status_code=422, detail="Submission não está pendente de aprovação.")
 
-    now = _now()
     current_round = sub.get("round", 1)
 
     if current_round >= 3:
         # Anti-loop: 3ª revisão → EXPIRED (RN-025)
-        sub["status"] = ApprovalStatus.EXPIRED
-        action = EventAction.REQUEST_CHANGES
+        new_status = ApprovalStatus.EXPIRED
         notif_title = "Submissão expirada"
         notif_body = "Sua submissão atingiu o limite de rodadas de revisão e foi expirada."
     else:
-        sub["status"] = ApprovalStatus.CHANGES_REQUESTED
-        action = EventAction.REQUEST_CHANGES
+        new_status = ApprovalStatus.CHANGES_REQUESTED
         notif_title = "Revisão solicitada"
         notif_body = "Sua submissão precisa de ajustes antes de ser aprovada."
 
-    sub["updated_at"] = now
-
-    evt = {
-        "id": str(uuid.uuid4()),
-        "submission_id": submission_id,
-        "action": action,
-        "comment": body.comment,
-        "user_id": actor["uid"],
-        "user_name": actor["name"],
-        "timestamp": now,
-    }
-    _events.setdefault(submission_id, []).append(evt)
+    sub = repository.update_submission(session, submission_id, status=new_status)
+    repository.add_event(
+        session,
+        submission_id=submission_id,
+        action=EventAction.REQUEST_CHANGES,
+        comment=body.comment,
+        user_id=actor["uid"],
+        user_name=actor["name"],
+    )
 
     _notify_creator(
         sub,
@@ -395,29 +369,25 @@ async def reject_submission(
     request: Request,
     body: ApprovalDecisionRequest,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """Rejeitar submission com motivo obrigatório."""
     actor = _resolve_actor(request, authorization)
     _require_admin(actor)
-    sub = _require_submission(submission_id, actor)
+    sub = _require_submission(session, submission_id, actor)
 
     if sub["status"] not in ("PENDING_APPROVAL", "PENDING_VALIDATION"):
         raise HTTPException(status_code=422, detail="Submission não está pendente de aprovação.")
 
-    now = _now()
-    sub["status"] = ApprovalStatus.REJECTED
-    sub["updated_at"] = now
-
-    evt = {
-        "id": str(uuid.uuid4()),
-        "submission_id": submission_id,
-        "action": EventAction.REJECT,
-        "comment": body.comment,
-        "user_id": actor["uid"],
-        "user_name": actor["name"],
-        "timestamp": now,
-    }
-    _events.setdefault(submission_id, []).append(evt)
+    sub = repository.update_submission(session, submission_id, status=ApprovalStatus.REJECTED)
+    repository.add_event(
+        session,
+        submission_id=submission_id,
+        action=EventAction.REJECT,
+        comment=body.comment,
+        user_id=actor["uid"],
+        user_name=actor["name"],
+    )
 
     _notify_creator(
         sub,
@@ -439,13 +409,14 @@ async def get_approval_history(
     submission_id: str,
     request: Request,
     authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
 ):
     """Histórico de eventos (append-only) de uma submission."""
     actor = _resolve_actor(request, authorization)
     _require_admin(actor)
-    _require_submission(submission_id, actor)
+    _require_submission(session, submission_id, actor)
 
-    evts = sorted(_events.get(submission_id, []), key=lambda e: e["timestamp"])
+    evts = repository.list_events(session, submission_id)
     return ApprovalHistoryResponse(
         submission_id=submission_id,
         events=[_evt_to_response(e) for e in evts],

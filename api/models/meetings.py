@@ -16,11 +16,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import relationship
 
-from models.base import Base
+from .base import Base
 
 
 def _now() -> datetime:
@@ -32,7 +31,7 @@ class Meeting(Base):
 
     __tablename__ = "meetings"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
 
     # Denormalized for cross-client guard (RN-010)
     client_id = Column(String(255), nullable=False, index=True)
@@ -52,14 +51,14 @@ class Meeting(Base):
     duration_minutes = Column(Integer, nullable=True)
 
     # JSON array of participant names/emails
-    participants = Column(JSONB, nullable=True)
+    participants = Column(JSON, nullable=True)
 
     created_by = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=_now, onupdate=_now)
 
     # Relationships
-    segments: list[MeetingSegment] = relationship(
+    segments = relationship(
         "MeetingSegment",
         back_populates="meeting",
         cascade="all, delete-orphan",
@@ -76,10 +75,10 @@ class MeetingSegment(Base):
 
     __tablename__ = "meeting_segments"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
 
     meeting_id = Column(
-        UUID(as_uuid=True),
+        Uuid,
         ForeignKey("meetings.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -102,4 +101,4 @@ class MeetingSegment(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
 
     # Relationship
-    meeting: Meeting = relationship("Meeting", back_populates="segments")
+    meeting = relationship("Meeting", back_populates="segments")
