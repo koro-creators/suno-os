@@ -34,9 +34,6 @@ UserRole = Literal["admin", "creator", "viewer"]
 
 _FIREBASE_ADMIN_AVAILABLE: bool = False
 
-# Emails que sempre recebem acesso admin independente de custom claim Firebase
-_ADMIN_EMAIL_ALLOWLIST: frozenset[str] = frozenset({"luis.felipesouza@rede.ulbra.br"})
-
 try:
     import firebase_admin  # noqa: F401
     from firebase_admin import auth as firebase_auth
