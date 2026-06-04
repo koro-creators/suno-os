@@ -41,13 +41,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (loading || !user) {
-    // Sem auth: mostra conteúdo + ChatPanel fixo (sempre visível)
-    return (
-      <>
-        <div style={{ paddingRight: 40 }}>{children}</div>
-        <ChatPanel />
-      </>
-    );
+    return <>{children}</>;
   }
 
   return (
