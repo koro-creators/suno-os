@@ -86,11 +86,14 @@
 - [x] 7 testes SQLite (CRUD + curate + cross-client 404). Suite: 93 verdes; ruff limpo
 - Tabelas já existiam (008) → nada novo em prod. `created_by`/`curated_by` ainda "admin" (TODO JWT).
 
-### A-8 — Onboarding/Wiki (`wiki_entities`, `entity_hitl_events`, `onboarding_jobs`)
-- [ ] Repository + plugar `api/onboarding/service.py` (`_jobs`, `_wiki_entities`, `_hitl_events`)
-- [ ] **Inclui o rewiring de `_clients`** (herdado de A-1) — usar `clientes/repository.py`; resolver mutação de `client["status"]` no fluxo do oráculo via `update_status`
-- [ ] Depende de A-1 (clients) ✅ fundação pronta
-- [ ] Testes
+### A-8 — Onboarding/Wiki (`wiki_entities`, `entity_hitl_events`, `onboarding_jobs`) ✅ (04/06/2026)
+- [x] Migração `014_onboarding_fixes.sql` (`entity_hitl_events.user_id` UUID→TEXT — Firebase UID) — **aplicada em prod**
+- [x] Models `models/onboarding.py` (WikiEntity, OnboardingJob, EntityHitlEvent), portáveis
+- [x] `onboarding/repository.py` (jobs/wiki/hitl) + reuso de `clientes/repository` p/ clients
+- [x] `service.py` reescrito: funções sync recebem `session`; tasks async (`run_oracle_agent`, `regenerate_entity_stub`, `add_reunion_context`) abrem sessão própria (best-effort)
+- [x] Router com `Depends(get_session)`; `job["entities"]` derivado de wiki_entities (não é coluna)
+- [x] 7 testes SQLite (criar/status/gate HITL→ACTIVE/wiki); suite 114 verde; ruff limpo
+- Nota: `add_reunion_context` busca tipo "Briefings" (plural) que não existe (tipo real "Briefing") — no-op, comportamento pré-existente preservado.
 
 ### A-9 — Biblioteca (`knowledge_documents`, `knowledge_chunks`) ✅ backend já DB-backed (03/06/2026)
 - [x] **Verificado:** `chat/knowledge/router.py` já faz INSERT/SELECT em `knowledge_documents` via AsyncSession (com fallback p/ None). Backend persiste em prod quando há DB. Nada a reimplementar.
@@ -151,6 +154,7 @@
 - **03/06/2026** — B-0 concluído (`api/core/db.py` compartilhado; `admin/db.py` re-exporta; 22 testes admin verdes). A-1 iniciado: identificado gap de schema em `clients` (campos do onboarding ausentes) — aguardando decisão de schema.
 - **03/06/2026** — A-7 (Reuniões) concluído: model portável, repository + router DB-backed, 7 testes; suite 93 verdes. Bug latente de relationship corrigido.
 - **03/06/2026** — A-9 (Biblioteca) verificado: backend já persiste em `knowledge_documents` (nada a fazer no backend; frontend `biblioteca-docs.ts` é concern à parte). A-10 (Drive) DEFERIDO: é stub pendente de integração real (SPEC-006), não migração. Restantes substanciais: A-8 (Onboarding, async/coupled), Bucket B (skills, integrações, prompts).
+- **04/06/2026** — A-8 (Onboarding/Wiki) concluído: migração 014 em prod (user_id→TEXT), models + repository + service/router DB-backed, tasks async com sessão própria, 7 testes; suite 114. Restantes: Workflows (A-4) e Agents (A-5) — reescrita de suíte; Bucket B — skills/integrações/prompts.
 - **03/06/2026** — B-4 (Notificações) concluído: migração 013 em prod (29 tabelas), model+repository+router DB-backed, helper interno best-effort, 5 testes; suite 107. **Nota de sequenciamento:** Workflows (A-4) e Agents (A-5) têm suítes existentes acopladas ao in-memory (38 testes canvas + test_agents) → exigem reescrita das suítes; tratá-los como esforços dedicados. Demais limpos: onboarding (A-8), biblioteca (A-9), drive (A-10).
 - **03/06/2026** — A-6 (Aprovações) concluído: model portado (Uuid + Enum→CHECK no SQLite), repository + router DB-backed mantendo auth/caixa-preta/notificações, 9 testes; suite 102 verdes. Documentada a convenção de import relativo de base p/ models fora de `models/`. Próximo: A-4 (Workflows) / A-5 (Agents).
 - **03/06/2026** — Decisão: colunas dedicadas. A-1 (fundação) concluído: migração `012_clients_extend.sql` aplicada em prod (clients com 13 colunas), model + repository `clientes/` + 6 testes; **4 clientes reais seedados em prod**. Rewiring do onboarding adiado para A-8. Suite: 86 verdes, ruff limpo. Prod agora com 28 tabelas + schema clients estendido.
