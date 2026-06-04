@@ -1,43 +1,19 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Toast from '@/components/ui/Toast';
+import {
+  apiAvailable,
+  inviteAdminUser,
+  listAdminUsers,
+  updateAdminUser,
+  type AdminUser,
+} from '@/lib/api';
 
-interface MockUser {
-  uid: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'creator' | 'viewer';
-  is_active: boolean;
-  last_access: string;
+function fmtDate(iso: string | null): string {
+  if (!iso) return '—';
+  return iso.slice(0, 10);
 }
-
-const INITIAL_USERS: MockUser[] = [
-  {
-    uid: '1',
-    name: 'Heitor Miranda',
-    email: 'heitor@suno.com.br',
-    role: 'admin',
-    is_active: true,
-    last_access: '2026-05-26',
-  },
-  {
-    uid: '2',
-    name: 'Ana Silva',
-    email: 'ana@suno.com.br',
-    role: 'creator',
-    is_active: true,
-    last_access: '2026-05-25',
-  },
-  {
-    uid: '3',
-    name: 'Carlos Melo',
-    email: 'carlos@suno.com.br',
-    role: 'viewer',
-    is_active: false,
-    last_access: '2026-05-10',
-  },
-];
 
 const ROLE_COLORS: Record<string, string> = {
   admin: 'var(--sun)',
@@ -50,7 +26,8 @@ type StatusFilter = 'Todos' | 'Ativos' | 'Suspensos';
 const STATUS_FILTERS: StatusFilter[] = ['Todos', 'Ativos', 'Suspensos'];
 
 export default function UsuariosTab() {
-  const [users, setUsers] = useState<MockUser[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Todos');
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -58,39 +35,54 @@ export default function UsuariosTab() {
   const [toast, setToast] = useState<string | null>(null);
   const handleCloseToast = useCallback(() => setToast(null), []);
 
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setUsers(await listAdminUsers());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
   const filteredUsers = users.filter((u) => {
     if (statusFilter === 'Ativos') return u.is_active;
     if (statusFilter === 'Suspensos') return !u.is_active;
     return true;
   });
 
-  const handleInvite = () => {
+  const handleInvite = async () => {
     if (!inviteEmail.trim()) return;
-    const newUser: MockUser = {
-      uid: String(Date.now()),
-      name: inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: inviteRole,
-      is_active: true,
-      last_access: '—',
-    };
-    setUsers((prev) => [...prev, newUser]);
+    const res = await inviteAdminUser(inviteEmail.trim(), inviteRole);
     setInviteEmail('');
     setInviteRole('creator');
     setShowInviteModal(false);
-    setToast('Convite enviado');
+    if (res) {
+      setToast('Convite enviado');
+      await reload();
+    } else {
+      setToast('Falha ao convidar (verifique acesso de admin / API)');
+    }
   };
 
-  const handleSuspend = (uid: string) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.uid === uid ? { ...u, is_active: false } : u)),
-    );
-    setToast('Usuário suspenso');
+  const handleSuspend = async (uid: string) => {
+    const res = await updateAdminUser(uid, { is_active: false });
+    if (res) {
+      setToast('Usuário suspenso');
+      await reload();
+    } else {
+      setToast('Falha ao suspender');
+    }
   };
 
-  const handleRoleChange = (uid: string, role: 'admin' | 'creator' | 'viewer') => {
-    setUsers((prev) => prev.map((u) => (u.uid === uid ? { ...u, role } : u)));
-    setToast('Papel atualizado');
+  const handleRoleChange = async (uid: string, role: 'admin' | 'creator' | 'viewer') => {
+    const res = await updateAdminUser(uid, { role });
+    if (res) {
+      setToast('Papel atualizado');
+      await reload();
+    } else {
+      setToast('Falha ao atualizar papel');
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -194,7 +186,19 @@ export default function UsuariosTab() {
         </div>
 
         {/* Table rows */}
-        {filteredUsers.length === 0 && (
+        {loading && (
+          <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Carregando…</span>
+          </div>
+        )}
+        {!loading && !apiAvailable() && (
+          <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Configure NEXT_PUBLIC_API_URL para gerenciar usuários.
+            </span>
+          </div>
+        )}
+        {!loading && apiAvailable() && filteredUsers.length === 0 && (
           <div style={{ padding: '24px 16px', textAlign: 'center' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Nenhum usuário neste filtro
@@ -225,7 +229,7 @@ export default function UsuariosTab() {
                 color: user.is_active ? 'var(--text-primary)' : 'var(--text-muted)',
               }}
             >
-              {user.name}
+              {user.name || user.email}
             </span>
             <span
               style={{
@@ -277,7 +281,7 @@ export default function UsuariosTab() {
             </span>
 
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              {user.last_access}
+              {fmtDate(user.last_access)}
             </span>
 
             {/* Actions */}
