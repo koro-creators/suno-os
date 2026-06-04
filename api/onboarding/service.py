@@ -236,6 +236,9 @@ async def run_oracle_agent(client_id: str) -> None:
 
     brand_context = client.get("brand_context", "")
     wizard_briefing = client.get("wizard_briefing", "")
+    # RN-033: allowed_domains from oracle_config (set in wizard step 2)
+    oracle_config = client.get("oracle_config") or {}
+    allowed_domains: list[str] = oracle_config.get("allowed_domains") or []
 
     for entity_type in ONTOLOGY_ENTITY_TYPES:
         job["current_entity"] = entity_type
@@ -246,21 +249,21 @@ async def run_oracle_agent(client_id: str) -> None:
         entity = _wiki_entities.get(key)
         if entity:
             try:
-                content = await invoke_oracle(
+                # invoke_oracle now returns (content, provenance) — CA-20
+                content, provenance = await invoke_oracle(
                     client_id=client_id,
                     client_name=client["name"],
                     entity_type=entity_type,
                     brand_context=brand_context,
                     wizard_briefing=wizard_briefing,
+                    allowed_domains=allowed_domains,
                 )
-                provenance_source = "Oráculo Gemini"
             except Exception as exc:
                 logger.warning("Oracle agent: invoke_oracle failed for %s/%s (%s)", client["slug"], entity_type, exc)
                 from .oracle_agent import _fallback_content
                 content = _fallback_content(entity_type, client["name"])
-                provenance_source = "Fallback local"
+                provenance = [{"source_type": "briefing", "reference": "Fallback local", "cited_excerpt": f"Gerado localmente para {entity_type}"}]
 
-            provenance = [{"source": provenance_source, "excerpt": f"Gerado para {entity_type}"}]
             entity["status"] = "generated"
             entity["content"] = content
             entity["provenance"] = provenance
@@ -476,22 +479,22 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
         client_name = client["name"] if client else client_id
         brand_context = client.get("brand_context", "") if client else ""
         wizard_briefing = client.get("wizard_briefing", "") if client else ""
+        oracle_config = (client.get("oracle_config") or {}) if client else {}
+        allowed_domains: list[str] = oracle_config.get("allowed_domains") or []
         try:
-            content = await invoke_oracle(
+            content, provenance = await invoke_oracle(
                 client_id=client_id,
                 client_name=client_name,
                 entity_type=entity_type,
                 brand_context=brand_context,
                 wizard_briefing=wizard_briefing,
+                allowed_domains=allowed_domains,
             )
-            provenance_source = "Oráculo Gemini"
         except Exception as exc:
             logger.warning("Oracle agent: regeneration failed for %s/%s (%s)", client_id, entity_type, exc)
             from .oracle_agent import _fallback_content
             content = _fallback_content(entity_type, client_name)
-            provenance_source = "Fallback local"
-
-        provenance = [{"source": provenance_source, "excerpt": f"Regenerado após rejeição HITL de {entity_type}"}]
+            provenance = [{"source_type": "briefing", "reference": "Fallback local", "cited_excerpt": f"Regenerado localmente para {entity_type}"}]
         entity["status"] = "generated"
         entity["content"] = content
         entity["provenance"] = provenance

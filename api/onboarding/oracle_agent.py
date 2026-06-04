@@ -28,8 +28,10 @@ class OracleState(TypedDict):
     client_name: str
     brand_context: str  # wizard step 2 (contexto de marca)
     wizard_briefing: str  # texto livre do wizard
+    allowed_domains: list[str]  # allow-list from wizard step 2 (RN-033)
     entity_type: str  # which entity to extract
     generated_content: str
+    provenance: list[dict]  # ProvenanceEntry dicts from web search
     error: Optional[str]
 
 
@@ -159,7 +161,7 @@ _ENTITY_PROMPTS: dict[str, str] = {
 }
 
 
-def _build_prompt(state: OracleState) -> str:
+def _build_prompt(state: OracleState, web_context: str = "") -> str:
     entity_type = state["entity_type"]
     client_name = state["client_name"]
     brand_context = state.get("brand_context", "").strip()
@@ -182,12 +184,16 @@ def _build_prompt(state: OracleState) -> str:
     if wizard_briefing:
         parts += ["", "BRIEFING DO WIZARD:", wizard_briefing]
 
+    if web_context:
+        parts += ["", web_context]
+
     parts += [
         "",
         f"TAREFA: {instruction}",
         "",
         "Escreva em português brasileiro, de forma clara e direta. "
-        "Máximo 3 parágrafos. Sem títulos ou bullets — apenas texto corrido.",
+        "Máximo 3 parágrafos. Sem títulos ou bullets — apenas texto corrido."
+        + (" Use as informações das fontes web quando relevantes." if web_context else ""),
     ]
 
     return "\n".join(parts)
@@ -199,39 +205,58 @@ def _build_prompt(state: OracleState) -> str:
 
 
 async def _extract_entities_node(state: OracleState) -> OracleState:
-    """Call Gemini Flash to generate content for the given entity_type."""
+    """
+    Fetch web context from allowed domains, then call Gemini Flash to generate
+    content for the given entity_type.
+
+    CA-20: all web fetches go through allow-list enforcement in web_search.py.
+    """
+    from oracle.web_search import fetch_allowed_domains, format_web_context
+
     llm = _get_llm()
     entity_type = state["entity_type"]
     client_name = state["client_name"]
+    allowed_domains: list[str] = state.get("allowed_domains") or []
+
+    # Fetch web context (allow-list enforced, robots.txt respected)
+    web_entries = await fetch_allowed_domains(allowed_domains, max_per_domain=1)
+    web_context = format_web_context(web_entries)
+    provenance = [e.as_dict() for e in web_entries]
+
+    if web_entries:
+        logger.info(
+            "Oracle agent: fetched %d web sources for %s/%s",
+            len(web_entries), client_name, entity_type,
+        )
 
     if llm is None:
         logger.info("Oracle agent: using local fallback for %s/%s", client_name, entity_type)
         return {
             **state,
             "generated_content": _fallback_content(entity_type, client_name),
+            "provenance": provenance,
             "error": None,
         }
 
     try:
         from langchain_core.messages import HumanMessage
 
-        prompt = _build_prompt(state)
+        prompt = _build_prompt(state, web_context=web_context)
         response = await llm.ainvoke([HumanMessage(content=prompt)])
         content = (response.content or "").strip()
         if not content:
             raise ValueError("Empty response from Gemini")
         logger.info("Oracle agent: Gemini generated content for %s/%s", client_name, entity_type)
-        return {**state, "generated_content": content, "error": None}
+        return {**state, "generated_content": content, "provenance": provenance, "error": None}
     except Exception as exc:
         logger.warning(
             "Oracle agent: Gemini call failed for %s/%s (%s) — using fallback",
-            client_name,
-            entity_type,
-            exc,
+            client_name, entity_type, exc,
         )
         return {
             **state,
             "generated_content": _fallback_content(entity_type, client_name),
+            "provenance": provenance,
             "error": str(exc),
         }
 
@@ -262,16 +287,26 @@ async def invoke_oracle(
     entity_type: str,
     brand_context: str = "",
     wizard_briefing: str = "",
-) -> str:
-    """Invoke the oracle graph for a single entity. Returns generated_content."""
+    allowed_domains: list[str] | None = None,
+) -> tuple[str, list[dict]]:
+    """
+    Invoke the oracle graph for a single entity.
+
+    Returns (generated_content, provenance_list).
+    provenance_list contains ProvenanceEntry dicts from web_search (CA-20).
+    """
     state: OracleState = {
         "client_id": client_id,
         "client_name": client_name,
         "brand_context": brand_context,
         "wizard_briefing": wizard_briefing,
+        "allowed_domains": allowed_domains or [],
         "entity_type": entity_type,
         "generated_content": "",
+        "provenance": [],
         "error": None,
     }
     result = await _oracle_graph.ainvoke(state)
-    return result.get("generated_content") or _fallback_content(entity_type, client_name)
+    content = result.get("generated_content") or _fallback_content(entity_type, client_name)
+    provenance = result.get("provenance") or []
+    return content, provenance
