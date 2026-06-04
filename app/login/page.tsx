@@ -1,9 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, user, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect to home once logged in
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace('/');
+    }
+  }, [user, loading, router]);
 
   return (
     <div

@@ -27,6 +27,9 @@ UserRole = Literal["admin", "creator", "viewer"]
 
 _FIREBASE_ADMIN_AVAILABLE: bool = False
 
+# Emails que sempre recebem acesso admin independente de custom claim Firebase
+_ADMIN_EMAIL_ALLOWLIST: frozenset[str] = frozenset({"luis.felipesouza@rede.ulbra.br"})
+
 try:
     import firebase_admin  # noqa: F401
     from firebase_admin import auth as firebase_auth
@@ -72,7 +75,7 @@ def _require_admin(authorization: str | None = None) -> str | None:
         logger.warning("Firebase token verification error: %s", exc)
         raise HTTPException(status_code=404, detail="Not found")
 
-    if not decoded.get("admin"):
+    if not decoded.get("admin") and decoded.get("email") not in _ADMIN_EMAIL_ALLOWLIST:
         raise HTTPException(status_code=404, detail="Not found")
 
     return decoded["uid"]
@@ -128,8 +131,8 @@ def _sync_users_from_firebase() -> int:
 _users: dict[str, dict] = {
     "uid-1": {
         "uid": "uid-1",
-        "name": "Heitor Miranda",
-        "email": "heitor@suno.com.br",
+        "name": "Heitor Miranda1",
+        "email": "luis.felipesouza@rede.ulbra.br",
         "role": "admin",
         "is_active": True,
         "last_access": "2026-05-26T14:00:00Z",

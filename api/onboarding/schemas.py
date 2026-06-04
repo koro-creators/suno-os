@@ -24,7 +24,7 @@ OntologyEntityType = Literal[
 
 EntityStatus = Literal["pending", "generated", "accepted", "regenerating"]
 EntityBadge = Literal["seed_auto", "hitl", "capture"]
-ClientStatus = Literal["DRAFT", "PRE_ACTIVE", "ACTIVE", "ARCHIVED"]
+ClientStatus = Literal["DRAFT", "PRE_ACTIVE", "ACTIVE", "ARCHIVED", "CANCELLED"]
 JobPhaseStatus = Literal["pending", "running", "done", "error"]
 HITLAction = Literal["accept", "edit_accept", "reject_regenerate"]
 
@@ -63,14 +63,20 @@ class ClientCreateResponse(BaseModel):
     job_id: str
 
 
+class ClientSummary(BaseModel):
+    id: str
+    slug: str
+    name: str
+    color: str
+    status: ClientStatus
+    pre_active_since: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 # ---------------------------------------------------------------------------
 # Onboarding job status (polling)
 # ---------------------------------------------------------------------------
-
-
-class EntityProgress(BaseModel):
-    entity_type: OntologyEntityType
-    status: EntityStatus
 
 
 class OnboardingStatusResponse(BaseModel):
@@ -124,6 +130,22 @@ class ValidateEntityResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Direct wiki edit (JN-15 — PX-07 Sponsor)
+# ---------------------------------------------------------------------------
+
+
+class DirectEditRequest(BaseModel):
+    content: str = Field(..., min_length=1)
+
+
+class DirectEditResponse(BaseModel):
+    entity_type: OntologyEntityType
+    content: str
+    badge: EntityBadge
+    status: EntityStatus
+
+
+# ---------------------------------------------------------------------------
 # Wiki entity
 # ---------------------------------------------------------------------------
 
@@ -150,3 +172,35 @@ class WikiPageResponse(BaseModel):
     client_slug: str
     client_name: str
     entities: list[WikiEntityResponse]
+
+
+# ---------------------------------------------------------------------------
+# Audit log (Admin only)
+# ---------------------------------------------------------------------------
+
+
+class HitlEventResponse(BaseModel):
+    id: str
+    client_id: str
+    entity_type: str
+    action: str
+    before_content: str | None = None
+    after_content: str | None = None
+    user_id: str
+    timestamp_utc: datetime
+
+
+class WikiAuditResponse(BaseModel):
+    client_id: str
+    client_slug: str
+    events: list[HitlEventResponse]
+
+
+# ---------------------------------------------------------------------------
+# Client list response
+# ---------------------------------------------------------------------------
+
+
+class ClientListResponse(BaseModel):
+    items: list[ClientSummary]
+    total: int

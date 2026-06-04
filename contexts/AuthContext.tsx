@@ -11,6 +11,8 @@ import { getFirebase } from '@/lib/firebase';
 
 export type UserRole = 'admin' | 'creator';
 
+const ADMIN_EMAIL_ALLOWLIST = new Set(['luis.felipesouza@rede.ulbra.br']);
+
 interface AuthContextValue {
   user: User | null;
   role: UserRole;
@@ -32,8 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const tokenResult = await u.getIdTokenResult();
-        setRole((tokenResult.claims.role as UserRole) || 'creator');
+        try {
+          const tokenResult = await u.getIdTokenResult();
+          const claimRole = tokenResult.claims.role as UserRole | undefined;
+          const isAllowlisted = u.email ? ADMIN_EMAIL_ALLOWLIST.has(u.email) : false;
+          setRole(claimRole || (isAllowlisted ? 'admin' : 'creator'));
+        } catch {
+          // Token refresh failed — keep user logged in with role based on email allowlist
+          const isAllowlisted = u.email ? ADMIN_EMAIL_ALLOWLIST.has(u.email) : false;
+          setRole(isAllowlisted ? 'admin' : 'creator');
+        }
       } else {
         setRole('creator');
       }
