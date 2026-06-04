@@ -17,7 +17,13 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from sqlalchemy.orm import Session
+
+try:
+    from core.db import get_session
+except ImportError:  # test import root (repo root on sys.path)
+    from api.core.db import get_session
 
 from .schemas import (
     ClientCreate,
@@ -49,12 +55,15 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/clients", response_model=ClientCreateResponse, status_code=201)
-async def create_client_endpoint(data: ClientCreate) -> ClientCreateResponse:
+async def create_client_endpoint(
+    data: ClientCreate,
+    session: Session = Depends(get_session),
+) -> ClientCreateResponse:
     """
     Create a new client in PRE_ACTIVE status.
     Does NOT start the Oráculo job — call /onboarding/start separately.
     """
-    client, job_id = create_client(data.model_dump())
+    client, job_id = create_client(session, data.model_dump())
     return ClientCreateResponse(
         id=client["id"],
         slug=client["slug"],
@@ -73,12 +82,15 @@ async def create_client_endpoint(data: ClientCreate) -> ClientCreateResponse:
     "/clients/{slug}/onboarding/status",
     response_model=OnboardingStatusResponse,
 )
-async def get_onboarding_status_endpoint(slug: str) -> OnboardingStatusResponse:
+async def get_onboarding_status_endpoint(
+    slug: str,
+    session: Session = Depends(get_session),
+) -> OnboardingStatusResponse:
     """
     Poll onboarding job status.
     Frontend polls every 5s (ADR-LOCAL-01).
     """
-    status = get_onboarding_status(slug)
+    status = get_onboarding_status(session, slug)
     return OnboardingStatusResponse(**status)
 
 
@@ -94,18 +106,19 @@ async def get_onboarding_status_endpoint(slug: str) -> OnboardingStatusResponse:
 async def start_onboarding_endpoint(
     slug: str,
     background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
 ) -> StartOnboardingResponse:
     """
     Dispatch the Oráculo stub job as a BackgroundTask.
     Constitution §1.1: never block HTTP waiting for Oráculo.
     ADR-LOCAL-02: FastAPI BackgroundTasks for v1.
     """
-    result = start_onboarding(slug)
+    result = start_onboarding(session, slug)
 
     # Get client_id for the background task
     from .service import get_client_by_slug
 
-    client = get_client_by_slug(slug)
+    client = get_client_by_slug(session, slug)
     if client:
         background_tasks.add_task(run_oracle_agent, client["id"])
         logger.info("Oracle agent job dispatched for client %s", slug)
@@ -127,6 +140,7 @@ async def validate_entity_endpoint(
     entity_type: str,
     data: ValidateEntityRequest,
     background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
 ) -> ValidateEntityResponse:
     """
     HITL gate per entity (constitution §1.3: never batch).
@@ -138,6 +152,7 @@ async def validate_entity_endpoint(
     user_id = "system"
 
     result = validate_entity(
+        session,
         slug=slug,
         entity_type=entity_type,
         action=data.action,
@@ -149,7 +164,7 @@ async def validate_entity_endpoint(
     if data.action == "reject_regenerate":
         from .service import get_client_by_slug
 
-        client = get_client_by_slug(slug)
+        client = get_client_by_slug(session, slug)
         if client:
             background_tasks.add_task(regenerate_entity_stub, client["id"], entity_type)
             logger.info("Regeneration scheduled for %s/%s", slug, entity_type)
@@ -168,6 +183,7 @@ async def validate_entity_endpoint(
 )
 async def get_wiki_endpoint(
     slug: str,
+    session: Session = Depends(get_session),
     include_generated: bool = Query(
         False,
         description=(
@@ -190,7 +206,7 @@ async def get_wiki_endpoint(
 
     TODO: enforce role check from JWT when Firebase auth is wired in.
     """
-    wiki = get_wiki(slug, include_generated=include_generated)
+    wiki = get_wiki(session, slug, include_generated=include_generated)
 
     entities = [
         WikiEntityResponse(
