@@ -1,28 +1,31 @@
 # Pendências — SPEC-015 Oráculo do Cliente (FA-15)
 
 **Referência:** `docs/specs/large/onboarding-oraculo-cliente/`
-**Data:** 2026-06-03
-**Branch:** `oraculo-parte-1`
+**Atualizado:** 2026-06-04
+**Branches:** `oraculo-parte-1` → `oraculo-parte-2` → `oraculo-parte-3`
 
-Estado atual: ~70% funcional em mock-mode, 0% funcional em produção com dados reais.
+Estado atual: ~80% funcional. API real conectada, web search com allow-list implementado.
+
+---
+
+## ✅ RESOLVIDOS
+
+### ~~B1 — Web search com allow-list~~ → **RESOLVIDO** em `oraculo-parte-3`
+**Branch:** `oraculo-parte-3` commit `b0f33d7`
+
+- `api/oracle/web_search.py` criado com allow-list enforcement, robots.txt, detecção de paywall e proveniência rastreável (`source_type`, `reference`, `cited_excerpt`, `retrieved_at`)
+- `oracle_agent.py` integrado: faz web fetch antes de chamar o LLM, contexto web entra no prompt
+- `service.py` passa `oracle_config.allowed_domains` para o agente e salva proveniência real nas entidades
+- **CA-20 agora passa** — nenhum fetch ocorre fora da allow-list
+
+### Chat Lateral (Oráculo sunOS) → **RESOLVIDO** em `oraculo-parte-3`
+- SSE parser corrigido: lê `event:` e `data:` separadamente (API retorna `json.content`, não `json.data.content`)
+- Título: "Oráculo sunOS" com letras OS maiores
+- ChatPanel aparece apenas para usuários logados (`oraculo-parte-2`)
 
 ---
 
 ## 🔴 BLOQUEADORES — Sem isso o Oráculo não funciona de verdade
-
-### B1 — Web search com allow-list não existe
-**Task:** TASK-B02 | **CA:** CA-20 | **Regra:** FR-183, RN-033
-
-O Oráculo configura uma allow-list de domínios no passo 2 do wizard (ex: site oficial + LinkedIn + portais de notícia), mas essa lista **nunca é usada**. A geração de entidades (`oracle_agent.py`) só usa o prompt — não faz nenhuma pesquisa web de verdade.
-
-**O que falta:**
-- Criar `api/oracle/web_search.py` — LangChain tool que:
-  - Verifica domínio contra `oracle_config.allowed_domains` antes de qualquer fetch
-  - Respeita `robots.txt Disallow` (requisito da constitution §3.3)
-  - Retorna `ProvenanceEntry` com URL + trecho citado + `retrieved_at`
-  - Bloqueia paywall e login-required silenciosamente (log, sem erro)
-- Integrar a tool no `entity_generator.py` como fonte de dados
-- Sem isso, **CA-20 nunca passa** e a proveniência de cada claim é mentira
 
 ---
 
@@ -218,22 +221,22 @@ O projeto não tem `node_modules` populado. Nenhum comando Node/npm funciona.
 
 ## Resumo executivo
 
-| Prioridade | Item | Impacto |
-|------------|------|---------|
-| 🔴 B1 | Web search com allow-list | CA-20 nunca passa; proveniência é mentira |
-| 🔴 B2 | LLMGraphTransformer | Violação de ADR-LOCAL-06 / ADR-013 |
-| 🔴 B3 | Guard PRE_ACTIVE em Skills/Workflows | CA-18 viola constitution §1.2 |
-| 🔴 B4 | Auto-save wizard localStorage | CA-02 nunca passa |
-| 🔴 B5 | Slug duplicado retorna 500 | CA-01 nunca passa |
-| 🟡 I1 | Módulo `api/oracle/` separado | Arquitetura incorreta vs. design.md |
-| 🟡 I2 | Validação ≥100 palavras + retry | RF-03 não atendido |
-| 🟡 I3 | `WikiEntityEditor.tsx` separado | design.md §1.2 não atendido |
-| 🟡 I4 | `EntityActionBar.tsx` separado | design.md §1.2 não atendido |
-| 🟡 I5 | Link Wiki na Sidebar | UX: navegação para Wiki inexiste |
-| 🟡 I6 | WizardStep3Drive placeholder | Aguarda SPEC-006 FA-14 |
-| 🟢 P1 | Testes de integração | Sem cobertura automatizada |
-| 🟢 P2 | Alerta Admin 72h | CA-19 não implementado no painel |
-| 🟢 P3/P4 | `npm install` + `tsc --noEmit` | TypeScript não verificado |
+| Prioridade | Item | Status | Impacto |
+|------------|------|--------|---------|
+| ✅ B1 | Web search com allow-list | Resolvido (parte-3) | CA-20 passa, proveniência real |
+| 🔴 B2 | LLMGraphTransformer | Aberto | Violação ADR-LOCAL-06 / ADR-013 |
+| 🔴 B3 | Guard PRE_ACTIVE em Skills/Workflows | Aberto | CA-18 viola constitution §1.2 |
+| 🔴 B4 | Auto-save wizard localStorage | Aberto | CA-02 nunca passa |
+| 🔴 B5 | Slug duplicado retorna 500 | Aberto | CA-01 nunca passa |
+| ✅ I1 | Módulo `api/oracle/` separado | Resolvido (parte-3) | Arquitetura alinhada com design.md |
+| 🟡 I2 | Validação ≥100 palavras + retry | Aberto | RF-03 não atendido |
+| 🟡 I3 | `WikiEntityEditor.tsx` separado | Aberto | design.md §1.2 não atendido |
+| 🟡 I4 | `EntityActionBar.tsx` separado | Aberto | design.md §1.2 não atendido |
+| 🟡 I5 | Link Wiki na Sidebar | Aberto | UX: navegação para Wiki inexiste |
+| 🟡 I6 | WizardStep3Drive placeholder | Aberto | Aguarda SPEC-006 FA-14 |
+| 🟢 P1 | Testes de integração | Aberto | Sem cobertura automatizada |
+| 🟢 P2 | Alerta Admin 72h | Aberto | CA-19 não implementado no painel |
+| 🟢 P3/P4 | `npm install` + `tsc --noEmit` | Aberto | TypeScript não verificado |
 
-**Para ir a piloto com cliente real:** resolver B1, B3, B4, B5 no mínimo.
+**Para ir a piloto com cliente real:** resolver B2, B3, B4, B5 no mínimo.
 B2 (LLMGraphTransformer) pode ficar para pós-piloto se o Gemini raw já gerar conteúdo aceitável.
