@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     # Default model
     DEFAULT_MODEL: str = "gemini-flash"
 
-    # Firebase Auth
-    FIREBASE_PROJECT_ID: str = "toolbox-67a0e"
+    # Firebase Auth — projeto de identidade do sunOS (frontend + backend usam o mesmo)
+    FIREBASE_PROJECT_ID: str = "koro-creators"
     FIREBASE_USE_ADC: bool = True
 
     # GCP
