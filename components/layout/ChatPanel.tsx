@@ -77,11 +77,14 @@ export default function ChatPanel() {
         const parts = buf.split('\n\n');
         buf = parts.pop() ?? '';
         for (const part of parts) {
-          const line = part.split('\n').find((l) => l.startsWith('data: '));
-          if (!line) continue;
+          const lines = part.split('\n');
+          const eventLine = lines.find((l) => l.startsWith('event: '));
+          const dataLine = lines.find((l) => l.startsWith('data: '));
+          if (!dataLine) continue;
+          const eventType = eventLine ? eventLine.slice(7).trim() : 'message';
           try {
-            const json = JSON.parse(line.slice(6));
-            if (json.event === 'text') { full += json.data?.content ?? ''; setStreaming(full); }
+            const json = JSON.parse(dataLine.slice(6));
+            if (eventType === 'text') { full += json.content ?? ''; setStreaming(full); }
           } catch { /* ignore */ }
         }
       }
@@ -178,7 +181,7 @@ export default function ChatPanel() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 12px 12px', borderBottom: '1px solid #263A4D', flexShrink: 0 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#FFC801' }} />
           <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94A3B8', userSelect: 'none' }}>
-            Chat Rápido
+            Oráculo sun<span style={{ fontSize: '0.85rem' }}>OS</span>
           </span>
           <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#22C55E', display: 'inline-block', marginLeft: 'auto' }} />
         </div>
