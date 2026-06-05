@@ -235,7 +235,9 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
     if web_entries:
         logger.info(
             "Oracle agent: fetched %d web sources for %s/%s",
-            len(web_entries), client_name, entity_type,
+            len(web_entries),
+            client_name,
+            entity_type,
         )
 
     if llm is None:
@@ -260,7 +262,9 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
     except Exception as exc:
         logger.warning(
             "Oracle agent: Gemini call failed for %s/%s (%s) — using fallback",
-            client_name, entity_type, exc,
+            client_name,
+            entity_type,
+            exc,
         )
         return {
             **state,

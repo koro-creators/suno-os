@@ -183,9 +183,7 @@ async def db_get_job(client_id: str) -> dict | None:
 
         async with session:
             result = await session.execute(
-                select(OnboardingJob).where(
-                    OnboardingJob.client_id == uuid.UUID(client_id)
-                )
+                select(OnboardingJob).where(OnboardingJob.client_id == uuid.UUID(client_id))
             )
             job = result.scalar_one_or_none()
             return job.as_dict() if job else None

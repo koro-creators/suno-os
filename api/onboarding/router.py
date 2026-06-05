@@ -86,6 +86,7 @@ def _decode_token(authorization: str | None) -> dict:
     token = authorization.removeprefix("Bearer ").strip()
     try:
         from core.firebase import get_firebase_app
+
         app = get_firebase_app()
         return _firebase_auth.verify_id_token(token, app=app)
     except Exception:
