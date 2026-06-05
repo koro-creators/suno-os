@@ -30,9 +30,20 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture
-def client() -> TestClient:
+def client(wf_db) -> TestClient:
+    from api.workflows.router import get_session
+
     app = FastAPI()
     app.include_router(router, prefix="/api/workflows")
+
+    def _override():
+        s = wf_db()
+        try:
+            yield s
+        finally:
+            s.close()
+
+    app.dependency_overrides[get_session] = _override
     return TestClient(app)
 
 
@@ -137,31 +148,36 @@ def test_workflow_step_v2_carries_position_and_merge_policy():
 # ---------------------------------------------------------------------------
 
 
-def test_seed_v1_legacy_has_no_edges_no_positions(seed_workflow_v1_legacy):
-    from api.workflows import router as wf_router
+def _load(wf_db, wf_id: str) -> dict:
+    from api.workflows import repository
 
-    wf = wf_router._workflows[seed_workflow_v1_legacy]
+    s = wf_db()
+    try:
+        return repository.get_workflow(s, wf_id)
+    finally:
+        s.close()
+
+
+def test_seed_v1_legacy_has_no_edges_no_positions(wf_db, seed_workflow_v1_legacy):
+    wf = _load(wf_db, seed_workflow_v1_legacy)
     assert wf["definition"]["metadata"]["canvas_v2_migrated"] is False
     assert wf["edges"] == []
     for step in wf["definition"]["steps"]:
         assert "position_x" not in step
 
 
-def test_seed_v2_linear_has_two_edges(seed_workflow_v2_linear):
-    from api.workflows import router as wf_router
-
-    wf = wf_router._workflows[seed_workflow_v2_linear]
+def test_seed_v2_linear_has_two_edges(wf_db, seed_workflow_v2_linear):
+    wf = _load(wf_db, seed_workflow_v2_linear)
     assert wf["definition"]["metadata"]["canvas_v2_migrated"] is True
     assert len(wf["edges"]) == 2
     assert all(e["source_handle"] == "out" for e in wf["edges"])
 
 
 def test_seed_v2_fanout_merge_has_seven_edges_and_one_merge_step(
+    wf_db,
     seed_workflow_v2_fanout_merge,
 ):
-    from api.workflows import router as wf_router
-
-    wf = wf_router._workflows[seed_workflow_v2_fanout_merge]
+    wf = _load(wf_db, seed_workflow_v2_fanout_merge)
     assert len(wf["edges"]) == 7
     merge_steps = [s for s in wf["definition"]["steps"] if s["type"] == "merge"]
     assert len(merge_steps) == 1

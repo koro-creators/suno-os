@@ -32,9 +32,20 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture
-def client() -> TestClient:
+def client(wf_db) -> TestClient:
+    from api.workflows.router import get_session
+
     app = FastAPI()
     app.include_router(router, prefix="/api/workflows")
+
+    def _override():
+        s = wf_db()
+        try:
+            yield s
+        finally:
+            s.close()
+
+    app.dependency_overrides[get_session] = _override
     return TestClient(app)
 
 
@@ -344,17 +355,27 @@ def test_cycle_edges_returns_offenders():
 # ---------------------------------------------------------------------------
 
 
-def test_migration_v1_to_v2_creates_edges_and_positions(seed_workflow_v1_legacy):
-    from api.workflows import router as wf_router
+def _store_from_db(wf_db, wf_id: str) -> dict:
+    """Carrega o workflow do DB de teste num store {id: dict} para a lógica pura."""
+    from api.workflows import repository
 
+    s = wf_db()
+    try:
+        return {wf_id: repository.get_workflow(s, wf_id)}
+    finally:
+        s.close()
+
+
+def test_migration_v1_to_v2_creates_edges_and_positions(wf_db, seed_workflow_v1_legacy):
     workflow_id = seed_workflow_v1_legacy
-    result = migrate_workflow(workflow_id, wf_router._workflows)
+    store = _store_from_db(wf_db, workflow_id)
+    result = migrate_workflow(workflow_id, store)
 
     assert result.migrated is True
     assert result.edges_created == 2  # s1→s2, s2→s3
     assert result.steps_with_position == 3
 
-    wf = wf_router._workflows[workflow_id]
+    wf = store[workflow_id]
     assert wf["definition"]["metadata"]["canvas_v2_migrated"] is True
     assert all(e["source_handle"] == "out" for e in wf["edges"])
     # Positions populated.
@@ -363,27 +384,25 @@ def test_migration_v1_to_v2_creates_edges_and_positions(seed_workflow_v1_legacy)
         assert "position_y" in step
 
 
-def test_migration_is_idempotent(seed_workflow_v1_legacy):
-    from api.workflows import router as wf_router
-
+def test_migration_is_idempotent(wf_db, seed_workflow_v1_legacy):
     workflow_id = seed_workflow_v1_legacy
-    first = migrate_workflow(workflow_id, wf_router._workflows)
-    second = migrate_workflow(workflow_id, wf_router._workflows)
+    store = _store_from_db(wf_db, workflow_id)
+    first = migrate_workflow(workflow_id, store)
+    second = migrate_workflow(workflow_id, store)
 
     assert first.migrated is True
     assert second.migrated is False
     assert second.skipped_reason == "already_migrated"
     # Edge count unchanged on second invocation.
-    assert len(wf_router._workflows[workflow_id]["edges"]) == 2
+    assert len(store[workflow_id]["edges"]) == 2
 
 
-def test_migration_preserves_legacy_fields_for_retrocompat(seed_workflow_v1_legacy):
+def test_migration_preserves_legacy_fields_for_retrocompat(wf_db, seed_workflow_v1_legacy):
     """Constitution §11: drop happens in a later release, NOT during migration.
     `next_step` survives so a rollback can recompile via v1 fallback."""
-    from api.workflows import router as wf_router
-
-    migrate_workflow(seed_workflow_v1_legacy, wf_router._workflows)
-    wf = wf_router._workflows[seed_workflow_v1_legacy]
+    store = _store_from_db(wf_db, seed_workflow_v1_legacy)
+    migrate_workflow(seed_workflow_v1_legacy, store)
+    wf = store[seed_workflow_v1_legacy]
     by_id = {s["id"]: s for s in wf["definition"]["steps"]}
     assert by_id["s1"].get("next_step") == "s2"
     assert by_id["s2"].get("next_step") == "s3"
@@ -391,10 +410,9 @@ def test_migration_preserves_legacy_fields_for_retrocompat(seed_workflow_v1_lega
 
 def test_migration_condition_steps_emit_then_else():
     """Manually craft a v1 workflow with a condition step, confirm handles."""
-    from api.workflows import router as wf_router
-
     wf_id = "fixture-cond"
-    wf_router._workflows[wf_id] = {
+    store = {}
+    store[wf_id] = {
         "id": wf_id,
         "name": "cond fixture",
         "description": "",
@@ -433,9 +451,9 @@ def test_migration_condition_steps_emit_then_else():
         "updated_by": None,
         "edges": [],
     }
-    result = migrate_workflow(wf_id, wf_router._workflows)
+    result = migrate_workflow(wf_id, store)
     assert result.edges_created == 2
-    handles = sorted(e["source_handle"] for e in wf_router._workflows[wf_id]["edges"])
+    handles = sorted(e["source_handle"] for e in store[wf_id]["edges"])
     assert handles == ["else", "then"]
 
 
