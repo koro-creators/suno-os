@@ -167,14 +167,22 @@ async def logging_middleware(request: Request, call_next):
     return response
 
 
-# CORS — production is handled by Cloud Load Balancer (ADR-001).
-# In DEBUG mode, enable CORS middleware for local frontend development.
-if settings.DEBUG:
-    from fastapi.middleware.cors import CORSMiddleware
+# CORS — habilitado no app para as origens permitidas (ALLOWED_ORIGINS).
+# ADR-001 previa CORS no Load Balancer, mas hoje o frontend chama as URLs
+# *.run.app diretamente (sem LB), então o app precisa emitir os headers.
+# Em dev inclui localhost; em prod, a(s) URL(s) do frontend (set via deploy).
+from fastapi.middleware.cors import CORSMiddleware
 
+_cors_origins = [o.strip() for o in (settings.ALLOWED_ORIGINS or "").split(",") if o.strip()]
+if settings.DEBUG:
+    for _dev in ("http://localhost:3003", "http://localhost:3000"):
+        if _dev not in _cors_origins:
+            _cors_origins.append(_dev)
+
+if _cors_origins:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3003", "http://localhost:3000"],
+        allow_origins=_cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
