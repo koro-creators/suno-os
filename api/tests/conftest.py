@@ -35,18 +35,33 @@ def _now_iso() -> datetime:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
-def reset_workflow_store() -> Iterator[None]:
-    """Reset the in-memory workflow/run/log dicts before each test."""
-    from api.workflows import router as wf_router
+@pytest.fixture
+def wf_db():
+    """SQLite em memória para workflows (A-4) — tabelas + sessionmaker compartilhado
+    entre os seeds e o fixture `client` (mesmo engine por teste)."""
+    from api.models.base import Base
+    from api.models.workflows import StepLog, Workflow, WorkflowEdge, WorkflowRun
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
 
-    wf_router._workflows.clear()
-    wf_router._runs.clear()
-    wf_router._step_logs.clear()
-    yield
-    wf_router._workflows.clear()
-    wf_router._runs.clear()
-    wf_router._step_logs.clear()
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(
+        engine,
+        tables=[
+            Workflow.__table__,
+            WorkflowEdge.__table__,
+            WorkflowRun.__table__,
+            StepLog.__table__,
+        ],
+    )
+    TestSession = sessionmaker(bind=engine)
+    yield TestSession
+    engine.dispose()
 
 
 @pytest.fixture(autouse=True)
@@ -100,12 +115,17 @@ def _base_workflow(name: str, definition: dict[str, Any], canvas_v2: bool) -> di
     }
 
 
-def _install(workflow: dict[str, Any], edges: list[dict[str, Any]] | None = None) -> str:
-    """Insert into the in-memory store and return workflow_id."""
-    from api.workflows import router as wf_router
+def _install(
+    session_factory, workflow: dict[str, Any], edges: list[dict[str, Any]] | None = None
+) -> str:
+    """Persist a workflow dict (+ edges) into the test DB and return workflow_id."""
+    from api.workflows import repository
 
-    workflow.setdefault("edges", edges or [])
-    wf_router._workflows[workflow["id"]] = workflow
+    session = session_factory()
+    try:
+        repository.upsert_from_dict(session, {**workflow, "edges": edges or []})
+    finally:
+        session.close()
     return workflow["id"]
 
 
@@ -115,7 +135,7 @@ def _install(workflow: dict[str, Any], edges: list[dict[str, Any]] | None = None
 
 
 @pytest.fixture
-def seed_workflow_v1_legacy() -> str:
+def seed_workflow_v1_legacy(wf_db) -> str:
     """3-step linear workflow in v1 shape (next_step linkage, no edges/positions).
 
     s1 (tool) → s2 (llm) → s3 (action)
@@ -153,11 +173,11 @@ def seed_workflow_v1_legacy() -> str:
         "max_execution_time": 300,
     }
     wf = _base_workflow("Linear v1 (legacy)", definition, canvas_v2=False)
-    return _install(wf, edges=[])
+    return _install(wf_db, wf, edges=[])
 
 
 @pytest.fixture
-def seed_workflow_v2_linear() -> str:
+def seed_workflow_v2_linear(wf_db) -> str:
     """3-step linear workflow already in v2 shape with positions and edges."""
     steps = [
         {
@@ -210,11 +230,11 @@ def seed_workflow_v2_linear() -> str:
         "max_execution_time": 300,
     }
     wf = _base_workflow("Linear v2", definition, canvas_v2=True)
-    return _install(wf, edges=edges)
+    return _install(wf_db, wf, edges=edges)
 
 
 @pytest.fixture
-def seed_workflow_v2_fanout_merge() -> str:
+def seed_workflow_v2_fanout_merge(wf_db) -> str:
     """Fan-out 1→3 with explicit MergeNode (merge_policy='all').
 
     Layout:
@@ -304,4 +324,4 @@ def seed_workflow_v2_fanout_merge() -> str:
         "max_execution_time": 300,
     }
     wf = _base_workflow("Fan-out + Merge all (v2)", definition, canvas_v2=True)
-    return _install(wf, edges=edges)
+    return _install(wf_db, wf, edges=edges)

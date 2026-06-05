@@ -62,11 +62,14 @@
 - [ ] Decidir: manter fallback ou exigir banco (CC-4)
 - [ ] Testes
 
-### A-4 — Workflows (`workflows`, `workflow_runs`, `workflow_edges`, `step_logs`)
-- [ ] Repository + plugar `api/workflows/router.py` (`_workflows`, `_runs`, `_step_logs`)
-- [ ] Migrar edges (hoje em `workflows/edges.py` sobre o dict)
-- [ ] `workflow-templates.ts` → seed em `workflows` com `is_template=true`
-- [ ] Testes
+### A-4 — Workflows (`workflows`, `workflow_runs`, `workflow_edges`, `step_logs`) ✅ (05/06/2026)
+- [x] Migração `016_workflows_portable.sql` (client_scope TEXT[]→JSONB p/ portabilidade) — **aplicada em prod**
+- [x] Model portável `models/workflows.py` (substitui o órfão `workflows/models.py`, que usava UUID/JSONB/ARRAY nativos)
+- [x] `workflows/repository.py` — converte ORM↔dict (mesmo shape do store), CRUD + runs + step_logs + edges
+- [x] Router reescrito p/ `Depends(get_session)` + repository; **lógica intacta** (validator/migration_v1_v2/auto_layout/edges/compiler operam sobre dict carregado do DB num store temporário, persistido de volta)
+- [x] conftest reescrito: fixture `wf_db` (SQLite compartilhado) + seeds persistem via repository; `client` fixtures com override de get_session; 7 testes que liam `_workflows` direto reescritos p/ DB/store
+- [x] **40 testes canvas verdes** (phase A 12 + phase B 26 + 2 seeds), suite 109; ruff limpo
+- `workflow-templates.ts` (frontend) é concern à parte.
 
 ### A-5 — Agents (`agents`, `agent_runs`, `agent_schedules`) ✅ (05/06/2026)
 - [x] Migração `015_agents_portable.sql` (CHECK triggered_by inclui 'preview'; agent_schedules days_of_week INT[]→JSONB, time_of_day TIME→VARCHAR p/ portabilidade) — **aplicada em prod** (idempotente)
@@ -157,6 +160,7 @@
 - **03/06/2026** — B-0 concluído (`api/core/db.py` compartilhado; `admin/db.py` re-exporta; 22 testes admin verdes). A-1 iniciado: identificado gap de schema em `clients` (campos do onboarding ausentes) — aguardando decisão de schema.
 - **03/06/2026** — A-7 (Reuniões) concluído: model portável, repository + router DB-backed, 7 testes; suite 93 verdes. Bug latente de relationship corrigido.
 - **03/06/2026** — A-9 (Biblioteca) verificado: backend já persiste em `knowledge_documents` (nada a fazer no backend; frontend `biblioteca-docs.ts` é concern à parte). A-10 (Drive) DEFERIDO: é stub pendente de integração real (SPEC-006), não migração. Restantes substanciais: A-8 (Onboarding, async/coupled), Bucket B (skills, integrações, prompts).
+- **05/06/2026** — A-4 (Workflows) concluído: migração 016 em prod (client_scope→JSONB), model portável + repository ORM↔dict, router DB-backed mantendo TODA a lógica de canvas (validator/migration/auto-layout/edges/compiler) intacta, conftest + 38 testes canvas migrados p/ SQLite. **Bucket A 100% concluído.** Resta só o Bucket B (skills/integrações/prompts) e Drive (deferido).
 - **05/06/2026** — A-5 (Agents) concluído: migração 015 em prod (CHECK + portabilidade schedules), models + repository + router/runner/scheduler/preview DB-backed; scheduler carrega do DB no startup; 12 testes; suite 109. Restam: A-4 (Workflows, 38 testes canvas) e Bucket B (skills/integrações/prompts).
 - **04/06/2026** — A-8 (Onboarding/Wiki) concluído: migração 014 em prod (user_id→TEXT), models + repository + service/router DB-backed, tasks async com sessão própria, 7 testes; suite 114. Restantes: Workflows (A-4) e Agents (A-5) — reescrita de suíte; Bucket B — skills/integrações/prompts.
 - **03/06/2026** — B-4 (Notificações) concluído: migração 013 em prod (29 tabelas), model+repository+router DB-backed, helper interno best-effort, 5 testes; suite 107. **Nota de sequenciamento:** Workflows (A-4) e Agents (A-5) têm suítes existentes acopladas ao in-memory (38 testes canvas + test_agents) → exigem reescrita das suítes; tratá-los como esforços dedicados. Demais limpos: onboarding (A-8), biblioteca (A-9), drive (A-10).

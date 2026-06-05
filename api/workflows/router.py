@@ -1,12 +1,26 @@
-"""FastAPI router for Workflow CRUD + execution endpoints."""
+"""FastAPI router for Workflow CRUD + execution endpoints (SPEC-005 / A-4: DB-backed).
+
+A persistência vive em workflows/repository.py. A lógica de canvas (validator,
+migration_v1_v2, auto_layout, edges, compiler) opera sobre DICTS — então este
+router carrega o workflow como dict do DB, roda a lógica num store temporário
+``{id: wf}`` e persiste de volta. Assim a lógica permanece intacta.
+"""
 
 from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
+
+try:
+    from core.db import get_session
+    from workflows import repository
+except ImportError:  # test import root (repo root on sys.path)
+    from api.core.db import get_session
+    from api.workflows import repository
 
 from .schemas import (
     AutoLayoutResponse,
@@ -30,16 +44,9 @@ from .schemas import (
 
 router = APIRouter(tags=["Workflows"])
 
-# ---------------------------------------------------------------------------
-# In-memory store (dev — replace with DB later)
-# ---------------------------------------------------------------------------
-_workflows: dict[str, dict] = {}
-_runs: dict[str, dict] = {}
-_step_logs: dict[str, list] = {}
-
 
 # ---------------------------------------------------------------------------
-# Validation helpers
+# Validation helpers (lógica pura — inalterada)
 # ---------------------------------------------------------------------------
 
 
@@ -57,32 +64,27 @@ def _validate_workflow_steps(workflow_id: str, steps: list[dict]) -> list[str]:
             elif ref_id == workflow_id:
                 errors.append(
                     f"Step '{step.get('name', step.get('id', '?'))}': "
-                    "circular reference \u2014 cannot reference self"
+                    "circular reference — cannot reference self"
                 )
     return errors
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _workflow_to_response(w: dict) -> WorkflowResponse:
-    # Find latest run for this workflow
-    last_run = None
-    wf_runs = [r for r in _runs.values() if r["workflow_id"] == w["id"]]
-    if wf_runs:
-        latest = max(wf_runs, key=lambda r: r["created_at"])
-        last_run = WorkflowRunSummary(
-            run_id=latest["id"],
-            status=latest["status"],
-            completed_at=latest.get("completed_at"),
-        )
+def _last_run_summary(session: Session, workflow_id: str) -> WorkflowRunSummary | None:
+    latest = repository.latest_run(session, workflow_id)
+    if not latest:
+        return None
+    return WorkflowRunSummary(
+        run_id=latest["id"],
+        status=latest["status"],
+        completed_at=latest.get("completed_at"),
+    )
 
+
+def _workflow_to_response(w: dict, last_run: WorkflowRunSummary | None) -> WorkflowResponse:
     return WorkflowResponse(
         id=w["id"],
         name=w["name"],
@@ -98,17 +100,7 @@ def _workflow_to_response(w: dict) -> WorkflowResponse:
     )
 
 
-def _workflow_to_detail(w: dict) -> WorkflowDetailResponse:
-    last_run = None
-    wf_runs = [r for r in _runs.values() if r["workflow_id"] == w["id"]]
-    if wf_runs:
-        latest = max(wf_runs, key=lambda r: r["created_at"])
-        last_run = WorkflowRunSummary(
-            run_id=latest["id"],
-            status=latest["status"],
-            completed_at=latest.get("completed_at"),
-        )
-
+def _workflow_to_detail(w: dict, last_run: WorkflowRunSummary | None) -> WorkflowDetailResponse:
     return WorkflowDetailResponse(
         id=w["id"],
         name=w["name"],
@@ -128,6 +120,13 @@ def _workflow_to_detail(w: dict) -> WorkflowDetailResponse:
     )
 
 
+def _require_workflow(session: Session, workflow_id: str) -> dict:
+    wf = repository.get_workflow(session, workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return wf
+
+
 # ---------------------------------------------------------------------------
 # CRUD endpoints
 # ---------------------------------------------------------------------------
@@ -137,21 +136,20 @@ def _workflow_to_detail(w: dict) -> WorkflowDetailResponse:
 async def list_workflows(
     status: str | None = None,
     creator: str | None = None,
+    session: Session = Depends(get_session),
 ) -> WorkflowListResponse:
     """List all workflows, optionally filtered by status or creator."""
-    items = list(_workflows.values())
-    if status:
-        items = [w for w in items if w["status"] == status]
-    if creator:
-        items = [w for w in items if w["created_by"] == creator]
+    items = repository.list_workflows(session, status=status, created_by=creator)
     return WorkflowListResponse(
-        workflows=[_workflow_to_response(w) for w in items],
+        workflows=[_workflow_to_response(w, _last_run_summary(session, w["id"])) for w in items],
         total=len(items),
     )
 
 
 @router.post("/", status_code=201)
-async def create_workflow(req: WorkflowCreate) -> WorkflowDetailResponse:
+async def create_workflow(
+    req: WorkflowCreate, session: Session = Depends(get_session)
+) -> WorkflowDetailResponse:
     """Create a new workflow. Maximum 20 steps allowed."""
     if len(req.steps) > 20:
         raise HTTPException(status_code=400, detail="Maximum 20 steps per workflow")
@@ -159,14 +157,13 @@ async def create_workflow(req: WorkflowCreate) -> WorkflowDetailResponse:
     now = _now()
     wf_id = str(uuid.uuid4())
 
-    # Validate workflow step references (circular, missing workflow_id)
     step_dicts = [s.model_dump() for s in req.steps]
     step_errors = _validate_workflow_steps(wf_id, step_dicts)
     if step_errors:
         raise HTTPException(status_code=422, detail=step_errors)
 
     definition = {
-        "steps": [s.model_dump() for s in req.steps],
+        "steps": step_dicts,
         "default_model": req.default_model,
         "max_execution_time": req.max_execution_time,
     }
@@ -188,38 +185,31 @@ async def create_workflow(req: WorkflowCreate) -> WorkflowDetailResponse:
         "updated_at": now,
     }
 
-    _workflows[wf_id] = wf
-    return _workflow_to_detail(wf)
+    created = repository.create_workflow(session, wf)
+    return _workflow_to_detail(created, None)
 
 
 @router.get("/{workflow_id}")
-async def get_workflow(workflow_id: str) -> WorkflowDetailResponse:
+async def get_workflow(
+    workflow_id: str, session: Session = Depends(get_session)
+) -> WorkflowDetailResponse:
     """Get a workflow by ID."""
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return _workflow_to_detail(wf)
+    wf = _require_workflow(session, workflow_id)
+    return _workflow_to_detail(wf, _last_run_summary(session, workflow_id))
 
 
 @router.put("/{workflow_id}")
-async def update_workflow(workflow_id: str, req: WorkflowUpdate) -> WorkflowDetailResponse:
-    """Update an existing workflow.
+async def update_workflow(
+    workflow_id: str, req: WorkflowUpdate, session: Session = Depends(get_session)
+) -> WorkflowDetailResponse:
+    """Update an existing workflow (SPEC-005 TASK-B01b: hard validation no PUT)."""
+    wf = _require_workflow(session, workflow_id)
 
-    SPEC-005 TASK-B01b: when steps change, run `hard_validate_for_put` against
-    the *resulting* state. Hard findings (cycle, unauthorized_tool,
-    max_nodes_exceeded, edge_to_nonexistent_handle, no_entry_node) block the
-    save with 400 and a structured payload so the canvas can revert.
-    Soft findings (fan_in_without_merge, merge_with_zero_inputs) do NOT block
-    save — they show up as warnings on POST /validate.
-    """
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-
+    fields: dict = {}
     if req.name is not None:
-        wf["name"] = req.name
+        fields["name"] = req.name
     if req.description is not None:
-        wf["description"] = req.description
+        fields["description"] = req.description
     if req.steps is not None:
         if len(req.steps) > 20:
             raise HTTPException(status_code=400, detail="Maximum 20 steps per workflow")
@@ -229,10 +219,6 @@ async def update_workflow(workflow_id: str, req: WorkflowUpdate) -> WorkflowDeta
             raise HTTPException(status_code=422, detail=step_errors)
         wf["definition"]["steps"] = step_dicts
 
-        # SPEC-005 TASK-B01b: hard validation against the new step set.
-        # Edges aren't part of the PUT body in this endpoint (canvas uses
-        # dedicated /edges endpoints), so we validate against whatever edges
-        # are currently persisted plus the new steps.
         from .validator import hard_validate_for_put
 
         hard_errors = hard_validate_for_put(wf)
@@ -244,40 +230,35 @@ async def update_workflow(workflow_id: str, req: WorkflowUpdate) -> WorkflowDeta
                     "errors": [e.model_dump() for e in hard_errors],
                 },
             )
+        fields["definition"] = wf["definition"]
     if req.schedule is not None:
-        wf["schedule_cron"] = req.schedule.cron
-        wf["schedule_timezone"] = req.schedule.timezone
-        wf["schedule_enabled"] = req.schedule.enabled
+        fields["schedule_cron"] = req.schedule.cron
+        fields["schedule_timezone"] = req.schedule.timezone
+        fields["schedule_enabled"] = req.schedule.enabled
     if req.status is not None:
         if req.status not in ("draft", "active", "paused"):
             raise HTTPException(status_code=400, detail="Invalid status")
-        wf["status"] = req.status
+        fields["status"] = req.status
     if req.client_scope is not None:
-        wf["client_scope"] = req.client_scope
+        fields["client_scope"] = req.client_scope
     if req.default_model is not None:
-        wf["default_model"] = req.default_model
         wf["definition"]["default_model"] = req.default_model
+        fields["default_model"] = req.default_model
+        fields["definition"] = wf["definition"]
     if req.max_execution_time is not None:
-        wf["max_execution_time"] = req.max_execution_time
         wf["definition"]["max_execution_time"] = req.max_execution_time
+        fields["max_execution_time"] = req.max_execution_time
+        fields["definition"] = wf["definition"]
 
-    wf["updated_at"] = _now()
-    return _workflow_to_detail(wf)
+    updated = repository.update_workflow(session, workflow_id, fields)
+    return _workflow_to_detail(updated, _last_run_summary(session, workflow_id))
 
 
 @router.delete("/{workflow_id}", status_code=204)
-async def delete_workflow(workflow_id: str):
-    """Delete a workflow and all associated runs."""
-    if workflow_id not in _workflows:
+async def delete_workflow(workflow_id: str, session: Session = Depends(get_session)):
+    """Delete a workflow and all associated runs (cascade)."""
+    if not repository.delete_workflow(session, workflow_id):
         raise HTTPException(status_code=404, detail="Workflow not found")
-
-    # Remove associated runs and step logs
-    run_ids_to_remove = [r["id"] for r in _runs.values() if r["workflow_id"] == workflow_id]
-    for run_id in run_ids_to_remove:
-        _step_logs.pop(run_id, None)
-        _runs.pop(run_id, None)
-
-    del _workflows[workflow_id]
 
 
 # ---------------------------------------------------------------------------
@@ -289,30 +270,27 @@ async def delete_workflow(workflow_id: str):
 async def run_workflow(
     workflow_id: str,
     req: RunWorkflowRequest = RunWorkflowRequest(),
+    session: Session = Depends(get_session),
 ) -> RunWorkflowResponse:
     """Trigger a new workflow run."""
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
+    wf = _require_workflow(session, workflow_id)
 
     now = _now()
     run_id = str(uuid.uuid4())
-    run = {
-        "id": run_id,
-        "workflow_id": workflow_id,
-        "status": "running",
-        "trigger": "manual",
-        "started_at": now,
-        "completed_at": None,
-        "error": None,
-        "steps_output": {},
-        "checkpoint_data": None,
-        "created_at": now,
-    }
-    _runs[run_id] = run
-    _step_logs[run_id] = []
+    repository.create_run(
+        session,
+        {
+            "id": run_id,
+            "workflow_id": workflow_id,
+            "status": "running",
+            "trigger": "manual",
+            "started_at": now,
+        },
+    )
 
-    # Execute asynchronously via executor (SPEC-005-aware: pass edges if v2).
+    status = "completed"
+    error = None
+    steps_output: dict = {}
     try:
         from .executor import WorkflowExecutor
 
@@ -324,70 +302,24 @@ async def run_workflow(
             overrides=req.input_overrides,
             edges=wf.get("edges"),
         )
-        run["status"] = "completed"
-        run["completed_at"] = _now()
-        run["steps_output"] = result.get("steps_output", {})
-    except Exception as e:
-        run["status"] = "failed"
-        run["completed_at"] = _now()
-        run["error"] = str(e)
+        steps_output = result.get("steps_output", {})
+    except Exception as e:  # noqa: BLE001
+        status = "failed"
+        error = str(e)
 
-    return RunWorkflowResponse(
-        run_id=run_id,
-        status=run["status"],
-        started_at=now,
+    repository.update_run(
+        session,
+        run_id,
+        status=status,
+        completed_at=_now(),
+        steps_output=steps_output,
+        error=error,
     )
 
-
-@router.get("/{workflow_id}/runs")
-async def list_runs(workflow_id: str) -> WorkflowRunListResponse:
-    """List all runs for a workflow."""
-    if workflow_id not in _workflows:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-
-    wf_runs = [r for r in _runs.values() if r["workflow_id"] == workflow_id]
-    wf_runs.sort(key=lambda r: r["created_at"], reverse=True)
-
-    return WorkflowRunListResponse(
-        runs=[
-            WorkflowRunResponse(
-                id=r["id"],
-                workflow_id=r["workflow_id"],
-                status=r["status"],
-                trigger=r["trigger"],
-                started_at=r.get("started_at"),
-                completed_at=r.get("completed_at"),
-                error=r.get("error"),
-                steps_output=r.get("steps_output", {}),
-                step_logs=[
-                    StepLogResponse(
-                        id=sl.get("id", ""),
-                        step_id=sl.get("step_id", ""),
-                        step_name=sl.get("step_name"),
-                        status=sl.get("status", ""),
-                        input=sl.get("input"),
-                        output=sl.get("output"),
-                        error=sl.get("error"),
-                        duration_ms=sl.get("duration_ms"),
-                        started_at=sl.get("started_at"),
-                        completed_at=sl.get("completed_at"),
-                    )
-                    for sl in _step_logs.get(r["id"], [])
-                ],
-            )
-            for r in wf_runs
-        ],
-        total=len(wf_runs),
-    )
+    return RunWorkflowResponse(run_id=run_id, status=status, started_at=now)
 
 
-@router.get("/{workflow_id}/runs/{run_id}")
-async def get_run(workflow_id: str, run_id: str) -> WorkflowRunResponse:
-    """Get details of a specific run."""
-    run = _runs.get(run_id)
-    if not run or run["workflow_id"] != workflow_id:
-        raise HTTPException(status_code=404, detail="Run not found")
-
+def _run_to_response(session: Session, run: dict) -> WorkflowRunResponse:
     return WorkflowRunResponse(
         id=run["id"],
         workflow_id=run["workflow_id"],
@@ -397,22 +329,33 @@ async def get_run(workflow_id: str, run_id: str) -> WorkflowRunResponse:
         completed_at=run.get("completed_at"),
         error=run.get("error"),
         steps_output=run.get("steps_output", {}),
-        step_logs=[
-            StepLogResponse(
-                id=sl.get("id", ""),
-                step_id=sl.get("step_id", ""),
-                step_name=sl.get("step_name"),
-                status=sl.get("status", ""),
-                input=sl.get("input"),
-                output=sl.get("output"),
-                error=sl.get("error"),
-                duration_ms=sl.get("duration_ms"),
-                started_at=sl.get("started_at"),
-                completed_at=sl.get("completed_at"),
-            )
-            for sl in _step_logs.get(run_id, [])
-        ],
+        step_logs=[StepLogResponse(**sl) for sl in repository.list_step_logs(session, run["id"])],
     )
+
+
+@router.get("/{workflow_id}/runs")
+async def list_runs(
+    workflow_id: str, session: Session = Depends(get_session)
+) -> WorkflowRunListResponse:
+    """List all runs for a workflow."""
+    if not repository.workflow_exists(session, workflow_id):
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    runs = repository.list_runs(session, workflow_id)
+    return WorkflowRunListResponse(
+        runs=[_run_to_response(session, r) for r in runs],
+        total=len(runs),
+    )
+
+
+@router.get("/{workflow_id}/runs/{run_id}")
+async def get_run(
+    workflow_id: str, run_id: str, session: Session = Depends(get_session)
+) -> WorkflowRunResponse:
+    """Get details of a specific run."""
+    run = repository.get_run(session, run_id)
+    if not run or run["workflow_id"] != workflow_id:
+        raise HTTPException(status_code=404, detail="Run not found")
+    return _run_to_response(session, run)
 
 
 @router.post("/{workflow_id}/runs/{run_id}/resume")
@@ -420,40 +363,30 @@ async def resume_run(
     workflow_id: str,
     run_id: str,
     req: ResumeRunRequest,
+    session: Session = Depends(get_session),
 ) -> WorkflowRunResponse:
     """Resume a paused run (HITL interrupt/resume)."""
-    run = _runs.get(run_id)
+    run = repository.get_run(session, run_id)
     if not run or run["workflow_id"] != workflow_id:
         raise HTTPException(status_code=404, detail="Run not found")
     if run["status"] != "paused":
         raise HTTPException(status_code=400, detail="Run is not paused")
 
-    # In a real implementation, we would resume the LangGraph checkpoint
-    # with Command(resume={...}). For now, update status.
-    run["status"] = "completed" if req.approved else "failed"
-    run["completed_at"] = _now()
-    if not req.approved:
-        run["error"] = req.feedback or "Rejected during human review"
-
-    return WorkflowRunResponse(
-        id=run["id"],
-        workflow_id=run["workflow_id"],
-        status=run["status"],
-        trigger=run["trigger"],
-        started_at=run.get("started_at"),
-        completed_at=run.get("completed_at"),
-        error=run.get("error"),
-        steps_output=run.get("steps_output", {}),
-        step_logs=[],
+    error = None if req.approved else (req.feedback or "Rejected during human review")
+    run = repository.update_run(
+        session,
+        run_id,
+        status="completed" if req.approved else "failed",
+        completed_at=_now(),
+        error=error,
     )
+    return _run_to_response(session, run)
 
 
 @router.get("/{workflow_id}/runs/{run_id}/stream")
-async def stream_run(workflow_id: str, run_id: str):
+async def stream_run(workflow_id: str, run_id: str, session: Session = Depends(get_session)):
     """Stream workflow execution via SSE."""
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
+    wf = _require_workflow(session, workflow_id)
 
     from .executor import WorkflowExecutor
 
@@ -484,16 +417,11 @@ async def stream_run(workflow_id: str, run_id: str):
 
 
 @router.post("/{workflow_id}/schedule")
-async def create_schedule(workflow_id: str) -> dict:
+async def create_schedule(workflow_id: str, session: Session = Depends(get_session)) -> dict:
     """Create or update a Cloud Scheduler job for this workflow."""
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
+    wf = _require_workflow(session, workflow_id)
     if not wf.get("schedule_cron"):
-        raise HTTPException(
-            status_code=400,
-            detail="Workflow has no schedule configured",
-        )
+        raise HTTPException(status_code=400, detail="Workflow has no schedule configured")
 
     from config import settings
 
@@ -510,17 +438,14 @@ async def create_schedule(workflow_id: str) -> dict:
         timezone=wf.get("schedule_timezone", "America/Sao_Paulo"),
     )
 
-    wf["schedule_enabled"] = True
-    wf["updated_at"] = _now()
+    repository.update_workflow(session, workflow_id, {"schedule_enabled": True})
     return result
 
 
 @router.delete("/{workflow_id}/schedule")
-async def delete_schedule(workflow_id: str) -> dict:
+async def delete_schedule(workflow_id: str, session: Session = Depends(get_session)) -> dict:
     """Delete the Cloud Scheduler job for this workflow."""
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
+    _require_workflow(session, workflow_id)
 
     from config import settings
 
@@ -532,8 +457,7 @@ async def delete_schedule(workflow_id: str) -> dict:
     )
     await scheduler.delete(workflow_id=workflow_id)
 
-    wf["schedule_enabled"] = False
-    wf["updated_at"] = _now()
+    repository.update_workflow(session, workflow_id, {"schedule_enabled": False})
     return {"deleted": True, "workflow_id": workflow_id}
 
 
@@ -686,88 +610,78 @@ async def list_templates() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# SPEC-005 (Workflow Builder Canvas) — endpoint skeletons
-# Phase A delivers these as 501 Not Implemented; Phase B fills in real bodies.
-# Each handler asserts the workflow exists (404 caixa-preta) before bowing out
-# with 501, so the contract surface is real even though behaviour is stubbed.
+# SPEC-005 (Workflow Builder Canvas) — edges / auto-layout / validate / migrate
+# A lógica opera sobre dicts; carregamos do DB, rodamos num store temporário e
+# persistimos de volta.
 # ---------------------------------------------------------------------------
 
 
-def _require_workflow(workflow_id: str) -> dict:
-    wf = _workflows.get(workflow_id)
-    if not wf:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    return wf
-
-
 @router.get("/{workflow_id}/edges")
-async def get_workflow_edges(workflow_id: str) -> list[WorkflowEdge]:
+async def get_workflow_edges(
+    workflow_id: str, session: Session = Depends(get_session)
+) -> list[WorkflowEdge]:
     """List edges of a workflow (SPEC-005 TASK-B01)."""
-    _require_workflow(workflow_id)
-    from .edges import get_edges as _get_edges
-
-    raw = _get_edges(workflow_id, _workflows)
-    return [WorkflowEdge(**e) for e in raw]
+    wf = _require_workflow(session, workflow_id)
+    return [WorkflowEdge(**e) for e in wf.get("edges", [])]
 
 
 @router.post("/{workflow_id}/edges")
-async def set_workflow_edges(workflow_id: str, req: SetEdgesRequest) -> list[WorkflowEdge]:
-    """Bulk-replace edges of a workflow (SPEC-005 TASK-B01).
-
-    Validation is structural (handles, step refs, uniqueness). Graph-shape
-    validation (cycles, fan-in without merge, …) lives in `validator.py` and
-    is enforced on PUT /api/workflows/{id} (TASK-B01b).
-    """
-    _require_workflow(workflow_id)
+async def set_workflow_edges(
+    workflow_id: str, req: SetEdgesRequest, session: Session = Depends(get_session)
+) -> list[WorkflowEdge]:
+    """Bulk-replace edges of a workflow (SPEC-005 TASK-B01)."""
+    wf = _require_workflow(session, workflow_id)
     from .edges import EdgeValidationError
     from .edges import set_edges as _set_edges
 
+    store = {workflow_id: wf}
     try:
-        persisted = _set_edges(workflow_id, req.edges, _workflows)
+        persisted = _set_edges(workflow_id, req.edges, store)
     except EdgeValidationError as err:
         raise HTTPException(
             status_code=400,
             detail={"error": str(err), "edge_index": err.edge_index},
         ) from err
 
-    # Bump updated_at so concurrent-edit banner (FR-WBC-13) reflects the change.
-    _workflows[workflow_id]["updated_at"] = _now()
+    repository.replace_edges(session, workflow_id, persisted)
+    repository.touch(session, workflow_id)
     return [WorkflowEdge(**e) for e in persisted]
 
 
 @router.delete("/{workflow_id}/edges/{edge_id}", status_code=204)
-async def delete_workflow_edge(workflow_id: str, edge_id: str) -> None:
+async def delete_workflow_edge(
+    workflow_id: str, edge_id: str, session: Session = Depends(get_session)
+) -> None:
     """Delete a single edge by ID (SPEC-005 TASK-B01)."""
-    _require_workflow(workflow_id)
+    wf = _require_workflow(session, workflow_id)
     from .edges import delete_edge as _delete_edge
 
-    removed = _delete_edge(workflow_id, edge_id, _workflows)
+    store = {workflow_id: wf}
+    removed = _delete_edge(workflow_id, edge_id, store)
     if not removed:
         raise HTTPException(status_code=404, detail="Edge not found")
-    _workflows[workflow_id]["updated_at"] = _now()
+    repository.replace_edges(session, workflow_id, store[workflow_id]["edges"])
+    repository.touch(session, workflow_id)
 
 
 @router.post("/{workflow_id}/auto-layout")
-async def auto_layout_workflow(workflow_id: str) -> AutoLayoutResponse:
+async def auto_layout_workflow(
+    workflow_id: str, session: Session = Depends(get_session)
+) -> AutoLayoutResponse:
     """Compute a server-side layered layout for the workflow graph (TASK-B02)."""
-    wf = _require_workflow(workflow_id)
+    wf = _require_workflow(session, workflow_id)
     from .auto_layout import layered_layout
 
-    positions = layered_layout(
-        wf["definition"].get("steps", []),
-        wf.get("edges", []),
-    )
+    positions = layered_layout(wf["definition"].get("steps", []), wf.get("edges", []))
     return AutoLayoutResponse(positions=positions)
 
 
 @router.post("/{workflow_id}/validate")
-async def validate_workflow(workflow_id: str) -> ValidateWorkflowResponse:
-    """Validate the workflow graph (TASK-B03).
-
-    Returns hard findings as `errors` and soft findings as `warnings` so the
-    canvas can render them differently (errors block run; warnings hint).
-    """
-    wf = _require_workflow(workflow_id)
+async def validate_workflow(
+    workflow_id: str, session: Session = Depends(get_session)
+) -> ValidateWorkflowResponse:
+    """Validate the workflow graph (TASK-B03)."""
+    wf = _require_workflow(session, workflow_id)
     from .validator import validate
 
     errors, warnings = validate(wf)
@@ -775,14 +689,19 @@ async def validate_workflow(workflow_id: str) -> ValidateWorkflowResponse:
 
 
 @router.post("/{workflow_id}/migrate-v2")
-async def migrate_workflow_v2(workflow_id: str) -> MigrateV2Response:
+async def migrate_workflow_v2(
+    workflow_id: str, session: Session = Depends(get_session)
+) -> MigrateV2Response:
     """Idempotently migrate a v1 workflow to the canvas v2 format (TASK-B06)."""
-    _require_workflow(workflow_id)
+    wf = _require_workflow(session, workflow_id)
     from .migration_v1_v2 import migrate_workflow
 
-    result = migrate_workflow(workflow_id, _workflows)
+    store = {workflow_id: wf}
+    result = migrate_workflow(workflow_id, store)
     if result.migrated:
-        _workflows[workflow_id]["updated_at"] = _now()
+        repository.save_definition(session, workflow_id, store[workflow_id]["definition"])
+        repository.replace_edges(session, workflow_id, store[workflow_id].get("edges", []))
+        repository.touch(session, workflow_id)
     return MigrateV2Response(
         migrated=result.migrated,
         edges_created=result.edges_created,
