@@ -140,10 +140,11 @@ def _sync_users_from_firebase(session: Session) -> int:
 
 
 # ---------------------------------------------------------------------------
-# In-memory stores (Fase A) — apenas integrations + skill defaults.
-# Users e audit foram promovidos para o Postgres (SPEC-022 Fase B):
-#   - users  → tabela users        (011_users.sql,  models/user.py)
-#   - audit  → tabela audit_events (009_admin_panel.sql, models/audit.py)
+# In-memory store (Fase A) — apenas integrations (chaves de API; persistência
+# real exige criptografia/KMS — ver Bucket B). Demais já no Postgres:
+#   - users          → users           (011_users.sql)
+#   - audit          → audit_events    (009_admin_panel.sql)
+#   - skill defaults → skill_defaults  (017_skill_defaults.sql)
 # ---------------------------------------------------------------------------
 
 _integrations: dict[str, dict] = {
@@ -160,33 +161,6 @@ _integrations: dict[str, dict] = {
         "description": "Chave de API da OpenAI (GPT-4o, DALL-E)",
         "configured": False,
         "value_masked": None,
-    },
-}
-
-_skill_defaults: dict[str, dict] = {
-    "copy-social": {
-        "skill_slug": "copy-social",
-        "skill_name": "Copy Social",
-        "model": "gemini-2.5-flash",
-        "temperature": 0.7,
-        "max_tokens": 2048,
-        "updated_at": "2026-05-26T10:00:00Z",
-    },
-    "plano-de-midia": {
-        "skill_slug": "plano-de-midia",
-        "skill_name": "Plano de Mídia",
-        "model": "gemini-2.5-flash",
-        "temperature": 0.3,
-        "max_tokens": 4096,
-        "updated_at": "2026-05-26T10:00:00Z",
-    },
-    "briefing": {
-        "skill_slug": "briefing",
-        "skill_name": "Briefing",
-        "model": "gpt-4o",
-        "temperature": 0.5,
-        "max_tokens": 2048,
-        "updated_at": "2026-05-26T10:00:00Z",
     },
 }
 
@@ -342,7 +316,7 @@ async def get_skill_defaults(
     session: Session = Depends(get_session),
 ) -> list[dict]:
     _require_admin(session, authorization)
-    return list(_skill_defaults.values())
+    return repository.list_skill_defaults(session)
 
 
 @router.put("/skills/defaults/{skill_slug}")
@@ -353,16 +327,15 @@ async def update_skill_default(
     session: Session = Depends(get_session),
 ) -> dict:
     actor = _require_admin(session, authorization)
-    if skill_slug not in _skill_defaults:
-        raise HTTPException(status_code=404, detail="Not found")
-    _skill_defaults[skill_slug].update(
-        {
-            "model": data.model,
-            "temperature": data.temperature,
-            "max_tokens": data.max_tokens,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        }
+    updated = repository.update_skill_default(
+        session,
+        skill_slug,
+        model=data.model,
+        temperature=data.temperature,
+        max_tokens=data.max_tokens,
     )
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Not found")
     repository.record_audit(
         session,
         actor_uid=actor,
@@ -372,7 +345,7 @@ async def update_skill_default(
         resource_id=skill_slug,
         detail={"slug": skill_slug, "model": data.model},
     )
-    return _skill_defaults[skill_slug]
+    return updated
 
 
 # ---------------------------------------------------------------------------

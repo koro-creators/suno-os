@@ -14,9 +14,11 @@ from sqlalchemy.orm import Session
 
 try:
     from models.audit import AuditEvent
+    from models.skill_default import SkillDefault
     from models.user import User
 except ImportError:  # test import root (repo root on sys.path)
     from api.models.audit import AuditEvent
+    from api.models.skill_default import SkillDefault
     from api.models.user import User
 
 # ---------------------------------------------------------------------------
@@ -141,6 +143,25 @@ def record_audit(
         )
     )
     session.commit()
+
+
+def list_skill_defaults(session: Session) -> list[dict]:
+    rows = session.query(SkillDefault).order_by(SkillDefault.skill_slug).all()
+    return [s.to_dict() for s in rows]
+
+
+def update_skill_default(
+    session: Session, skill_slug: str, *, model: str, temperature: float, max_tokens: int
+) -> dict | None:
+    sd = session.get(SkillDefault, skill_slug)
+    if sd is None:
+        return None
+    sd.model = model
+    sd.temperature = temperature
+    sd.max_tokens = max_tokens
+    session.commit()
+    session.refresh(sd)
+    return sd.to_dict()
 
 
 def list_audit(
