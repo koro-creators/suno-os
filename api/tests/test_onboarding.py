@@ -98,7 +98,7 @@ def test_validate_pending_entity_409(ctx):
     client, _ = ctx
     _create(client)
     # entidade ainda 'pending' (Oráculo não rodou) → 409
-    resp = client.post("/api/clients/cogna/entities/Persona/validate", json={"action": "accept"})
+    resp = client.post("/api/clients/cogna/entities/Personas-Alvo/validate", json={"action": "accept"})
     assert resp.status_code == 409
 
 
@@ -124,8 +124,8 @@ def test_edit_accept_sets_hitl_badge(ctx):
     _create(client)
     _mark_all_generated(TestSession, "cogna")
     resp = client.post(
-        "/api/clients/cogna/entities/Persona/validate",
-        json={"action": "edit_accept", "edited_content": "Persona editada"},
+        "/api/clients/cogna/entities/Personas-Alvo/validate",
+        json={"action": "edit_accept", "edited_content": "Personas-Alvo editada"},
     ).json()
     assert resp["status"] == "accepted"
     assert resp["badge"] == "hitl"
@@ -135,11 +135,11 @@ def test_wiki_returns_only_accepted_by_default(ctx):
     client, TestSession = ctx
     _create(client)
     _mark_all_generated(TestSession, "cogna")
-    client.post("/api/clients/cogna/entities/Persona/validate", json={"action": "accept"})
+    client.post("/api/clients/cogna/entities/Personas-Alvo/validate", json={"action": "accept"})
 
     default = client.get("/api/clients/cogna/wiki").json()
     assert len(default["entities"]) == 1
-    assert default["entities"][0]["entity_type"] == "Persona"
+    assert default["entities"][0]["entity_type"] == "Personas-Alvo"
 
     full = client.get("/api/clients/cogna/wiki?include_generated=true").json()
     assert len(full["entities"]) == 6
