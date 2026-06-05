@@ -42,35 +42,40 @@ class OracleState(TypedDict):
 _FALLBACK_TEMPLATES: dict[str, str] = {
     "Perfil do Cliente": (
         "{name} é uma organização com atuação consolidada em seu setor, "
-        "reconhecida pela consistência de entrega e pelo relacionamento próximo com clientes e parceiros. "
-        "Seu perfil combina expertise técnica com comunicação acessível, posicionando-se como referência em sua área."
+        "reconhecida pela consistência de entrega e pelo relacionamento próximo "
+        "com clientes e parceiros. Seu perfil combina expertise técnica com "
+        "comunicação acessível, posicionando-se como referência em sua área."
     ),
     "Mercado e Setor": (
-        "O mercado em que {name} atua é dinâmico e competitivo, com tendências de consolidação "
-        "e crescente digitalização dos processos. "
-        "O setor apresenta oportunidades relevantes para marcas que souberem combinar credibilidade, "
+        "O mercado em que {name} atua é dinâmico e competitivo, com tendências "
+        "de consolidação e crescente digitalização dos processos. O setor apresenta "
+        "oportunidades relevantes para marcas que souberem combinar credibilidade, "
         "agilidade e presença digital consistente."
     ),
     "Concorrentes Diretos": (
-        "{name} compete com players estabelecidos que disputam atenção por preço ou volume. "
-        "O diferencial competitivo da marca está na profundidade de conteúdo e na curadoria da experiência, "
-        "criando uma barreira difícil de replicar apenas com escala ou commoditização."
+        "{name} compete com players estabelecidos que disputam atenção por preço "
+        "ou volume. O diferencial competitivo da marca está na profundidade de "
+        "conteúdo e na curadoria da experiência, criando uma barreira difícil de "
+        "replicar apenas com escala ou commoditização."
     ),
     "Personas-Alvo": (
-        "O público principal de {name} é composto por profissionais e tomadores de decisão "
-        "que valorizam qualidade, confiabilidade e resultados mensuráveis. "
-        "São pessoas conectadas, exigentes e dispostas a investir em soluções que agreguem valor real à sua rotina e negócio."
+        "O público principal de {name} é composto por profissionais e tomadores "
+        "de decisão que valorizam qualidade, confiabilidade e resultados mensuráveis. "
+        "São pessoas conectadas, exigentes e dispostas a investir em soluções que "
+        "agreguem valor real à sua rotina e negócio."
     ),
     "Histórico de Campanhas": (
-        "{name} possui histórico de comunicação focado em construção de autoridade e geração de demanda. "
-        "As campanhas anteriores priorizaram conteúdo educativo, cases de sucesso e presença em canais digitais relevantes "
-        "para o público-alvo, com resultados consistentes de engajamento e conversão."
+        "{name} possui histórico de comunicação focado em construção de autoridade "
+        "e geração de demanda. As campanhas anteriores priorizaram conteúdo educativo, "
+        "cases de sucesso e presença em canais digitais relevantes para o público-alvo, "
+        "com resultados consistentes de engajamento e conversão."
     ),
     "Restrições Legais e Contratuais": (
         "A comunicação de {name} deve observar as diretrizes regulatórias do setor, "
-        "evitando afirmações não comprovadas, comparações diretas com concorrentes sem embasamento e "
-        "promessas de resultado que possam configurar publicidade enganosa. "
-        "Todo conteúdo deve estar alinhado com as políticas internas de compliance e comunicação institucional."
+        "evitando afirmações não comprovadas, comparações diretas com concorrentes "
+        "sem embasamento e promessas de resultado que possam configurar publicidade "
+        "enganosa. Todo conteúdo deve estar alinhado com as políticas internas de "
+        "compliance e comunicação institucional."
     ),
 }
 
@@ -145,8 +150,8 @@ _ENTITY_PROMPTS: dict[str, str] = {
     "Personas-Alvo": (
         "Descreva as personas-alvo desta organização. "
         "Para cada persona: perfil demográfico e profissional, comportamentos, "
-        "dores e desafios, motivações de compra, canais preferidos e como a organização resolve seus problemas. "
-        "Mínimo 100 palavras."
+        "dores e desafios, motivações de compra, canais preferidos e como a "
+        "organização resolve seus problemas. Mínimo 100 palavras."
     ),
     "Histórico de Campanhas": (
         "Descreva o histórico de campanhas e comunicação desta organização. "
@@ -156,9 +161,10 @@ _ENTITY_PROMPTS: dict[str, str] = {
         "Mínimo 100 palavras."
     ),
     "Restrições Legais e Contratuais": (
-        "Liste as restrições legais, regulatórias e contratuais que impactam a comunicação desta organização. "
-        "Inclua: restrições do setor regulado, claims proibidos ou que exigem comprovação, "
-        "obrigações de disclaimer, políticas internas de compliance e quaisquer limitações contratuais. "
+        "Liste as restrições legais, regulatórias e contratuais que impactam "
+        "a comunicação desta organização. Inclua: restrições do setor regulado, "
+        "claims proibidos ou que exigem comprovação, obrigações de disclaimer, "
+        "políticas internas de compliance e quaisquer limitações contratuais. "
         "Mínimo 100 palavras."
     ),
 }

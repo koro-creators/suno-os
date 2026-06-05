@@ -19,7 +19,7 @@ import re
 import urllib.robotparser
 from datetime import datetime, timezone
 from typing import Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 

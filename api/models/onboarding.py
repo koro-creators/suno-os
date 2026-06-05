@@ -21,7 +21,9 @@ def _now() -> datetime:
 
 class WikiEntity(Base):
     __tablename__ = "wiki_entities"
-    __table_args__ = (UniqueConstraint("client_id", "entity_type", name="wiki_entities_client_type_uc"),)
+    __table_args__ = (
+        UniqueConstraint("client_id", "entity_type", name="wiki_entities_client_type_uc"),
+    )
 
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     client_id = Column(Uuid, nullable=False, index=True)

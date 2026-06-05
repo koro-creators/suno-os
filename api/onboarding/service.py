@@ -365,7 +365,9 @@ def add_reunion_context_to_oraculo(
         new_content = (entity.content or "") + f"\n\n[Reunião {meeting_id}]:\n{reunion_text}"
         repository.update_entity(session, entity, content=new_content)
         logger.info(
-            "FA-15: reunion %s context added to Histórico de Campanhas for client %s", meeting_id, client_id
+            "FA-15: reunion %s context added to Histórico de Campanhas for client %s",
+            meeting_id,
+            client_id,
         )
     except Exception as exc:  # noqa: BLE001 — best-effort
         logger.warning("FA-15: failed to add reunion context (non-fatal): %s", exc)
