@@ -41,9 +41,9 @@ services:
       # Dentro da rede do compose o host do banco é o nome do serviço "postgres"
       DATABASE_URL: postgresql+asyncpg://sunos:sunos_dev_pass@postgres:5432/sunos_db
       ALLOWED_ORIGINS: http://localhost:3003,http://localhost:3000
-      # Firebase/MLflow são inicializados de forma tolerante (try/except) e
-      # podem ficar vazios em dev. Preencha via .env se precisar.
-      FIREBASE_USE_ADC: "false"
+      # Firebase: FIREBASE_PROJECT_ID e FIREBASE_USE_ADC vêm do api/.env
+      # FIREBASE_USE_ADC=true → inicializa sem ADC (só projectId) — suficiente
+      # para verificar tokens JWT em dev sem precisar de gcloud credentials.
     env_file:
       - ./api/.env
     volumes:

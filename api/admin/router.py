@@ -81,6 +81,9 @@ def _require_admin(session: Session, authorization: str | None = None) -> str | 
     ):
         raise HTTPException(status_code=404, detail="Not found")
     except Exception as exc:
+        if "credentials" in str(exc).lower():
+            logger.warning("Firebase credentials not available — mock mode: %s", exc)
+            return None
         logger.warning("Firebase token verification error: %s", exc)
         raise HTTPException(status_code=404, detail="Not found")
 
