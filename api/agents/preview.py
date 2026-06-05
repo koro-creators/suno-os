@@ -1,40 +1,40 @@
-"""Preview runs — sandbox execution with in-memory TTL (1h).
+"""Preview runs — sandbox (triggered_by='preview'). DB-backed (A-5).
 
-Cleanup task in main.py lifespan (TASK-C12).
+Preview runs ficam na mesma tabela agent_runs com triggered_by='preview'.
+Cleanup por TTL roda no lifespan (main.py) e abre a própria sessão.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from .runner import _runs, create_run
+from sqlalchemy.orm import Session
+
+try:
+    from agents import repository
+    from core.db import _get_sessionmaker
+except ImportError:  # test import root
+    from api.agents import repository
+    from api.core.db import _get_sessionmaker
 
 PREVIEW_TTL_HOURS = 1
 
-_preview_run_ids: set[str] = set()
 
-
-def create_preview_run(agent_id: str, input_text: str) -> dict:
-    """Create a preview run with a 1-hour TTL."""
-    run = create_run(agent_id, triggered_by="preview", input_text=input_text)
-    _preview_run_ids.add(run["id"])
-    run["expires_at"] = (
-        datetime.now(timezone.utc) + timedelta(hours=PREVIEW_TTL_HOURS)
-    ).isoformat()
-    return run
+def create_preview_run(session: Session, agent_id: str, input_text: str) -> dict:
+    """Cria um preview run (TTL conceitual de 1h; limpeza por cleanup_expired_previews)."""
+    return repository.create_run(
+        session, agent_id=agent_id, triggered_by="preview", input_text=input_text
+    )
 
 
 def cleanup_expired_previews() -> int:
-    """Delete preview runs past their TTL. Returns count deleted."""
-    now = datetime.now(timezone.utc)
-    expired = [
-        rid
-        for rid in list(_preview_run_ids)
-        if rid in _runs
-        and "expires_at" in _runs[rid]
-        and datetime.fromisoformat(_runs[rid]["expires_at"]) < now
-    ]
-    for rid in expired:
-        _runs.pop(rid, None)
-        _preview_run_ids.discard(rid)
-    return len(expired)
+    """Remove preview runs além do TTL. Abre a própria sessão (chamado no lifespan)."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=PREVIEW_TTL_HOURS)
+    try:
+        session = _get_sessionmaker()()
+    except Exception:
+        return 0
+    try:
+        return repository.delete_expired_previews(session, cutoff)
+    finally:
+        session.close()

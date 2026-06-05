@@ -68,10 +68,13 @@
 - [ ] `workflow-templates.ts` → seed em `workflows` com `is_template=true`
 - [ ] Testes
 
-### A-5 — Agents (`agents`, `agent_runs`, `agent_schedules`, `agent_*`)
-- [ ] Repository + plugar `api/agents/router.py` + `runner.py` + `scheduler.py`
-- [ ] `agents-admin.ts` deixa de ser source
-- [ ] Testes
+### A-5 — Agents (`agents`, `agent_runs`, `agent_schedules`) ✅ (05/06/2026)
+- [x] Migração `015_agents_portable.sql` (CHECK triggered_by inclui 'preview'; agent_schedules days_of_week INT[]→JSONB, time_of_day TIME→VARCHAR p/ portabilidade) — **aplicada em prod** (idempotente)
+- [x] Models `models/agents.py` (Agent, AgentRun, AgentSchedule) — portáveis
+- [x] `agents/repository.py` (CRUD + runs + schedules); `last_run_at` derivado de agent_runs
+- [x] Router/runner/preview/scheduler reescritos: endpoints com `Depends(get_session)`; `execute_run` (BackgroundTask) abre sessão própria best-effort; **scheduler carrega do DB no startup** (schedules sobrevivem a restart); preview runs em agent_runs (triggered_by='preview')
+- [x] 12 testes SQLite (CRUD/run/runs/schedule/scheduler); suite 109 verde; ruff limpo
+- Tabelas-filhas (permissions/skills/app/memory) seguem **órfãs** (sem CRUD ainda). `agents-admin.ts` (frontend) é concern à parte.
 
 ### A-6 — Aprovações (`approval_submissions`, `approval_events`) ✅ (03/06/2026)
 - [x] Model portado (Uuid genérico; Enum do SQLAlchemy degrada p/ VARCHAR+CHECK no SQLite)
@@ -154,6 +157,7 @@
 - **03/06/2026** — B-0 concluído (`api/core/db.py` compartilhado; `admin/db.py` re-exporta; 22 testes admin verdes). A-1 iniciado: identificado gap de schema em `clients` (campos do onboarding ausentes) — aguardando decisão de schema.
 - **03/06/2026** — A-7 (Reuniões) concluído: model portável, repository + router DB-backed, 7 testes; suite 93 verdes. Bug latente de relationship corrigido.
 - **03/06/2026** — A-9 (Biblioteca) verificado: backend já persiste em `knowledge_documents` (nada a fazer no backend; frontend `biblioteca-docs.ts` é concern à parte). A-10 (Drive) DEFERIDO: é stub pendente de integração real (SPEC-006), não migração. Restantes substanciais: A-8 (Onboarding, async/coupled), Bucket B (skills, integrações, prompts).
+- **05/06/2026** — A-5 (Agents) concluído: migração 015 em prod (CHECK + portabilidade schedules), models + repository + router/runner/scheduler/preview DB-backed; scheduler carrega do DB no startup; 12 testes; suite 109. Restam: A-4 (Workflows, 38 testes canvas) e Bucket B (skills/integrações/prompts).
 - **04/06/2026** — A-8 (Onboarding/Wiki) concluído: migração 014 em prod (user_id→TEXT), models + repository + service/router DB-backed, tasks async com sessão própria, 7 testes; suite 114. Restantes: Workflows (A-4) e Agents (A-5) — reescrita de suíte; Bucket B — skills/integrações/prompts.
 - **03/06/2026** — B-4 (Notificações) concluído: migração 013 em prod (29 tabelas), model+repository+router DB-backed, helper interno best-effort, 5 testes; suite 107. **Nota de sequenciamento:** Workflows (A-4) e Agents (A-5) têm suítes existentes acopladas ao in-memory (38 testes canvas + test_agents) → exigem reescrita das suítes; tratá-los como esforços dedicados. Demais limpos: onboarding (A-8), biblioteca (A-9), drive (A-10).
 - **03/06/2026** — A-6 (Aprovações) concluído: model portado (Uuid + Enum→CHECK no SQLite), repository + router DB-backed mantendo auth/caixa-preta/notificações, 9 testes; suite 102 verdes. Documentada a convenção de import relativo de base p/ models fora de `models/`. Próximo: A-4 (Workflows) / A-5 (Agents).
