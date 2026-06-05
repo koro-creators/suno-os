@@ -118,11 +118,12 @@
 ### B-0 — Extrair `get_session` compartilhado ✅ (03/06/2026)
 - [x] Criar `api/core/db.py` reaproveitável; `admin/db.py` re-exporta. Testes admin verdes (22).
 
-### B-1 — Skills (`skills` + defaults)
-- [ ] Migração `012_skills.sql` (skills admin: slug, name, type, status, model defaults, temperature, max_tokens…)
-- [ ] Model + repository + plugar `skills-admin.ts` e `_skill_defaults` (admin)
-- [ ] **Não confundir** com `api/chat/skills/` (SKILL.md = código/prompt, continua em arquivos)
-- [ ] Testes
+### B-1 — Skill defaults (`skill_defaults`) ✅ (05/06/2026)
+- [x] Migração `017_skill_defaults.sql` (+ seed dos 3 defaults reais) — **aplicada em prod** (30 tabelas)
+- [x] Model `models/skill_default.py` + funções no `admin/repository.py`
+- [x] Admin router (`/skills/defaults` GET/PUT) plugado no DB; store `_skill_defaults` removido
+- [x] test_admin atualizado (tabela + seed na fixture); 23 admin + 109 suite verdes; ruff limpo
+- ⏭️ **Skills CRUD completo** (`skills-admin.ts`) é **feature net-new no backend** (não há router de skills hoje) — fora do escopo de "migração"; fica para quando a feature for construída. `api/chat/skills/` (SKILL.md) continua em arquivos (código/prompt).
 
 ### B-2 — Integrações / chaves de API (`platform_settings`)
 - [ ] Usar a tabela `platform_settings` (já existe, hoje não usada) no lugar de `_integrations`
@@ -160,6 +161,7 @@
 - **03/06/2026** — B-0 concluído (`api/core/db.py` compartilhado; `admin/db.py` re-exporta; 22 testes admin verdes). A-1 iniciado: identificado gap de schema em `clients` (campos do onboarding ausentes) — aguardando decisão de schema.
 - **03/06/2026** — A-7 (Reuniões) concluído: model portável, repository + router DB-backed, 7 testes; suite 93 verdes. Bug latente de relationship corrigido.
 - **03/06/2026** — A-9 (Biblioteca) verificado: backend já persiste em `knowledge_documents` (nada a fazer no backend; frontend `biblioteca-docs.ts` é concern à parte). A-10 (Drive) DEFERIDO: é stub pendente de integração real (SPEC-006), não migração. Restantes substanciais: A-8 (Onboarding, async/coupled), Bucket B (skills, integrações, prompts).
+- **05/06/2026** — B-1 (Skill defaults) concluído: migração 017 em prod (30 tabelas), `_skill_defaults` → tabela `skill_defaults`, admin router DB-backed. Restam no Bucket B só features net-new (Skills CRUD, Prompts) e Integrações (precisa de criptografia/KMS) — não são "migração de store".
 - **05/06/2026** — A-4 (Workflows) concluído: migração 016 em prod (client_scope→JSONB), model portável + repository ORM↔dict, router DB-backed mantendo TODA a lógica de canvas (validator/migration/auto-layout/edges/compiler) intacta, conftest + 38 testes canvas migrados p/ SQLite. **Bucket A 100% concluído.** Resta só o Bucket B (skills/integrações/prompts) e Drive (deferido).
 - **05/06/2026** — A-5 (Agents) concluído: migração 015 em prod (CHECK + portabilidade schedules), models + repository + router/runner/scheduler/preview DB-backed; scheduler carrega do DB no startup; 12 testes; suite 109. Restam: A-4 (Workflows, 38 testes canvas) e Bucket B (skills/integrações/prompts).
 - **04/06/2026** — A-8 (Onboarding/Wiki) concluído: migração 014 em prod (user_id→TEXT), models + repository + service/router DB-backed, tasks async com sessão própria, 7 testes; suite 114. Restantes: Workflows (A-4) e Agents (A-5) — reescrita de suíte; Bucket B — skills/integrações/prompts.

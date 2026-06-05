@@ -104,17 +104,47 @@ def _force_admin_mock_mode(monkeypatch):
 
 @pytest.fixture
 def db_sessionmaker():
-    """Fresh in-memory SQLite DB per test (users + audit_events tables)."""
+    """Fresh in-memory SQLite DB per test (users + audit_events + skill_defaults)."""
+    from api.models.skill_default import SkillDefault
+
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    Base.metadata.create_all(engine, tables=[User.__table__, AuditEvent.__table__])
+    Base.metadata.create_all(
+        engine,
+        tables=[User.__table__, AuditEvent.__table__, SkillDefault.__table__],
+    )
     TestSession = sessionmaker(bind=engine)
 
     seed = TestSession()
     seed.add_all([User(**row) for row in _USERS_SEED])
+    seed.add_all(
+        [
+            SkillDefault(
+                skill_slug="copy-social",
+                skill_name="Copy Social",
+                model="gemini-2.5-flash",
+                temperature=0.7,
+                max_tokens=2048,
+            ),
+            SkillDefault(
+                skill_slug="plano-de-midia",
+                skill_name="Plano de Mídia",
+                model="gemini-2.5-flash",
+                temperature=0.3,
+                max_tokens=4096,
+            ),
+            SkillDefault(
+                skill_slug="briefing",
+                skill_name="Briefing",
+                model="gpt-4o",
+                temperature=0.5,
+                max_tokens=2048,
+            ),
+        ]
+    )
     seed.commit()
     seed.close()
 
