@@ -98,7 +98,9 @@ def test_validate_pending_entity_409(ctx):
     client, _ = ctx
     _create(client)
     # entidade ainda 'pending' (Oráculo não rodou) → 409
-    resp = client.post("/api/clients/cogna/entities/Personas-Alvo/validate", json={"action": "accept"})
+    resp = client.post(
+        "/api/clients/cogna/entities/Personas-Alvo/validate", json={"action": "accept"}
+    )
     assert resp.status_code == 409
 
 
