@@ -14,10 +14,16 @@ def get_firebase_app() -> firebase_admin.App:
     if _app is not None:
         return _app
 
+    # projectId é obrigatório para verify_id_token (checa o audience do token).
+    options = {"projectId": settings.FIREBASE_PROJECT_ID}
+
     if settings.FIREBASE_USE_ADC:
-        _app = firebase_admin.initialize_app(options={"projectId": settings.FIREBASE_PROJECT_ID})
+        # Credencial do ambiente (Cloud Run: metadata server).
+        _app = firebase_admin.initialize_app(options=options)
     else:
+        # Credencial explícita (ADC local / GOOGLE_APPLICATION_CREDENTIALS) +
+        # projectId — sem o projectId, verify_id_token falha com "project ID required".
         cred = credentials.ApplicationDefault()
-        _app = firebase_admin.initialize_app(cred)
+        _app = firebase_admin.initialize_app(cred, options)
 
     return _app
