@@ -294,7 +294,9 @@ async def db_update_wiki_entity(client_id: str, entity_type: str, fields: dict[s
         return False
 
 
-async def db_list_wiki_entities(client_id: str, include_generated: bool = False) -> list[dict] | None:
+async def db_list_wiki_entities(
+    client_id: str, include_generated: bool = False
+) -> list[dict] | None:
     session = await _get_session()
     if session is None:
         return None
