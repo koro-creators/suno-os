@@ -245,6 +245,11 @@ from admin.router import router as admin_router
 
 app.include_router(admin_router, prefix=f"{settings.API_PREFIX}/admin")
 
+# Mount skills router (feature SPEC-017 — catálogo de skills)
+from skills.router import router as skills_router
+
+app.include_router(skills_router, prefix=f"{settings.API_PREFIX}/skills")
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
