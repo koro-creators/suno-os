@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # Firebase Auth — projeto de identidade do sunOS (frontend + backend usam o mesmo)
     FIREBASE_PROJECT_ID: str = "koro-creators"
     FIREBASE_USE_ADC: bool = True
+    FIREBASE_SERVICE_ACCOUNT_PATH: str | None = None
 
     # GCP
     GCP_PROJECT_ID: str | None = None

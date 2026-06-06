@@ -1,7 +1,7 @@
 """
 Admin router — SPEC-022 (Configurações Admin)
 
-Middleware: _require_admin verifica Firebase Custom Claim admin=true (com fallback mock).
+Middleware: _require_admin verifica Firebase ID Token + role no Postgres.
 Caixa-preta: resposta 404 para não-admins (nunca 403) — RN-009/010/011.
 """
 
@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from typing import Annotated, Literal, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from firebase_admin import auth as firebase_auth
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -27,86 +28,47 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Admin"])
 
 # ---------------------------------------------------------------------------
-# Firebase Admin SDK — real verification with graceful dev fallback
+# Firebase Admin SDK — autenticação real obrigatória
 # ---------------------------------------------------------------------------
 
 UserRole = Literal["admin", "creator", "viewer"]
 
-_FIREBASE_ADMIN_AVAILABLE: bool = False
 
-try:
-    import firebase_admin  # noqa: F401
-    from firebase_admin import auth as firebase_auth
-
-    _FIREBASE_ADMIN_AVAILABLE = True
-except ImportError:
-    logger.warning("firebase_admin not installed — admin auth in mock mode")
-
-
-def _require_admin(session: Session, authorization: str | None = None) -> str | None:
-    """
-    Autenticação via Firebase (só prova identidade) + AUTORIZAÇÃO via nosso banco.
-
-    O Firebase apenas verifica o token e devolve uid/email. A permissão (role
-    'admin') vem da tabela `users` do Postgres — NÃO de custom claim do Firebase.
-    Assim, "dar acesso" = uma linha em users (role='admin'), gerida por nós.
-
-    Falls back to mock (allow all) when Firebase not configured (dev/testes).
-    Caixa-preta: always 404, never 403 — RN-009/010/011.
-    """
-    if not _FIREBASE_ADMIN_AVAILABLE:
-        logger.debug("Firebase Admin SDK not available — admin auth in mock mode")
-        return None
-
+def _verify_token(authorization: str | None) -> dict:
+    """Verifica o Bearer token com Firebase e retorna o payload decodificado."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=404, detail="Not found")
 
     token = authorization.removeprefix("Bearer ").strip()
 
-    try:
-        from core.firebase import get_firebase_app
-
-        app = get_firebase_app()
-    except Exception as exc:
-        logger.warning("Firebase app init failed — falling back to mock mode: %s", exc)
-        return None
+    from core.firebase import get_firebase_app
 
     try:
-        decoded = firebase_auth.verify_id_token(token, app=app)
-    except (
-        firebase_auth.InvalidIdTokenError,
-        firebase_auth.ExpiredIdTokenError,
-        firebase_auth.RevokedIdTokenError,
-        firebase_auth.CertificateFetchError,
-    ):
-        raise HTTPException(status_code=404, detail="Not found")
-    except Exception as exc:
-        logger.warning("Firebase token verification error: %s", exc)
+        return firebase_auth.verify_id_token(token, app=get_firebase_app())
+    except Exception:
         raise HTTPException(status_code=404, detail="Not found")
 
-    # Autorização: role vem do NOSSO banco (users), resolvido por uid ou email.
+
+def _require_admin(session: Session, authorization: str | None = None) -> str:
+    """
+    Autenticação via Firebase (prova identidade) + autorização via Postgres (role).
+
+    O Firebase verifica o token e devolve uid/email. A permissão (role 'admin')
+    vem da tabela `users` do Postgres — não de custom claim do Firebase.
+    Caixa-preta: always 404, never 403 — RN-009/010/011.
+    """
+    decoded = _verify_token(authorization)
     user = repository.get_user_for_auth(session, decoded.get("uid"), decoded.get("email"))
     if not user or user.get("role") != "admin" or not user.get("is_active"):
         raise HTTPException(status_code=404, detail="Not found")
-
-    return decoded.get("uid")
+    return decoded["uid"]
 
 
 def _sync_users_from_firebase(session: Session) -> int:
-    """Upsert real users from Firebase Auth into the users table.
+    """Upsert real users from Firebase Auth into the users table."""
+    from core.firebase import get_firebase_app
 
-    No-op (returns 0) if Firebase Admin SDK is not configured.
-    """
-    if not _FIREBASE_ADMIN_AVAILABLE:
-        return 0
-
-    try:
-        from core.firebase import get_firebase_app
-
-        app = get_firebase_app()
-    except Exception as exc:
-        logger.warning("Firebase app init failed during user sync: %s", exc)
-        return 0
+    app = get_firebase_app()
 
     def _ms_to_dt(ms: int | None) -> datetime | None:
         if ms is None:
@@ -187,6 +149,28 @@ class SkillDefaultUpdate(BaseModel):
     model: str
     temperature: float = Field(..., ge=0.0, le=2.0)
     max_tokens: int = Field(..., ge=256)
+
+
+# ---------------------------------------------------------------------------
+# Me — qualquer usuário autenticado, resolve perfil do banco
+# ---------------------------------------------------------------------------
+
+
+@router.get("/me")
+async def get_me(
+    authorization: Annotated[str | None, Header()] = None,
+    session: Session = Depends(get_session),
+) -> dict:
+    """Retorna o perfil do usuário autenticado a partir do banco.
+
+    Usado pelo frontend após login Firebase para validar provisionamento.
+    Retorna 404 se não estiver no banco (caixa-preta RN-009).
+    """
+    decoded = _verify_token(authorization)
+    user = repository.get_user_for_auth(session, decoded.get("uid"), decoded.get("email"))
+    if not user or not user.get("is_active"):
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"uid": user["uid"], "email": user["email"], "name": user["name"], "role": user["role"]}
 
 
 # ---------------------------------------------------------------------------

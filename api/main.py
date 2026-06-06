@@ -28,14 +28,11 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
 
-    # Initialize Firebase
-    try:
-        from core.firebase import get_firebase_app
+    # Initialize Firebase — obrigatório, falha no startup se não configurado
+    from core.firebase import get_firebase_app
 
-        get_firebase_app()
-        logger.info("Firebase Admin SDK initialized")
-    except Exception as e:
-        logger.warning(f"Firebase initialization skipped: {e}")
+    get_firebase_app()
+    logger.info("Firebase Admin SDK initialized")
 
     # Initialize MLflow
     try:
