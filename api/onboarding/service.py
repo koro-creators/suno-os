@@ -143,20 +143,23 @@ async def run_oracle_agent(client_id: str) -> None:
         client_name = client.name
         brand_context, wizard_briefing = _oracle_inputs(client)
         language = _oracle_language(client)
+        domains = _oracle_domains(client)
         for entity_type in ONTOLOGY_ENTITY_TYPES:
             repository.update_job(session, client_id, current_entity=entity_type)
             await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)
 
             entity = repository.get_entity(session, client_id, entity_type)
             if entity:
+                sources: list[dict] = []
                 try:
-                    content, oracle_error = await invoke_oracle(
+                    content, oracle_error, sources = await invoke_oracle(
                         client_id=client_id,
                         client_name=client_name,
                         entity_type=entity_type,
                         brand_context=brand_context,
                         wizard_briefing=wizard_briefing,
                         language=language,
+                        allowed_domains=domains,
                     )
                 except Exception as exc:  # defensivo — invoke_oracle não deveria levantar
                     logger.warning(
@@ -175,15 +178,7 @@ async def run_oracle_agent(client_id: str) -> None:
                     entity,
                     status="generated",
                     content=content,
-                    provenance=[
-                        {
-                            "source": provenance_source,
-                            "excerpt": (
-                                f"Gerado a partir de brand_context + wizard_briefing "
-                                f"para {entity_type}"
-                            ),
-                        }
-                    ],
+                    provenance=_build_provenance(sources, provenance_source, entity_type),
                 )
 
             repository.increment_entities_done(session, client_id)
@@ -234,6 +229,30 @@ def _oracle_language(client) -> str:
     """Idioma da saída do Oráculo a partir do oracle_config (A6). Default pt-BR."""
     cfg = getattr(client, "oracle_config", None) or {}
     return cfg.get("language") or "pt-BR"
+
+
+def _oracle_domains(client) -> list[str]:
+    """Allow-list de busca web do oracle_config (A3). Vazio = sem pesquisa web."""
+    cfg = getattr(client, "oracle_config", None) or {}
+    return cfg.get("allowed_domains") or []
+
+
+def _build_provenance(sources: list[dict], fallback_source: str, entity_type: str) -> list[dict]:
+    """Provenance: cita as URLs reais da busca (A3); senão, a origem genérica."""
+    if sources:
+        return [
+            {
+                "source": s.get("url") or s.get("title") or "web",
+                "excerpt": s.get("content", "")[:200],
+            }
+            for s in sources
+        ]
+    return [
+        {
+            "source": fallback_source,
+            "excerpt": f"Gerado a partir de brand_context + wizard_briefing para {entity_type}",
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -352,14 +371,17 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
         client_name = client.name if client else client_id
         brand_context, wizard_briefing = _oracle_inputs(client) if client else ("", "")
         language = _oracle_language(client) if client else "pt-BR"
+        domains = _oracle_domains(client) if client else []
+        sources: list[dict] = []
         try:
-            content, oracle_error = await invoke_oracle(
+            content, oracle_error, sources = await invoke_oracle(
                 client_id=client_id,
                 client_name=client_name,
                 entity_type=entity_type,
                 brand_context=brand_context,
                 wizard_briefing=wizard_briefing,
                 language=language,
+                allowed_domains=domains,
             )
         except Exception as exc:  # defensivo
             logger.warning(
@@ -375,12 +397,7 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
             status="generated",
             content=content,
             badge="seed_auto",
-            provenance=[
-                {
-                    "source": provenance_source,
-                    "excerpt": f"Regenerado após rejeição HITL de {entity_type}",
-                }
-            ],
+            provenance=_build_provenance(sources, provenance_source, entity_type),
         )
         logger.info("Oracle agent: entity %s regenerated for client %s", entity_type, client_id)
     except Exception as exc:  # noqa: BLE001 — background task

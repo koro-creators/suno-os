@@ -76,7 +76,7 @@ jobs:
             --max-instances 10 \
             --timeout 300 \
             --set-env-vars "^@^ENVIRONMENT=production@GCP_PROJECT_ID=${GCP_PROJECT_ID}@GCP_REGION=${REGION}@FIREBASE_PROJECT_ID=koro-creators@LANGFUSE_HOST=https://cloud.langfuse.com@ALLOWED_ORIGINS=https://sunos-frontend-280770524531.us-west1.run.app" \
-            --set-secrets "DATABASE_URL=sunos-database-url:latest,GOOGLE_API_KEY=sunos-google-api-key:latest,LANGFUSE_SECRET_KEY=sunos-langfuse-secret-key:latest,LANGFUSE_PUBLIC_KEY=sunos-langfuse-public-key:latest" \
+            --set-secrets "DATABASE_URL=sunos-database-url:latest,GOOGLE_API_KEY=sunos-google-api-key:latest,TAVILY_API_KEY=sunos-tavily-api-key:latest,LANGFUSE_SECRET_KEY=sunos-langfuse-secret-key:latest,LANGFUSE_PUBLIC_KEY=sunos-langfuse-public-key:latest" \
             --labels "app=sunos,env=production,service=sunos-api"
 
       - name: Smoke test (/health)
