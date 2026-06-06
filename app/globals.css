@@ -122,6 +122,15 @@ body {
     15% 41%, 37% 73%, 55% 17%;
 }
 
+/* Native <select> dropdown popup: força fundo/texto do tema.
+   Sem isso o popup de opções herda o branco default do SO (texto claro
+   ilegível no dark). Vale para dark + light via CSS variables. */
+select option,
+select optgroup {
+  background-color: var(--deep);
+  color: var(--text-primary);
+}
+
 @keyframes blink {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
