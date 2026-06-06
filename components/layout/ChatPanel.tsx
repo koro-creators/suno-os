@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Chat, Close, Send } from '@carbon/icons-react';
+import { Chat, Close, Send, Sun } from '@carbon/icons-react';
 import { useToolStream } from '@/hooks/useToolStream';
 
 interface Message {
@@ -55,7 +55,7 @@ export default function ChatPanel() {
 
     startStream({
       message: text,
-      skillSlug: 'conversation',
+      skillSlug: 'consultor',
       model: 'gemini-flash',
     });
   }, [inputValue, isStreaming, startStream]);
@@ -159,15 +159,7 @@ export default function ChatPanel() {
               flexShrink: 0,
             }}
           >
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                backgroundColor: 'var(--sun)',
-                flexShrink: 0,
-              }}
-            />
+            <Sun size={14} style={{ color: 'var(--sun)', flexShrink: 0 }} />
             <span
               style={{
                 fontSize: '0.7rem',
@@ -177,7 +169,7 @@ export default function ChatPanel() {
                 userSelect: 'none',
               }}
             >
-              Chat Rápido
+              Oráculo
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
               <span

@@ -1,4 +1,7 @@
-"""Conversational Agent — handles general questions, greetings, off-topic. No tools."""
+"""Conversational Agent — handles general questions, greetings, off-topic.
+
+When a skill is active, runs ReAct with skill-specific tools and prompt.
+"""
 
 from __future__ import annotations
 
@@ -23,9 +26,33 @@ FALLBACK_MESSAGE = (
     "Tente novamente em instantes ou entre em contato com o suporte."
 )
 
+# System prompts por skill ativa
+_SKILL_PROMPTS: dict[str, str] = {
+    "consultor": (
+        "Você é um sistema de consulta restrito da Suno United Creators.\n\n"
+        "REGRAS ABSOLUTAS — sem exceções, sem flexibilidade:\n\n"
+        "1. Você SOMENTE pode falar sobre clientes cadastrados na base de dados.\n"
+        "2. Para toda mensagem que mencionar um cliente, chame a ferramenta search_wiki.\n"
+        "3. Se a mensagem NÃO mencionar um cliente cadastrado — seja matemática, programação, "
+        "história, curiosidades ou qualquer outro assunto — responda APENAS com a frase exata: "
+        "'Não há informações sobre isso na base de dados.'\n"
+        "4. Se search_wiki não retornar conteúdo útil, responda APENAS: "
+        "'Não há informações sobre isso na base de dados.'\n"
+        "5. NUNCA use conhecimento próprio. NUNCA responda perguntas gerais.\n"
+        "6. Responda sempre em Português (Brasil)."
+    ),
+}
+
+# Tools disponíveis por skill ativa
+def _get_skill_tools(skill_slug: str) -> list:
+    if skill_slug == "consultor":
+        from chat.tools.wiki_search import search_wiki
+        return [search_wiki]
+    return []
+
 
 class ConversationalAgent(BaseAgent):
-    """Handles general questions, greetings, and off-topic requests. No tools."""
+    """Handles general questions and, when a skill is active, runs ReAct with skill tools."""
 
     def __init__(self, llm: Any = None):
         self._llm = llm
@@ -65,15 +92,53 @@ class ConversationalAgent(BaseAgent):
             state["current_agent"] = self.name
             return state
 
-        # Build messages: SystemMessage + conversation history
-        messages = [SystemMessage(content=self.system_prompt)]
-        for msg in state.get("messages", []):
-            messages.append(msg)
+        active_skill = state.get("active_skill")
 
-        # Simple LLM call (no ReAct, no tools)
-        response = await llm.ainvoke(messages)
+        if active_skill and active_skill in _SKILL_PROMPTS:
+            # Skill mode: ReAct loop com tools e prompt específico da skill
+            skill_prompt = _SKILL_PROMPTS[active_skill]
+            tools = _get_skill_tools(active_skill)
 
-        state["messages"] = state.get("messages", []) + [AIMessage(content=response.content or "")]
+            from langchain_core.messages import HumanMessage
+
+            messages: list = [SystemMessage(content=skill_prompt)]
+            for msg in state.get("messages", []):
+                messages.append(msg)
+
+            import json
+            from langchain_core.messages import ToolMessage
+            from chat.agents.base import MAX_REACT_ROUNDS
+
+            bound_llm = llm.bind_tools(tools) if tools else llm
+            tool_map = {t.name: t for t in tools}
+
+            for _round in range(MAX_REACT_ROUNDS):
+                response = await bound_llm.ainvoke(messages)
+                messages.append(response)
+
+                tool_calls = getattr(response, "tool_calls", None) or []
+                if not tool_calls:
+                    break
+
+                for call in tool_calls:
+                    tool_fn = tool_map.get(call.get("name", ""))
+                    try:
+                        result = tool_fn.invoke(call.get("args", {})) if tool_fn else {"error": "tool not found"}
+                    except Exception as exc:
+                        result = {"error": str(exc)}
+
+                    result_str = result if isinstance(result, str) else json.dumps(result, default=str)
+                    messages.append(ToolMessage(
+                        content=result_str,
+                        tool_call_id=call.get("id", ""),
+                        name=call.get("name", ""),
+                    ))
+
+            final_text = ""
+            for msg in reversed(messages):
+                if isinstance(msg, AIMessage):
+                    final_text = msg.content or ""
+                    break
+        state["messages"] = state.get("messages", []) + [AIMessage(content=final_text)]
         state["current_agent"] = self.name
-
         return state
