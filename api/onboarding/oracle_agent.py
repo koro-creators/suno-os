@@ -8,6 +8,7 @@ Falls back to rich local content if LLM unavailable (no GOOGLE_API_KEY or API er
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import Optional
@@ -26,11 +27,17 @@ logger = logging.getLogger(__name__)
 class OracleState(TypedDict):
     client_id: str
     client_name: str
-    brand_context: str  # wizard step 2 (contexto de marca)
-    wizard_briefing: str  # texto livre do wizard
+    brand_context: str  # descrição da marca (wizard step 1)
+    wizard_briefing: str  # sponsor + domínios de referência (wizard)
+    language: str  # idioma da saída: "pt-BR" | "en-US" (oracle_config)
     entity_type: str  # which entity to extract
     generated_content: str
+    used_fallback: bool  # True se caiu no template local (A5: fallback não-silencioso)
     error: Optional[str]
+
+
+# Nº de tentativas no Gemini antes de cair no fallback local (A5)
+_LLM_MAX_ATTEMPTS = 3
 
 
 # ---------------------------------------------------------------------------
@@ -182,13 +189,18 @@ def _build_prompt(state: OracleState) -> str:
     if wizard_briefing:
         parts += ["", "BRIEFING DO WIZARD:", wizard_briefing]
 
-    parts += [
-        "",
-        f"TAREFA: {instruction}",
-        "",
-        "Escreva em português brasileiro, de forma clara e direta. "
-        "Máximo 3 parágrafos. Sem títulos ou bullets — apenas texto corrido.",
-    ]
+    if state.get("language") == "en-US":
+        closing = (
+            "Write in clear, direct American English. "
+            "Maximum 3 paragraphs. No headings or bullets — plain prose only."
+        )
+    else:
+        closing = (
+            "Escreva em português brasileiro, de forma clara e direta. "
+            "Máximo 3 parágrafos. Sem títulos ou bullets — apenas texto corrido."
+        )
+
+    parts += ["", f"TAREFA: {instruction}", "", closing]
 
     return "\n".join(parts)
 
@@ -205,35 +217,60 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
     client_name = state["client_name"]
 
     if llm is None:
-        logger.info("Oracle agent: using local fallback for %s/%s", client_name, entity_type)
-        return {
-            **state,
-            "generated_content": _fallback_content(entity_type, client_name),
-            "error": None,
-        }
-
-    try:
-        from langchain_core.messages import HumanMessage
-
-        prompt = _build_prompt(state)
-        response = await llm.ainvoke([HumanMessage(content=prompt)])
-        content = (response.content or "").strip()
-        if not content:
-            raise ValueError("Empty response from Gemini")
-        logger.info("Oracle agent: Gemini generated content for %s/%s", client_name, entity_type)
-        return {**state, "generated_content": content, "error": None}
-    except Exception as exc:
-        logger.warning(
-            "Oracle agent: Gemini call failed for %s/%s (%s) — using fallback",
-            client_name,
-            entity_type,
-            exc,
+        logger.info(
+            "Oracle agent: sem LLM, usando fallback local para %s/%s", client_name, entity_type
         )
         return {
             **state,
             "generated_content": _fallback_content(entity_type, client_name),
-            "error": str(exc),
+            "used_fallback": True,
+            "error": "GOOGLE_API_KEY ausente — fallback local",
         }
+
+    from langchain_core.messages import HumanMessage
+
+    prompt = _build_prompt(state)
+    last_exc: Optional[Exception] = None
+
+    # A5: retry com backoff (Gemini retorna 503 intermitente) antes do fallback.
+    for attempt in range(1, _LLM_MAX_ATTEMPTS + 1):
+        try:
+            response = await llm.ainvoke([HumanMessage(content=prompt)])
+            content = (response.content or "").strip()
+            if not content:
+                raise ValueError("Empty response from Gemini")
+            logger.info(
+                "Oracle agent: Gemini gerou conteúdo para %s/%s (tentativa %d)",
+                client_name,
+                entity_type,
+                attempt,
+            )
+            return {**state, "generated_content": content, "used_fallback": False, "error": None}
+        except Exception as exc:
+            last_exc = exc
+            logger.warning(
+                "Oracle agent: Gemini tentativa %d/%d falhou para %s/%s (%s)",
+                attempt,
+                _LLM_MAX_ATTEMPTS,
+                client_name,
+                entity_type,
+                exc,
+            )
+            if attempt < _LLM_MAX_ATTEMPTS:
+                await asyncio.sleep(1.5 * attempt)  # backoff linear
+
+    logger.warning(
+        "Oracle agent: Gemini esgotou %d tentativas para %s/%s — fallback local",
+        _LLM_MAX_ATTEMPTS,
+        client_name,
+        entity_type,
+    )
+    return {
+        **state,
+        "generated_content": _fallback_content(entity_type, client_name),
+        "used_fallback": True,
+        "error": str(last_exc),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -262,16 +299,26 @@ async def invoke_oracle(
     entity_type: str,
     brand_context: str = "",
     wizard_briefing: str = "",
-) -> str:
-    """Invoke the oracle graph for a single entity. Returns generated_content."""
+    language: str = "pt-BR",
+) -> tuple[str, Optional[str]]:
+    """Invoke the oracle graph for a single entity.
+
+    Retorna ``(content, error)``. ``error`` é ``None`` quando o Gemini gerou de
+    fato; quando preenchido, indica que o conteúdo veio do **fallback local**
+    (A5: fallback deixa de ser silencioso — o caller marca a provenance).
+    """
     state: OracleState = {
         "client_id": client_id,
         "client_name": client_name,
         "brand_context": brand_context,
         "wizard_briefing": wizard_briefing,
+        "language": language,
         "entity_type": entity_type,
         "generated_content": "",
+        "used_fallback": False,
         "error": None,
     }
     result = await _oracle_graph.ainvoke(state)
-    return result.get("generated_content") or _fallback_content(entity_type, client_name)
+    content = result.get("generated_content") or _fallback_content(entity_type, client_name)
+    error = result.get("error") if result.get("used_fallback") else None
+    return content, error
