@@ -33,9 +33,9 @@ export default function CreateSkillPage() {
   const router = useRouter();
   const { createSkill } = useSkills();
 
-  const handleCreate = (data: SkillAdmin) => {
+  const handleCreate = async (data: SkillAdmin) => {
     const { id: _, ...rest } = data;
-    const created = createSkill(rest);
+    const created = await createSkill(rest);
     router.push(`/skills/${created.id}`);
   };
 

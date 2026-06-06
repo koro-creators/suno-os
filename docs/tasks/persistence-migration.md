@@ -123,7 +123,13 @@
 - [x] Model `models/skill_default.py` + funções no `admin/repository.py`
 - [x] Admin router (`/skills/defaults` GET/PUT) plugado no DB; store `_skill_defaults` removido
 - [x] test_admin atualizado (tabela + seed na fixture); 23 admin + 109 suite verdes; ruff limpo
-- ⏭️ **Skills CRUD completo** (`skills-admin.ts`) é **feature net-new no backend** (não há router de skills hoje) — fora do escopo de "migração"; fica para quando a feature for construída. `api/chat/skills/` (SKILL.md) continua em arquivos (código/prompt).
+- ✅ **Skills CRUD completo** (`skills-admin.ts`) construído — ver B-1b abaixo. `api/chat/skills/` (SKILL.md) continua em arquivos (código/prompt).
+
+### B-1b — Skills CRUD (catálogo admin) ✅ (05/06/2026)
+- [x] Migração `018_skills.sql` (tabela `skills` + seed das 10 skills reais; moons/assigned_clients/versions em JSONB) — **validada em pgvector (double-pass) e aplicada em prod** (10 skills, 8 ativas)
+- [x] Model `models/skill.py` (snake_case → `to_dict()` camelCase = tipo `SkillAdmin` do front), `skills/schemas.py`, `skills/repository.py` (`_FIELD_MAP` camelCase→snake), `skills/router.py` (CRUD ungated, 404 caixa-preta), registrado no `main.py`
+- [x] Frontend: `lib/api.ts` (list/create/update/delete) + `SkillsContext` DB-backed (carrega da API, fallback mock sem `NEXT_PUBLIC_API_URL`); create async, update/delete otimistas + persist em background
+- [x] 7 testes skills (SQLite); suite 116 verde; ruff limpo; tsc limpo
 
 ### B-2 — Integrações / chaves de API (`platform_settings`)
 - [ ] Usar a tabela `platform_settings` (já existe, hoje não usada) no lugar de `_integrations`
@@ -157,6 +163,7 @@
 
 ## Log de progresso
 
+- **05/06/2026** — B-1b (Skills CRUD) construído como feature net-new: migração 018 em prod (tabela `skills` + seed de 10 reais, 8 ativas), backend model/schemas/repository/router DB-backed + frontend (`lib/api.ts` + `SkillsContext` API-backed com fallback mock). 7 testes; suite 116; tsc + ruff limpos. Restam no Bucket B só Integrações (KMS) e Prompts (B-3).
 - **03/06/2026** — Schema (28 tabelas) aplicado em prod. `users`+`audit` migrados. Driver sync adicionado. Stack local apontando para prod validado. Documento de tasks criado.
 - **03/06/2026** — B-0 concluído (`api/core/db.py` compartilhado; `admin/db.py` re-exporta; 22 testes admin verdes). A-1 iniciado: identificado gap de schema em `clients` (campos do onboarding ausentes) — aguardando decisão de schema.
 - **03/06/2026** — A-7 (Reuniões) concluído: model portável, repository + router DB-backed, 7 testes; suite 93 verdes. Bug latente de relationship corrigido.

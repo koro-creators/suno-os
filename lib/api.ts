@@ -5,6 +5,8 @@
  * and the frontend falls back to mock streaming.
  */
 
+import type { SkillAdmin } from './admin-types';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export function apiAvailable(): boolean {
@@ -603,4 +605,69 @@ export async function listAvailableTools(): Promise<ToolDescriptor[]> {
     ];
   }
   return workflowFetch<ToolDescriptor[]>('/api/tools?for_user=current');
+}
+
+// ---------------------------------------------------------------------------
+// Skills catalog (SPEC-017) — DB-backed CRUD
+// ---------------------------------------------------------------------------
+
+/** Lista skills do backend. Retorna null em mock-mode (sem API). */
+export async function listSkills(): Promise<SkillAdmin[] | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl('/api/skills/'), { headers: await getHeaders() });
+    if (!res.ok) return null;
+    return (await res.json()) as SkillAdmin[];
+  } catch {
+    return null;
+  }
+}
+
+/** Cria skill. Retorna a skill criada (com id do server) ou null em falha. */
+export async function createSkillApi(data: Omit<SkillAdmin, 'id'>): Promise<SkillAdmin | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl('/api/skills/'), {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as SkillAdmin;
+  } catch {
+    return null;
+  }
+}
+
+/** Atualiza skill (PATCH parcial). Best-effort: retorna null em falha. */
+export async function updateSkillApi(
+  id: string,
+  data: Partial<SkillAdmin>,
+): Promise<SkillAdmin | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl(`/api/skills/${id}`), {
+      method: 'PATCH',
+      headers: await getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as SkillAdmin;
+  } catch {
+    return null;
+  }
+}
+
+/** Remove skill. Retorna true se removida (204). */
+export async function deleteSkillApi(id: string): Promise<boolean> {
+  if (!apiAvailable()) return false;
+  try {
+    const res = await fetch(getApiUrl(`/api/skills/${id}`), {
+      method: 'DELETE',
+      headers: await getHeaders(),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
