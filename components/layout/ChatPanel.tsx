@@ -1,20 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Chat, Close } from '@carbon/icons-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Chat, Close, Send } from '@carbon/icons-react';
+import { useToolStream } from '@/hooks/useToolStream';
 
 interface Message {
   role: 'user' | 'assistant';
   text: string;
 }
-
-const PLACEHOLDER_MESSAGES: Message[] = [
-  { role: 'user', text: 'Resumo do Santander' },
-  {
-    role: 'assistant',
-    text: 'Santander tem 6 skills ativos com 18 áreas. Último uso há 2h.',
-  },
-];
 
 const pulseKeyframes = `
 @keyframes chat-pulse {
@@ -24,7 +17,55 @@ const pulseKeyframes = `
 `;
 
 export default function ChatPanel() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const prevIsStreamingRef = useRef(false);
+
+  const { text: streamingText, isStreaming, error, startStream } = useToolStream();
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingText]);
+
+  // Focus input when panel opens
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 220);
+    }
+  }, [isOpen]);
+
+  // When streaming finishes, commit the assistant message
+  useEffect(() => {
+    if (prevIsStreamingRef.current && !isStreaming && streamingText) {
+      setMessages((prev) => [...prev, { role: 'assistant', text: streamingText }]);
+    }
+    prevIsStreamingRef.current = isStreaming;
+  }, [isStreaming, streamingText]);
+
+  const handleSend = useCallback(() => {
+    const text = inputValue.trim();
+    if (!text || isStreaming) return;
+
+    setMessages((prev) => [...prev, { role: 'user', text }]);
+    setInputValue('');
+
+    startStream({
+      message: text,
+      skillSlug: 'conversation',
+      model: 'gemini-flash',
+    });
+  }, [inputValue, isStreaming, startStream]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <>
@@ -45,7 +86,7 @@ export default function ChatPanel() {
           position: 'relative',
         }}
       >
-        {/* Toggle button — vertically centered */}
+        {/* Toggle button */}
         <button
           aria-label={isOpen ? 'Fechar chat' : 'Abrir chat'}
           aria-expanded={isOpen}
@@ -63,22 +104,19 @@ export default function ChatPanel() {
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            color: 'var(--text-muted)',
+            color: isOpen ? 'var(--text-secondary)' : 'var(--sun)',
             flexShrink: 0,
             zIndex: 10,
             borderRadius: 0,
             transition: 'color 150ms ease, background-color 150ms ease',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--deep)';
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--sun)';
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+            (e.currentTarget as HTMLButtonElement).style.color = isOpen ? 'var(--text-secondary)' : 'var(--sun)';
           }}
         >
-          {/* Notification dot — only shown when collapsed */}
           {!isOpen && (
             <span
               aria-hidden="true"
@@ -94,14 +132,10 @@ export default function ChatPanel() {
               }}
             />
           )}
-          {isOpen ? (
-            <Close size={14} />
-          ) : (
-            <Chat size={14} />
-          )}
+          {isOpen ? <Close size={14} /> : <Chat size={14} />}
         </button>
 
-        {/* Panel content — only interactive when open */}
+        {/* Panel content */}
         <div
           style={{
             width: 320,
@@ -125,7 +159,6 @@ export default function ChatPanel() {
               flexShrink: 0,
             }}
           >
-            {/* Sun dot */}
             <div
               style={{
                 width: 6,
@@ -146,15 +179,7 @@ export default function ChatPanel() {
             >
               Chat Rápido
             </span>
-            {/* Online indicator */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                marginLeft: 4,
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
               <span
                 style={{
                   width: 4,
@@ -190,7 +215,25 @@ export default function ChatPanel() {
               gap: 10,
             }}
           >
-            {PLACEHOLDER_MESSAGES.map((msg, idx) => (
+            {messages.length === 0 && !isStreaming && (
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.65rem',
+                  textAlign: 'center',
+                  userSelect: 'none',
+                  padding: '0 16px',
+                }}
+              >
+                Faça uma pergunta para começar
+              </div>
+            )}
+
+            {messages.map((msg, idx) => (
               <div key={idx}>
                 <div
                   style={{
@@ -200,60 +243,80 @@ export default function ChatPanel() {
                 >
                   <div
                     style={{
-                      maxWidth: '80%',
+                      maxWidth: '85%',
                       padding: '7px 11px',
                       borderRadius:
                         msg.role === 'user'
                           ? '12px 12px 4px 12px'
                           : '12px 12px 12px 4px',
                       backgroundColor:
-                        msg.role === 'user'
-                          ? 'var(--nebula)'
-                          : 'var(--surface-hover)',
-                      border:
-                        msg.role === 'user'
-                          ? '1px solid var(--border-subtle)'
-                          : '1px solid var(--border-subtle)',
+                        msg.role === 'user' ? 'var(--nebula)' : 'var(--deep)',
+                      border: '1px solid var(--border-subtle)',
                       fontSize: '0.72rem',
                       lineHeight: 1.5,
                       color:
                         msg.role === 'user'
                           ? 'var(--text-primary)'
                           : 'var(--text-secondary)',
-                      userSelect: 'none',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {msg.text}
                   </div>
                 </div>
-                {/* Timestamp */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    marginTop: 3,
-                    paddingLeft: msg.role === 'assistant' ? 4 : 0,
-                    paddingRight: msg.role === 'user' ? 4 : 0,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '0.5rem',
-                      color: 'var(--text-muted)',
-                      userSelect: 'none',
-                    }}
-                  >
-                    {msg.role === 'user' ? 'agora' : '2s'}
-                  </span>
-                </div>
               </div>
             ))}
+
+            {/* Streaming message */}
+            {isStreaming && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div
+                  style={{
+                    maxWidth: '85%',
+                    padding: '7px 11px',
+                    borderRadius: '12px 12px 12px 4px',
+                    backgroundColor: 'var(--deep)',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '0.72rem',
+                    lineHeight: 1.5,
+                    color: 'var(--text-secondary)',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {streamingText || (
+                    <span style={{ opacity: 0.5 }}>
+                      <span style={{ animation: 'chat-pulse 1s ease-in-out infinite' }}>●</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && !isStreaming && (
+              <div
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  backgroundColor: 'rgba(239,68,68,0.1)',
+                  border: '1px solid rgba(239,68,68,0.2)',
+                  fontSize: '0.65rem',
+                  color: '#f87171',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Input area */}
+          {/* Input */}
           <div
             style={{
-              padding: '12px',
+              padding: '10px 12px',
               borderTop: '1px solid var(--border-subtle)',
               flexShrink: 0,
             }}
@@ -262,25 +325,52 @@ export default function ChatPanel() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'var(--surface-hover)',
+                gap: 6,
+                backgroundColor: 'var(--nebula)',
                 border: '1px solid var(--border-subtle)',
-                borderRadius: '9999px',
-                padding: '7px 14px',
-                opacity: 0.5,
-                cursor: 'not-allowed',
+                borderRadius: 9999,
+                padding: '5px 5px 5px 12px',
+                transition: 'border-color 150ms ease',
               }}
             >
-              <span
+              <input
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Pergunte algo..."
+                disabled={isStreaming}
                 style={{
-                  fontSize: '0.6rem',
-                  color: 'var(--text-muted)',
-                  userSelect: 'none',
-                  textAlign: 'center',
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: '0.72rem',
+                  color: 'var(--text-primary)',
+                  minWidth: 0,
+                }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputValue.trim() || isStreaming}
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  backgroundColor:
+                    inputValue.trim() && !isStreaming ? 'var(--sun)' : 'var(--border-subtle)',
+                  border: 'none',
+                  cursor: inputValue.trim() && !isStreaming ? 'pointer' : 'default',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'background-color 150ms ease',
+                  color: inputValue.trim() && !isStreaming ? '#000' : 'var(--text-muted)',
                 }}
               >
-                ⌘K para chat rápido
-              </span>
+                <Send size={12} />
+              </button>
             </div>
           </div>
         </div>
