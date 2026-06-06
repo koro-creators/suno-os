@@ -11,7 +11,7 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: sunos-postgres
     environment:
       POSTGRES_USER: sunos
@@ -49,6 +49,7 @@ services:
     volumes:
       # Hot-reload: monta o código, mas preserva site-packages da imagem
       - ./api:/app
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
     depends_on:
       postgres:
         condition: service_healthy

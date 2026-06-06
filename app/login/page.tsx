@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, authError } = useAuth();
 
   return (
     <div
@@ -40,6 +40,24 @@ export default function LoginPage() {
           Plataforma de IA da Suno United Creators
         </p>
       </div>
+
+      {/* Aviso de acesso negado */}
+      {authError && (
+        <div
+          style={{
+            padding: '12px 20px',
+            borderRadius: 8,
+            border: '1px solid rgba(255, 80, 80, 0.3)',
+            backgroundColor: 'rgba(255, 80, 80, 0.08)',
+            color: '#ff6b6b',
+            fontSize: '0.85rem',
+            textAlign: 'center',
+            maxWidth: 320,
+          }}
+        >
+          {authError}
+        </div>
+      )}
 
       {/* Login button */}
       <button
