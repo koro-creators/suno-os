@@ -5,13 +5,15 @@ When a skill is active, runs ReAct with skill-specific tools and prompt.
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 
-from chat.agents.base import BaseAgent
+from chat.agents.base import MAX_REACT_ROUNDS, BaseAgent
 from chat.graph.state import SunosChatState
+from chat.tools.wiki_search import search_wiki
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +49,6 @@ _SKILL_PROMPTS: dict[str, str] = {
 # Tools disponíveis por skill ativa
 def _get_skill_tools(skill_slug: str) -> list:
     if skill_slug == "consultor":
-        from chat.tools.wiki_search import search_wiki
-
         return [search_wiki]
     return []
 
@@ -111,12 +111,6 @@ class ConversationalAgent(BaseAgent):
             messages: list = [SystemMessage(content=skill_prompt)]
             for msg in state.get("messages", []):
                 messages.append(msg)
-
-            import json
-
-            from langchain_core.messages import ToolMessage
-
-            from chat.agents.base import MAX_REACT_ROUNDS
 
             bound_llm = llm.bind_tools(tools) if tools else llm
             tool_map = {t.name: t for t in tools}
