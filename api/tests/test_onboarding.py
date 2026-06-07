@@ -93,6 +93,31 @@ def test_list_clients_returns_created(ctx):
     assert "sponsor_email" in cogna and "created_at" in cogna
 
 
+def test_backfill_creates_job_and_entities(ctx):
+    import pytest
+    from api.clientes import repository as cr
+    from api.onboarding.service import backfill_onboarding
+    from fastapi import HTTPException
+
+    _client, TestSession = ctx
+    s = TestSession()
+    try:
+        cr.create_client(s, name="Legado", slug="legado", status="ACTIVE")
+        client_id, job_id = backfill_onboarding(s, "legado", ["cliente.com.br"], "pt-BR")
+        assert job_id
+        # 6 placeholders criados
+        for et in ONTOLOGY_ENTITY_TYPES:
+            assert repository.get_entity(s, client_id, et) is not None
+        # domínios persistidos no oracle_config
+        assert cr.get_by_slug(s, "legado").oracle_config["allowed_domains"] == ["cliente.com.br"]
+        # segundo backfill → 409 (já tem onboarding)
+        with pytest.raises(HTTPException) as ei:
+            backfill_onboarding(s, "legado", [], "pt-BR")
+        assert ei.value.status_code == 409
+    finally:
+        s.close()
+
+
 def test_status_lists_six_pending(ctx):
     client, _ = ctx
     _create(client)

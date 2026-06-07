@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
 import ClientEditor from '@/components/clientes/ClientEditor';
+import GerarOraculoPanel from '@/components/clientes/GerarOraculoPanel';
 import { useClients } from '@/contexts/ClientsContext';
 
 export default function ClientEditorPage() {
@@ -61,6 +62,9 @@ export default function ClientEditorPage() {
           router.push('/clientes');
         }}
       />
+      <div style={{ padding: '0 24px 32px' }}>
+        <GerarOraculoPanel slug={client.slug} />
+      </div>
     </>
   );
 }
