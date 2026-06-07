@@ -90,16 +90,19 @@ def reset_admin_store():
 
 
 @pytest.fixture(autouse=True)
-def _force_admin_mock_mode(monkeypatch):
-    """Pin admin auth to mock mode for the CRUD/audit suite.
+def _force_admin_auth(monkeypatch):
+    """Bypassa a verificação Firebase nos testes de CRUD/audit.
 
-    The CI image installs firebase_admin, which flips
-    ``_FIREBASE_ADMIN_AVAILABLE`` to True; ``_require_admin`` then rejects the
-    unauthenticated TestClient with 404 (caixa-preta). These tests exercise the
-    CRUD/audit logic, not Firebase verification, so we force the no-Firebase
-    fallback path the same way a dev environment without credentials behaves.
+    Pós-#32 (auth Firebase real) o ``admin/router`` faz ``_verify_token``
+    (Firebase) + role no Postgres, sem mock-mode. Como o TestClient não tem
+    token, fixamos ``_verify_token`` devolvendo o admin semeado (``uid-1``);
+    ``_require_admin`` então resolve a role no DB de teste e libera. Estes testes
+    exercem a lógica de CRUD/audit, não a verificação Firebase.
     """
-    monkeypatch.setattr("api.admin.router._FIREBASE_ADMIN_AVAILABLE", False)
+    monkeypatch.setattr(
+        "api.admin.router._verify_token",
+        lambda authorization=None: {"uid": "uid-1", "email": "heitor@suno.com.br"},
+    )
 
 
 @pytest.fixture

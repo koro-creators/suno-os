@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ClientAdmin } from '@/lib/client-types';
 import { initialClients } from '@/data/clients-admin';
+import { apiAvailable, listClients } from '@/lib/api';
 
 interface ClientsContextValue {
   clients: ClientAdmin[];
@@ -14,7 +15,15 @@ interface ClientsContextValue {
 const ClientsContext = createContext<ClientsContextValue | null>(null);
 
 export function ClientsProvider({ children }: { children: ReactNode }) {
-  const [clients, setClients] = useState<ClientAdmin[]>(initialClients);
+  // Com API (prod/dev real): carrega do banco. Sem API (mock-mode): usa o seed local.
+  const [clients, setClients] = useState<ClientAdmin[]>(apiAvailable() ? [] : initialClients);
+
+  useEffect(() => {
+    if (!apiAvailable()) return;
+    listClients().then((rows) => {
+      if (rows) setClients(rows);
+    });
+  }, []);
 
   function createClient(data: Omit<ClientAdmin, 'id' | 'createdAt' | 'updatedAt'>): ClientAdmin {
     const id = `client-${crypto.randomUUID()}`;

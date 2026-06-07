@@ -19,7 +19,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from .constants import ONTOLOGY_ENTITY_TYPES, ORACLE_STUB_DELAY_SECONDS
-from .oracle_agent import invoke_oracle
+from .oracle_agent import _fallback_content, invoke_oracle
 
 try:
     from clientes import repository as clients_repo
@@ -53,6 +53,11 @@ def _open_session() -> Session:
 
 def get_client_by_slug(session: Session, slug: str) -> dict | None:
     return repository.get_client_by_slug(session, slug)
+
+
+def list_all_clients(session: Session) -> list[dict]:
+    """Lista todos os clientes do banco (admin /clientes)."""
+    return clients_repo.list_clients(session)
 
 
 def require_client_by_slug(session: Session, slug: str) -> dict:
@@ -141,47 +146,44 @@ async def run_oracle_agent(client_id: str) -> None:
         repository.update_job(session, client_id, drive_sync_status="done", oracle_status="running")
 
         client_name = client.name
+        brand_context, wizard_briefing = _oracle_inputs(client)
+        language = _oracle_language(client)
+        domains = _oracle_domains(client)
         for entity_type in ONTOLOGY_ENTITY_TYPES:
             repository.update_job(session, client_id, current_entity=entity_type)
             await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)
 
             entity = repository.get_entity(session, client_id, entity_type)
             if entity:
+                sources: list[dict] = []
                 try:
-                    content = await invoke_oracle(
+                    content, oracle_error, sources = await invoke_oracle(
                         client_id=client_id,
                         client_name=client_name,
                         entity_type=entity_type,
-                        brand_context="",
-                        wizard_briefing="",
+                        brand_context=brand_context,
+                        wizard_briefing=wizard_briefing,
+                        language=language,
+                        allowed_domains=domains,
                     )
-                    provenance_source = "Oráculo Gemini"
-                except Exception as exc:
+                except Exception as exc:  # defensivo — invoke_oracle não deveria levantar
                     logger.warning(
                         "Oracle agent: invoke_oracle failed for %s/%s (%s)",
                         client.slug,
                         entity_type,
                         exc,
                     )
-                    from .oracle_agent import _fallback_content
-
                     content = _fallback_content(entity_type, client_name)
-                    provenance_source = "Fallback local"
+                    oracle_error = str(exc)
+
+                provenance_source = "Fallback local" if oracle_error else "Oráculo Gemini"
 
                 repository.update_entity(
                     session,
                     entity,
                     status="generated",
                     content=content,
-                    provenance=[
-                        {
-                            "source": provenance_source,
-                            "excerpt": (
-                                f"Gerado a partir de brand_context + wizard_briefing "
-                                f"para {entity_type}"
-                            ),
-                        }
-                    ],
+                    provenance=_build_provenance(sources, provenance_source, entity_type),
                 )
 
             repository.increment_entities_done(session, client_id)
@@ -205,6 +207,57 @@ def _oracle_now():
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc)
+
+
+def _oracle_inputs(client) -> tuple[str, str]:
+    """Monta (brand_context, wizard_briefing) a partir dos dados do cliente (A1).
+
+    Antes ia tudo vazio para o agente; agora a descrição da marca e os dados do
+    wizard (sponsor, domínios de referência) alimentam o prompt do Oráculo.
+    """
+    brand_context = (getattr(client, "description", None) or "").strip()
+
+    cfg = getattr(client, "oracle_config", None) or {}
+    domains = cfg.get("allowed_domains") or []
+
+    briefing_parts: list[str] = []
+    if getattr(client, "sponsor_name", None):
+        briefing_parts.append(f"Sponsor responsável: {client.sponsor_name}")
+    if domains:
+        briefing_parts.append("Fontes de referência (domínios): " + ", ".join(domains))
+    wizard_briefing = ". ".join(briefing_parts)
+
+    return brand_context, wizard_briefing
+
+
+def _oracle_language(client) -> str:
+    """Idioma da saída do Oráculo a partir do oracle_config (A6). Default pt-BR."""
+    cfg = getattr(client, "oracle_config", None) or {}
+    return cfg.get("language") or "pt-BR"
+
+
+def _oracle_domains(client) -> list[str]:
+    """Allow-list de busca web do oracle_config (A3). Vazio = sem pesquisa web."""
+    cfg = getattr(client, "oracle_config", None) or {}
+    return cfg.get("allowed_domains") or []
+
+
+def _build_provenance(sources: list[dict], fallback_source: str, entity_type: str) -> list[dict]:
+    """Provenance: cita as URLs reais da busca (A3); senão, a origem genérica."""
+    if sources:
+        return [
+            {
+                "source": s.get("url") or s.get("title") or "web",
+                "excerpt": s.get("content", "")[:200],
+            }
+            for s in sources
+        ]
+    return [
+        {
+            "source": fallback_source,
+            "excerpt": f"Gerado a partir de brand_context + wizard_briefing para {entity_type}",
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -321,23 +374,27 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
         if not entity:
             return
         client_name = client.name if client else client_id
+        brand_context, wizard_briefing = _oracle_inputs(client) if client else ("", "")
+        language = _oracle_language(client) if client else "pt-BR"
+        domains = _oracle_domains(client) if client else []
+        sources: list[dict] = []
         try:
-            content = await invoke_oracle(
+            content, oracle_error, sources = await invoke_oracle(
                 client_id=client_id,
                 client_name=client_name,
                 entity_type=entity_type,
-                brand_context="",
-                wizard_briefing="",
+                brand_context=brand_context,
+                wizard_briefing=wizard_briefing,
+                language=language,
+                allowed_domains=domains,
             )
-            provenance_source = "Oráculo Gemini"
-        except Exception as exc:
+        except Exception as exc:  # defensivo
             logger.warning(
                 "Oracle agent: regeneration failed for %s/%s (%s)", client_id, entity_type, exc
             )
-            from .oracle_agent import _fallback_content
-
             content = _fallback_content(entity_type, client_name)
-            provenance_source = "Fallback local"
+            oracle_error = str(exc)
+        provenance_source = "Fallback local" if oracle_error else "Oráculo Gemini"
 
         repository.update_entity(
             session,
@@ -345,12 +402,7 @@ async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:
             status="generated",
             content=content,
             badge="seed_auto",
-            provenance=[
-                {
-                    "source": provenance_source,
-                    "excerpt": f"Regenerado após rejeição HITL de {entity_type}",
-                }
-            ],
+            provenance=_build_provenance(sources, provenance_source, entity_type),
         )
         logger.info("Oracle agent: entity %s regenerated for client %s", entity_type, client_id)
     except Exception as exc:  # noqa: BLE001 — background task
