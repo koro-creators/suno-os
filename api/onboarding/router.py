@@ -39,6 +39,7 @@ from .service import (
     create_client,
     get_onboarding_status,
     get_wiki,
+    list_all_clients,
     regenerate_entity_stub,
     run_oracle_agent,
     start_onboarding,
@@ -52,6 +53,12 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # POST /api/clients — criar cliente
 # ---------------------------------------------------------------------------
+
+
+@router.get("/clients")
+async def list_clients_endpoint(session: Session = Depends(get_session)) -> list[dict]:
+    """Lista todos os clientes (admin /clientes). Shape do banco (snake_case)."""
+    return list_all_clients(session)
 
 
 @router.post("/clients", response_model=ClientCreateResponse, status_code=201)

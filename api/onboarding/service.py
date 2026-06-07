@@ -55,6 +55,11 @@ def get_client_by_slug(session: Session, slug: str) -> dict | None:
     return repository.get_client_by_slug(session, slug)
 
 
+def list_all_clients(session: Session) -> list[dict]:
+    """Lista todos os clientes do banco (admin /clientes)."""
+    return clients_repo.list_clients(session)
+
+
 def require_client_by_slug(session: Session, slug: str) -> dict:
     """Returns client or raises 404 (caixa-preta: never 403)."""
     client = repository.get_client_by_slug(session, slug)
