@@ -726,3 +726,25 @@ export async function listClients(): Promise<ClientAdmin[] | null> {
     return null;
   }
 }
+
+/**
+ * Gera o Oráculo de um cliente legado (sem ontologia) — cria job + dispara geração.
+ * `allowedDomains` restringe a busca web (vazio = sem pesquisa). Retorna ok/erro.
+ */
+export async function backfillOnboarding(
+  slug: string,
+  allowedDomains: string[],
+  language = 'pt-BR',
+): Promise<{ ok: boolean; status: number }> {
+  if (!apiAvailable()) return { ok: false, status: 0 };
+  try {
+    const res = await fetch(getApiUrl(`/api/clients/${slug}/onboarding/backfill`), {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ allowed_domains: allowedDomains, language }),
+    });
+    return { ok: res.ok, status: res.status };
+  } catch {
+    return { ok: false, status: 0 };
+  }
+}

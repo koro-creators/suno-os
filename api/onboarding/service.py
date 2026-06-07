@@ -122,6 +122,35 @@ def start_onboarding(session: Session, slug: str) -> dict:
     return {"job_id": str(job.id), "status": "started", "eta_hours": job.eta_hours or 24}
 
 
+def backfill_onboarding(
+    session: Session,
+    slug: str,
+    allowed_domains: list[str],
+    language: str = "pt-BR",
+) -> tuple[str, str]:
+    """Gera o Oráculo de um cliente legado (sem job/entidades).
+
+    Cria o job + os 6 placeholders e persiste os domínios de busca no oracle_config.
+    Retorna (client_id, job_id). O dispatch do run_oracle_agent fica no router.
+    409 se o cliente já tem onboarding (não re-gera por enquanto).
+    """
+    client = require_client_by_slug(session, slug)
+    client_id = client["id"]
+    if repository.get_job(session, client_id):
+        raise HTTPException(status_code=409, detail="Cliente já possui onboarding")
+
+    cfg = dict(client.get("oracle_config") or {})
+    cfg["allowed_domains"] = allowed_domains
+    cfg["language"] = language
+    clients_repo.update(session, client_id, {"oracle_config": cfg})
+
+    job_id = repository.create_job(session, client_id)
+    for entity_type in ONTOLOGY_ENTITY_TYPES:
+        repository.create_entity_placeholder(session, client_id, entity_type)
+
+    return client_id, job_id
+
+
 # ---------------------------------------------------------------------------
 # Oracle BackgroundTask (async — abre a própria sessão)
 # ---------------------------------------------------------------------------
