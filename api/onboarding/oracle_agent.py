@@ -30,7 +30,9 @@ class OracleState(TypedDict):
     brand_context: str  # descrição da marca (wizard step 1)
     wizard_briefing: str  # sponsor + domínios de referência (wizard)
     language: str  # idioma da saída: "pt-BR" | "en-US" (oracle_config)
+    allowed_domains: list[str]  # allow-list de busca web (A3)
     entity_type: str  # which entity to extract
+    sources: list[dict]  # resultados Tavily {title,url,content} (A2/A3)
     generated_content: str
     used_fallback: bool  # True se caiu no template local (A5: fallback não-silencioso)
     error: Optional[str]
@@ -38,6 +40,16 @@ class OracleState(TypedDict):
 
 # Nº de tentativas no Gemini antes de cair no fallback local (A5)
 _LLM_MAX_ATTEMPTS = 3
+
+# Termo de busca por entidade (A2) — combinado com o nome da marca.
+_SEARCH_TERMS: dict[str, str] = {
+    "Posicionamento": "posicionamento de marca proposta de valor diferenciais",
+    "Persona": "público-alvo persona perfil de cliente",
+    "Competidor": "concorrentes mercado análise competitiva",
+    "Produto": "produtos serviços portfólio",
+    "TomDeVoz": "tom de voz comunicação identidade verbal",
+    "Briefing": "marca comunicação campanha briefing",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -114,7 +126,7 @@ def _get_llm():
     try:
         from langchain_google_genai import ChatGoogleGenerativeAI
 
-        _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.7)
+        _llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
         logger.info("Oracle agent: Gemini Flash LLM initialized")
     except ImportError:
         logger.warning(
@@ -189,6 +201,16 @@ def _build_prompt(state: OracleState) -> str:
     if wizard_briefing:
         parts += ["", "BRIEFING DO WIZARD:", wizard_briefing]
 
+    sources = state.get("sources") or []
+    if sources:
+        parts += [
+            "",
+            "FONTES PESQUISADAS NA WEB (use como base factual; não invente além disto):",
+        ]
+        for s in sources:
+            line = f"- {s.get('title') or s.get('url')}: {s.get('content', '')}"
+            parts.append(line)
+
     if state.get("language") == "en-US":
         closing = (
             "Write in clear, direct American English. "
@@ -206,8 +228,23 @@ def _build_prompt(state: OracleState) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Graph node
+# Graph nodes
 # ---------------------------------------------------------------------------
+
+
+async def _research_node(state: OracleState) -> OracleState:
+    """A2/A3: pesquisa web (Tavily) restrita aos allowed_domains, antes de gerar.
+
+    Sem domínios ou sem chave → sources=[] e o LLM gera só com o contexto do wizard.
+    """
+    from .web_search import tavily_search
+
+    domains = state.get("allowed_domains") or []
+    entity_type = state["entity_type"]
+    term = _SEARCH_TERMS.get(entity_type, "")
+    query = f"{state['client_name']} {term}".strip()
+    sources = await tavily_search(query, allowed_domains=domains, max_results=4)
+    return {**state, "sources": sources}
 
 
 async def _extract_entities_node(state: OracleState) -> OracleState:
@@ -279,10 +316,12 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
 
 
 def build_oracle_graph() -> CompiledStateGraph:
-    """Build and compile the oracle extraction graph."""
+    """Build and compile the oracle graph: START → research → extract → END."""
     graph: StateGraph = StateGraph(OracleState)
+    graph.add_node("research", _research_node)
     graph.add_node("extract_entities", _extract_entities_node)
-    graph.add_edge(START, "extract_entities")
+    graph.add_edge(START, "research")
+    graph.add_edge("research", "extract_entities")
     graph.add_edge("extract_entities", END)
     compiled = graph.compile()
     logger.info("Oracle graph compiled")
@@ -300,12 +339,13 @@ async def invoke_oracle(
     brand_context: str = "",
     wizard_briefing: str = "",
     language: str = "pt-BR",
-) -> tuple[str, Optional[str]]:
+    allowed_domains: Optional[list[str]] = None,
+) -> tuple[str, Optional[str], list[dict]]:
     """Invoke the oracle graph for a single entity.
 
-    Retorna ``(content, error)``. ``error`` é ``None`` quando o Gemini gerou de
-    fato; quando preenchido, indica que o conteúdo veio do **fallback local**
-    (A5: fallback deixa de ser silencioso — o caller marca a provenance).
+    Retorna ``(content, error, sources)``. ``error`` é ``None`` quando o Gemini
+    gerou de fato; quando preenchido, o conteúdo veio do **fallback local** (A5).
+    ``sources`` são os resultados da busca web (A2/A3) — vazio se sem chave/domínios.
     """
     state: OracleState = {
         "client_id": client_id,
@@ -313,7 +353,9 @@ async def invoke_oracle(
         "brand_context": brand_context,
         "wizard_briefing": wizard_briefing,
         "language": language,
+        "allowed_domains": allowed_domains or [],
         "entity_type": entity_type,
+        "sources": [],
         "generated_content": "",
         "used_fallback": False,
         "error": None,
@@ -321,4 +363,4 @@ async def invoke_oracle(
     result = await _oracle_graph.ainvoke(state)
     content = result.get("generated_content") or _fallback_content(entity_type, client_name)
     error = result.get("error") if result.get("used_fallback") else None
-    return content, error
+    return content, error, result.get("sources") or []

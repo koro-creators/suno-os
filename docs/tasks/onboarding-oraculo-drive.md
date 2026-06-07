@@ -32,9 +32,9 @@
 | Task | Descrição | Depende | Estado |
 |------|-----------|---------|--------|
 | **A1** | Passar contexto do wizard ao agente: `brand_context` = `client.description`; `wizard_briefing` = sponsor + domínios. Ajustado `run_oracle_agent` e `regenerate_entity_stub` (helper `_oracle_inputs`). | — | ✅ 06/06 |
-| **A2** | Tool de **web search real** (**Tavily** — DEC-1), com `TAVILY_API_KEY` em Secret Manager. Fallback gracioso se sem chave. | chave Tavily | pendente |
-| **A3** | **Usar `allowed_domains`** para restringir a busca (filtro de domínio) e citar fontes reais na `provenance`. | A2 | pendente |
-| **A4** | Dar a tool de busca ao agente (LangGraph ReAct: o Gemini decide buscar) e injetar resultados no prompt antes de gerar cada entidade. | A2, A3 | pendente |
+| **A2** | Web search real via **Tavily** (`api/onboarding/web_search.py`, httpx — sem nova dep). Graceful sem chave. Secret `sunos-tavily-api-key` criado + wired no deploy. | chave Tavily | ✅ 06/06 |
+| **A3** | Busca **restrita aos `allowed_domains`** (Tavily `include_domains`); `provenance` cita as URLs reais encontradas (`_build_provenance`). | A2 | ✅ 06/06 |
+| **A4** | Nó `research` no LangGraph (START → research → extract → END) injeta as fontes no prompt antes de gerar cada entidade. | A2, A3 | ✅ 06/06 |
 | **A5** | **Robustez do Gemini**: retry/backoff (3 tentativas) + fallback **não-silencioso** (`invoke_oracle` retorna `(content, error)`; provenance vira "Fallback local" quando aplicável). | — | ✅ 06/06 |
 | **A6** | Idioma da saída segue `oracle_config.language` (pt-BR/en-US) no prompt. | A1 | ✅ 06/06 |
 | **A7** | Alimentar o Oráculo com **docs do Drive** selecionados (`selected_doc_ids`) como contexto. | Frente B | pendente |
@@ -59,15 +59,15 @@
 
 ## Sequência recomendada
 
-1. ~~**A1**~~ ✅ → conteúdo já fica específico do cliente.
+1. ~~**A1**~~ ✅ → conteúdo específico do cliente.
 2. ~~**A5 + A6**~~ ✅ (robustez + idioma).
-3. **A2 → A3 → A4** (pesquisa real com **Tavily** — precisa da `TAVILY_API_KEY`). ← *próximo*
+3. ~~**A2 → A3 → A4**~~ ✅ (pesquisa real com Tavily, restrita a domínios). **Frente A do Oráculo concluída** (falta só A7, que depende do Drive).
 4. **Frente B** (Drive) — **parada** (DEC-3 = decidir depois).
 5. **A7** (integra Drive ao Oráculo — fecha o ciclo). Depende da Frente B.
 
 ## Decisões
 
-- **DEC-1 (A2):** ✅ **Tavily** (search API feita p/ agentes, retorna trechos + fontes). Falta a `TAVILY_API_KEY`.
+- **DEC-1 (A2):** ✅ **Tavily** — implementado. `TAVILY_API_KEY` no `api/.env` (local) e secret `sunos-tavily-api-key` (prod).
 - **DEC-2 (B4):** _(aberta)_ KMS já no MVP ou coluna preparada + plaintext só em dev? A migration prevê KMS antes de prod.
 - **DEC-3 (B1):** ✅ **decidir depois** — Frente B parada; foco na Frente A (Oráculo).
 
@@ -75,3 +75,5 @@
 
 - **06/06/2026** — Doc criado após teste E2E do onboarding (tudo funciona até a Wiki; inteligência é stub).
 - **06/06/2026** — **A1, A5, A6 concluídas.** Oráculo agora recebe `brand_context` (descrição) + `wizard_briefing` (sponsor/domínios) + idioma; retry no Gemini (3x) com fallback não-silencioso (provenance distingue "Oráculo Gemini" de "Fallback local"). Suíte 116 verde, ruff limpo. Decisões: Tavily (A2), Frente B adiada. **Bônus:** corrigida regressão pré-existente do `test_admin` (PR #32 removeu `_FIREBASE_ADMIN_AVAILABLE`; fixture agora mocka `_verify_token`).
+- **06/06/2026** — **🐛 BUG CRÍTICO corrigido (teste ao vivo Playwright):** `gemini-2.0-flash` foi **descontinuado pelo Google** (404 NOT_FOUND) — **era a causa real** do conteúdo sempre genérico (caía no fallback, não usava o LLM). Trocado para **`gemini-2.5-flash`** (probe confirmou: 2.0 e 1.5 mortos; 2.5-flash ok). Após o fix, o Oráculo gera conteúdo específico da marca usando as fontes do Tavily (validado: cliente "Havaianas" → conteúdo + provenance com URLs reais). **Observação:** domínios genéricos (wikipedia.org) trazem ruído de homônimo; onboarding real deve usar os domínios do próprio cliente.
+- **06/06/2026** — **A2, A3, A4 concluídas.** Busca web real via Tavily (`web_search.py`, httpx) restrita aos `allowed_domains`; nó `research` no LangGraph injeta as fontes no prompt; `provenance` cita URLs reais. Secret `sunos-tavily-api-key` criado + wired no `deploy-api.yml`. Probe ao vivo confirmou busca real (wikipedia 3 results; suno.com.br 0 — pouco indexado). +4 testes offline (120 verde). **Frente A do Oráculo concluída** (resta A7, que depende do Drive — Frente B parada).
