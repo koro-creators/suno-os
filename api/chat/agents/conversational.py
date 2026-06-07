@@ -97,6 +97,13 @@ class ConversationalAgent(BaseAgent):
         if active_skill and active_skill in _SKILL_PROMPTS:
             # Skill mode: ReAct loop com tools e prompt específico da skill
             skill_prompt = _SKILL_PROMPTS[active_skill]
+
+            # Escopo de cliente (ex.: usuário navegando em /samsung) — o frontend
+            # envia via system_prompt; some às regras da skill sem afrouxá-las.
+            scope_override = state.get("system_prompt")
+            if scope_override:
+                skill_prompt = f"{skill_prompt}\n\n## Contexto da navegação\n\n{scope_override}"
+
             tools = _get_skill_tools(active_skill)
 
             from langchain_core.messages import HumanMessage

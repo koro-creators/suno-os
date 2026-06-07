@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Chat, Close, Send, Sun } from '@carbon/icons-react';
+import { usePathname } from 'next/navigation';
+import { Chat, Close, Send, Sun, TrashCan } from '@carbon/icons-react';
 import { useToolStream } from '@/hooks/useToolStream';
+import { getClientBySlug } from '@/lib/utils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,7 +26,75 @@ export default function ChatPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const prevIsStreamingRef = useRef(false);
 
-  const { text: streamingText, isStreaming, error, startStream } = useToolStream();
+  const { text: streamingText, isStreaming, error, conversationId, startStream } = useToolStream();
+
+  // Scope to the client whose page is currently open (e.g. /samsung -> Samsung).
+  // Pages outside `/[clientSlug]` (home, /skills, /clientes, etc.) resolve to
+  // `undefined`, and the consultor keeps its general "any registered client" mode.
+  const pathname = usePathname();
+  const clientSlug = pathname?.split('/').filter(Boolean)[0] ?? null;
+  const scopedClient = clientSlug ? getClientBySlug(clientSlug) : undefined;
+  const scopeKey = scopedClient?.slug ?? null;
+
+  const clientScopePrompt = scopedClient
+    ? `O usuário está navegando na página do cliente "${scopedClient.name}". ` +
+      `Responda exclusivamente sobre este cliente. Se a pergunta mencionar outro cliente ` +
+      `ou assunto fora deste contexto, explique que você está respondendo no contexto de ` +
+      `${scopedClient.name} e que, para falar de outro cliente, é preciso abrir a página dele.`
+    : undefined;
+
+  // The conversation_id to continue, scoped to the current client page.
+  const [scopedConversationId, setScopedConversationId] = useState<string | null>(null);
+
+  // Per-scope history cache — keeps each page's conversation alive across
+  // navigation instead of wiping it. Keyed by client slug ('__general__' for
+  // pages outside `/[clientSlug]`, e.g. home). Lives in a ref so switching
+  // scopes doesn't trigger extra renders; latest messages/conversationId are
+  // tracked via refs to avoid stale closures when the scope changes.
+  const scopeCacheRef = useRef<Record<string, { messages: Message[]; conversationId: string | null }>>({});
+  const messagesRef = useRef(messages);
+  const scopedConversationIdRef = useRef(scopedConversationId);
+  const prevScopeKeyRef = useRef(scopeKey);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    scopedConversationIdRef.current = scopedConversationId;
+  }, [scopedConversationId]);
+
+  useEffect(() => {
+    if (prevScopeKeyRef.current === scopeKey) return;
+
+    const prevKey = prevScopeKeyRef.current ?? '__general__';
+    scopeCacheRef.current[prevKey] = {
+      messages: messagesRef.current,
+      conversationId: scopedConversationIdRef.current,
+    };
+
+    const nextKey = scopeKey ?? '__general__';
+    const cached = scopeCacheRef.current[nextKey];
+    setMessages(cached?.messages ?? []);
+    setScopedConversationId(cached?.conversationId ?? null);
+
+    prevScopeKeyRef.current = scopeKey;
+  }, [scopeKey]);
+
+  useEffect(() => {
+    if (conversationId) {
+      setScopedConversationId(conversationId);
+    }
+  }, [conversationId]);
+
+  // "Limpar conversa" — starts a fresh conversation in the current scope and
+  // forgets its cached history (so navigating away and back won't restore it).
+  const handleClear = useCallback(() => {
+    const key = scopeKey ?? '__general__';
+    delete scopeCacheRef.current[key];
+    setMessages([]);
+    setScopedConversationId(null);
+  }, [scopeKey]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -57,8 +127,10 @@ export default function ChatPanel() {
       message: text,
       skillSlug: 'consultor',
       model: 'gemini-flash',
+      conversationId: scopedConversationId,
+      systemPrompt: clientScopePrompt,
     });
-  }, [inputValue, isStreaming, startStream]);
+  }, [inputValue, isStreaming, scopedConversationId, clientScopePrompt, startStream]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -194,6 +266,41 @@ export default function ChatPanel() {
                 Online
               </span>
             </div>
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={messages.length === 0 && !isStreaming}
+              aria-label="Limpar conversa"
+              title="Limpar conversa"
+              style={{
+                marginLeft: 'auto',
+                width: 22,
+                height: 22,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: 6,
+                cursor: messages.length === 0 && !isStreaming ? 'default' : 'pointer',
+                color: messages.length === 0 && !isStreaming ? 'var(--text-muted)' : 'var(--text-secondary)',
+                opacity: messages.length === 0 && !isStreaming ? 0.4 : 1,
+                flexShrink: 0,
+                transition: 'color 150ms ease, background-color 150ms ease',
+              }}
+              onMouseEnter={(e) => {
+                if (messages.length === 0 && !isStreaming) return;
+                (e.currentTarget as HTMLButtonElement).style.color = '#f87171';
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--nebula)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color =
+                  messages.length === 0 && !isStreaming ? 'var(--text-muted)' : 'var(--text-secondary)';
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+              }}
+            >
+              <TrashCan size={14} />
+            </button>
           </div>
 
           {/* Message list */}

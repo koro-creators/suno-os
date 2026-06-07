@@ -119,12 +119,18 @@ def _build_initial_state(
     system_prompt: str | None = None,
     context_documents: list[str] | None = None,
     web_search: bool = False,
+    history: list[Any] | None = None,
 ) -> SunosChatState:
-    """Construct the initial SunosChatState for a new turn."""
+    """Construct the initial SunosChatState for a new turn.
+
+    `history` carries prior turns (already trimmed to MAX_HISTORY_MESSAGES) so
+    the agent has memory of the conversation — it is prepended to the new
+    HumanMessage rather than replacing it.
+    """
     conv_id = conversation_id or str(uuid.uuid4())
 
     return SunosChatState(
-        messages=[HumanMessage(content=message)],
+        messages=[*(history or []), HumanMessage(content=message)],
         current_intent="",
         current_agent="",
         active_skill=skill_slug if skill_slug != "conversation" else None,
@@ -139,6 +145,71 @@ def _build_initial_state(
         generated_images=[],
         generated_texts=[],
     )
+
+
+# ---------------------------------------------------------------------------
+# Conversation memory — load prior turns so the agent has context
+# ---------------------------------------------------------------------------
+
+# Bounds how many prior messages are replayed into the LLM each turn, to keep
+# token usage predictable as conversations grow.
+MAX_HISTORY_MESSAGES = 20
+
+
+async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
+    """Load prior turns for `conversation_id` as LangChain messages.
+
+    Best-effort and symmetric to `_persist_conversation`: tries the
+    `conversations.messages` JSONB column first, falls back to the in-memory
+    store, and returns [] (never raises) for new or unknown conversations so a
+    cold cache never breaks the chat.
+    """
+    if not conversation_id:
+        return []
+
+    def _sync_load() -> list[dict] | None:
+        try:
+            from sqlalchemy import create_engine, text
+
+            engine = create_engine(
+                settings.DATABASE_URL.replace("+asyncpg", ""),
+                pool_pre_ping=True,
+                connect_args={"connect_timeout": 3},
+            )
+            with engine.connect() as conn:
+                row = conn.execute(
+                    text("SELECT messages FROM conversations WHERE id = :id"),
+                    {"id": conversation_id},
+                ).first()
+            return row[0] if row else None
+        except Exception as db_exc:
+            logger.debug("DB history load failed for conversation %s: %s", conversation_id, db_exc)
+            return None
+
+    import asyncio
+
+    raw_messages = await asyncio.to_thread(_sync_load)
+
+    if raw_messages is None:
+        from chat.conversations.router import _memory_store
+
+        cached = _memory_store.get(conversation_id)
+        raw_messages = cached.get("messages", []) if cached else []
+
+    history: list[Any] = []
+    for idx, entry in enumerate(raw_messages[-MAX_HISTORY_MESSAGES:]):
+        role = entry.get("role")
+        content = entry.get("content", "")
+        # Stable, deterministic id (preserved by LangGraph's add_messages reducer)
+        # so the streaming loop can recognize these as already-seen and skip
+        # re-emitting them as new "text" events — see seen_message_ids below.
+        msg_id = f"hist-{conversation_id}-{idx}"
+        if role == "user":
+            history.append(HumanMessage(content=content, id=msg_id))
+        elif role == "assistant":
+            history.append(AIMessage(content=content, id=msg_id))
+
+    return history
 
 
 # ---------------------------------------------------------------------------
@@ -190,9 +261,9 @@ async def _persist_conversation(
                         """
                         INSERT INTO conversations
                             (id, user_id, skill_slug, messages, created_at, last_message_at)
-                        VALUES (:id, :user_id, :skill_slug, :messages::jsonb, :now, :now)
+                        VALUES (:id, :user_id, :skill_slug, CAST(:messages AS jsonb), :now, :now)
                         ON CONFLICT (id) DO UPDATE
-                        SET messages = conversations.messages || :messages::jsonb,
+                        SET messages = conversations.messages || CAST(:messages AS jsonb),
                             last_message_at = :now
                         """
                     ),
@@ -264,6 +335,8 @@ async def run_chat_stream(
     After the stream completes, attempts best-effort persistence of the
     conversation turn (user message + assistant response) to the database.
     """
+    history = await _load_conversation_history(conversation_id)
+
     state = _build_initial_state(
         message=message,
         skill_slug=skill_slug,
@@ -274,6 +347,7 @@ async def run_chat_stream(
         system_prompt=system_prompt,
         context_documents=context_documents,
         web_search=web_search,
+        history=history,
     )
 
     conv_id = state["conversation_id"]
@@ -297,7 +371,14 @@ async def run_chat_stream(
 
     graph = build_chat_graph(llm, agents)
 
-    seen_message_ids: set[str] = set()
+    # Pre-seed with AIMessages already in the initial state (replayed history)
+    # so the loop below only streams genuinely new responses — otherwise every
+    # past assistant turn would be re-emitted as "text" on each new message.
+    seen_message_ids: set[str] = {
+        getattr(msg, "id", None) or id(msg)
+        for msg in state.get("messages", [])
+        if isinstance(msg, AIMessage)
+    }
     collected_text_parts: list[str] = []  # Phase 11: accumulate for persistence
 
     try:
