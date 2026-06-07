@@ -290,7 +290,15 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
                     raise ValueError("Empty response from Gemini")
                 if gen is not None:
                     try:
-                        gen.update(output=content)
+                        # Tokens/custo: usa o usage_metadata do Gemini (input/output/total).
+                        um = getattr(response, "usage_metadata", None) or {}
+                        usage = {
+                            "input": um.get("input_tokens"),
+                            "output": um.get("output_tokens"),
+                            "total": um.get("total_tokens"),
+                        }
+                        usage = {k: v for k, v in usage.items() if v is not None}
+                        gen.update(output=content, usage_details=usage or None)
                     except Exception:  # noqa: BLE001
                         pass
             logger.info(
