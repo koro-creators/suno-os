@@ -43,10 +43,12 @@ _SKILL_PROMPTS: dict[str, str] = {
     ),
 }
 
+
 # Tools disponíveis por skill ativa
 def _get_skill_tools(skill_slug: str) -> list:
     if skill_slug == "consultor":
         from chat.tools.wiki_search import search_wiki
+
         return [search_wiki]
     return []
 
@@ -106,14 +108,14 @@ class ConversationalAgent(BaseAgent):
 
             tools = _get_skill_tools(active_skill)
 
-            from langchain_core.messages import HumanMessage
-
             messages: list = [SystemMessage(content=skill_prompt)]
             for msg in state.get("messages", []):
                 messages.append(msg)
 
             import json
+
             from langchain_core.messages import ToolMessage
+
             from chat.agents.base import MAX_REACT_ROUNDS
 
             bound_llm = llm.bind_tools(tools) if tools else llm
@@ -130,16 +132,24 @@ class ConversationalAgent(BaseAgent):
                 for call in tool_calls:
                     tool_fn = tool_map.get(call.get("name", ""))
                     try:
-                        result = tool_fn.invoke(call.get("args", {})) if tool_fn else {"error": "tool not found"}
+                        result = (
+                            tool_fn.invoke(call.get("args", {}))
+                            if tool_fn
+                            else {"error": "tool not found"}
+                        )
                     except Exception as exc:
                         result = {"error": str(exc)}
 
-                    result_str = result if isinstance(result, str) else json.dumps(result, default=str)
-                    messages.append(ToolMessage(
-                        content=result_str,
-                        tool_call_id=call.get("id", ""),
-                        name=call.get("name", ""),
-                    ))
+                    result_str = (
+                        result if isinstance(result, str) else json.dumps(result, default=str)
+                    )
+                    messages.append(
+                        ToolMessage(
+                            content=result_str,
+                            tool_call_id=call.get("id", ""),
+                            name=call.get("name", ""),
+                        )
+                    )
 
             final_text = ""
             for msg in reversed(messages):

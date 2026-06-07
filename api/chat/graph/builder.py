@@ -65,11 +65,11 @@ def build_chat_graph(llm: Any, agents: dict[str, Any] | None = None) -> Compiled
         "top_supervisor",
         route_to_intent,
         {
-            "criacao":      "orchestrator",
-            "midia":        "orchestrator",
+            "criacao": "orchestrator",
+            "midia": "orchestrator",
             "planejamento": "orchestrator",
             "conversation": "orchestrator",
-            "respond":      "respond",
+            "respond": "respond",
         },
     )
 
