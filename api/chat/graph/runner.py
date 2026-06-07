@@ -11,6 +11,7 @@ completes.  Failures are caught and logged — they never interrupt the user.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -19,10 +20,13 @@ from datetime import datetime, timezone
 from typing import Any, AsyncGenerator
 
 from langchain_core.messages import AIMessage, HumanMessage
+from sqlalchemy import text
 
+from chat.conversations.router import _memory_store
 from chat.graph.builder import build_chat_graph
 from chat.graph.state import SunosChatState
 from config import settings
+from core.db import get_sync_session
 
 logger = logging.getLogger(__name__)
 
@@ -169,10 +173,6 @@ async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
 
     def _sync_load() -> list[dict] | None:
         try:
-            from sqlalchemy import text
-
-            from core.db import get_sync_session
-
             db = get_sync_session()
             try:
                 row = db.execute(
@@ -186,13 +186,9 @@ async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
             logger.debug("DB history load failed for conversation %s: %s", conversation_id, db_exc)
             return None
 
-    import asyncio
-
     raw_messages = await asyncio.to_thread(_sync_load)
 
     if raw_messages is None:
-        from chat.conversations.router import _memory_store
-
         cached = _memory_store.get(conversation_id)
         raw_messages = cached.get("messages", []) if cached else []
 
@@ -242,10 +238,6 @@ async def _persist_conversation(
     def _sync_persist() -> bool:
         """Run DB upsert synchronously (called inside asyncio.to_thread)."""
         try:
-            from sqlalchemy import text
-
-            from core.db import get_sync_session
-
             db = get_sync_session()
             try:
                 # Upsert: append new messages to the JSONB column (migration 004).
@@ -278,16 +270,12 @@ async def _persist_conversation(
             logger.debug("DB persist failed for conversation %s: %s", conversation_id, db_exc)
             return False
 
-    import asyncio
-
     persisted_to_db = await asyncio.to_thread(_sync_persist)
 
     if not persisted_to_db:
         # Fallback: write into the in-memory store so GET /conversations works
         # within the same process even without a DB.
         try:
-            from chat.conversations.router import _memory_store
-
             existing = _memory_store.get(conversation_id, {})
             existing_messages: list[dict] = list(existing.get("messages", []))
             existing_messages.extend(new_messages)
@@ -429,9 +417,7 @@ async def run_chat_stream(
         try:
             full_assistant_response = "".join(collected_text_parts)
             if full_assistant_response:
-                import asyncio as _asyncio
-
-                _asyncio.ensure_future(
+                asyncio.ensure_future(
                     _persist_conversation(
                         conversation_id=conv_id,
                         skill_slug=skill_slug,

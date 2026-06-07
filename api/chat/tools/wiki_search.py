@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from langchain_core.tools import tool
+from sqlalchemy import text
 
 from core.db import get_sync_session
 
@@ -21,8 +22,6 @@ def search_wiki(client_name: str) -> str:
     Args:
         client_name: Full or partial name of the client to search for.
     """
-    from sqlalchemy import text
-
     db = get_sync_session()
 
     try:
