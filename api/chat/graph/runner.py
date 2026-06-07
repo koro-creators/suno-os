@@ -169,19 +169,19 @@ async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
 
     def _sync_load() -> list[dict] | None:
         try:
-            from sqlalchemy import create_engine, text
+            from sqlalchemy import text
 
-            engine = create_engine(
-                settings.DATABASE_URL.replace("+asyncpg", ""),
-                pool_pre_ping=True,
-                connect_args={"connect_timeout": 3},
-            )
-            with engine.connect() as conn:
-                row = conn.execute(
+            from core.db import get_sync_session
+
+            db = get_sync_session()
+            try:
+                row = db.execute(
                     text("SELECT messages FROM conversations WHERE id = :id"),
                     {"id": conversation_id},
                 ).first()
-            return row[0] if row else None
+                return row[0] if row else None
+            finally:
+                db.close()
         except Exception as db_exc:
             logger.debug("DB history load failed for conversation %s: %s", conversation_id, db_exc)
             return None
@@ -242,16 +242,11 @@ async def _persist_conversation(
     def _sync_persist() -> bool:
         """Run DB upsert synchronously (called inside asyncio.to_thread)."""
         try:
-            from sqlalchemy import create_engine, text
-            from sqlalchemy.orm import sessionmaker
+            from sqlalchemy import text
 
-            engine = create_engine(
-                settings.DATABASE_URL.replace("+asyncpg", ""),
-                pool_pre_ping=True,
-                connect_args={"connect_timeout": 3},
-            )
-            SessionLocal = sessionmaker(bind=engine)
-            db = SessionLocal()
+            from core.db import get_sync_session
+
+            db = get_sync_session()
             try:
                 # Upsert: append new messages to the JSONB column (migration 004).
                 # Uses a raw SQL statement for JSONB concatenation to avoid

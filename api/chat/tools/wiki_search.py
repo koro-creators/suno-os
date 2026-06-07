@@ -6,7 +6,7 @@ import logging
 
 from langchain_core.tools import tool
 
-from config import settings
+from core.db import get_sync_session
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +21,9 @@ def search_wiki(client_name: str) -> str:
     Args:
         client_name: Full or partial name of the client to search for.
     """
-    from sqlalchemy import create_engine, text
-    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import text
 
-    db_url = settings.DATABASE_URL.replace("+asyncpg", "")
-    engine = create_engine(db_url, pool_pre_ping=True, connect_args={"connect_timeout": 5})
-    Session = sessionmaker(bind=engine)
-    db = Session()
+    db = get_sync_session()
 
     try:
         rows = db.execute(
@@ -64,4 +60,3 @@ def search_wiki(client_name: str) -> str:
         return f"Erro ao consultar a base de dados: {exc}"
     finally:
         db.close()
-        engine.dispose()
