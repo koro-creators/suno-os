@@ -266,16 +266,33 @@ async def _extract_entities_node(state: OracleState) -> OracleState:
 
     from langchain_core.messages import HumanMessage
 
+    try:
+        from core.observability import trace_generation
+    except ImportError:  # test import root
+        from api.core.observability import trace_generation
+
     prompt = _build_prompt(state)
     last_exc: Optional[Exception] = None
 
     # A5: retry com backoff (Gemini retorna 503 intermitente) antes do fallback.
     for attempt in range(1, _LLM_MAX_ATTEMPTS + 1):
         try:
-            response = await llm.ainvoke([HumanMessage(content=prompt)])
-            content = (response.content or "").strip()
-            if not content:
-                raise ValueError("Empty response from Gemini")
+            # Langfuse: span de generation (no-op se LANGFUSE_ENABLED off — prod-safe).
+            async with trace_generation(
+                name=f"oracle:{entity_type}",
+                model="gemini-2.5-flash",
+                input=prompt,
+                metadata={"client": client_name, "attempt": attempt},
+            ) as gen:
+                response = await llm.ainvoke([HumanMessage(content=prompt)])
+                content = (response.content or "").strip()
+                if not content:
+                    raise ValueError("Empty response from Gemini")
+                if gen is not None:
+                    try:
+                        gen.update(output=content)
+                    except Exception:  # noqa: BLE001
+                        pass
             logger.info(
                 "Oracle agent: Gemini gerou conteúdo para %s/%s (tentativa %d)",
                 client_name,
