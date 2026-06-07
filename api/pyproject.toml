@@ -37,6 +37,7 @@ dependencies = [
     "greenlet>=3.3.2",
     # Scheduler
     "apscheduler>=3.10.0",
+    "langfuse>=4.7.1",
 ]
 
 [dependency-groups]
