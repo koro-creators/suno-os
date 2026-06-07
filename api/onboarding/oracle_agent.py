@@ -126,7 +126,7 @@ def _get_llm():
     try:
         from langchain_google_genai import ChatGoogleGenerativeAI
 
-        _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.7)
+        _llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
         logger.info("Oracle agent: Gemini Flash LLM initialized")
     except ImportError:
         logger.warning(
