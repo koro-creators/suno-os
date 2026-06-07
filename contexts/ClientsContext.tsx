@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ClientAdmin } from '@/lib/client-types';
-import { initialClients } from '@/data/clients-admin';
 import { apiAvailable, listClients } from '@/lib/api';
 
 interface ClientsContextValue {
@@ -15,8 +14,8 @@ interface ClientsContextValue {
 const ClientsContext = createContext<ClientsContextValue | null>(null);
 
 export function ClientsProvider({ children }: { children: ReactNode }) {
-  // Com API (prod/dev real): carrega do banco. Sem API (mock-mode): usa o seed local.
-  const [clients, setClients] = useState<ClientAdmin[]>(apiAvailable() ? [] : initialClients);
+  // Lista 100% do banco — nunca exibe clientes mocados. Sem API, fica vazia.
+  const [clients, setClients] = useState<ClientAdmin[]>([]);
 
   useEffect(() => {
     if (!apiAvailable()) return;

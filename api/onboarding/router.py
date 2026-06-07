@@ -26,6 +26,7 @@ except ImportError:  # test import root (repo root on sys.path)
     from api.core.db import get_session
 
 from .schemas import (
+    BackfillRequest,
     ClientCreate,
     ClientCreateResponse,
     OnboardingStatusResponse,
@@ -36,6 +37,7 @@ from .schemas import (
     WikiPageResponse,
 )
 from .service import (
+    backfill_onboarding,
     create_client,
     get_onboarding_status,
     get_wiki,
@@ -131,6 +133,29 @@ async def start_onboarding_endpoint(
         logger.info("Oracle agent job dispatched for client %s", slug)
 
     return StartOnboardingResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# POST /api/clients/{slug}/onboarding/backfill — gerar Oráculo de cliente legado
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/clients/{slug}/onboarding/backfill",
+    response_model=StartOnboardingResponse,
+    status_code=202,
+)
+async def backfill_onboarding_endpoint(
+    slug: str,
+    req: BackfillRequest,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session),
+) -> StartOnboardingResponse:
+    """Cria job + placeholders para um cliente sem ontologia e dispara o Oráculo."""
+    client_id, job_id = backfill_onboarding(session, slug, req.allowed_domains, req.language)
+    background_tasks.add_task(run_oracle_agent, client_id)
+    logger.info("Oracle backfill dispatched for client %s", slug)
+    return StartOnboardingResponse(job_id=job_id, status="started", eta_hours=1)
 
 
 # ---------------------------------------------------------------------------

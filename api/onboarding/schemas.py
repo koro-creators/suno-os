@@ -98,6 +98,13 @@ class StartOnboardingResponse(BaseModel):
     eta_hours: int
 
 
+class BackfillRequest(BaseModel):
+    """Gera o Oráculo de um cliente legado (sem job/entidades). Domínios opcionais."""
+
+    allowed_domains: list[str] = []
+    language: str = "pt-BR"
+
+
 # ---------------------------------------------------------------------------
 # HITL validation
 # ---------------------------------------------------------------------------
