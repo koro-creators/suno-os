@@ -79,6 +79,20 @@ def test_create_client_pre_active(ctx):
     assert body["job_id"]
 
 
+def test_list_clients_returns_created(ctx):
+    client, _ = ctx
+    _create(client, slug="cogna", name="Cogna")
+    _create(client, slug="vivo", name="Vivo")
+    rows = client.get("/api/clients").json()
+    assert isinstance(rows, list)
+    slugs = {r["slug"] for r in rows}
+    assert {"cogna", "vivo"} <= slugs
+    cogna = next(r for r in rows if r["slug"] == "cogna")
+    assert cogna["status"] == "PRE_ACTIVE"
+    # shape do banco (snake_case) que o front mapeia para ClientAdmin
+    assert "sponsor_email" in cogna and "created_at" in cogna
+
+
 def test_status_lists_six_pending(ctx):
     client, _ = ctx
     _create(client)

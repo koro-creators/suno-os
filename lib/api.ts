@@ -6,6 +6,7 @@
  */
 
 import type { SkillAdmin } from './admin-types';
+import type { ClientAdmin } from './client-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -669,5 +670,59 @@ export async function deleteSkillApi(id: string): Promise<boolean> {
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Clientes (admin) — listagem DB-backed
+// ---------------------------------------------------------------------------
+
+/** Linha crua do backend (snake_case) — Client.to_dict(). */
+interface ClientApiRow {
+  id: string;
+  name: string;
+  slug: string;
+  status?: string;
+  color?: string | null;
+  description?: string | null;
+  sponsor_name?: string | null;
+  sponsor_email?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+/** Mapeia o shape do banco para o ClientAdmin do front (métricas zeradas — ainda não há analytics). */
+function mapClientRow(r: ClientApiRow): ClientAdmin {
+  return {
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    color: r.color || '#FFC801',
+    description: r.description || '',
+    contact: r.sponsor_email || r.sponsor_name || '',
+    assignedSkills: [],
+    metrics: {
+      totalSessions: 0,
+      totalFeedbacks: 0,
+      averageScore: 0,
+      topSkill: '',
+      lastActivity: r.updated_at || '',
+    },
+    createdAt: r.created_at || '',
+    updatedAt: r.updated_at || '',
+    status: (r.status as ClientAdmin['status']) || 'ACTIVE',
+  };
+}
+
+/** Lista clientes do banco. null em mock-mode (sem API). */
+export async function listClients(): Promise<ClientAdmin[] | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl('/api/clients'), { headers: await getHeaders() });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as ClientApiRow[];
+    return rows.map(mapClientRow);
+  } catch {
+    return null;
   }
 }
