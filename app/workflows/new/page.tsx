@@ -43,13 +43,18 @@ function CreateWorkflowContent() {
       }
     }
 
-    const created = createWorkflow({
-      name,
-      description,
-      client_id: '',
-      steps,
-    });
-    router.replace(`/workflows/${created.id}`);
+    let cancelled = false;
+    (async () => {
+      try {
+        const created = await createWorkflow({ name, description, client_id: '', steps });
+        if (!cancelled) router.replace(`/workflows/${created.id}`);
+      } catch {
+        if (!cancelled) router.replace('/workflows');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // Effect runs once on mount; createWorkflow + router stable enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

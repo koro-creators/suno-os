@@ -17,7 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Play, RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
-import { apiAvailable, migrateWorkflowV2 } from '@/lib/api';
+import { apiAvailable, getWorkflowDetail, migrateWorkflowV2 } from '@/lib/api';
 import type {
   Workflow,
   WorkflowEdge,
@@ -113,8 +113,12 @@ export default function WorkflowEditorPage() {
   const { workflows, updateWorkflow, deleteWorkflow, runWorkflow } = useWorkflows();
   const workflowId = params.workflowId as string;
 
-  const workflow = workflows.find((w) => w.id === workflowId);
+  const ctxWorkflow = workflows.find((w) => w.id === workflowId);
 
+  // `undefined` = still resolving; `null` = confirmed not found.
+  // Real-mode resolves via getWorkflowDetail (decoupled from the async list
+  // load, which omits steps); mock-mode resolves from the context fixtures.
+  const [workflow, setWorkflow] = useState<Workflow | null | undefined>(ctxWorkflow);
   const [migrationState, setMigrationState] = useState<'idle' | 'migrating' | 'ready'>('idle');
   const [migrationError, setMigrationError] = useState<string | null>(null);
   const [payload, setPayload] = useState<CanvasPayload | null>(null);
@@ -123,24 +127,37 @@ export default function WorkflowEditorPage() {
   // Dependency is workflowId (stable string), not workflow (object recreated on
   // every auto-save), to prevent an infinite re-migration loop.
   useEffect(() => {
-    if (!workflow) return;
-    const wf = workflow;
     let cancelled = false;
 
     async function prepare() {
       setMigrationError(null);
-      // Real-mode: trigger migrate-v2 if needed. On failure, fall back to the
-      // local migration so the canvas always renders (canvas-conventions.md §mock-mode).
+      let wf: Workflow | null | undefined = ctxWorkflow;
+
       if (apiAvailable()) {
+        // Real-mode: migrate to v2 if needed, then fetch the full detail
+        // (the list endpoint omits steps). On failure, fall back to whatever
+        // the context held (canvas-conventions.md §mock-mode degradation).
         try {
           setMigrationState('migrating');
-          await migrateWorkflowV2(wf.id);
+          await migrateWorkflowV2(workflowId);
         } catch (err) {
           if (cancelled) return;
-          // Non-blocking: surface the warning but continue with local migration.
           setMigrationError(err instanceof Error ? err.message : String(err));
         }
+        try {
+          wf = await getWorkflowDetail(workflowId);
+        } catch {
+          wf = ctxWorkflow ?? null;
+        }
       }
+
+      if (cancelled) return;
+      setWorkflow(wf ?? null);
+      if (!wf) {
+        setMigrationState('ready');
+        return;
+      }
+
       const steps = wf.steps as WorkflowStep[];
       const positions = buildPositions(steps);
       const v2Steps: WorkflowStepV2[] = steps.map((s) => ({
@@ -149,7 +166,6 @@ export default function WorkflowEditorPage() {
         position_y: positions[s.id]?.y ?? 0,
       }));
       const v2Edges = buildEdgesFromV1(steps);
-      if (cancelled) return;
       setPayload({ steps: v2Steps, edges: v2Edges });
       setMigrationState('ready');
     }
@@ -176,7 +192,18 @@ export default function WorkflowEditorPage() {
     [updateWorkflow, workflow],
   );
 
-  if (!workflow) {
+  if (workflow === undefined) {
+    return (
+      <>
+        <AppHeader breadcrumbs={[{ label: 'Workflows', href: '/workflows' }]} />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>Carregando workflow…</p>
+        </div>
+      </>
+    );
+  }
+
+  if (workflow === null) {
     return (
       <>
         <AppHeader

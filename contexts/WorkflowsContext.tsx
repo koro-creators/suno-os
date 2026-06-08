@@ -1,8 +1,16 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Workflow, WorkflowStep } from '@/lib/workflow-types';
 import { initialWorkflows } from '@/data/workflows-admin';
+import {
+  apiAvailable,
+  listWorkflows as apiListWorkflows,
+  createWorkflow as apiCreateWorkflow,
+  updateWorkflow as apiUpdateWorkflow,
+  deleteWorkflow as apiDeleteWorkflow,
+  runWorkflow as apiRunWorkflow,
+} from '@/lib/api';
 
 interface WorkflowCreateData {
   name: string;
@@ -19,20 +27,52 @@ interface WorkflowsContextValue {
   workflows: Workflow[];
   loading: boolean;
   error: string | null;
-  createWorkflow: (data: WorkflowCreateData) => Workflow;
-  updateWorkflow: (id: string, data: Partial<Workflow>) => void;
-  deleteWorkflow: (id: string) => void;
-  runWorkflow: (id: string) => void;
+  createWorkflow: (data: WorkflowCreateData) => Promise<Workflow>;
+  updateWorkflow: (id: string, data: Partial<Workflow>) => Promise<void>;
+  deleteWorkflow: (id: string) => Promise<void>;
+  runWorkflow: (id: string) => Promise<void>;
 }
 
 const WorkflowsContext = createContext<WorkflowsContextValue | null>(null);
 
 export function WorkflowsProvider({ children }: { children: ReactNode }) {
-  const [workflows, setWorkflows] = useState<Workflow[]>(initialWorkflows);
-  const [loading] = useState(false);
-  const [error] = useState<string | null>(null);
+  // Real-mode starts empty + loading; mock-mode seeds from the fixture file.
+  const [workflows, setWorkflows] = useState<Workflow[]>(
+    apiAvailable() ? [] : initialWorkflows,
+  );
+  const [loading, setLoading] = useState<boolean>(apiAvailable());
+  const [error, setError] = useState<string | null>(null);
 
-  function createWorkflow(data: WorkflowCreateData): Workflow {
+  // Load the workflow list from the backend on mount (real-mode only).
+  // On any failure, degrade to the mock fixtures so the UI keeps working
+  // (canvas-conventions.md §mock-mode degradation).
+  useEffect(() => {
+    if (!apiAvailable()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await apiListWorkflows();
+        if (!cancelled) setWorkflows(list);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : String(err));
+        setWorkflows(initialWorkflows); // graceful fallback
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function createWorkflow(data: WorkflowCreateData): Promise<Workflow> {
+    if (apiAvailable()) {
+      const created = await apiCreateWorkflow(data);
+      setWorkflows((prev) => [created, ...prev]);
+      return created;
+    }
+    // Mock-mode: local-only creation
     const id = `wf-${crypto.randomUUID()}`;
     const now = new Date().toISOString();
     const newWorkflow: Workflow = {
@@ -55,7 +95,18 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
     return newWorkflow;
   }
 
-  function updateWorkflow(id: string, data: Partial<Workflow>) {
+  async function updateWorkflow(id: string, data: Partial<Workflow>): Promise<void> {
+    if (apiAvailable()) {
+      const updated = await apiUpdateWorkflow(id, data);
+      // List responses omit steps; preserve any steps we already had locally
+      // so the editor's in-flight canvas state isn't blown away by the patch.
+      setWorkflows((prev) =>
+        prev.map((w) =>
+          w.id === id ? { ...updated, steps: updated.steps.length ? updated.steps : w.steps } : w,
+        ),
+      );
+      return;
+    }
     setWorkflows((prev) =>
       prev.map((w) => {
         if (w.id !== id) return w;
@@ -68,11 +119,36 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  function deleteWorkflow(id: string) {
+  async function deleteWorkflow(id: string): Promise<void> {
+    if (apiAvailable()) {
+      await apiDeleteWorkflow(id);
+    }
     setWorkflows((prev) => prev.filter((w) => w.id !== id));
   }
 
-  function runWorkflow(id: string) {
+  async function runWorkflow(id: string): Promise<void> {
+    if (apiAvailable()) {
+      const res = await apiRunWorkflow(id);
+      setWorkflows((prev) =>
+        prev.map((w) =>
+          w.id === id
+            ? {
+                ...w,
+                last_run: {
+                  run_id: res.run_id,
+                  status: res.status,
+                  completed_at:
+                    res.status === 'completed' || res.status === 'failed'
+                      ? new Date().toISOString()
+                      : null,
+                },
+                updated_at: new Date().toISOString(),
+              }
+            : w,
+        ),
+      );
+      return;
+    }
     // Mock: update last_run
     const now = new Date().toISOString();
     setWorkflows((prev) =>
