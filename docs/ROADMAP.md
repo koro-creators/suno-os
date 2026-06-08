@@ -1,6 +1,6 @@
 # sunOS — Roadmap
 
-> Última atualização: 2026-05-26 (Wave 1+2). Alinhado com PRD Parte 5 (v1.2, 2026-05-14) e SPECs SDD existentes.
+> Última atualização: 2026-06-08 (refino Oráculo + observabilidade). Alinhado com PRD Parte 5 (v1.2, 2026-05-14) e SPECs SDD existentes.
 > Fases de produto: **POC → Protótipo → Piloto → Momento 2 → MVP** (mapeamento em `docs/prd/parte5-roadmap-fases.md §1.4`).
 
 ---
@@ -178,6 +178,12 @@
 - [x] PRE_ACTIVE → ACTIVE após 6/6 entidades aprovadas — `validate/page.tsx` verifica `acceptedCount === 6`
 - [x] Alerta >= 72h se entidade pendente sem revisão (FR-185) — `isEntityStale()` + badge `WarningAlt` + banner na validate page
 
+**Refino pós-entrega (2026-06-08):**
+- [x] Clientes listam 100% do banco, sem fallback mocado (PR #39) — `chore(clientes): lista 100% do banco`
+- [x] Backfill: gerar Oráculo de cliente legado + botão na UI (PR #40) — `api/onboarding/service.py`
+- [x] Observabilidade Langfuse no Oráculo, local-only/prod-safe (PR #41) — gated por `LANGFUSE_ENABLED`; ver [[sunos-langfuse-local]]
+- [x] Performance: 6 entidades em paralelo (~50s vs ~90s) + captura de tokens/custo no Langfuse (PR #43) — `asyncio` + `Semaphore(_ORACLE_CONCURRENCY=3)` em `api/onboarding/oracle_agent.py`
+
 ### Phase 20: Aprovação Hierárquica
 > Fase de produto: **Momento 2** (pós-Piloto v1) — solicitado por Guga + Bruno Prosperi (2026-04-28)
 > SPEC-004 (approval-hierarchy): rascunho
@@ -272,14 +278,14 @@
 
 ## Mapeamento Fase de Produto ↔ Phases Técnicas
 
-> Última auditoria de código: 2026-05-26
+> Última auditoria de código: 2026-06-08
 
 | Fase de Produto | Phases Técnicas | Status |
 |-----------------|-----------------|:------:|
 | **POC** | SPEC-010 (Moon Shot pipeline mínimo) | Em planejamento |
 | **Protótipo** | Phases 1–11 concluídas | ✅ 100% — gate Protótipo completo (smoke test staging pendente ops) |
 | **MVP (UX)** | Phase 12 ✅, Phase 13 ✅, Phase 15 ✅ | Implementadas |
-| **Piloto** | Phase 14 ✅, Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅, Phase 18 ⚠️ (Sync/ACL requerem credenciais Drive externas), Phase 19 ✅, Phase 22 ⚠️ (GCS + Cloud Scheduler Fase D), Phase 23 ✅ | Em andamento |
+| **Piloto** | Phase 14 ✅, Phase 16 ⛔ bloqueada DEC-06, Phase 17 ✅, Phase 18 ⚠️ (Sync/ACL requerem credenciais Drive externas), Phase 19 ✅ (+ refino: paralelização, backfill, Langfuse — PRs #39–43), Phase 22 ⚠️ (GCS + Cloud Scheduler Fase D), Phase 23 ✅ | Em andamento |
 | **Momento 2** | Phase 20 ✅ (notificações in-memory; email/FCM externo), Phase 21 ✅ | Implementadas |
 
 ---
