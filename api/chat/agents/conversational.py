@@ -13,6 +13,7 @@ from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 
 from chat.agents.base import MAX_REACT_ROUNDS, BaseAgent
 from chat.graph.state import SunosChatState
+from chat.tools.client_tools import buscar_cliente
 from chat.tools.wiki_search import search_wiki
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ _SKILL_PROMPTS: dict[str, str] = {
 # Tools disponíveis por skill ativa
 def _get_skill_tools(skill_slug: str) -> list:
     if skill_slug == "consultor":
-        return [search_wiki]
+        return [search_wiki, buscar_cliente]
     return []
 
 
