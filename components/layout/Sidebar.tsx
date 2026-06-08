@@ -26,7 +26,6 @@ const NAV_ITEMS: NavItemDef[] = [
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState('Home');
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAdmin, role, signOut } = useAuth();
@@ -34,8 +33,15 @@ export default function Sidebar() {
 
   const visibleNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
+  // Item ativo derivado só do pathname (fonte única de verdade).
+  // Home ('/') exige match exato; demais aceitam rotas aninhadas (ex.: /skills/123).
+  const isItemActive = (href?: string) => {
+    if (!href) return false;
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(href + '/');
+  };
+
   const handleNavClick = (item: NavItemDef) => {
-    setActiveItem(item.label);
     if (item.href) {
       router.push(item.href);
     }
@@ -78,7 +84,7 @@ export default function Sidebar() {
         >
           {visibleNavItems.map((item) => {
             const { label, icon: Icon } = item;
-            const isActive = activeItem === label || (item.href && pathname.startsWith(item.href));
+            const isActive = isItemActive(item.href);
             return (
               <div
                 key={label}
@@ -197,7 +203,7 @@ export default function Sidebar() {
               key={item.label}
               label={item.label}
               icon={item.icon}
-              isActive={activeItem === item.label || !!(item.href && pathname.startsWith(item.href))}
+              isActive={isItemActive(item.href)}
               onClick={() => handleNavClick(item)}
             />
           ))}
