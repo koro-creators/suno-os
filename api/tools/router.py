@@ -57,6 +57,13 @@ TOOL_CATALOG: list[ToolDescriptor] = [
         default_config={"max_tokens": 1024},
     ),
     ToolDescriptor(
+        tool_name="consultar_ontologia",
+        label="Ontologia do cliente",
+        category="criacao",
+        description="Carrega a ontologia do cliente (marca, persona, tom de voz).",
+        default_config={},
+    ),
+    ToolDescriptor(
         tool_name="generate_image",
         label="Compor imagem",
         category="criacao",

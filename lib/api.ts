@@ -255,9 +255,13 @@ export async function enhancePrompt(params: EnhancePromptParams): Promise<Enhanc
 
 import type {
   AutoLayoutResponse,
+  CronSchedule,
   MigrateV2Response,
   ValidateWorkflowResponse,
+  Workflow,
   WorkflowEdge,
+  WorkflowRun,
+  WorkflowStep,
 } from '@/lib/workflow-types';
 
 async function workflowFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -313,6 +317,174 @@ export async function migrateWorkflowV2(workflowId: string): Promise<MigrateV2Re
   return workflowFetch<MigrateV2Response>(`/api/workflows/${workflowId}/migrate-v2`, {
     method: 'POST',
   });
+}
+
+// ---------------------------------------------------------------------------
+// SPEC-005 — Workflow CRUD + execution (DB-backed; backend api/workflows/router.py)
+// ---------------------------------------------------------------------------
+
+/** Raw backend shapes (WorkflowResponse / WorkflowDetailResponse from schemas.py). */
+interface ApiWorkflowSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  status: 'draft' | 'active' | 'paused';
+  steps_count: number;
+  schedule_cron: string | null;
+  schedule_enabled: boolean;
+  last_run: { run_id: string; status: string; completed_at: string | null } | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ApiWorkflowDetail extends ApiWorkflowSummary {
+  definition: {
+    steps?: WorkflowStep[];
+    default_model?: string;
+    max_execution_time?: number;
+    schedule_timezone?: string;
+  };
+  client_scope: string[];
+  default_model: string;
+  max_execution_time: number;
+}
+
+/** Input accepted by createWorkflow (mirrors WorkflowsContext WorkflowCreateData). */
+export interface WorkflowCreatePayload {
+  name: string;
+  description: string;
+  client_id?: string;
+  steps: WorkflowStep[];
+  schedule?: CronSchedule;
+  client_scope?: string[];
+  default_model?: string;
+  max_execution_time?: number;
+}
+
+/**
+ * Adapt a backend workflow response to the frontend `Workflow` shape.
+ *
+ * Bridges three impedance mismatches (see schemas.py):
+ * - steps live in `definition.steps` (detail only; list responses omit them → []).
+ * - there is no `client_id` column server-side — we derive it from client_scope[0].
+ * - schedule is split into schedule_cron / schedule_enabled (+ timezone in definition).
+ */
+function adaptWorkflow(r: ApiWorkflowSummary | ApiWorkflowDetail): Workflow {
+  const detail = r as Partial<ApiWorkflowDetail>;
+  const def = detail.definition ?? {};
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description ?? '',
+    status: r.status,
+    steps: def.steps ?? [],
+    schedule: r.schedule_cron
+      ? {
+          cron: r.schedule_cron,
+          timezone: def.schedule_timezone ?? 'America/Sao_Paulo',
+          enabled: !!r.schedule_enabled,
+        }
+      : undefined,
+    steps_count: r.steps_count,
+    last_run: r.last_run
+      ? {
+          run_id: r.last_run.run_id,
+          status: r.last_run.status,
+          completed_at: r.last_run.completed_at,
+        }
+      : undefined,
+    created_by: r.created_by,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    client_id: detail.client_scope?.[0] ?? '',
+    client_scope: detail.client_scope,
+    default_model: detail.default_model,
+    max_execution_time: detail.max_execution_time,
+  };
+}
+
+/** List all workflows (summaries — no steps; use getWorkflowDetail for the canvas). */
+export async function listWorkflows(): Promise<Workflow[]> {
+  const res = await workflowFetch<{ workflows: ApiWorkflowSummary[]; total: number }>(
+    `/api/workflows/`,
+  );
+  return res.workflows.map(adaptWorkflow);
+}
+
+/** Get a single workflow with its full definition (steps included). */
+export async function getWorkflowDetail(workflowId: string): Promise<Workflow> {
+  return adaptWorkflow(await workflowFetch<ApiWorkflowDetail>(`/api/workflows/${workflowId}`));
+}
+
+/** Create a workflow. client_id (if given) seeds client_scope[0]. */
+export async function createWorkflow(data: WorkflowCreatePayload): Promise<Workflow> {
+  const body = {
+    name: data.name,
+    description: data.description,
+    steps: data.steps,
+    schedule: data.schedule,
+    client_scope:
+      data.client_scope ?? (data.client_id ? [data.client_id] : []),
+    default_model: data.default_model ?? 'gemini-flash',
+    max_execution_time: data.max_execution_time ?? 300,
+  };
+  return adaptWorkflow(
+    await workflowFetch<ApiWorkflowDetail>(`/api/workflows/`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+/** Update a workflow (partial). Maps the frontend Workflow shape → WorkflowUpdate. */
+export async function updateWorkflow(
+  workflowId: string,
+  data: Partial<Workflow>,
+): Promise<Workflow> {
+  const body: Record<string, unknown> = {};
+  if (data.name !== undefined) body.name = data.name;
+  if (data.description !== undefined) body.description = data.description;
+  if (data.steps !== undefined) body.steps = data.steps;
+  if (data.schedule !== undefined) body.schedule = data.schedule;
+  if (data.status !== undefined) body.status = data.status;
+  if (data.client_scope !== undefined) body.client_scope = data.client_scope;
+  if (data.default_model !== undefined) body.default_model = data.default_model;
+  if (data.max_execution_time !== undefined) body.max_execution_time = data.max_execution_time;
+  return adaptWorkflow(
+    await workflowFetch<ApiWorkflowDetail>(`/api/workflows/${workflowId}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+/** Delete a workflow (cascade removes runs + edges server-side). */
+export async function deleteWorkflow(workflowId: string): Promise<void> {
+  const url = getApiUrl(`/api/workflows/${workflowId}`);
+  const headers = await getHeaders();
+  const response = await fetch(url, { method: 'DELETE', headers });
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Workflow API ${response.status}: ${response.statusText}`);
+  }
+}
+
+/** Trigger a workflow run (executes synchronously server-side, returns final status). */
+export async function runWorkflow(
+  workflowId: string,
+): Promise<{ run_id: string; status: string; started_at: string }> {
+  return workflowFetch(`/api/workflows/${workflowId}/run`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+/** List execution history for a workflow. */
+export async function listWorkflowRuns(workflowId: string): Promise<WorkflowRun[]> {
+  const res = await workflowFetch<{ runs: WorkflowRun[]; total: number }>(
+    `/api/workflows/${workflowId}/runs`,
+  );
+  return res.runs;
 }
 
 // ---------------------------------------------------------------------------

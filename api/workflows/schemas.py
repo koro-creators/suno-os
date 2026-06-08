@@ -124,6 +124,7 @@ class WorkflowUpdate(BaseModel):
 class RunWorkflowRequest(BaseModel):
     input_overrides: dict[str, Any] = {}
     model_override: str | None = None
+    client_id: str | None = None  # override; defaults to the workflow's client_scope[0]
 
 
 class ResumeRunRequest(BaseModel):

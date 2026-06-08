@@ -1,10 +1,12 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { Play } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowRunTimeline from '@/components/workflows/WorkflowRunTimeline';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
+import { apiAvailable, listWorkflowRuns } from '@/lib/api';
 import { WorkflowRun } from '@/lib/workflow-types';
 
 // Mock runs for dev — in production would come from API
@@ -62,7 +64,29 @@ export default function WorkflowRunsPage() {
 
   const workflowId = params.workflowId as string;
   const workflow = workflows.find((w) => w.id === workflowId);
-  const runs = MOCK_RUNS[workflowId] || [];
+  const [runs, setRuns] = useState<WorkflowRun[]>(MOCK_RUNS[workflowId] || []);
+
+  const loadRuns = useCallback(async () => {
+    if (!apiAvailable()) {
+      setRuns(MOCK_RUNS[workflowId] || []);
+      return;
+    }
+    try {
+      setRuns(await listWorkflowRuns(workflowId));
+    } catch {
+      setRuns(MOCK_RUNS[workflowId] || []); // graceful fallback
+    }
+  }, [workflowId]);
+
+  useEffect(() => {
+    void loadRuns();
+  }, [loadRuns]);
+
+  // Trigger a run, then refresh the history once it completes server-side.
+  const handleRun = useCallback(async () => {
+    await runWorkflow(workflowId);
+    await loadRuns();
+  }, [runWorkflow, workflowId, loadRuns]);
 
   if (!workflow) {
     return (
@@ -105,7 +129,7 @@ export default function WorkflowRunsPage() {
             </p>
           </div>
           <button
-            onClick={() => runWorkflow(workflow.id)}
+            onClick={handleRun}
             style={{
               display: 'flex',
               alignItems: 'center',

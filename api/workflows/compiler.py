@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 class WorkflowState(TypedDict):
     workflow_id: str
     run_id: str
+    client_id: str | None  # resolved from the run; powers client-scoped tools (ontologia)
     steps_output: dict[str, Any]
     current_step: str
     status: str
@@ -61,28 +62,58 @@ class WorkflowState(TypedDict):
 TOOL_REGISTRY: dict[str, Any] = {}
 
 
+def _lookup_client_ontology(client_id: str | None) -> str:
+    """Load the client's ontology (6 Oráculo entities) as prompt-ready text.
+
+    Reads the client_id from the run state (server-side) — never from user
+    config — so a tool step can inject the client's brand context without
+    leaking which client a step belongs to (caixa-preta RN-009/010). Returns a
+    benign message (not an error) when there's no client or no ontology yet, so
+    the run never fails just because the Oráculo hasn't been seeded.
+    """
+    if not client_id:
+        return "(nenhum cliente associado a este workflow)"
+    try:
+        from core.db import _get_sessionmaker
+        from onboarding.service import get_ontology_text
+    except ImportError:  # test import root (repo root on sys.path)
+        from api.core.db import _get_sessionmaker
+        from api.onboarding.service import get_ontology_text
+    session = _get_sessionmaker()()
+    try:
+        text = get_ontology_text(session, client_id)
+    finally:
+        session.close()
+    return text or "(ontologia ainda não disponível para este cliente)"
+
+
 def _load_tool_registry() -> None:
     """Lazy-load tools from chat/tools/ into the registry."""
     global TOOL_REGISTRY
     if TOOL_REGISTRY:
         return
+    # The tool objects are the @tool-decorated functions; their module-level
+    # names match the function names (generate_text / generate_image /
+    # web_search), NOT the *_tool aliases this used to import (which silently
+    # ImportError'd, leaving the registry empty and every tool step failing).
     try:
-        from chat.tools.text_tools import text_generation_tool
+        from chat.tools.text_tools import generate_text
 
-        TOOL_REGISTRY["generate_text"] = text_generation_tool
-        TOOL_REGISTRY["text_generation"] = text_generation_tool
+        TOOL_REGISTRY["generate_text"] = generate_text
+        TOOL_REGISTRY["text_generation"] = generate_text
     except ImportError:
         pass
     try:
-        from chat.tools.image_tools import generate_image_tool
+        from chat.tools.image_tools import generate_image
 
-        TOOL_REGISTRY["generate_image"] = generate_image_tool
+        TOOL_REGISTRY["generate_image"] = generate_image
     except ImportError:
         pass
     try:
-        from chat.tools.search_tools import web_search_tool
+        from chat.tools.search_tools import web_search
 
-        TOOL_REGISTRY["search_knowledge"] = web_search_tool
+        TOOL_REGISTRY["search_knowledge"] = web_search
+        TOOL_REGISTRY["web_search"] = web_search
     except ImportError:
         pass
 
@@ -424,11 +455,15 @@ class WorkflowCompiler:
 
             if step_type == "tool":
                 tool_name = step.get("tool_name", "")
-                tool = TOOL_REGISTRY.get(tool_name)
-                if tool:
-                    result = await tool.ainvoke(resolved_config)
+                if tool_name == "consultar_ontologia":
+                    # Client-scoped: reads client_id from run state, not config.
+                    result = _lookup_client_ontology(state.get("client_id"))
                 else:
-                    result = {"error": f"Tool '{tool_name}' not found in registry"}
+                    tool = TOOL_REGISTRY.get(tool_name)
+                    if tool:
+                        result = await tool.ainvoke(resolved_config)
+                    else:
+                        result = {"error": f"Tool '{tool_name}' not found in registry"}
 
             elif step_type == "llm":
                 prompt = step.get("prompt", "")
@@ -513,6 +548,7 @@ class WorkflowCompiler:
                         sub_state = {
                             "workflow_id": target_wf_id,
                             "run_id": state.get("run_id", "") + f"_sub_{step_id}",
+                            "client_id": state.get("client_id"),
                             "steps_output": {},
                             "current_step": "",
                             "status": "running",

@@ -49,6 +49,19 @@ def _open_session() -> Session:
     return _get_sessionmaker()()
 
 
+def get_ontology_text(session: Session, client_id: str) -> str:
+    """Render the client's ontology (accepted/generated entities) as prompt text.
+
+    Ordered by ONTOLOGY_ENTITY_TYPES so the output is deterministic. Returns ""
+    when nothing is available yet. The caller must resolve client_id server-side
+    (caixa-preta RN-009/010) — this only filters by the given client.
+    """
+    entities = repository.list_entities(session, client_id, statuses={"accepted", "generated"})
+    by_type = {e.entity_type: (e.content or "").strip() for e in entities}
+    parts = [f"## {et}\n{by_type[et]}" for et in ONTOLOGY_ENTITY_TYPES if by_type.get(et)]
+    return "\n\n".join(parts)
+
+
 # ---------------------------------------------------------------------------
 # Client helpers
 # ---------------------------------------------------------------------------
