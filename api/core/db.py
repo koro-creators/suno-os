@@ -58,3 +58,15 @@ def get_session():
         yield session
     finally:
         session.close()
+
+
+def get_sync_session():
+    """Sessão síncrona avulsa, usando o engine cacheado por `_get_sessionmaker`.
+
+    Para código best-effort fora do ciclo de request (tools do LangChain,
+    persistência em background) que trata a indisponibilidade do banco
+    localmente — ao contrário de `get_session`, NÃO levanta 503; o chamador
+    decide o fallback (mensagem amigável, cache em memória, etc.). Quem chama
+    é responsável por fechar a sessão (`session.close()`).
+    """
+    return _get_sessionmaker()()

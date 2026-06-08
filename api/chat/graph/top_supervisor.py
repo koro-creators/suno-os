@@ -33,6 +33,7 @@ _SKILL_INTENT_MAP: dict[str, str] = {
     "persona-sintetica": "planejamento",
     "brief-builder": "planejamento",
     "analise-de-mercado": "planejamento",
+    "consultor": "conversation",
 }
 
 _VALID_INTENTS = {"criacao", "midia", "planejamento", "conversation"}
