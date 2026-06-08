@@ -290,6 +290,11 @@ async def run_workflow(
 
     from .executor import WorkflowExecutor
 
+    # Resolve the client this run is for: explicit override wins, else the
+    # workflow's first client_scope entry. Powers client-scoped tools (ontologia).
+    client_scope = wf.get("client_scope") or []
+    client_id = req.client_id or (client_scope[0] if client_scope else None)
+
     executor = WorkflowExecutor()
     result = await executor.run_with_logs(
         workflow_id=workflow_id,
@@ -297,6 +302,7 @@ async def run_workflow(
         definition=wf["definition"],
         overrides=req.input_overrides,
         edges=wf.get("edges"),
+        client_id=client_id,
     )
     status = result["status"]
     error = result["error"]

@@ -97,6 +97,7 @@ class WorkflowExecutor:
         overrides: dict | None = None,
         depth: int = 0,
         edges: list[dict] | None = None,
+        client_id: str | None = None,
     ) -> dict:
         """Execute workflow fully and return the final state.
 
@@ -116,6 +117,7 @@ class WorkflowExecutor:
         initial_state = {
             "workflow_id": workflow_id,
             "run_id": run_id,
+            "client_id": client_id,
             "steps_output": {},
             "current_step": "",
             "status": "running",
@@ -147,6 +149,7 @@ class WorkflowExecutor:
         overrides: dict | None = None,
         depth: int = 0,
         edges: list[dict] | None = None,
+        client_id: str | None = None,
     ) -> dict:
         """Execute a workflow and capture real per-step logs (timing/output/status).
 
@@ -171,6 +174,7 @@ class WorkflowExecutor:
         initial_state = {
             "workflow_id": workflow_id,
             "run_id": run_id,
+            "client_id": client_id,
             "steps_output": {},
             "current_step": "",
             "status": "running",
@@ -248,6 +252,7 @@ class WorkflowExecutor:
         definition: dict,
         depth: int = 0,
         edges: list[dict] | None = None,
+        client_id: str | None = None,
     ) -> AsyncGenerator[SSEEvent, None]:
         """Execute with streaming SSE events per step (SPEC-005-aware)."""
         # Rate limit check
@@ -264,6 +269,7 @@ class WorkflowExecutor:
         initial_state = {
             "workflow_id": workflow_id,
             "run_id": run_id,
+            "client_id": client_id,
             "steps_output": {},
             "current_step": "",
             "status": "running",
