@@ -17,7 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Play, RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
-import { apiAvailable, getWorkflowDetail, migrateWorkflowV2 } from '@/lib/api';
+import { apiAvailable, getWorkflowDetail, getWorkflowEdges, migrateWorkflowV2 } from '@/lib/api';
 import type {
   Workflow,
   WorkflowEdge,
@@ -132,11 +132,12 @@ export default function WorkflowEditorPage() {
     async function prepare() {
       setMigrationError(null);
       let wf: Workflow | null | undefined = ctxWorkflow;
+      let persistedEdges: WorkflowEdge[] | null = null;
 
       if (apiAvailable()) {
         // Real-mode: migrate to v2 if needed, then fetch the full detail
-        // (the list endpoint omits steps). On failure, fall back to whatever
-        // the context held (canvas-conventions.md §mock-mode degradation).
+        // (the list endpoint omits steps) plus the persisted edges. On failure,
+        // fall back to whatever the context held (canvas-conventions.md §mock-mode).
         try {
           setMigrationState('migrating');
           await migrateWorkflowV2(workflowId);
@@ -146,6 +147,7 @@ export default function WorkflowEditorPage() {
         }
         try {
           wf = await getWorkflowDetail(workflowId);
+          persistedEdges = await getWorkflowEdges(workflowId);
         } catch {
           wf = ctxWorkflow ?? null;
         }
@@ -165,7 +167,12 @@ export default function WorkflowEditorPage() {
         position_x: positions[s.id]?.x ?? 0,
         position_y: positions[s.id]?.y ?? 0,
       }));
-      const v2Edges = buildEdgesFromV1(steps);
+      // Prefer the edges persisted in workflow_edges (v2). Only synthesize from
+      // v1 linkage (next_step/condition) when there are no stored edges yet.
+      const v2Edges =
+        persistedEdges && persistedEdges.length > 0
+          ? persistedEdges
+          : buildEdgesFromV1(steps);
       setPayload({ steps: v2Steps, edges: v2Edges });
       setMigrationState('ready');
     }

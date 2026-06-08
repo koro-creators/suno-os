@@ -66,23 +66,28 @@ def _load_tool_registry() -> None:
     global TOOL_REGISTRY
     if TOOL_REGISTRY:
         return
+    # The tool objects are the @tool-decorated functions; their module-level
+    # names match the function names (generate_text / generate_image /
+    # web_search), NOT the *_tool aliases this used to import (which silently
+    # ImportError'd, leaving the registry empty and every tool step failing).
     try:
-        from chat.tools.text_tools import text_generation_tool
+        from chat.tools.text_tools import generate_text
 
-        TOOL_REGISTRY["generate_text"] = text_generation_tool
-        TOOL_REGISTRY["text_generation"] = text_generation_tool
+        TOOL_REGISTRY["generate_text"] = generate_text
+        TOOL_REGISTRY["text_generation"] = generate_text
     except ImportError:
         pass
     try:
-        from chat.tools.image_tools import generate_image_tool
+        from chat.tools.image_tools import generate_image
 
-        TOOL_REGISTRY["generate_image"] = generate_image_tool
+        TOOL_REGISTRY["generate_image"] = generate_image
     except ImportError:
         pass
     try:
-        from chat.tools.search_tools import web_search_tool
+        from chat.tools.search_tools import web_search
 
-        TOOL_REGISTRY["search_knowledge"] = web_search_tool
+        TOOL_REGISTRY["search_knowledge"] = web_search
+        TOOL_REGISTRY["web_search"] = web_search
     except ImportError:
         pass
 

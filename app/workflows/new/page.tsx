@@ -9,7 +9,7 @@
  */
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
@@ -27,8 +27,13 @@ function CreateWorkflowContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { createWorkflow } = useWorkflows();
+  // Guard against React StrictMode's double effect-invoke in dev, which would
+  // otherwise fire two POSTs and create duplicate workflows.
+  const createdRef = useRef(false);
 
   useEffect(() => {
+    if (createdRef.current) return;
+    createdRef.current = true;
     const templateId = searchParams.get('template');
     let name = 'Novo workflow';
     let description = '';
@@ -43,18 +48,18 @@ function CreateWorkflowContent() {
       }
     }
 
-    let cancelled = false;
+    // createdRef guarantees this runs once even under StrictMode's
+    // double-invoke, so navigation is always desired (no cancellation needed —
+    // tying the redirect to a per-invoke `cancelled` flag would let StrictMode's
+    // cleanup suppress the only navigation).
     (async () => {
       try {
         const created = await createWorkflow({ name, description, client_id: '', steps });
-        if (!cancelled) router.replace(`/workflows/${created.id}`);
+        router.replace(`/workflows/${created.id}`);
       } catch {
-        if (!cancelled) router.replace('/workflows');
+        router.replace('/workflows');
       }
     })();
-    return () => {
-      cancelled = true;
-    };
     // Effect runs once on mount; createWorkflow + router stable enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
