@@ -30,6 +30,9 @@ from . import repository
 
 logger = logging.getLogger(__name__)
 
+# Teto de gerações simultâneas do Oráculo (balanceia velocidade x rate-limit do Gemini).
+_ORACLE_CONCURRENCY = 3
+
 
 def _now_iso() -> str:
     from datetime import datetime, timezone
@@ -171,20 +174,20 @@ async def run_oracle_agent(client_id: str) -> None:
             session, client_id, drive_sync_status="running", started_at=_oracle_now()
         )
 
-        await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)
         repository.update_job(session, client_id, drive_sync_status="done", oracle_status="running")
 
         client_name = client.name
         brand_context, wizard_briefing = _oracle_inputs(client)
         language = _oracle_language(client)
         domains = _oracle_domains(client)
-        for entity_type in ONTOLOGY_ENTITY_TYPES:
-            repository.update_job(session, client_id, current_entity=entity_type)
-            await asyncio.sleep(ORACLE_STUB_DELAY_SECONDS)
 
-            entity = repository.get_entity(session, client_id, entity_type)
-            if entity:
-                sources: list[dict] = []
+        # Gera as 6 entidades em paralelo (I/O-bound: LLM + busca web), com teto de
+        # concorrência para não estourar o rate-limit do Gemini. A persistência no DB
+        # ocorre à medida que cada uma conclui — a sessão é usada só aqui (sem concorrência).
+        sem = asyncio.Semaphore(_ORACLE_CONCURRENCY)
+
+        async def _generate(entity_type: str):
+            async with sem:
                 try:
                     content, oracle_error, sources = await invoke_oracle(
                         client_id=client_id,
@@ -202,11 +205,19 @@ async def run_oracle_agent(client_id: str) -> None:
                         entity_type,
                         exc,
                     )
-                    content = _fallback_content(entity_type, client_name)
-                    oracle_error = str(exc)
+                    content, oracle_error, sources = (
+                        _fallback_content(entity_type, client_name),
+                        str(exc),
+                        [],
+                    )
+                return entity_type, content, oracle_error, sources
 
+        tasks = [asyncio.create_task(_generate(et)) for et in ONTOLOGY_ENTITY_TYPES]
+        for coro in asyncio.as_completed(tasks):
+            entity_type, content, oracle_error, sources = await coro
+            entity = repository.get_entity(session, client_id, entity_type)
+            if entity:
                 provenance_source = "Fallback local" if oracle_error else "Oráculo Gemini"
-
                 repository.update_entity(
                     session,
                     entity,
@@ -214,7 +225,6 @@ async def run_oracle_agent(client_id: str) -> None:
                     content=content,
                     provenance=_build_provenance(sources, provenance_source, entity_type),
                 )
-
             repository.increment_entities_done(session, client_id)
             logger.info("Oracle agent: entity %s generated for %s", entity_type, client.slug)
 
