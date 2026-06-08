@@ -288,24 +288,19 @@ async def run_workflow(
         },
     )
 
-    status = "completed"
-    error = None
-    steps_output: dict = {}
-    try:
-        from .executor import WorkflowExecutor
+    from .executor import WorkflowExecutor
 
-        executor = WorkflowExecutor()
-        result = await executor.run(
-            workflow_id=workflow_id,
-            run_id=run_id,
-            definition=wf["definition"],
-            overrides=req.input_overrides,
-            edges=wf.get("edges"),
-        )
-        steps_output = result.get("steps_output", {})
-    except Exception as e:  # noqa: BLE001
-        status = "failed"
-        error = str(e)
+    executor = WorkflowExecutor()
+    result = await executor.run_with_logs(
+        workflow_id=workflow_id,
+        run_id=run_id,
+        definition=wf["definition"],
+        overrides=req.input_overrides,
+        edges=wf.get("edges"),
+    )
+    status = result["status"]
+    error = result["error"]
+    steps_output = result["steps_output"]
 
     repository.update_run(
         session,
@@ -315,6 +310,8 @@ async def run_workflow(
         steps_output=steps_output,
         error=error,
     )
+    # Persist per-step execution logs (real timing/output/status from the run).
+    repository.create_step_logs(session, run_id, result["step_logs"])
 
     return RunWorkflowResponse(run_id=run_id, status=status, started_at=now)
 

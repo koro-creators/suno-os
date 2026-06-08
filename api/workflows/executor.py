@@ -139,6 +139,108 @@ class WorkflowExecutor:
         except asyncio.TimeoutError:
             raise RuntimeError(f"Workflow execution timed out after {max_time}s")
 
+    async def run_with_logs(
+        self,
+        workflow_id: str,
+        run_id: str,
+        definition: dict,
+        overrides: dict | None = None,
+        depth: int = 0,
+        edges: list[dict] | None = None,
+    ) -> dict:
+        """Execute a workflow and capture real per-step logs (timing/output/status).
+
+        Mirrors ``run`` but drives the graph with ``astream`` so each step's
+        completion is observed individually. Never raises: on timeout or a node
+        exception it returns ``status="failed"`` with whatever logs were
+        collected up to that point — so the runs history is always persistable.
+
+        Returns ``{steps_output, step_logs, status, error}``.
+        """
+        if not _check_rate_limit(workflow_id):
+            return {
+                "steps_output": {},
+                "step_logs": [],
+                "status": "failed",
+                "error": f"Rate limit exceeded: max {MAX_RUNS_PER_HOUR} runs/hour",
+            }
+
+        graph = self.compiler.compile(definition, edges=edges)
+        max_time = definition.get("max_execution_time", 300)
+
+        initial_state = {
+            "workflow_id": workflow_id,
+            "run_id": run_id,
+            "steps_output": {},
+            "current_step": "",
+            "status": "running",
+            "messages": [],
+            "human_input": None,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "model": definition.get("default_model", "gemini-flash"),
+            "error": None,
+            "_depth": depth,
+            "config_overrides": overrides or {},
+        }
+        config = {"configurable": {"thread_id": run_id}}
+
+        step_names = {s["id"]: s.get("name") for s in definition.get("steps", [])}
+        step_logs: list[dict] = []
+        final_outputs: dict = {}
+        status = "completed"
+        error: str | None = None
+        last_ts = datetime.now(timezone.utc)
+
+        async def _drive() -> None:
+            nonlocal final_outputs, last_ts
+            async for event in graph.astream(initial_state, config, stream_mode="updates"):
+                now = datetime.now(timezone.utc)
+                for node_name, update in event.items():
+                    # Skip LangGraph internal channels (e.g. __interrupt__).
+                    if node_name.startswith("__"):
+                        continue
+                    node_outputs = (
+                        update.get("steps_output", {}) if isinstance(update, dict) else {}
+                    )
+                    final_outputs = {**final_outputs, **node_outputs}
+                    raw = node_outputs.get(node_name)
+                    is_err = isinstance(raw, dict) and bool(raw.get("error"))
+                    # StepLog.output is JSON object — wrap scalars/strings.
+                    out_obj = raw if isinstance(raw, (dict, list)) else {"value": raw}
+                    step_logs.append(
+                        {
+                            "step_id": node_name,
+                            "step_name": step_names.get(node_name),
+                            "status": "failed" if is_err else "completed",
+                            "output": out_obj,
+                            "error": raw.get("error") if is_err else None,
+                            "started_at": last_ts,
+                            "completed_at": now,
+                            "duration_ms": int((now - last_ts).total_seconds() * 1000),
+                        }
+                    )
+                    last_ts = now
+
+        try:
+            await asyncio.wait_for(_drive(), timeout=max_time)
+        except asyncio.TimeoutError:
+            status = "failed"
+            error = f"Workflow execution timed out after {max_time}s"
+        except Exception as e:  # noqa: BLE001 — capture so logs survive
+            status = "failed"
+            error = str(e)
+            logger.error("Workflow %s run_with_logs failed: %s", workflow_id, error)
+
+        if any(sl["status"] == "failed" for sl in step_logs) and status == "completed":
+            status = "failed"
+
+        return {
+            "steps_output": final_outputs,
+            "step_logs": step_logs,
+            "status": status,
+            "error": error,
+        }
+
     async def run_stream(
         self,
         workflow_id: str,

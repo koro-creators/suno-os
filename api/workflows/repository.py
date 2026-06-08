@@ -307,6 +307,30 @@ def update_run(session: Session, run_id: str, **fields) -> dict | None:
     return _run_to_dict(run)
 
 
+def create_step_logs(session: Session, run_id: str, logs: list[dict]) -> None:
+    """Persist a batch of per-step execution logs for a run (single commit)."""
+    rid = _coerce(run_id)
+    if rid is None or not logs:
+        return
+    for sl in logs:
+        session.add(
+            StepLog(
+                id=uuid.uuid4(),
+                run_id=rid,
+                step_id=sl["step_id"],
+                step_name=sl.get("step_name"),
+                status=sl.get("status", "completed"),
+                input=sl.get("input"),
+                output=sl.get("output"),
+                error=sl.get("error"),
+                duration_ms=sl.get("duration_ms"),
+                started_at=sl.get("started_at"),
+                completed_at=sl.get("completed_at"),
+            )
+        )
+    session.commit()
+
+
 def list_step_logs(session: Session, run_id: str) -> list[dict]:
     rid = _coerce(run_id)
     logs = (
