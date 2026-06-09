@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from langchain_core.tools import tool
+from sqlalchemy import text
 
 from core.db import get_sync_session
 
@@ -41,8 +42,6 @@ def buscar_cliente(query: str) -> str:
     """
     db = get_sync_session()
     try:
-        from sqlalchemy import text
-
         rows = db.execute(
             text("""
                 SELECT name, slug, description, color, sponsor_name, sponsor_email, status
