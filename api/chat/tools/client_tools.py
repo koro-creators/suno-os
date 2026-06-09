@@ -26,7 +26,7 @@ _COR_NAMES: dict[str, str] = {
 
 def hex_para_cor(hex_color: str) -> str:
     """Converte um código hex para o nome de cor em português."""
-    return _COR_NAMES.get(hex_color.upper() if hex_color else "", hex_color) or hex_color
+    return _COR_NAMES.get(hex_color.upper(), hex_color)
 
 
 @tool
