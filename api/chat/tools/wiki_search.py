@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 
 @tool
 def search_wiki(client_name: str) -> str:
-    """Search the wiki_entities database for a client by name.
+    """Busca dados estratégicos de um cliente: Posicionamento, Persona, Produto, TomDeVoz, Briefing.
 
-    Returns all entity content (Posicionamento, Persona, Produto, etc.) for the
-    matched client. Use this tool before answering any question about a client.
+    Use para perguntas sobre estratégia, público-alvo, tom de voz, concorrentes e produtos.
+    NÃO use para dados cadastrais como cor, slug, sponsor ou status — para isso use buscar_cliente.
 
     Args:
-        client_name: Full or partial name of the client to search for.
+        client_name: Nome completo ou parcial do cliente.
     """
     db = get_sync_session()
 
