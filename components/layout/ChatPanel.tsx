@@ -19,7 +19,7 @@ const pulseKeyframes = `
 `;
 
 export default function ChatPanel() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -158,68 +158,105 @@ export default function ChatPanel() {
           position: 'relative',
         }}
       >
-        {/* Toggle button */}
-        <button
-          aria-label={isOpen ? 'Fechar chat' : 'Abrir chat'}
-          aria-expanded={isOpen}
-          onClick={() => setIsOpen((v) => !v)}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            transform: 'translateY(-50%)',
-            width: 40,
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            color: isOpen ? 'var(--text-secondary)' : 'var(--sun)',
-            flexShrink: 0,
-            zIndex: 10,
-            borderRadius: 0,
-            transition: 'color 150ms ease, background-color 150ms ease',
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = 'var(--sun)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.color = isOpen ? 'var(--text-secondary)' : 'var(--sun)';
-          }}
-        >
-          {!isOpen && (
-            <span
-              aria-hidden="true"
+        {!isOpen ? (
+          /* Collapsed strip — normal-flow flex item, fills the aside via
+             stretch/flex:1 (no absolute positioning, no transform). */
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Abrir chat"
+            onClick={() => setIsOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsOpen(true);
+              }
+            }}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'var(--sun)',
+              position: 'relative',
+              outline: 'none',
+              transition: 'background-color 150ms ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--surface-hover)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent';
+            }}
+          >
+            <span style={{ position: 'relative', display: 'flex' }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  width: 4,
+                  height: 4,
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--sun)',
+                  animation: 'chat-pulse 2s ease-in-out infinite',
+                }}
+              />
+              <Chat size={14} />
+            </span>
+          </div>
+        ) : (
+          /* Panel content */
+          <div
+            style={{
+              width: 320,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              paddingLeft: 40,
+              position: 'relative',
+            }}
+          >
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Fechar chat"
+              aria-expanded={isOpen}
+              onClick={() => setIsOpen(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsOpen(false);
+                }
+              }}
               style={{
                 position: 'absolute',
-                top: 8,
-                right: 8,
-                width: 4,
-                height: 4,
-                borderRadius: '50%',
-                backgroundColor: 'var(--sun)',
-                animation: 'chat-pulse 2s ease-in-out infinite',
+                top: '50%',
+                left: 0,
+                transform: 'translateY(-50%)',
+                width: 40,
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-secondary)',
+                zIndex: 10,
+                outline: 'none',
+                transition: 'color 150ms ease, background-color 150ms ease',
               }}
-            />
-          )}
-          {isOpen ? <Close size={14} /> : <Chat size={14} />}
-        </button>
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.color = 'var(--sun)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.color = 'var(--text-secondary)';
+              }}
+            >
+              <Close size={14} />
+            </div>
 
-        {/* Panel content */}
-        <div
-          style={{
-            width: 320,
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            opacity: isOpen ? 1 : 0,
-            pointerEvents: isOpen ? 'auto' : 'none',
-            transition: 'opacity 150ms ease',
-            paddingLeft: 40,
-          }}
-        >
           {/* Header */}
           <div
             style={{
@@ -473,6 +510,7 @@ export default function ChatPanel() {
             </div>
           </div>
         </div>
+        )}
       </aside>
     </>
   );
