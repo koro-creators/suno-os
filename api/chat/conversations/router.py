@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -132,7 +131,6 @@ def _get_db_session():
 
 @router.get("", response_model=ConversationListResponse)
 async def list_conversations(
-    request: Any,
     skill_slug: str | None = Query(default=None, description="Filter by skill slug"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -214,7 +212,6 @@ async def list_conversations(
 @router.get("/{conversation_id}", response_model=ConversationDetail)
 async def get_conversation(
     conversation_id: str,
-    request: Any,
     user_id: str = Depends(get_current_user_id),
 ) -> ConversationDetail:
     """Retrieve a conversation with full message history.
