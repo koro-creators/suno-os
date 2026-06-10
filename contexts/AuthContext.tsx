@@ -82,6 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut() {
     const { auth } = getFirebase();
     await firebaseSignOut(auth);
+    // Conversa fica no banco (dono = uid), mas os ponteiros locais não devem
+    // sobreviver à sessão — evita restaurar histórico de outro usuário no
+    // mesmo navegador.
+    if (typeof window !== 'undefined') {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('sunos:conv:'))
+        .forEach((key) => localStorage.removeItem(key));
+    }
   }
 
   const isAdmin = role === 'admin';
