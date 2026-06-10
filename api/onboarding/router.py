@@ -17,12 +17,14 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 try:
+    from core.auth import resolve_user_id
     from core.db import get_session
 except ImportError:  # test import root (repo root on sys.path)
+    from api.core.auth import resolve_user_id
     from api.core.db import get_session
 
 from .schemas import (
@@ -172,6 +174,7 @@ async def validate_entity_endpoint(
     entity_type: str,
     data: ValidateEntityRequest,
     background_tasks: BackgroundTasks,
+    request: Request,
     session: Session = Depends(get_session),
 ) -> ValidateEntityResponse:
     """
@@ -180,8 +183,8 @@ async def validate_entity_endpoint(
 
     Caixa-preta (constitution §1.4): 404, never 403.
     """
-    # TODO: extract real user_id from JWT — using placeholder for v1
-    user_id = "system"
+    # uid real do JWT quando presente; "system" mantém dev/testes sem auth.
+    user_id = resolve_user_id(request) or "system"
 
     result = validate_entity(
         session,

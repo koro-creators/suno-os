@@ -6,6 +6,7 @@ import { MessageFeedback, SessionFeedback } from '@/lib/feedback-types';
 import { chatResponsesByMoon } from '@/data/chat-responses';
 import { useToolStream } from '@/hooks/useToolStream';
 import { apiAvailable, getApiUrl, getConversation } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { Chat, Image, TextScale } from '@carbon/icons-react';
 import MessageBubble from './MessageBubble';
@@ -71,20 +72,28 @@ export default function ChatInterface({ moonSlug, skillSlug, clientSlug, clientN
 
   // Get skill admin config (systemPrompt, model, temperature) if available
   const { skills: skillsAdmin } = useSkills();
+  const { user } = useAuth();
   const skillConfig = skillsAdmin.find((s) => s.slug === skillSlug);
 
   const [selectedModel, setSelectedModel] = useState(skillConfig?.model || 'gemini-flash');
 
-  // Load previous conversation on mount
+  // Load previous conversation on mount.
+  // O backend identifica o usuário pelo JWT (Authorization header); o uid aqui
+  // é só o fallback X-User-ID para dev local sem Firebase.
   useEffect(() => {
     const savedId = typeof window !== 'undefined' ? localStorage.getItem(convStorageKey) : null;
     if (!savedId) return;
     setStoredConvId(savedId);
-    getConversation(savedId, 'preview-user').then((conv) => {
+    getConversation(savedId, user?.uid ?? 'preview-user').then((conv) => {
       if (conv && conv.messages.length > 0) {
         setMessages(
           conv.messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         );
+      } else if (conv === null && apiAvailable()) {
+        // Conversa não encontrada para este usuário (404 caixa-preta) —
+        // descarta o ponteiro para que a próxima mensagem comece conversa nova.
+        localStorage.removeItem(convStorageKey);
+        setStoredConvId(null);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
