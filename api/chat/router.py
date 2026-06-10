@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from chat.schemas.chat import (
@@ -19,6 +19,7 @@ from chat.schemas.chat import (
     TextGenRequest,
     TextGenResponse,
 )
+from core.auth import resolve_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,13 @@ REQUEST_TIMEOUT = 60  # seconds
 
 
 @router.post("/chat/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest, http_request: Request):
     """Chat streaming endpoint via SSE."""
     from chat.graph.runner import run_chat_stream
+
+    # JWT Firebase quando presente; "anonymous" preserva o comportamento
+    # best-effort do stream (nunca bloqueia o chat por falta de auth em dev).
+    user_id = resolve_user_id(http_request) or "anonymous"
 
     async def event_generator():
         try:
@@ -44,6 +49,7 @@ async def chat_stream(request: ChatRequest):
                 system_prompt=request.system_prompt,
                 context_documents=request.context_documents,
                 web_search=request.web_search,
+                user_id=user_id,
             ):
                 yield f"event: {event.event}\ndata: {json.dumps(event.data)}\n\n"
         except asyncio.TimeoutError:

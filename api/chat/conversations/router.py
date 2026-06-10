@@ -17,46 +17,18 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
+
+from core.auth import get_current_user_id
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/conversations", tags=["Conversations"])
 
 
-# ---------------------------------------------------------------------------
-# Dependency — current user
-# ---------------------------------------------------------------------------
-
-
-def _get_current_user_id(
-    # In production this will be a Firebase JWT dependency.  For now we read the
-    # X-User-ID header so the endpoint is testable without running Firebase.
-    # TASK: replace with real Firebase token verification before Piloto phase.
-    request: Any = None,
-) -> str:
-    """Resolve the authenticated user ID from the request context.
-
-    Placeholder implementation: reads the ``X-User-ID`` header.
-    Must be replaced with proper Firebase JWT verification before production.
-    """
-
-    # This import is deferred to avoid a circular dep at module-load time.
-    return ""
-
-
-async def get_current_user_id(request: Request) -> str:
-    """FastAPI dependency that extracts the user ID from the X-User-ID header.
-
-    In production, replace this with Firebase Admin SDK token verification.
-    Returns 401 if the header is missing.
-    """
-
-    user_id = request.headers.get("X-User-ID", "").strip()
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    return user_id
+# Dependency de usuário: JWT Firebase em produção; X-User-ID apenas como
+# fallback dev/teste — ver core/auth.py.
 
 
 # ---------------------------------------------------------------------------

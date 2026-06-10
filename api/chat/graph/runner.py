@@ -160,13 +160,19 @@ def _build_initial_state(
 MAX_HISTORY_MESSAGES = 20
 
 
-async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
+async def _load_conversation_history(
+    conversation_id: str | None,
+    user_id: str = "anonymous",
+) -> list[Any]:
     """Load prior turns for `conversation_id` as LangChain messages.
 
     Best-effort and symmetric to `_persist_conversation`: tries the
     `conversations.messages` JSONB column first, falls back to the in-memory
     store, and returns [] (never raises) for new or unknown conversations so a
     cold cache never breaks the chat.
+
+    Cross-user guard (caixa-preta RN-010): só carrega histórico se a conversa
+    pertence ao usuário atual ou é legada ('anonymous', pré-auth).
     """
     if not conversation_id:
         return []
@@ -176,8 +182,11 @@ async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
             db = get_sync_session()
             try:
                 row = db.execute(
-                    text("SELECT messages FROM conversations WHERE id = :id"),
-                    {"id": conversation_id},
+                    text(
+                        "SELECT messages FROM conversations "
+                        "WHERE id = :id AND user_id IN (:user_id, 'anonymous')"
+                    ),
+                    {"id": conversation_id, "user_id": user_id},
                 ).first()
                 return row[0] if row else None
             finally:
@@ -190,6 +199,8 @@ async def _load_conversation_history(conversation_id: str | None) -> list[Any]:
 
     if raw_messages is None:
         cached = _memory_store.get(conversation_id)
+        if cached and cached.get("user_id", "anonymous") not in (user_id, "anonymous"):
+            cached = None  # caixa-preta: conversa de outro usuário
         raw_messages = cached.get("messages", []) if cached else []
 
     history: list[Any] = []
@@ -218,6 +229,7 @@ async def _persist_conversation(
     skill_slug: str,
     user_message: str,
     assistant_message: str,
+    user_id: str = "anonymous",
 ) -> None:
     """Upsert the human + assistant turn into persistent storage.
 
@@ -243,6 +255,9 @@ async def _persist_conversation(
                 # Upsert: append new messages to the JSONB column (migration 004).
                 # Uses a raw SQL statement for JSONB concatenation to avoid
                 # loading the full array into Python on every turn.
+                # ON CONFLICT: só atualiza se a conversa for do próprio usuário ou
+                # legada ('anonymous'), que é reivindicada pelo primeiro usuário
+                # autenticado que a continuar (caixa-preta RN-010).
                 db.execute(
                     text(
                         """
@@ -251,12 +266,14 @@ async def _persist_conversation(
                         VALUES (:id, :user_id, :skill_slug, CAST(:messages AS jsonb), :now, :now)
                         ON CONFLICT (id) DO UPDATE
                         SET messages = conversations.messages || CAST(:messages AS jsonb),
+                            user_id = EXCLUDED.user_id,
                             last_message_at = :now
+                        WHERE conversations.user_id IN (EXCLUDED.user_id, 'anonymous')
                         """
                     ),
                     {
                         "id": conversation_id,
-                        "user_id": "anonymous",  # replaced when auth wired up
+                        "user_id": user_id,
                         "skill_slug": skill_slug,
                         "messages": json.dumps(new_messages),
                         "now": now,
@@ -277,11 +294,14 @@ async def _persist_conversation(
         # within the same process even without a DB.
         try:
             existing = _memory_store.get(conversation_id, {})
+            owner = existing.get("user_id", "anonymous")
+            if owner not in (user_id, "anonymous"):
+                return  # caixa-preta: não anexar em conversa de outro usuário
             existing_messages: list[dict] = list(existing.get("messages", []))
             existing_messages.extend(new_messages)
             _memory_store[conversation_id] = {
                 "id": conversation_id,
-                "user_id": existing.get("user_id", "anonymous"),
+                "user_id": user_id,
                 "skill_slug": skill_slug,
                 "title": existing.get("title"),
                 "created_at": existing.get("created_at", now),
@@ -311,6 +331,7 @@ async def run_chat_stream(
     system_prompt: str | None = None,
     context_documents: list[str] | None = None,
     web_search: bool = False,
+    user_id: str = "anonymous",
 ) -> AsyncGenerator[SSEEvent, None]:
     """Execute the chat graph with SSE streaming.
 
@@ -318,7 +339,7 @@ async def run_chat_stream(
     After the stream completes, attempts best-effort persistence of the
     conversation turn (user message + assistant response) to the database.
     """
-    history = await _load_conversation_history(conversation_id)
+    history = await _load_conversation_history(conversation_id, user_id)
 
     state = _build_initial_state(
         message=message,
@@ -423,6 +444,7 @@ async def run_chat_stream(
                         skill_slug=skill_slug,
                         user_message=message,
                         assistant_message=full_assistant_response,
+                        user_id=user_id,
                     )
                 )
         except Exception as persist_exc:
