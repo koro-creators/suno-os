@@ -33,6 +33,22 @@ Em `/configuracoes` → aba **Usuários** → convidar cada testador pelo **e-ma
 
 Se o passo 4 falhar: verificar se o deploy da main pós-PR #48 concluiu (`Deploy — API (prod)` no Actions).
 
+### 2b. Drive da Suna — pasta por cliente (PR #50, opcional mas recomendado)
+
+Para os clientes que terão contexto real no teste:
+
+1. No Drive da Suno, compartilhe a pasta do cliente com
+   `sunos-backend@koro-creators.iam.gserviceaccount.com` como **Leitor**
+   (o e-mail tem botão de copiar na própria aba Drive).
+2. Em `/clientes` → editor do cliente → aba **Drive** (admin-only): cole o
+   link da pasta → **Conectar pasta** → **Sincronizar**.
+3. Os docs aparecem na Biblioteca com o escopo do cliente e alimentam o
+   ContextSidebar do chat.
+
+Limites do MVP: até 50 arquivos por sync (aviso quando passa), Docs/Sheets/
+Slides e arquivos de texto extraem conteúdo; binários (PDF, imagem) entram só
+com link. Re-sync é manual (botão).
+
 ### 3. Avisos operacionais
 
 - **Não fazer deploy durante o horário de teste** — as chaves de integração configuradas em `/configuracoes` → Integrações vivem em memória e somem a cada deploy/restart (pendência B-2, KMS).
@@ -53,7 +69,7 @@ Acesse `<URL do frontend>` e faça login com sua conta Google (seu e-mail já fo
 4. Recarregue a página no meio de uma conversa — o histórico deve voltar.
 
 **Limitações conhecidas (não reportar como bug):**
-- **Google Drive**: integração ainda não disponível ("em breve" no wizard é esperado).
+- **Google Drive**: documentos chegam via pasta configurada pelo admin por cliente; o passo "Drive" do wizard de cliente novo ainda mostra "em breve" — é esperado.
 - **Geração de imagem**: retorna placeholder (integração Vertex AI pendente).
 - **Notificações**: só no sino do header — e-mail/push ainda não enviam.
 - **Histórico de conversa** é por navegador (se trocar de máquina, a conversa não segue).
@@ -65,3 +81,4 @@ Acesse `<URL do frontend>` e faça login com sua conta Google (seu e-mail já fo
 ## Histórico
 
 - 10/06/2026 — Criado. PRs #47 (identidade JWT no chat/onboarding) e #48 (fix 422 conversas) mergeados e deployados; smoke de API em prod verde (health 200, conversas 401 sem auth, X-User-ID rejeitado em produção); auditoria de GRANTs 31/31 OK.
+- 10/06/2026 — PR #50 (Drive da Suno — pasta por cliente via service account) mergeado; migration 019 aplicada em prod (jose) e verificada antes do merge. Seção 2b adicionada ao checklist do admin.
