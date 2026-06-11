@@ -621,6 +621,24 @@ export async function disconnectClientDrive(slug: string): Promise<void> {
   await clientDriveFetch<void>(`/api/clients/${slug}/drive/folder`, { method: 'DELETE' });
 }
 
+/** E-mail da service account (instrução de compartilhamento no wizard). */
+export async function getDriveServiceAccount(): Promise<string | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const r = await clientDriveFetch<{ sa_email: string }>('/api/drive/service-account');
+    return r.sa_email;
+  } catch {
+    return null;
+  }
+}
+
+/** Valida acesso a uma pasta sem vinculá-la a um cliente (passo 3 do wizard). */
+export async function validateDriveFolder(
+  folder: string,
+): Promise<{ folder_id: string; folder_name: string }> {
+  return clientDriveFetch(`/api/drive/folder-info?folder=${encodeURIComponent(folder)}`);
+}
+
 // ---------------------------------------------------------------------------
 // SPEC-004 — Approval Hierarchy API (Phase 20)
 // ---------------------------------------------------------------------------

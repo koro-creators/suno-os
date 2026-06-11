@@ -140,6 +140,43 @@ def test_set_folder_without_access_is_400_with_reason(ctx, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Standalone (wizard — sem cliente)
+# ---------------------------------------------------------------------------
+
+
+def test_service_account_email(ctx):
+    client, _ = ctx
+    assert client.get("/api/drive/service-account").status_code == 404  # caixa-preta
+    resp = client.get("/api/drive/service-account", headers=ADMIN)
+    assert resp.status_code == 200
+    assert "@" in resp.json()["sa_email"]
+
+
+def test_folder_info_validates_without_binding(ctx, monkeypatch):
+    client, _ = ctx
+    monkeypatch.setattr(
+        cd.google_drive, "get_folder", lambda fid: {"id": fid, "name": "Pasta Teste"}
+    )
+    resp = client.get(
+        "/api/drive/folder-info",
+        params={"folder": "https://drive.google.com/drive/folders/1AbC_dEf-GhIjKlMnOpQ"},
+        headers=ADMIN,
+    )
+    assert resp.status_code == 200
+    assert resp.json() == {"folder_id": "1AbC_dEf-GhIjKlMnOpQ", "folder_name": "Pasta Teste"}
+
+    # Não vinculou a nenhum cliente
+    status = client.get("/api/clients/vivo/drive", headers=ADMIN).json()
+    assert status["configured"] is False
+
+
+def test_folder_info_invalid_link_is_400(ctx):
+    client, _ = ctx
+    resp = client.get("/api/drive/folder-info", params={"folder": "lixo"}, headers=ADMIN)
+    assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
 # Sync
 # ---------------------------------------------------------------------------
 

@@ -95,13 +95,13 @@ export default function WizardStep4Confirm() {
           }
         />
 
-        {/* Drive docs */}
+        {/* Drive folder */}
         <SummaryRow
           icon={<Document size={14} />}
-          label="Docs Drive"
-          value={wizardState.selectedDocIds.length > 0
-            ? `${wizardState.selectedDocIds.length} documento(s)`
-            : 'Nenhum'}
+          label="Pasta Drive"
+          value={wizardState.driveFolderName
+            ? `${wizardState.driveFolderName} (sincroniza ao criar)`
+            : 'Nenhuma'}
         />
       </div>
 

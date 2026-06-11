@@ -4,8 +4,10 @@
  * SPEC-015 — WizardContainer: controls 4-step wizard navigation.
  */
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingOraculo } from '@/contexts/OnboardingOraculoContext';
+import { setClientDriveFolder, syncClientDrive } from '@/lib/api';
 import { WIZARD_STEP_LABELS } from '@/lib/onboarding-types';
 import WizardStep1Metadata from './WizardStep1Metadata';
 import WizardStep2Oracle from './WizardStep2Oracle';
@@ -15,6 +17,7 @@ import WizardStep4Confirm from './WizardStep4Confirm';
 export default function WizardContainer() {
   const router = useRouter();
   const { wizardState, updateWizard, submitWizard, startOracle, error } = useOnboardingOraculo();
+  const [confirmPhase, setConfirmPhase] = useState<'idle' | 'creating' | 'syncing'>('idle');
 
   const steps = [1, 2, 3, 4] as const;
 
@@ -31,13 +34,31 @@ export default function WizardContainer() {
   };
 
   const handleConfirm = async () => {
-    const created = await submitWizard();
-    if (!created) return;
+    setConfirmPhase('creating');
+    try {
+      const created = await submitWizard();
+      if (!created) return;
 
-    const started = await startOracle(created.slug);
-    if (!started) return;
+      // Pasta do Drive validada no passo 3: vincula + sincroniza antes do
+      // Oráculo. Best-effort — falha aqui não bloqueia o onboarding (a pasta
+      // pode ser reconectada depois no editor do cliente, aba Drive).
+      if (wizardState.driveFolder) {
+        setConfirmPhase('syncing');
+        try {
+          await setClientDriveFolder(created.slug, wizardState.driveFolder);
+          await syncClientDrive(created.slug);
+        } catch {
+          // segue sem docs; editor do cliente permite reconectar
+        }
+      }
 
-    router.push(`/clientes/${created.slug}/onboarding/progress`);
+      const started = await startOracle(created.slug);
+      if (!started) return;
+
+      router.push(`/clientes/${created.slug}/onboarding/progress`);
+    } finally {
+      setConfirmPhase('idle');
+    }
   };
 
   return (
@@ -208,6 +229,7 @@ export default function WizardContainer() {
           ) : (
             <button
               onClick={handleConfirm}
+              disabled={confirmPhase !== 'idle'}
               style={{
                 padding: '8px 24px',
                 borderRadius: 8,
@@ -216,11 +238,16 @@ export default function WizardContainer() {
                 color: 'var(--void)',
                 fontSize: '0.8rem',
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: confirmPhase !== 'idle' ? 'wait' : 'pointer',
+                opacity: confirmPhase !== 'idle' ? 0.6 : 1,
                 transition: 'all 150ms ease',
               }}
             >
-              Iniciar Oráculo
+              {confirmPhase === 'creating'
+                ? 'Criando cliente…'
+                : confirmPhase === 'syncing'
+                ? 'Sincronizando Drive…'
+                : 'Iniciar Oráculo'}
             </button>
           )}
         </div>
