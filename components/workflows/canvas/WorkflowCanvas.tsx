@@ -31,7 +31,6 @@ import {
   ReactFlow,
   ReactFlowProvider,
   Background,
-  Controls,
   MiniMap,
   addEdge,
   applyEdgeChanges,
@@ -144,6 +143,16 @@ function CanvasInner(props: WorkflowCanvasProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Mouse position (in flow coordinates) for the small readout beside the minimap.
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const onPaneMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const pos = flow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      setMousePosition({ x: Math.round(pos.x), y: Math.round(pos.y) });
+    },
+    [flow],
+  );
+
   // Mobile read-only detection (TASK-C19).
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -203,9 +212,69 @@ function CanvasInner(props: WorkflowCanvasProps) {
   const [hardErrorCount, setHardErrorCount] = useState(0);
   const [hardErrorSample, setHardErrorSample] = useState<string | undefined>();
 
+  // Undo/redo (FR-WBC toolbar "Voltar"/"Avançar"): snapshot nodes+edges before
+  // a user action (drag, connect, delete, drop, auto-layout, config edit) so
+  // it can be restored. Refs keep the latest state available to pushHistory
+  // without retriggering the callbacks that call it on every render.
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { edgesRef.current = edges; }, [edges]);
+
+  const MAX_HISTORY = 50;
+  const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[] }[]; future: { nodes: Node[]; edges: Edge[] }[] }>({
+    past: [],
+    future: [],
+  });
+  const [, setHistoryVersion] = useState(0);
+
+  const pushHistory = useCallback(() => {
+    historyRef.current = {
+      past: [...historyRef.current.past, { nodes: nodesRef.current, edges: edgesRef.current }].slice(-MAX_HISTORY),
+      future: [],
+    };
+    setHistoryVersion((v) => v + 1);
+  }, []);
+
+  const onUndo = useCallback(() => {
+    const { past, future } = historyRef.current;
+    if (past.length === 0) return;
+    const snapshot = past[past.length - 1];
+    historyRef.current = {
+      past: past.slice(0, -1),
+      future: [{ nodes: nodesRef.current, edges: edgesRef.current }, ...future],
+    };
+    setNodes(snapshot.nodes);
+    setEdges(snapshot.edges);
+    stepsAutoSave.markDirty(snapshot.nodes);
+    edgesAutoSave.markDirty(snapshot.edges);
+    setValidationOk(false);
+    setHistoryVersion((v) => v + 1);
+  }, [stepsAutoSave, edgesAutoSave]);
+
+  const onRedo = useCallback(() => {
+    const { past, future } = historyRef.current;
+    if (future.length === 0) return;
+    const snapshot = future[0];
+    historyRef.current = {
+      past: [...past, { nodes: nodesRef.current, edges: edgesRef.current }],
+      future: future.slice(1),
+    };
+    setNodes(snapshot.nodes);
+    setEdges(snapshot.edges);
+    stepsAutoSave.markDirty(snapshot.nodes);
+    edgesAutoSave.markDirty(snapshot.edges);
+    setValidationOk(false);
+    setHistoryVersion((v) => v + 1);
+  }, [stepsAutoSave, edgesAutoSave]);
+
+  const canUndo = historyRef.current.past.length > 0;
+  const canRedo = historyRef.current.future.length > 0;
+
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       if (isMobile) return;
+      if (changes.some((c) => c.type === 'remove')) pushHistory();
       setNodes((cur) => {
         const next = applyNodeChanges(changes, cur);
         stepsAutoSave.markDirty(next);
@@ -215,12 +284,13 @@ function CanvasInner(props: WorkflowCanvasProps) {
         return next;
       });
     },
-    [isMobile, stepsAutoSave],
+    [isMobile, stepsAutoSave, pushHistory],
   );
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       if (isMobile) return;
+      if (changes.some((c) => c.type === 'remove')) pushHistory();
       setEdges((cur) => {
         const next = applyEdgeChanges(changes, cur);
         edgesAutoSave.markDirty(next);
@@ -228,8 +298,13 @@ function CanvasInner(props: WorkflowCanvasProps) {
         return next;
       });
     },
-    [isMobile, edgesAutoSave],
+    [isMobile, edgesAutoSave, pushHistory],
   );
+
+  const onNodeDragStart = useCallback(() => {
+    if (isMobile) return;
+    pushHistory();
+  }, [isMobile, pushHistory]);
 
   const isValidConnection: IsValidConnection = useCallback(
     (connection) => {
@@ -250,6 +325,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
   const onConnect = useCallback(
     (connection: Connection) => {
       if (isMobile) return;
+      pushHistory();
       setEdges((cur) => {
         const next = addEdge({ ...connection, type: 'custom' }, cur);
         edgesAutoSave.markDirty(next);
@@ -257,7 +333,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         return next;
       });
     },
-    [isMobile, edgesAutoSave],
+    [isMobile, edgesAutoSave, pushHistory],
   );
 
   const onDrop = useCallback(
@@ -286,6 +362,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
           merge_policy: payload.step_type === 'merge' ? 'all' : undefined,
         },
       };
+      pushHistory();
       setNodes((cur) => {
         const next = [...cur, newNode];
         stepsAutoSave.markDirty(next);
@@ -293,7 +370,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
       });
       setValidationOk(false);
     },
-    [isMobile, flow, stepsAutoSave],
+    [isMobile, flow, stepsAutoSave, pushHistory],
   );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -305,8 +382,20 @@ function CanvasInner(props: WorkflowCanvasProps) {
     setSelectedNodeId(node.id);
   }, []);
 
+  // Drawer edits collapse into a single undo step per node selection: the
+  // first change after selecting a node snapshots the pre-edit state, and
+  // subsequent edits while that drawer stays open don't add more steps.
+  const drawerHistoryPushedRef = useRef<string | null>(null);
+  useEffect(() => {
+    drawerHistoryPushedRef.current = null;
+  }, [selectedNodeId]);
+
   const onDrawerChange = useCallback(
     (id: string, updates: Record<string, unknown>) => {
+      if (drawerHistoryPushedRef.current !== id) {
+        pushHistory();
+        drawerHistoryPushedRef.current = id;
+      }
       setNodes((cur) => {
         const next = cur.map((n) => (n.id === id ? { ...n, data: { ...(n.data ?? {}), ...updates } } : n));
         stepsAutoSave.markDirty(next);
@@ -314,10 +403,11 @@ function CanvasInner(props: WorkflowCanvasProps) {
         return next;
       });
     },
-    [stepsAutoSave],
+    [stepsAutoSave, pushHistory],
   );
 
   const onAutoLayoutClick = useCallback(async () => {
+    pushHistory();
     // Prefer server-side (deterministic Python algorithm); fall back to
     // dagre (frontend) if API not available or call fails.
     if (apiAvailable()) {
@@ -341,7 +431,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
       stepsAutoSave.markDirty(next);
       return next;
     });
-  }, [workflowId, applyAutoLayout, edges, stepsAutoSave]);
+  }, [workflowId, applyAutoLayout, edges, stepsAutoSave, pushHistory]);
 
   const onValidateClick = useCallback(async () => {
     setValidating(true);
@@ -418,13 +508,23 @@ function CanvasInner(props: WorkflowCanvasProps) {
       )}
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         {!isMobile && <NodePalette />}
-        <div style={{ flex: 1, position: 'relative' }} ref={wrapperRef}>
+        <div
+          className="sunos-canvas-pane"
+          style={{ flex: 1, position: 'relative', background: '#000000' }}
+          ref={wrapperRef}
+          onMouseMove={onPaneMouseMove}
+          onMouseLeave={() => setMousePosition(null)}
+        >
           <CanvasToolbar
             onAutoLayout={onAutoLayoutClick}
             onValidate={onValidateClick}
             onExecute={() => onExecute?.()}
             validating={validating}
             validationOk={validationOk}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
           <ReactFlow
             nodes={nodes}
@@ -434,6 +534,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onNodeDragStart={onNodeDragStart}
             isValidConnection={isValidConnection}
             onNodeClick={onNodeClick}
             onPaneClick={() => setSelectedNodeId(null)}
@@ -443,11 +544,54 @@ function CanvasInner(props: WorkflowCanvasProps) {
             nodesConnectable={!isMobile}
             elementsSelectable={!isMobile}
             fitView
+            style={{ background: '#000000' }}
+            proOptions={{ hideAttribution: true }}
           >
-            <Background gap={16} />
-            <MiniMap pannable zoomable />
-            <Controls position="bottom-left" />
+            <Background gap={16} color="rgba(255,255,255,0.07)" />
+            <MiniMap
+              pannable
+              zoomable
+              onClick={(_, position) => flow.setCenter(position.x, position.y, { zoom: flow.getZoom(), duration: 400 })}
+              style={{ width: 230, height: 161, background: '#000000', border: '1px solid var(--border-subtle)', borderRadius: 8 }}
+              maskColor="rgba(0,0,0,0.65)"
+              maskStrokeColor="var(--sun)"
+              maskStrokeWidth={1}
+              nodeColor="var(--nebula)"
+              nodeStrokeColor="var(--border-subtle)"
+              nodeBorderRadius={4}
+            />
           </ReactFlow>
+          {/* Mouse-position readout beside the minimap (bottom-right, minimap
+              is 230px wide with the default 15px panel margin — sit just to
+              its left). */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 15,
+              right: 255,
+              zIndex: 10,
+              padding: '4px 8px',
+              fontSize: 11,
+              fontFamily: 'monospace',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              background: 'var(--deep)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 8,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            X: {mousePosition?.x ?? '—'} · Y: {mousePosition?.y ?? '—'}
+          </div>
+          {/* Edges must render above node cards: dagre-laid-out edges can
+              otherwise pass underneath neighbouring step cards and look
+              "cut off". @xyflow stacks `.react-flow__edges` below
+              `.react-flow__nodes` by default; flip that for this canvas. */}
+          <style jsx global>{`
+            .sunos-canvas-pane .react-flow__edges {
+              z-index: 1000;
+            }
+          `}</style>
         </div>
         {!isMobile && selectedNode && (
           <NodeConfigDrawer
