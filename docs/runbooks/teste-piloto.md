@@ -33,17 +33,21 @@ Em `/configuracoes` → aba **Usuários** → convidar cada testador pelo **e-ma
 
 Se o passo 4 falhar: verificar se o deploy da main pós-PR #48 concluiu (`Deploy — API (prod)` no Actions).
 
-### 2b. Drive da Suna — pasta por cliente (PR #50, opcional mas recomendado)
+### 2b. Drive da Suna — pasta por cliente (PRs #50 + #51, opcional mas recomendado)
 
 Para os clientes que terão contexto real no teste:
 
 1. No Drive da Suno, compartilhe a pasta do cliente com
    `sunos-backend@koro-creators.iam.gserviceaccount.com` como **Leitor**
-   (o e-mail tem botão de copiar na própria aba Drive).
-2. Em `/clientes` → editor do cliente → aba **Drive** (admin-only): cole o
-   link da pasta → **Conectar pasta** → **Sincronizar**.
+   (o e-mail tem botão de copiar na própria UI).
+2. Dois caminhos:
+   - **Cliente novo**: o passo 3 do wizard de onboarding valida o link da
+     pasta; o sync roda automaticamente na confirmação, antes do Oráculo.
+   - **Cliente existente**: `/clientes` → editor → aba **Drive** (admin-only):
+     cole o link → **Conectar pasta** → **Sincronizar**.
 3. Os docs aparecem na Biblioteca com o escopo do cliente e alimentam o
-   ContextSidebar do chat.
+   ContextSidebar do chat. (O Oráculo ainda não lê esses docs — usa briefing
+   + pesquisa web.)
 
 Limites do MVP: até 50 arquivos por sync (aviso quando passa), Docs/Sheets/
 Slides e arquivos de texto extraem conteúdo; binários (PDF, imagem) entram só
