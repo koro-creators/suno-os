@@ -24,6 +24,12 @@ class Conversation(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_message_at = Column(DateTime, nullable=True)
 
+    # Inline message history (migration 004, Phase 11). Mapped under a
+    # different attribute name because `messages` is already the relationship
+    # to ChatMessage rows below — conversations/router.py reads this column
+    # (`conv.messages_json`) to build the GET /api/conversations/{id} response.
+    messages_json = Column("messages", JSON, nullable=False, default=list)
+
     messages = relationship(
         "ChatMessage",
         back_populates="conversation",

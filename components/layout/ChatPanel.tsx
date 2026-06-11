@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { Chat, Close, Send, Sun, TrashCan } from '@carbon/icons-react';
 import { useToolStream } from '@/hooks/useToolStream';
 import { getClientBySlug } from '@/lib/utils';
+import { apiAvailable, getConversation } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -18,6 +20,13 @@ const pulseKeyframes = `
 }
 `;
 
+// Persists which conversation each scope (client page or "general") is on,
+// so a page reload can restore the history via getConversation(). Cleared
+// on sign-out (see AuthContext.signOut) — history doesn't follow logout.
+function oraculoStorageKey(scopeKey: string): string {
+  return `sunos:conv:oraculo:${scopeKey}`;
+}
+
 export default function ChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -27,6 +36,7 @@ export default function ChatPanel() {
   const prevIsStreamingRef = useRef(false);
 
   const { text: streamingText, isStreaming, error, conversationId, startStream } = useToolStream();
+  const { user, loading: authLoading } = useAuth();
 
   // Scope to the client whose page is currently open (e.g. /samsung -> Samsung).
   // Pages outside `/[clientSlug]` (home, /skills, /clientes, etc.) resolve to
@@ -84,14 +94,50 @@ export default function ChatPanel() {
   useEffect(() => {
     if (conversationId) {
       setScopedConversationId(conversationId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(oraculoStorageKey(scopeKey ?? '__general__'), conversationId);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
+
+  // Restore history on mount / scope change — fetches the conversation saved
+  // in localStorage so a page reload doesn't wipe what's on screen. Skipped
+  // while auth is resolving, for unauthenticated users (no Oráculo panel
+  // anyway), and for scopes already cached in-memory.
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const key = scopeKey ?? '__general__';
+    if (scopeCacheRef.current[key]) return;
+    const savedId = typeof window !== 'undefined' ? localStorage.getItem(oraculoStorageKey(key)) : null;
+    if (!savedId) return;
+    getConversation(savedId, user.uid).then((conv) => {
+      // Bail if the user navigated to a different scope while this resolved.
+      if ((prevScopeKeyRef.current ?? '__general__') !== key) return;
+      if (conv && conv.messages.length > 0) {
+        const restored = conv.messages.map((m) => ({
+          role: m.role as 'user' | 'assistant',
+          text: m.content,
+        }));
+        scopeCacheRef.current[key] = { messages: restored, conversationId: savedId };
+        setMessages(restored);
+        setScopedConversationId(savedId);
+      } else if (conv === null && apiAvailable()) {
+        // Conversa não encontrada para este usuário (404 caixa-preta) —
+        // descarta o ponteiro local.
+        localStorage.removeItem(oraculoStorageKey(key));
+      }
+    });
+  }, [scopeKey, authLoading, user]);
 
   // "Limpar conversa" — starts a fresh conversation in the current scope and
   // forgets its cached history (so navigating away and back won't restore it).
   const handleClear = useCallback(() => {
     const key = scopeKey ?? '__general__';
     delete scopeCacheRef.current[key];
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(oraculoStorageKey(key));
+    }
     setMessages([]);
     setScopedConversationId(null);
   }, [scopeKey]);

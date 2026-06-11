@@ -248,12 +248,12 @@ async def get_conversation(
             if conv is None:
                 raise HTTPException(status_code=404, detail="Conversation not found")
 
-            # Prefer JSONB messages column if populated (after migration 004).
-            # Fall back to the chat_messages relationship rows.
+            # Prefer the chat_messages relationship (normalized history,
+            # already ordered by created_at). Fall back to the legacy JSONB
+            # `messages` column for conversations persisted before the
+            # chat_messages swap.
             raw_messages: list[dict] = []
-            if hasattr(conv, "messages_json") and conv.messages_json:
-                raw_messages = conv.messages_json
-            elif conv.messages:
+            if conv.messages:
                 for msg in conv.messages:
                     raw_messages.append(
                         {
@@ -263,6 +263,8 @@ async def get_conversation(
                             "agent_name": msg.agent_name,
                         }
                     )
+            elif hasattr(conv, "messages_json") and conv.messages_json:
+                raw_messages = conv.messages_json
 
             message_records = [
                 MessageRecord(
