@@ -553,6 +553,75 @@ export async function disconnectDrive(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Drive da Suno — pasta por cliente (recorte da SPEC-006, via service account)
+// ---------------------------------------------------------------------------
+
+export interface ClientDriveStatus {
+  configured: boolean;
+  folder_id: string | null;
+  folder_name: string | null;
+  last_sync: string | null;
+  doc_count: number | null;
+  sa_email: string;
+}
+
+export interface ClientDriveSyncResult {
+  synced: number;
+  updated: number;
+  skipped: number;
+  total: number;
+  truncated: boolean;
+}
+
+/** Fetch que propaga o `detail` do backend (mensagens acionáveis na UI). */
+async function clientDriveFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = await getHeaders();
+  const response = await fetch(getApiUrl(path), {
+    ...init,
+    headers: { ...headers, ...(init?.headers ?? {}) },
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const data = await response.json();
+      if (typeof data?.detail === 'string') detail = data.detail;
+    } catch {
+      // mantém statusText
+    }
+    throw new Error(detail);
+  }
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
+
+export async function getClientDrive(slug: string): Promise<ClientDriveStatus | null> {
+  if (!apiAvailable()) return null;
+  try {
+    return await clientDriveFetch<ClientDriveStatus>(`/api/clients/${slug}/drive`);
+  } catch {
+    return null;
+  }
+}
+
+export async function setClientDriveFolder(
+  slug: string,
+  folder: string,
+): Promise<{ folder_id: string; folder_name: string }> {
+  return clientDriveFetch(`/api/clients/${slug}/drive/folder`, {
+    method: 'PUT',
+    body: JSON.stringify({ folder }),
+  });
+}
+
+export async function syncClientDrive(slug: string): Promise<ClientDriveSyncResult> {
+  return clientDriveFetch(`/api/clients/${slug}/drive/sync`, { method: 'POST' });
+}
+
+export async function disconnectClientDrive(slug: string): Promise<void> {
+  await clientDriveFetch<void>(`/api/clients/${slug}/drive/folder`, { method: 'DELETE' });
+}
+
+// ---------------------------------------------------------------------------
 // SPEC-004 — Approval Hierarchy API (Phase 20)
 // ---------------------------------------------------------------------------
 

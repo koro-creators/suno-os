@@ -86,3 +86,27 @@ def update(session: Session, client_id: str, updates: dict) -> dict | None:
 
 def update_status(session: Session, client_id: str, status: str) -> dict | None:
     return update(session, client_id, {"status": status})
+
+
+def set_drive_folder(
+    session: Session,
+    client_id: str,
+    *,
+    folder_id: str | None,
+    folder_name: str | None,
+    last_sync=None,
+) -> dict | None:
+    """Configura (ou limpa, com None) a pasta do Drive do cliente.
+
+    Separado de ``update`` porque lá valores None são ignorados — aqui None é
+    um valor válido (desconectar a pasta).
+    """
+    client = session.get(Client, client_id)
+    if client is None:
+        return None
+    client.drive_folder_id = folder_id
+    client.drive_folder_name = folder_name
+    client.drive_last_sync = last_sync
+    session.commit()
+    session.refresh(client)
+    return client.to_dict()

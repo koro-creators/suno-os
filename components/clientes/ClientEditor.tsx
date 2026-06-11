@@ -538,7 +538,7 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
 
       {/* Tab: Drive (admin-only) */}
       {activeTab === 'Drive' && isAdmin && (
-        <DriveTab clientId={initial.id} />
+        <DriveTab clientSlug={initial.slug} />
       )}
 
       {/* Toast */}

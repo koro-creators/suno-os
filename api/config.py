@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     GCP_PROJECT_ID: str | None = None
     GCP_REGION: str = "us-central1"
 
+    # Drive da Suno — pasta por cliente (recorte da SPEC-006).
+    # A SA do Cloud Run lê pastas compartilhadas com ela (Leitor); o e-mail é
+    # exibido na UI para o admin saber com quem compartilhar.
+    DRIVE_SA_EMAIL: str = "sunos-backend@koro-creators.iam.gserviceaccount.com"
+
     # Logging
     LOG_LEVEL: str = "INFO"
 
