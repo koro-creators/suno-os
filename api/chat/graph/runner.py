@@ -166,10 +166,12 @@ async def _load_conversation_history(
 ) -> list[Any]:
     """Load prior turns for `conversation_id` as LangChain messages.
 
-    Best-effort and symmetric to `_persist_conversation`: tries the
-    `conversations.messages` JSONB column first, falls back to the in-memory
-    store, and returns [] (never raises) for new or unknown conversations so a
-    cold cache never breaks the chat.
+    Best-effort and symmetric to `_persist_conversation`: reads the
+    `chat_messages` table (normalized history), falls back to the legacy
+    `conversations.messages` JSONB column for conversations persisted before
+    the chat_messages swap, then to the in-memory store. Returns []
+    (never raises) for new or unknown conversations so a cold cache never
+    breaks the chat.
 
     Cross-user guard (caixa-preta RN-010): só carrega histórico se a conversa
     pertence ao usuário atual ou é legada ('anonymous', pré-auth).
@@ -181,14 +183,29 @@ async def _load_conversation_history(
         try:
             db = get_sync_session()
             try:
-                row = db.execute(
+                owner_row = db.execute(
                     text(
                         "SELECT messages FROM conversations "
                         "WHERE id = :id AND user_id IN (:user_id, 'anonymous')"
                     ),
                     {"id": conversation_id, "user_id": user_id},
                 ).first()
-                return row[0] if row else None
+                if owner_row is None:
+                    return None
+
+                rows = db.execute(
+                    text(
+                        "SELECT role, content FROM chat_messages "
+                        "WHERE conversation_id = :id ORDER BY created_at ASC"
+                    ),
+                    {"id": conversation_id},
+                ).fetchall()
+                if rows:
+                    return [{"role": r[0], "content": r[1]} for r in rows]
+
+                # Legacy fallback: conversation persisted before the
+                # chat_messages swap, history still lives in the JSONB column.
+                return owner_row[0] or []
             finally:
                 db.close()
         except Exception as db_exc:
@@ -252,9 +269,8 @@ async def _persist_conversation(
         try:
             db = get_sync_session()
             try:
-                # Upsert: append new messages to the JSONB column (migration 004).
-                # Uses a raw SQL statement for JSONB concatenation to avoid
-                # loading the full array into Python on every turn.
+                # Upsert conversation metadata (ownership/claim only — message
+                # content now lives in chat_messages, see below).
                 # ON CONFLICT: só atualiza se a conversa for do próprio usuário ou
                 # legada ('anonymous'), que é reivindicada pelo primeiro usuário
                 # autenticado que a continuar (caixa-preta RN-010).
@@ -263,10 +279,9 @@ async def _persist_conversation(
                         """
                         INSERT INTO conversations
                             (id, user_id, skill_slug, messages, created_at, last_message_at)
-                        VALUES (:id, :user_id, :skill_slug, CAST(:messages AS jsonb), :now, :now)
+                        VALUES (:id, :user_id, :skill_slug, '[]'::jsonb, :now, :now)
                         ON CONFLICT (id) DO UPDATE
-                        SET messages = conversations.messages || CAST(:messages AS jsonb),
-                            user_id = EXCLUDED.user_id,
+                        SET user_id = EXCLUDED.user_id,
                             last_message_at = :now
                         WHERE conversations.user_id IN (EXCLUDED.user_id, 'anonymous')
                         """
@@ -275,7 +290,36 @@ async def _persist_conversation(
                         "id": conversation_id,
                         "user_id": user_id,
                         "skill_slug": skill_slug,
-                        "messages": json.dumps(new_messages),
+                        "now": now,
+                    },
+                )
+
+                # Insert the turn into chat_messages — only if the conversation
+                # ended up owned by user_id/'anonymous' (same guard as above:
+                # if the upsert's WHERE skipped the update, the row still
+                # belongs to another user and EXISTS below is false).
+                db.execute(
+                    text(
+                        """
+                        INSERT INTO chat_messages (id, conversation_id, role, content, created_at)
+                        SELECT v.id, v.conversation_id, v.role, v.content, v.created_at
+                        FROM (VALUES
+                            (:user_msg_id, :id, 'user', :user_content, :now),
+                            (:assistant_msg_id, :id, 'assistant', :assistant_content, :now)
+                        ) AS v(id, conversation_id, role, content, created_at)
+                        WHERE EXISTS (
+                            SELECT 1 FROM conversations
+                            WHERE id = :id AND user_id IN (:user_id, 'anonymous')
+                        )
+                        """
+                    ),
+                    {
+                        "id": conversation_id,
+                        "user_id": user_id,
+                        "user_msg_id": str(uuid.uuid4()),
+                        "assistant_msg_id": str(uuid.uuid4()),
+                        "user_content": user_message,
+                        "assistant_content": assistant_message,
                         "now": now,
                     },
                 )
