@@ -32,6 +32,9 @@ class Client(Base):
     sponsor_email = Column(String(254), nullable=True)
     oracle_config = Column(JSON, nullable=True)
     selected_doc_ids = Column(JSON, nullable=True)
+    drive_folder_id = Column(Text, nullable=True)
+    drive_folder_name = Column(Text, nullable=True)
+    drive_last_sync = Column(DateTime(timezone=True), nullable=True)
     pre_active_since = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True),
@@ -57,6 +60,9 @@ class Client(Base):
             "sponsor_email": self.sponsor_email,
             "oracle_config": self.oracle_config or {},
             "selected_doc_ids": self.selected_doc_ids or [],
+            "drive_folder_id": self.drive_folder_id,
+            "drive_folder_name": self.drive_folder_name,
+            "drive_last_sync": self.drive_last_sync.isoformat() if self.drive_last_sync else None,
             "pre_active_since": self.pre_active_since.isoformat()
             if self.pre_active_since
             else None,

@@ -215,6 +215,11 @@ from drive.router import router as drive_router
 
 app.include_router(drive_router, prefix=settings.API_PREFIX)
 
+# Mount client drive router (Drive da Suno — pasta por cliente via SA, recorte SPEC-006)
+from drive.client_drive import router as client_drive_router
+
+app.include_router(client_drive_router, prefix=settings.API_PREFIX)
+
 # Mount onboarding router (Phase 19 / SPEC-015 — Oráculo do Cliente)
 from onboarding.router import router as onboarding_router
 
