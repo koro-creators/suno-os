@@ -69,7 +69,54 @@ export default function WikiPage() {
           </div>
         </div>
       ) : (
-        <WikiPanel clientName={clientName} entities={wikiEntities} />
+        <>
+          {/* Próximo passo pós-onboarding: a Wiki não é um beco sem saída */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 8,
+              padding: '16px 24px 0',
+              maxWidth: 768,
+              margin: '0 auto',
+              width: '100%',
+            }}
+          >
+            <button
+              onClick={() => router.push('/clientes')}
+              style={{
+                padding: '7px 14px',
+                borderRadius: 8,
+                border: '1px solid var(--border-subtle)',
+                backgroundColor: 'transparent',
+                color: 'var(--text-secondary)',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                transition: 'border-color 150ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--twilight)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+            >
+              Todos os clientes
+            </button>
+            <button
+              onClick={() => router.push(`/clientes/${clientId}`)}
+              style={{
+                padding: '7px 16px',
+                borderRadius: 8,
+                border: 'none',
+                backgroundColor: 'var(--sun)',
+                color: '#000',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Abrir cliente →
+            </button>
+          </div>
+          <WikiPanel clientName={clientName} entities={wikiEntities} />
+        </>
       )}
     </>
   );

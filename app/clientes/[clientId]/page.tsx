@@ -12,7 +12,8 @@ export default function ClientEditorPage() {
   const { clients, updateClient, deleteClient } = useClients();
 
   const clientId = params.clientId as string;
-  const client = clients.find((c) => c.id === clientId);
+  // Aceita id OU slug — rotas do onboarding/wiki usam slug (/clientes/{slug}/...)
+  const client = clients.find((c) => c.id === clientId || c.slug === clientId);
 
   if (!client) {
     return (
