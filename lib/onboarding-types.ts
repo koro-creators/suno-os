@@ -113,6 +113,9 @@ export interface WizardState {
   oracleConfig: OracleConfig;
   // Step 3: drive docs
   selectedDocIds: string[];
+  /** Pasta do Drive da Suno validada no passo 3 (URL/ID); vinculada após criar o cliente. */
+  driveFolder: string;
+  driveFolderName: string | null;
   // Step 4: ready to confirm
 }
 

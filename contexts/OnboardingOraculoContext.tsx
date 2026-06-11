@@ -59,6 +59,8 @@ function emptyWizardState(): WizardState {
       depth: 'standard',
     },
     selectedDocIds: [],
+    driveFolder: '',
+    driveFolderName: null,
   };
 }
 

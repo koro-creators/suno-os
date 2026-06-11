@@ -124,7 +124,49 @@ def _sa_email() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Endpoints
+# Endpoints — standalone (sem cliente; usados pelo wizard de onboarding)
+# ---------------------------------------------------------------------------
+
+
+class ServiceAccountResponse(BaseModel):
+    sa_email: str
+
+
+@router.get("/drive/service-account", response_model=ServiceAccountResponse)
+async def drive_service_account(
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
+) -> ServiceAccountResponse:
+    """E-mail da SA para a UI instruir o compartilhamento (wizard, sem cliente)."""
+    _resolve_admin(session, request, authorization)
+    return ServiceAccountResponse(sa_email=_sa_email())
+
+
+@router.get("/drive/folder-info", response_model=SetFolderResponse)
+async def drive_folder_info(
+    folder: str,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+    session: Session = Depends(get_session),
+) -> SetFolderResponse:
+    """Valida acesso a uma pasta SEM vinculá-la (wizard valida antes do cliente existir)."""
+    _resolve_admin(session, request, authorization)
+
+    folder_id = google_drive.extract_folder_id(folder)
+    if not folder_id:
+        raise HTTPException(status_code=400, detail="Link de pasta do Drive inválido")
+
+    try:
+        info = google_drive.get_folder(folder_id)
+    except DriveAccessError as exc:
+        raise HTTPException(status_code=400, detail=exc.reason)
+
+    return SetFolderResponse(folder_id=info["id"], folder_name=info["name"])
+
+
+# ---------------------------------------------------------------------------
+# Endpoints — por cliente
 # ---------------------------------------------------------------------------
 
 
