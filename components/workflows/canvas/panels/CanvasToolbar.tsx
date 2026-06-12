@@ -1,7 +1,10 @@
 /**
  * CanvasToolbar — top toolbar of the canvas (SPEC-005 TASK-C10).
  *
- * 5 buttons:
+ * Buttons:
+ *   • Voltar / Avançar     — undo/redo over the history stack kept by the
+ *                             parent canvas (drag, connect, delete, drop,
+ *                             auto-layout, config edits).
  *   • Zoom in / out / fit  — driven by ReactFlow's `useReactFlow` instance.
  *   • Reorganizar          — calls the auto-layout hook from useAutoLayout.
  *   • Validar              — runs `validateWorkflow` (server) and surfaces
@@ -15,7 +18,7 @@
  */
 'use client';
 
-import { Maximize, Play, Renew, SecurityServices, ZoomIn, ZoomOut } from '@carbon/icons-react';
+import { Maximize, Play, Redo, Renew, SecurityServices, Undo, ZoomIn, ZoomOut } from '@carbon/icons-react';
 import { useReactFlow } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 
@@ -25,6 +28,10 @@ interface ToolbarProps {
   onExecute: () => void;
   validating?: boolean;
   validationOk?: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 const BTN: CSSProperties = {
@@ -47,6 +54,10 @@ export default function CanvasToolbar({
   onExecute,
   validating,
   validationOk,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: ToolbarProps) {
   const flow = useReactFlow();
   return (
@@ -67,6 +78,22 @@ export default function CanvasToolbar({
         zIndex: 10,
       }}
     >
+      <button
+        style={{ ...BTN, opacity: canUndo ? 1 : 0.4, cursor: canUndo ? 'pointer' : 'not-allowed' }}
+        onClick={onUndo}
+        disabled={!canUndo}
+        aria-label="Voltar"
+      >
+        <Undo size={14} /> Voltar
+      </button>
+      <button
+        style={{ ...BTN, opacity: canRedo ? 1 : 0.4, cursor: canRedo ? 'pointer' : 'not-allowed' }}
+        onClick={onRedo}
+        disabled={!canRedo}
+        aria-label="Avançar"
+      >
+        <Redo size={14} /> Avançar
+      </button>
       <button style={BTN} onClick={() => flow.zoomIn()} aria-label="Aproximar">
         <ZoomIn size={14} />
       </button>
