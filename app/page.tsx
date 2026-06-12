@@ -4,30 +4,42 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, useEffect } from 'react';
 import { Globe } from '@carbon/icons-react';
 import Link from 'next/link';
-import { clients } from '@/data/clients';
 import AppHeader from '@/components/layout/AppHeader';
 import QuickStats from '@/components/solar/QuickStats';
 import { useAuth } from '@/contexts/AuthContext';
+import { useClients } from '@/contexts/ClientsContext';
 import WelcomeScreen from '@/components/solar/WelcomeScreen';
 import GettingStartedGuide from '@/components/onboarding/GettingStartedGuide';
 import { useFirstVisit } from '@/hooks/useFirstVisit';
+import type { ClientAdmin } from '@/lib/client-types';
 
-// Sort clients by skill count — fewer skills closer to sun
-const sorted = [...clients].sort((a, b) => a.skills.length - b.skills.length);
+// Normalized shape rendered as a planet, derived from the admin-managed
+// clients (ClientsContext) — the real source backed by the API.
+interface SolarClient {
+  slug: string;
+  name: string;
+  color: string;
+  skillCount: number;
+}
+
+const adminToSolar = (c: ClientAdmin): SolarClient => ({
+  slug: c.slug,
+  name: c.name,
+  color: c.color,
+  skillCount: c.assignedSkills.length,
+});
 
 // Planet sizes following real solar system proportions:
 // Mercury(40), Venus(55), Earth(65), Jupiter(110)
 const solarSizes = [40, 55, 65, 110];
 
-const totalSkills = clients.reduce((sum, c) => sum + c.skills.length, 0);
-
 // Sun center X = left(-280) + 620/2 = 30px from left edge
 const sunCenterX = 30;
-const orbitRadii = sorted.map((_, idx) => 440 + idx * 130);
 
 export default function Home() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { clients: adminClients } = useClients();
   const [loading, setLoading] = useState(true);
   const { isFirstVisit, dismiss: dismissWelcome } = useFirstVisit();
   const [guideOpen, setGuideOpen] = useState(false);
@@ -37,9 +49,19 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
+  // Planets come solely from the admin-managed clients (ClientsContext) — the
+  // real, API-backed source, same as QuickStats. No static/mock fallback: when
+  // there are no clients, the empty state / WelcomeScreen renders instead.
+  const solarClients: SolarClient[] = adminClients.map(adminToSolar);
+
+  // Sort by skill count — fewer skills closer to sun
+  const sorted = [...solarClients].sort((a, b) => a.skillCount - b.skillCount);
+  const totalSkills = solarClients.reduce((sum, c) => sum + c.skillCount, 0);
+  const orbitRadii = sorted.map((_, idx) => 440 + idx * 130);
+
   // WelcomeScreen is shown when the solar system has no clients (defensive — static array
   // is non-empty in the deployed mock, but handles a future empty-state gracefully).
-  if (clients.length === 0) {
+  if (solarClients.length === 0) {
     return (
       <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
         <AppHeader
@@ -59,7 +81,7 @@ export default function Home() {
     <main className="page-enter flex flex-col h-screen overflow-hidden bg-void">
       <AppHeader
         breadcrumbs={[{ label: 'Home', href: '/' }]}
-        rightLabel={`${clients.length} clientes`}
+        rightLabel={`${solarClients.length} clientes`}
       />
 
       {/* First-visit welcome overlay — shown once, independent of client count */}
@@ -94,7 +116,7 @@ export default function Home() {
         />
 
         {/* Empty state — only visible when clients list is empty */}
-        {clients.length === 0 && !loading && (
+        {solarClients.length === 0 && !loading && (
           <div
             style={{
               position: 'absolute',
@@ -223,7 +245,7 @@ export default function Home() {
         >
           <div style={{ fontSize: '3rem', fontWeight: 200, color: 'var(--editorial-text)', lineHeight: 1, letterSpacing: '-0.02em' }}>01</div>
           <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--editorial-label)', marginTop: 4 }}>Sistema Solar</div>
-          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>{clients.length} clientes &middot; {totalSkills} skills</div>
+          <div style={{ fontSize: '0.45rem', letterSpacing: '0.08em', color: 'var(--editorial-meta)', marginTop: 3 }}>{solarClients.length} clientes &middot; {totalSkills} skills</div>
         </div>
       </div>
     </main>
@@ -239,7 +261,7 @@ function Planet({
   delay,
   onClick,
 }: {
-  client: typeof clients[number];
+  client: SolarClient;
   size: number;
   planetX: number;
   yOffset: number;
@@ -270,7 +292,7 @@ function Planet({
       className="orbit-appear"
       role="button"
       tabIndex={0}
-      aria-label={`${client.name} — ${client.skills.length} skills`}
+      aria-label={`${client.name} — ${client.skillCount} skills`}
       style={{
         position: 'absolute',
         left: planetX - size / 2,
@@ -349,7 +371,7 @@ function Planet({
             marginBottom: 4,
           }}
         >
-          {client.skills.length} skills
+          {client.skillCount} skills
         </span>
         <div
           style={{
