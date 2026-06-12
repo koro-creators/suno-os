@@ -9,7 +9,7 @@ interface BibliotecaContextValue {
   documents: BibliotecaDocument[];
   createDocument: (data: Omit<BibliotecaDocument, 'id' | 'updatedAt' | 'createdBy'>) => BibliotecaDocument;
   updateDocument: (id: string, data: Partial<BibliotecaDocument>) => void;
-  deleteDocument: (id: string) => void;
+  deleteDocument: (id: string) => Promise<void>;
   uploadDocument: (file: File, title: string, tags: string[], scope: string[], description?: string) => Promise<BibliotecaDocument | null>;
   allTags: string[];
   isLoading: boolean;
@@ -18,7 +18,10 @@ interface BibliotecaContextValue {
 const BibliotecaContext = createContext<BibliotecaContextValue | null>(null);
 
 export function BibliotecaProvider({ children }: { children: ReactNode }) {
-  const [documents, setDocuments] = useState<BibliotecaDocument[]>(initialDocuments);
+  // Com API (prod): começa vazio e carrega do banco. Sem API (mock-mode dev): usa o seed local.
+  const [documents, setDocuments] = useState<BibliotecaDocument[]>(
+    apiAvailable() ? [] : initialDocuments,
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch from API when available
@@ -31,7 +34,7 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
         const response = await fetch(getApiUrl('/api/knowledge/documents'));
         if (!response.ok) return;
         const data = await response.json();
-        if (data.documents && data.documents.length > 0) {
+        if (data.documents) {
           const apiDocs: BibliotecaDocument[] = data.documents.map((d: Record<string, unknown>) => ({
             id: d.id as string,
             title: d.title as string,
@@ -48,7 +51,8 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
             status: d.status as BibliotecaDocument['status'],
             fileSize: d.file_size as number | undefined,
           }));
-          setDocuments((prev) => [...apiDocs, ...prev]);
+          // Fonte é o banco — substitui (não mistura com o seed mocado).
+          setDocuments(apiDocs);
         }
       } catch {
         // Fallback to mock data silently
@@ -84,7 +88,20 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  function deleteDocument(id: string) {
+  async function deleteDocument(id: string) {
+    // Persiste no backend (hard-delete do doc + chunks). Só remove da UI após
+    // sucesso, para não dar a falsa impressão de exclusão e o doc reaparecer no
+    // refresh. Em mock-mode (sem API) remove direto do estado local.
+    if (apiAvailable()) {
+      try {
+        const res = await fetch(getApiUrl(`/api/knowledge/documents/${id}`), {
+          method: 'DELETE',
+        });
+        if (!res.ok) return;
+      } catch {
+        return;
+      }
+    }
     setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
 
