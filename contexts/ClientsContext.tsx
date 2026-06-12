@@ -2,13 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ClientAdmin } from '@/lib/client-types';
-import { apiAvailable, listClients } from '@/lib/api';
+import { apiAvailable, listClients, archiveClient } from '@/lib/api';
 
 interface ClientsContextValue {
   clients: ClientAdmin[];
   createClient: (data: Omit<ClientAdmin, 'id' | 'createdAt' | 'updatedAt'>) => ClientAdmin;
   updateClient: (id: string, data: Partial<ClientAdmin>) => void;
-  deleteClient: (id: string) => void;
+  deleteClient: (id: string) => Promise<void>;
 }
 
 const ClientsContext = createContext<ClientsContextValue | null>(null);
@@ -38,7 +38,15 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  function deleteClient(id: string) {
+  async function deleteClient(id: string) {
+    const target = clients.find((c) => c.id === id);
+    // Arquiva no backend (soft-delete). Só remove da UI após sucesso, para não
+    // dar a falsa impressão de exclusão se o servidor recusar (aí reaparece no
+    // refresh, que foi o bug original). Em mock-mode (sem API) remove direto.
+    if (target && apiAvailable()) {
+      const ok = await archiveClient(target.slug);
+      if (!ok) return;
+    }
     setClients((prev) => prev.filter((c) => c.id !== id));
   }
 

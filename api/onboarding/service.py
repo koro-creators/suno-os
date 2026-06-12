@@ -72,8 +72,21 @@ def get_client_by_slug(session: Session, slug: str) -> dict | None:
 
 
 def list_all_clients(session: Session) -> list[dict]:
-    """Lista todos os clientes do banco (admin /clientes)."""
-    return clients_repo.list_clients(session)
+    """Lista clientes do banco (admin /clientes). Esconde os arquivados (INACTIVE)."""
+    return [c for c in clients_repo.list_clients(session) if c.get("status") != "INACTIVE"]
+
+
+def archive_client(session: Session, slug: str) -> bool:
+    """Soft-delete: marca o cliente como INACTIVE.
+
+    Some das listas (list_all_clients filtra INACTIVE) mas continua no banco —
+    recuperável. Retorna False quando o cliente não existe; o router converte em
+    404 (caixa-preta: nunca revela existência via 403)."""
+    client = clients_repo.get_by_slug(session, slug)
+    if client is None:
+        return False
+    clients_repo.update_status(session, client.id, "INACTIVE")
+    return True
 
 
 def require_client_by_slug(session: Session, slug: str) -> dict:
