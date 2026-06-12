@@ -36,6 +36,7 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
   useReactFlow,
+  useViewport,
   type Connection,
   type Edge,
   type Node,
@@ -137,6 +138,7 @@ function flowEdgesToWorkflowEdges(flowEdges: Edge[]): WorkflowEdge[] {
 function CanvasInner(props: WorkflowCanvasProps) {
   const { workflowId, initialSteps, initialEdges, currentWorkflowId, onPersistSteps, onExecute, concurrentEdit } = props;
   const flow = useReactFlow();
+  const { zoom } = useViewport();
 
   const [nodes, setNodes] = useState<Node[]>(() => stepsToNodes(initialSteps, initialEdges));
   const [edges, setEdges] = useState<Edge[]>(() => workflowEdgesToFlowEdges(initialEdges));
@@ -270,6 +272,42 @@ function CanvasInner(props: WorkflowCanvasProps) {
 
   const canUndo = historyRef.current.past.length > 0;
   const canRedo = historyRef.current.future.length > 0;
+
+  // Delete the currently selected node (and any edges touching it). Used by
+  // the toolbar "Apagar" button and the Delete/Backspace keyboard shortcut.
+  const onDeleteSelected = useCallback(() => {
+    if (!selectedNodeId || isMobile) return;
+    pushHistory();
+    setNodes((cur) => {
+      const next = cur.filter((n) => n.id !== selectedNodeId);
+      stepsAutoSave.markDirty(next);
+      return next;
+    });
+    setEdges((cur) => {
+      const next = cur.filter((e) => e.source !== selectedNodeId && e.target !== selectedNodeId);
+      edgesAutoSave.markDirty(next);
+      return next;
+    });
+    setSelectedNodeId(null);
+    setValidationOk(false);
+  }, [selectedNodeId, isMobile, stepsAutoSave, edgesAutoSave, pushHistory]);
+
+  // Delete/Backspace deletes the selected node, unless the user is typing in
+  // a form field (e.g. the NodeConfigDrawer's inputs/textareas).
+  useEffect(() => {
+    if (isMobile) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      if (!selectedNodeId) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
+      e.preventDefault();
+      onDeleteSelected();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isMobile, selectedNodeId, onDeleteSelected]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -525,6 +563,8 @@ function CanvasInner(props: WorkflowCanvasProps) {
             onRedo={onRedo}
             canUndo={canUndo}
             canRedo={canRedo}
+            onDeleteSelected={onDeleteSelected}
+            canDelete={!!selectedNodeId}
           />
           <ReactFlow
             nodes={nodes}
@@ -581,7 +621,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
               color: 'var(--text-secondary)',
             }}
           >
-            X: {mousePosition?.x ?? '—'} · Y: {mousePosition?.y ?? '—'}
+            X: {mousePosition?.x ?? '—'} · Y: {mousePosition?.y ?? '—'} · Z: {zoom.toFixed(2)}
           </div>
           {/* Edges must render above node cards: dagre-laid-out edges can
               otherwise pass underneath neighbouring step cards and look

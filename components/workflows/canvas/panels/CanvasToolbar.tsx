@@ -18,7 +18,7 @@
  */
 'use client';
 
-import { Maximize, Play, Redo, Renew, SecurityServices, Undo, ZoomIn, ZoomOut } from '@carbon/icons-react';
+import { Maximize, Play, Redo, Renew, SecurityServices, TrashCan, Undo, ZoomIn, ZoomOut } from '@carbon/icons-react';
 import { useReactFlow } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 
@@ -32,6 +32,8 @@ interface ToolbarProps {
   onRedo: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  onDeleteSelected: () => void;
+  canDelete?: boolean;
 }
 
 const BTN: CSSProperties = {
@@ -58,6 +60,8 @@ export default function CanvasToolbar({
   onRedo,
   canUndo,
   canRedo,
+  onDeleteSelected,
+  canDelete,
 }: ToolbarProps) {
   const flow = useReactFlow();
   return (
@@ -93,6 +97,14 @@ export default function CanvasToolbar({
         aria-label="Avançar"
       >
         <Redo size={14} /> Avançar
+      </button>
+      <button
+        style={{ ...BTN, opacity: canDelete ? 1 : 0.4, cursor: canDelete ? 'pointer' : 'not-allowed' }}
+        onClick={onDeleteSelected}
+        disabled={!canDelete}
+        aria-label="Apagar node selecionado"
+      >
+        <TrashCan size={14} /> Apagar
       </button>
       <button style={BTN} onClick={() => flow.zoomIn()} aria-label="Aproximar">
         <ZoomIn size={14} />
