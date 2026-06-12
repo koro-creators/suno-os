@@ -93,6 +93,35 @@ def test_list_clients_returns_created(ctx):
     assert "sponsor_email" in cogna and "created_at" in cogna
 
 
+def test_archive_client_hides_from_list(ctx):
+    client, TestSession = ctx
+    _create(client, slug="cogna", name="Cogna")
+    _create(client, slug="vivo", name="Vivo")
+
+    resp = client.delete("/api/clients/cogna")
+    assert resp.status_code == 204
+
+    rows = client.get("/api/clients").json()
+    slugs = {r["slug"] for r in rows}
+    assert "cogna" not in slugs  # arquivado some da listagem
+    assert "vivo" in slugs  # os demais permanecem
+
+    # Soft-delete: a linha continua no banco com status INACTIVE (recuperável)
+    s = TestSession()
+    try:
+        archived = clients_repo.get_by_slug(s, "cogna")
+        assert archived is not None
+        assert archived.status == "INACTIVE"
+    finally:
+        s.close()
+
+
+def test_archive_unknown_client_404(ctx):
+    client, _ = ctx
+    resp = client.delete("/api/clients/nao-existe")
+    assert resp.status_code == 404
+
+
 def test_backfill_creates_job_and_entities(ctx):
     import pytest
     from api.clientes import repository as cr

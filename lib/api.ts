@@ -987,6 +987,23 @@ export async function listClients(): Promise<ClientAdmin[] | null> {
 }
 
 /**
+ * Arquiva (soft-delete) um cliente — status INACTIVE no backend. Some das
+ * listagens mas continua no banco (recuperável). Retorna true em sucesso.
+ */
+export async function archiveClient(slug: string): Promise<boolean> {
+  if (!apiAvailable()) return false;
+  try {
+    const res = await fetch(getApiUrl(`/api/clients/${slug}`), {
+      method: 'DELETE',
+      headers: await getHeaders(),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Gera o Oráculo de um cliente legado (sem ontologia) — cria job + dispara geração.
  * `allowedDomains` restringe a busca web (vazio = sem pesquisa). Retorna ok/erro.
  */

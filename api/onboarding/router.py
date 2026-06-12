@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 try:
@@ -39,6 +39,7 @@ from .schemas import (
     WikiPageResponse,
 )
 from .service import (
+    archive_client,
     backfill_onboarding,
     create_client,
     get_onboarding_status,
@@ -82,6 +83,23 @@ async def create_client_endpoint(
         status=client["status"],
         job_id=job_id,
     )
+
+
+# ---------------------------------------------------------------------------
+# DELETE /api/clients/{slug} — arquivar (soft-delete)
+# ---------------------------------------------------------------------------
+
+
+@router.delete("/clients/{slug}", status_code=204)
+async def archive_client_endpoint(
+    slug: str,
+    session: Session = Depends(get_session),
+) -> None:
+    """Arquiva o cliente (status INACTIVE). Some das listas mas fica recuperável.
+
+    Retorna 404 se o cliente não existe (caixa-preta: nunca 403)."""
+    if not archive_client(session, slug):
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
 
 # ---------------------------------------------------------------------------
