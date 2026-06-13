@@ -82,6 +82,15 @@ export default function WorkflowRunsPage() {
     void loadRuns();
   }, [loadRuns]);
 
+  // Poll while any run is still "running"/"paused" so the status updates
+  // without a manual page reload (e.g. a scheduled run finished elsewhere).
+  useEffect(() => {
+    const hasActiveRun = runs.some((r) => r.status === 'running' || r.status === 'paused');
+    if (!hasActiveRun) return;
+    const timer = setTimeout(() => void loadRuns(), 4000);
+    return () => clearTimeout(timer);
+  }, [runs, loadRuns]);
+
   // Trigger a run, then refresh the history once it completes server-side.
   const handleRun = useCallback(async () => {
     await runWorkflow(workflowId);

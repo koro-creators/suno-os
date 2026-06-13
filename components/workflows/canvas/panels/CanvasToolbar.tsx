@@ -26,6 +26,7 @@ interface ToolbarProps {
   onAutoLayout: () => void;
   onValidate: () => void;
   onExecute: () => void;
+  executing?: boolean;
   validating?: boolean;
   validationOk?: boolean;
   onUndo: () => void;
@@ -54,6 +55,7 @@ export default function CanvasToolbar({
   onAutoLayout,
   onValidate,
   onExecute,
+  executing,
   validating,
   validationOk,
   onUndo,
@@ -127,15 +129,16 @@ export default function CanvasToolbar({
           background: validationOk ? '#22C55E' : 'var(--deep)',
           color: validationOk ? '#fff' : 'var(--text-muted)',
           borderColor: validationOk ? '#22C55E' : 'var(--border-subtle)',
-          cursor: validationOk ? 'pointer' : 'not-allowed',
+          cursor: validationOk && !executing ? 'pointer' : 'not-allowed',
           fontWeight: 500,
+          opacity: executing ? 0.7 : 1,
         }}
         onClick={() => {
-          if (validationOk) onExecute();
+          if (validationOk && !executing) onExecute();
         }}
-        disabled={!validationOk}
+        disabled={!validationOk || executing}
       >
-        <Play size={14} /> Executar
+        <Play size={14} /> {executing ? 'Executando…' : 'Executar'}
       </button>
     </div>
   );

@@ -14,7 +14,7 @@
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Play, RecentlyViewed } from '@carbon/icons-react';
+import { RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { apiAvailable, getWorkflowDetail, getWorkflowEdges, migrateWorkflowV2 } from '@/lib/api';
@@ -110,7 +110,7 @@ interface CanvasPayload {
 export default function WorkflowEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const { workflows, updateWorkflow, deleteWorkflow, runWorkflow } = useWorkflows();
+  const { workflows, updateWorkflow, deleteWorkflow } = useWorkflows();
   const workflowId = params.workflowId as string;
 
   const ctxWorkflow = workflows.find((w) => w.id === workflowId);
@@ -342,7 +342,6 @@ export default function WorkflowEditorPage() {
           initialSteps={payload.steps}
           initialEdges={payload.edges}
           onPersistSteps={onPersistSteps}
-          onExecute={() => runWorkflow(workflow.id)}
         />
       )}
     </>

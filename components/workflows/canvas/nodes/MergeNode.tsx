@@ -12,12 +12,13 @@
 
 import { Merge } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeShell, type HandleSpec } from './NodeShell';
+import { NodeShell, type ExecutionStatus, type HandleSpec } from './NodeShell';
 
 interface MergeNodeData {
   type: 'merge';
   name: string;
   merge_policy?: 'all' | 'any';
+  _executionStatus?: ExecutionStatus;
   [key: string]: unknown;
 }
 
@@ -38,6 +39,7 @@ export default function MergeNode({ data, selected }: NodeProps) {
       accentColor="rgba(255,255,255,0.06)"
       sourceHandles={sources}
       selected={selected}
+      executionStatus={d._executionStatus}
     >
       <div
         style={{

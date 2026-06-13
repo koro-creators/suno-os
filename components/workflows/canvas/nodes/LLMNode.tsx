@@ -5,13 +5,14 @@
 
 import { Star } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeShell, type HandleSpec } from './NodeShell';
+import { NodeShell, type ExecutionStatus, type HandleSpec } from './NodeShell';
 
 interface LLMNodeData {
   type: 'llm';
   name: string;
   prompt?: string;
   _hasErrorEdge?: boolean;
+  _executionStatus?: ExecutionStatus;
   [key: string]: unknown;
 }
 
@@ -39,6 +40,7 @@ export default function LLMNode({ data, selected }: NodeProps) {
       accentColor="rgba(139,92,246,0.15)"
       sourceHandles={sources}
       selected={selected}
+      executionStatus={d._executionStatus}
     />
   );
 }

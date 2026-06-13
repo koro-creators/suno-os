@@ -99,8 +99,14 @@ export function useGraphValidation(
   /** Collected canvas-local findings ready to render in the validation panel. */
   const findings = useMemo(() => {
     const inDegree = new Map<string, number>();
+    const inHandles = new Map<string, string[]>();
     for (const n of nodes) inDegree.set(n.id, 0);
-    for (const e of edges) inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
+    for (const e of edges) {
+      inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
+      const handles = inHandles.get(e.target) ?? [];
+      handles.push(e.targetHandle ?? 'in');
+      inHandles.set(e.target, handles);
+    }
 
     const orphans: string[] = []; // in-degree 0 — fine if there's at least one entry node
     const fanInWithoutMerge: string[] = [];
@@ -112,6 +118,15 @@ export function useGraphValidation(
       if (deg === 0) orphans.push(node.id);
       if (type === 'merge') {
         if (deg === 0) mergeWithZeroInputs.push(node.id);
+      } else if (type === 'condition') {
+        // `condition` aceita 1 entrada (qualquer handle) ou 2 entradas via
+        // handles distintos in_a (CAMPO) + in_b (VALOR). `in` legado conta
+        // como in_a (paridade com validator.py).
+        const handles = (inHandles.get(node.id) ?? [])
+          .map((h) => (h === 'in' ? 'in_a' : h))
+          .sort();
+        const isDualInput = deg === 2 && handles[0] === 'in_a' && handles[1] === 'in_b';
+        if (deg > 2 || (deg === 2 && !isDualInput)) fanInWithoutMerge.push(node.id);
       } else {
         if (deg > 1) fanInWithoutMerge.push(node.id);
       }

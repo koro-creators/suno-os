@@ -5,13 +5,14 @@
 
 import { Flow } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeShell, type HandleSpec } from './NodeShell';
+import { NodeShell, type ExecutionStatus, type HandleSpec } from './NodeShell';
 
 interface SubWorkflowNodeData {
   type: 'workflow';
   name: string;
   workflow_id?: string;
   _hasErrorEdge?: boolean;
+  _executionStatus?: ExecutionStatus;
   [key: string]: unknown;
 }
 
@@ -35,6 +36,7 @@ export default function SubWorkflowNode({ data, selected }: NodeProps) {
       accentColor="rgba(236,72,153,0.15)"
       sourceHandles={sources}
       selected={selected}
+      executionStatus={d._executionStatus}
     />
   );
 }

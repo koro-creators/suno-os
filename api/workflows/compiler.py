@@ -22,6 +22,7 @@ fallback decays to zero before sunset (Fase D / E).
 from __future__ import annotations
 
 import logging
+import operator
 import re
 from datetime import datetime, timezone
 from typing import Annotated, Any, Callable, TypedDict
@@ -34,6 +35,13 @@ from langgraph.types import interrupt
 logger = logging.getLogger(__name__)
 
 
+def _last_value(_old: str, new: str) -> str:
+    """Reducer for `current_step`: concurrent writers (fan-in) just race to
+    set "last one wins" — the field is informational only, never read back
+    for routing (see `_make_condition`, which reads `steps_output` instead)."""
+    return new
+
+
 # ---------------------------------------------------------------------------
 # State schema
 # ---------------------------------------------------------------------------
@@ -43,8 +51,11 @@ class WorkflowState(TypedDict):
     workflow_id: str
     run_id: str
     client_id: str | None  # resolved from the run; powers client-scoped tools (ontologia)
-    steps_output: dict[str, Any]
-    current_step: str
+    # Annotated com reducers: nodes em paralelo (fan-out/fan-in, ex. condition
+    # com 2 entradas in_a/in_b) escrevem essas chaves no mesmo superstep.
+    # Sem reducer, LangGraph levanta INVALID_CONCURRENT_GRAPH_UPDATE.
+    steps_output: Annotated[dict[str, Any], operator.or_]
+    current_step: Annotated[str, _last_value]
     status: str
     messages: Annotated[list[BaseMessage], add_messages]
     human_input: str | None
@@ -60,6 +71,58 @@ class WorkflowState(TypedDict):
 # ---------------------------------------------------------------------------
 
 TOOL_REGISTRY: dict[str, Any] = {}
+
+
+# ---------------------------------------------------------------------------
+# LLM factory — mirrors api/chat/tools/chat_tools.py::_get_llm
+# ---------------------------------------------------------------------------
+
+LLM_MODEL_MAP = {
+    "gemini-flash": "gemini-2.5-flash",
+    "gemini-pro": "gemini-2.5-pro",
+    "gpt-4o": "gpt-4o",
+    "claude": "claude-sonnet-4",
+}
+
+
+def _get_llm(model: str, temperature: float = 0.7) -> Any:
+    """Instantiate the LangChain chat model for a workflow `llm` step.
+
+    Falls back to Gemini Flash if the requested model's API key is missing,
+    same as the chat agents' `_get_llm`.
+    """
+    from config import settings
+
+    model_id = LLM_MODEL_MAP.get(model, "gemini-2.5-flash")
+
+    if model_id.startswith("gpt") and settings.OPENAI_API_KEY:
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(model=model_id, temperature=temperature, api_key=settings.OPENAI_API_KEY)
+
+    if model_id.startswith("claude") and settings.ANTHROPIC_API_KEY:
+        from langchain_anthropic import ChatAnthropic
+
+        return ChatAnthropic(model=model_id, temperature=temperature, api_key=settings.ANTHROPIC_API_KEY)
+
+    if model_id.startswith("gemini") and settings.GOOGLE_API_KEY:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model=model_id, temperature=temperature, google_api_key=settings.GOOGLE_API_KEY
+        )
+
+    # Fallback: always use Gemini Flash if available
+    if settings.GOOGLE_API_KEY:
+        if model != "gemini-flash":
+            logger.warning("API key for model '%s' not configured, falling back to Gemini Flash", model)
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash", temperature=temperature, google_api_key=settings.GOOGLE_API_KEY
+        )
+
+    raise ValueError("No LLM API key configured. Set GOOGLE_API_KEY in .env")
 
 
 def _lookup_client_ontology(client_id: str | None) -> str:
@@ -116,6 +179,48 @@ def _load_tool_registry() -> None:
         TOOL_REGISTRY["web_search"] = web_search
     except ImportError:
         pass
+
+
+# ---------------------------------------------------------------------------
+# Condition evaluation — shared by the `condition` node and _make_condition's
+# fallback (v1 / condition attached to a non-condition step type).
+# ---------------------------------------------------------------------------
+
+
+def _evaluate_condition(actual: Any, operator: str, value: Any) -> str:
+    """Compara `actual` com `value` e retorna "then" ou "else".
+
+    `actual` ja foi resolvido pelo chamador: "output" do step anterior
+    (campo vazio) ou o literal digitado no campo "Campo" (campo preenchido).
+    """
+    # `value` vem da UI como string; `actual` pode ser numero, bool, str etc.
+    # Tenta comparar numericamente quando ambos convertem pra float (ex.:
+    # actual=5 (int), value="10" -> 5.0 < 10.0), senao cai pra comparacao
+    # direta dos valores originais.
+    cmp_actual, cmp_value = actual, value
+    if operator in ("eq", "neq", "gt", "lt"):
+        try:
+            cmp_actual, cmp_value = float(actual), float(value)
+        except (TypeError, ValueError):
+            cmp_actual, cmp_value = actual, value
+
+    if operator == "eq":
+        return "then" if cmp_actual == cmp_value else "else"
+    elif operator == "neq":
+        return "then" if cmp_actual != cmp_value else "else"
+    elif operator == "gt":
+        try:
+            return "then" if cmp_actual is not None and cmp_actual > cmp_value else "else"
+        except TypeError:
+            return "else"
+    elif operator == "lt":
+        try:
+            return "then" if cmp_actual is not None and cmp_actual < cmp_value else "else"
+        except TypeError:
+            return "else"
+    elif operator == "contains":
+        return "then" if str(value) in str(actual) else "else"
+    return "else"
 
 
 # ---------------------------------------------------------------------------
@@ -181,10 +286,15 @@ class WorkflowCompiler:
         for step in steps:
             if step.get("condition"):
                 cond = step["condition"]
+                # `cond` no formato v2 (vindo do drawer) so tem field/operator/
+                # value — then/else sao edges, nao chaves do dict. Usar .get()
+                # com fallback pra END evita KeyError aqui (que travaria o run
+                # em "running" pra sempre, pois compile() roda fora do
+                # try/except de run_with_logs).
                 graph.add_conditional_edges(
                     step["id"],
-                    self._make_condition(cond),
-                    {"then": cond["then"], "else": cond.get("else", END)},
+                    self._make_condition(cond, step_id=step["id"]),
+                    {"then": cond.get("then", END), "else": cond.get("else", END)},
                 )
             elif step.get("next_step"):
                 graph.add_edge(step["id"], step["next_step"])
@@ -216,10 +326,24 @@ class WorkflowCompiler:
                 if src is not None:
                     src["_error_target"] = edge["target_step_id"]
 
+        # For `condition` steps: map in_a (CAMPO source) / in_b (VALOR source)
+        # target handles to the source step that feeds each one. Legacy `in`
+        # edges (single-input, pre-SPEC-005) count as in_a.
+        condition_inputs: dict[str, dict[str, str]] = {}
+        for edge in edges:
+            tgt = steps_by_id.get(edge["target_step_id"])
+            if tgt is None or tgt["type"] != "condition":
+                continue
+            handle = edge["target_handle"]
+            input_key = "in_a" if handle in ("in", "in_a") else "in_b" if handle == "in_b" else None
+            if input_key:
+                condition_inputs.setdefault(edge["target_step_id"], {})[input_key] = edge["source_step_id"]
+
         for step in steps:
             base_fn = self._make_step_node(
                 step,
                 definition.get("default_model", "gemini-flash"),
+                input_sources=condition_inputs.get(step["id"]),
             )
             if step["type"] == "merge" and step.get("merge_policy") == "any":
                 node_fn = self._make_merge_any_node(step, base_fn)
@@ -295,13 +419,14 @@ class WorkflowCompiler:
                 # `then`/`else` are the only legal handles for condition; the
                 # validator already rejected anything else.
                 mapping[edge["source_handle"]] = edge["target_step_id"]
+            mapping.setdefault("then", END)
             mapping.setdefault("else", END)
             cond = source_step.get("condition") or {
                 "field": "",
                 "operator": "eq",
                 "value": None,
             }
-            graph.add_conditional_edges(src_id, self._make_condition(cond), mapping)
+            graph.add_conditional_edges(src_id, self._make_condition(cond, step_id=src_id), mapping)
             return
 
         if src_type == "hitl":
@@ -445,7 +570,12 @@ class WorkflowCompiler:
     # Node factory
     # ------------------------------------------------------------------
 
-    def _make_step_node(self, step: dict, default_model: str) -> Callable:
+    def _make_step_node(
+        self,
+        step: dict,
+        default_model: str,
+        input_sources: dict[str, str] | None = None,
+    ) -> Callable:
         step_type = step["type"]
         step_id = step["id"]
         step_config = step.get("config", {})
@@ -470,20 +600,7 @@ class WorkflowCompiler:
                 resolved_prompt = self._resolve_template_string(
                     prompt, state.get("steps_output", {})
                 )
-                # LLM call via langchain — resolve model alias
-                from langchain_google_genai import ChatGoogleGenerativeAI
-
-                from config import settings
-
-                MODEL_MAP = {
-                    "gemini-flash": "gemini-2.5-flash",
-                    "gemini-pro": "gemini-2.5-pro",
-                }
-                model_name = MODEL_MAP.get(default_model, default_model)
-                llm = ChatGoogleGenerativeAI(
-                    model=model_name,
-                    google_api_key=settings.GOOGLE_API_KEY,
-                )
+                llm = _get_llm(step.get("model") or default_model)
                 response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
                 result = response.content
 
@@ -504,7 +621,48 @@ class WorkflowCompiler:
                     return {"error": "Rejeitado na revisao humana", "status": "failed"}
 
             elif step_type == "condition":
-                result = {"evaluated": True}
+                cond = step.get("condition") or {}
+                field = cond.get("field") or ""
+                operator = cond.get("operator", "eq")
+                cond_value = cond.get("value") or ""
+
+                prev_outputs = state.get("steps_output", {})
+                last_output = list(prev_outputs.values())[-1] if prev_outputs else {}
+                # "output" e a chave universal que steps anteriores gravam em
+                # steps_output (ver wrapping no fim de node_fn).
+                prev_output_value = (
+                    last_output.get("output") if isinstance(last_output, dict) else None
+                )
+
+                def _resolve_input(handle: str, literal: str) -> Any:
+                    # Campo/Valor preenchidos (modo "Avancado") sao usados
+                    # literalmente. Vazios: se houver edge conectada no handle
+                    # in_a/in_b, usa o "output" desse step especifico; senao
+                    # cai no output do step anterior (comportamento legado).
+                    if literal:
+                        return literal
+                    source_id = (input_sources or {}).get(handle)
+                    if source_id is not None:
+                        source_output = prev_outputs.get(source_id)
+                        return (
+                            source_output.get("output")
+                            if isinstance(source_output, dict)
+                            else None
+                        )
+                    return prev_output_value
+
+                actual = _resolve_input("in_a", field)
+                value = _resolve_input("in_b", cond_value)
+
+                branch = _evaluate_condition(actual, operator, value)
+                result = {
+                    "output": branch == "then",
+                    "field": field,
+                    "operator": operator,
+                    "value": value,
+                    "actual": actual,
+                    "branch": branch,
+                }
 
             elif step_type == "action":
                 tool_name = step.get("tool_name", "")
@@ -571,6 +729,14 @@ class WorkflowCompiler:
             else:
                 result = {"error": f"Unknown step type: {step_type}"}
 
+            # Resultados escalares (string/numero/bool de llm, generate_text,
+            # web_search, etc.) sao embrulhados em {"output": ...} para que
+            # `condition`/templates acessem via field/placeholder "output" de
+            # forma uniforme, igual a steps que ja retornam dict (tool error,
+            # merge). Dicts/listas (ja "navegaveis") passam direto.
+            if not isinstance(result, (dict, list)):
+                result = {"output": result}
+
             new_outputs = {**state.get("steps_output", {}), step_id: result}
             return {"current_step": step_id, "steps_output": new_outputs}
 
@@ -580,27 +746,34 @@ class WorkflowCompiler:
     # Condition factory
     # ------------------------------------------------------------------
 
-    def _make_condition(self, condition: dict) -> Callable:
-        field = condition.get("field", "")
-        operator = condition.get("operator", "eq")
-        value = condition.get("value")
-
+    def _make_condition(self, condition: dict, step_id: str | None = None) -> Callable:
         def router(state: WorkflowState) -> str:
+            # Caminho normal (step_type="condition"): o node_fn ja calculou o
+            # branch usando o output do step anterior (capturado antes de
+            # gravar o proprio resultado em steps_output) e gravou em
+            # steps_output[step_id]["branch"]. So reaproveitar aqui garante
+            # que o routing usa exatamente a mesma avaliacao exibida no
+            # Run History — sem reler "last_output" (que a essa altura já
+            # seria o proprio resultado do condition, nao o do step anterior).
+            if step_id is not None:
+                own = state.get("steps_output", {}).get(step_id)
+                if isinstance(own, dict) and "branch" in own:
+                    return own["branch"]
+
+            # Fallback (v1 legacy / condition anexada a um step que nao e do
+            # tipo "condition"): mesma regra do node_fn — campo/valor vazios
+            # caem no "output" do step anterior; preenchidos sao literais.
+            field = condition.get("field") or ""
+            operator = condition.get("operator", "eq")
+            cond_value = condition.get("value") or ""
             outputs = state.get("steps_output", {})
             last_output = list(outputs.values())[-1] if outputs else {}
-            actual = last_output.get(field) if isinstance(last_output, dict) else None
-
-            if operator == "eq":
-                return "then" if actual == value else "else"
-            elif operator == "neq":
-                return "then" if actual != value else "else"
-            elif operator == "gt":
-                return "then" if actual is not None and actual > value else "else"
-            elif operator == "lt":
-                return "then" if actual is not None and actual < value else "else"
-            elif operator == "contains":
-                return "then" if value in str(actual) else "else"
-            return "else"
+            prev_output_value = (
+                last_output.get("output") if isinstance(last_output, dict) else None
+            )
+            actual = field if field else prev_output_value
+            value = cond_value if cond_value else prev_output_value
+            return _evaluate_condition(actual, operator, value)
 
         return router
 
@@ -634,5 +807,7 @@ class WorkflowCompiler:
         # Also replace {{previous}} with last step output
         if "{{previous}}" in result and steps_output:
             last = list(steps_output.values())[-1]
+            if isinstance(last, dict):
+                last = last.get("output", last)
             result = result.replace("{{previous}}", str(last))
         return result

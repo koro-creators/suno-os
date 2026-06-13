@@ -51,12 +51,15 @@ import {
   setWorkflowEdges,
   validateWorkflow,
   autoLayoutWorkflow,
+  runWorkflow,
+  getWorkflowRun,
 } from '@/lib/api';
 import type { WorkflowEdge, WorkflowStepV2 } from '@/lib/workflow-types';
 import { useWorkflowAutoSave } from '@/hooks/useWorkflowAutoSave';
 import { useGraphValidation } from './hooks/useGraphValidation';
 import { useAutoLayout } from './hooks/useAutoLayout';
 
+import type { ExecutionStatus } from './nodes/NodeShell';
 import ToolNode from './nodes/ToolNode';
 import LLMNode from './nodes/LLMNode';
 import ConditionNode from './nodes/ConditionNode';
@@ -92,8 +95,6 @@ interface WorkflowCanvasProps {
   currentWorkflowId?: string;
   /** Persists step changes via PUT /api/workflows/{id}. */
   onPersistSteps: (steps: WorkflowStepV2[]) => Promise<void>;
-  /** Optional: triggered by toolbar's "Executar". */
-  onExecute?: () => void;
   /**
    * If the workflow record carries `updated_by` and `updated_at` near now,
    * the banner shows the concurrent-edit warning (FR-WBC-13).
@@ -114,13 +115,18 @@ function stepsToNodes(steps: WorkflowStepV2[], edges: WorkflowEdge[]): Node[] {
   }));
 }
 
-function workflowEdgesToFlowEdges(edges: WorkflowEdge[]): Edge[] {
+function workflowEdgesToFlowEdges(edges: WorkflowEdge[], steps: WorkflowStepV2[]): Edge[] {
+  // Edges persisted before SPEC-005's in_a/in_b handles use the legacy `in`
+  // target handle. ConditionNode no longer renders an `in` handle (it has
+  // in_a/in_b instead), so remap `in` -> `in_a` for condition targets to
+  // keep those edges attached to a real handle on load.
+  const conditionIds = new Set(steps.filter((s) => s.type === 'condition').map((s) => s.id));
   return edges.map((e, idx) => ({
     id: e.edge_id ?? `e-${idx}-${e.source_step_id}-${e.target_step_id}`,
     source: e.source_step_id,
     target: e.target_step_id,
     sourceHandle: e.source_handle,
-    targetHandle: e.target_handle,
+    targetHandle: conditionIds.has(e.target_step_id) && e.target_handle === 'in' ? 'in_a' : e.target_handle,
     type: 'custom',
   }));
 }
@@ -131,19 +137,24 @@ function flowEdgesToWorkflowEdges(flowEdges: Edge[]): WorkflowEdge[] {
     source_step_id: e.source,
     source_handle: (e.sourceHandle ?? 'out') as WorkflowEdge['source_handle'],
     target_step_id: e.target,
-    target_handle: 'in',
+    target_handle: (e.targetHandle ?? 'in') as WorkflowEdge['target_handle'],
   }));
 }
 
 function CanvasInner(props: WorkflowCanvasProps) {
-  const { workflowId, initialSteps, initialEdges, currentWorkflowId, onPersistSteps, onExecute, concurrentEdit } = props;
+  const { workflowId, initialSteps, initialEdges, currentWorkflowId, onPersistSteps, concurrentEdit } = props;
   const flow = useReactFlow();
   const { zoom } = useViewport();
 
   const [nodes, setNodes] = useState<Node[]>(() => stepsToNodes(initialSteps, initialEdges));
-  const [edges, setEdges] = useState<Edge[]>(() => workflowEdgesToFlowEdges(initialEdges));
+  const [edges, setEdges] = useState<Edge[]>(() => workflowEdgesToFlowEdges(initialEdges, initialSteps));
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Per-node execution status shown on the canvas after "Executar" (FR: visual
+  // feedback of the run). Reset to null whenever the graph mutates.
+  const [executing, setExecuting] = useState(false);
+  const [executionStatus, setExecutionStatus] = useState<Record<string, ExecutionStatus> | null>(null);
 
   // Mouse position (in flow coordinates) for the small readout beside the minimap.
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
@@ -251,6 +262,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
     stepsAutoSave.markDirty(snapshot.nodes);
     edgesAutoSave.markDirty(snapshot.edges);
     setValidationOk(false);
+    setExecutionStatus(null);
     setHistoryVersion((v) => v + 1);
   }, [stepsAutoSave, edgesAutoSave]);
 
@@ -267,6 +279,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
     stepsAutoSave.markDirty(snapshot.nodes);
     edgesAutoSave.markDirty(snapshot.edges);
     setValidationOk(false);
+    setExecutionStatus(null);
     setHistoryVersion((v) => v + 1);
   }, [stepsAutoSave, edgesAutoSave]);
 
@@ -290,6 +303,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
     });
     setSelectedNodeId(null);
     setValidationOk(false);
+    setExecutionStatus(null);
   }, [selectedNodeId, isMobile, stepsAutoSave, edgesAutoSave, pushHistory]);
 
   // Delete/Backspace deletes the selected node, unless the user is typing in
@@ -319,6 +333,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         // Reset validation status whenever the graph mutates so the user
         // re-runs Validate before Executar lights up.
         setValidationOk(false);
+        setExecutionStatus(null);
         return next;
       });
     },
@@ -333,6 +348,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         const next = applyEdgeChanges(changes, cur);
         edgesAutoSave.markDirty(next);
         setValidationOk(false);
+        setExecutionStatus(null);
         return next;
       });
     },
@@ -368,6 +384,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         const next = addEdge({ ...connection, type: 'custom' }, cur);
         edgesAutoSave.markDirty(next);
         setValidationOk(false);
+        setExecutionStatus(null);
         return next;
       });
     },
@@ -407,6 +424,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         return next;
       });
       setValidationOk(false);
+      setExecutionStatus(null);
     },
     [isMobile, flow, stepsAutoSave, pushHistory],
   );
@@ -438,6 +456,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         const next = cur.map((n) => (n.id === id ? { ...n, data: { ...(n.data ?? {}), ...updates } } : n));
         stepsAutoSave.markDirty(next);
         setValidationOk(false);
+        setExecutionStatus(null);
         return next;
       });
     },
@@ -501,6 +520,40 @@ function CanvasInner(props: WorkflowCanvasProps) {
     }
   }, [workflowId, findings]);
 
+  // "Executar": runs the workflow (blocking server-side) and paints each
+  // node's final status (completed/failed) once the run finishes. All nodes
+  // flash "running" while the request is in flight as a coarse live signal —
+  // true per-step streaming would require wiring the SSE /runs/{id}/stream
+  // endpoint (see canvas-conventions.md pendências).
+  const onExecuteClick = useCallback(async () => {
+    if (executing) return;
+    setExecuting(true);
+    setExecutionStatus(
+      Object.fromEntries(nodesRef.current.map((n) => [n.id, 'running' as ExecutionStatus])),
+    );
+    try {
+      if (apiAvailable()) {
+        const result = await runWorkflow(workflowId);
+        const run = await getWorkflowRun(workflowId, result.run_id);
+        const next: Record<string, ExecutionStatus> = {};
+        for (const log of run.step_logs) {
+          next[log.step_id] = log.status === 'failed' ? 'failed' : 'completed';
+        }
+        setExecutionStatus(next);
+      } else {
+        // Mock-mode: no backend to execute against — nothing actually ran,
+        // so drop the "running" flash without faking a result.
+        setExecutionStatus(null);
+      }
+    } catch {
+      setExecutionStatus(
+        Object.fromEntries(nodesRef.current.map((n) => [n.id, 'failed' as ExecutionStatus])),
+      );
+    } finally {
+      setExecuting(false);
+    }
+  }, [executing, workflowId]);
+
   // Surface the most recent error from either auto-save channel.
   const saveStatus = stepsAutoSave.status === 'saving' || edgesAutoSave.status === 'saving'
     ? 'saving'
@@ -518,6 +571,15 @@ function CanvasInner(props: WorkflowCanvasProps) {
     () => nodes.find((n) => n.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId],
   );
+
+  // Stamp each node with its execution status (if any) for NodeShell to render.
+  const nodesWithStatus = useMemo(() => {
+    if (!executionStatus) return nodes;
+    return nodes.map((n) => ({
+      ...n,
+      data: { ...(n.data ?? {}), _executionStatus: executionStatus[n.id] },
+    }));
+  }, [nodes, executionStatus]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
@@ -556,7 +618,8 @@ function CanvasInner(props: WorkflowCanvasProps) {
           <CanvasToolbar
             onAutoLayout={onAutoLayoutClick}
             onValidate={onValidateClick}
-            onExecute={() => onExecute?.()}
+            onExecute={onExecuteClick}
+            executing={executing}
             validating={validating}
             validationOk={validationOk}
             onUndo={onUndo}
@@ -567,7 +630,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
             canDelete={!!selectedNodeId}
           />
           <ReactFlow
-            nodes={nodes}
+            nodes={nodesWithStatus}
             edges={edges}
             nodeTypes={NODE_TYPES}
             edgeTypes={EDGE_TYPES}
@@ -630,6 +693,10 @@ function CanvasInner(props: WorkflowCanvasProps) {
           <style jsx global>{`
             .sunos-canvas-pane .react-flow__edges {
               z-index: 1000;
+            }
+            @keyframes sunos-node-pulse {
+              0%, 100% { box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+              50% { box-shadow: 0 0 0 5px rgba(59,130,246,0.35); }
             }
           `}</style>
         </div>
