@@ -103,7 +103,9 @@ def _get_llm(model: str, temperature: float = 0.7) -> Any:
     if model_id.startswith("claude") and settings.ANTHROPIC_API_KEY:
         from langchain_anthropic import ChatAnthropic
 
-        return ChatAnthropic(model=model_id, temperature=temperature, api_key=settings.ANTHROPIC_API_KEY)
+        return ChatAnthropic(
+            model=model_id, temperature=temperature, api_key=settings.ANTHROPIC_API_KEY
+        )
 
     if model_id.startswith("gemini") and settings.GOOGLE_API_KEY:
         from langchain_google_genai import ChatGoogleGenerativeAI
@@ -115,11 +117,15 @@ def _get_llm(model: str, temperature: float = 0.7) -> Any:
     # Fallback: always use Gemini Flash if available
     if settings.GOOGLE_API_KEY:
         if model != "gemini-flash":
-            logger.warning("API key for model '%s' not configured, falling back to Gemini Flash", model)
+            logger.warning(
+                "API key for model '%s' not configured, falling back to Gemini Flash", model
+            )
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         return ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash", temperature=temperature, google_api_key=settings.GOOGLE_API_KEY
+            model="gemini-2.5-flash",
+            temperature=temperature,
+            google_api_key=settings.GOOGLE_API_KEY,
         )
 
     raise ValueError("No LLM API key configured. Set GOOGLE_API_KEY in .env")
@@ -337,7 +343,8 @@ class WorkflowCompiler:
             handle = edge["target_handle"]
             input_key = "in_a" if handle in ("in", "in_a") else "in_b" if handle == "in_b" else None
             if input_key:
-                condition_inputs.setdefault(edge["target_step_id"], {})[input_key] = edge["source_step_id"]
+                source_id = edge["source_step_id"]
+                condition_inputs.setdefault(edge["target_step_id"], {})[input_key] = source_id
 
         for step in steps:
             base_fn = self._make_step_node(

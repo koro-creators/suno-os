@@ -240,7 +240,8 @@ def validate(
         elif step["type"] == "condition":
             # `condition` aceita 1 entrada (CAMPO ou VALOR, qualquer handle)
             # ou 2 entradas via handles distintos in_a (CAMPO) + in_b (VALOR).
-            if deg > 2 or (deg == 2 and not _is_dual_condition_input(in_handles.get(step["id"], []))):
+            step_in_handles = in_handles.get(step["id"], [])
+            if deg > 2 or (deg == 2 and not _is_dual_condition_input(step_in_handles)):
                 findings.append(
                     ValidationError(
                         kind="fan_in_without_merge",
