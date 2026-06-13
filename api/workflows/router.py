@@ -51,17 +51,18 @@ router = APIRouter(tags=["Workflows"])
 
 
 def _validate_workflow_steps(workflow_id: str, steps: list[dict]) -> list[str]:
-    """Validate workflow steps. Returns list of error messages."""
+    """Validate workflow steps. Returns list of error messages.
+
+    A `workflow` step without `workflow_id` yet (just dropped on the canvas,
+    not configured in the drawer) is NOT a hard error here — it must still be
+    persistable by auto-save. The compiler already degrades gracefully at run
+    time (`Workflow '<id>' not found`) for an unconfigured/invalid reference.
+    """
     errors = []
     for step in steps:
         if step.get("type") == "workflow":
             ref_id = step.get("workflow_id")
-            if not ref_id:
-                errors.append(
-                    f"Step '{step.get('name', step.get('id', '?'))}': "
-                    "workflow_id is required for type 'workflow'"
-                )
-            elif ref_id == workflow_id:
+            if ref_id and ref_id == workflow_id:
                 errors.append(
                     f"Step '{step.get('name', step.get('id', '?'))}': "
                     "circular reference — cannot reference self"

@@ -18,7 +18,7 @@
  */
 'use client';
 
-import { Maximize, Play, Redo, Renew, SecurityServices, Undo, ZoomIn, ZoomOut } from '@carbon/icons-react';
+import { Maximize, Play, Redo, Renew, SecurityServices, TrashCan, Undo, ZoomIn, ZoomOut } from '@carbon/icons-react';
 import { useReactFlow } from '@xyflow/react';
 import type { CSSProperties } from 'react';
 
@@ -26,12 +26,15 @@ interface ToolbarProps {
   onAutoLayout: () => void;
   onValidate: () => void;
   onExecute: () => void;
+  executing?: boolean;
   validating?: boolean;
   validationOk?: boolean;
   onUndo: () => void;
   onRedo: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  onDeleteSelected: () => void;
+  canDelete?: boolean;
 }
 
 const BTN: CSSProperties = {
@@ -52,12 +55,15 @@ export default function CanvasToolbar({
   onAutoLayout,
   onValidate,
   onExecute,
+  executing,
   validating,
   validationOk,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
+  onDeleteSelected,
+  canDelete,
 }: ToolbarProps) {
   const flow = useReactFlow();
   return (
@@ -94,6 +100,14 @@ export default function CanvasToolbar({
       >
         <Redo size={14} /> Avançar
       </button>
+      <button
+        style={{ ...BTN, opacity: canDelete ? 1 : 0.4, cursor: canDelete ? 'pointer' : 'not-allowed' }}
+        onClick={onDeleteSelected}
+        disabled={!canDelete}
+        aria-label="Apagar node selecionado"
+      >
+        <TrashCan size={14} /> Apagar
+      </button>
       <button style={BTN} onClick={() => flow.zoomIn()} aria-label="Aproximar">
         <ZoomIn size={14} />
       </button>
@@ -115,15 +129,16 @@ export default function CanvasToolbar({
           background: validationOk ? '#22C55E' : 'var(--deep)',
           color: validationOk ? '#fff' : 'var(--text-muted)',
           borderColor: validationOk ? '#22C55E' : 'var(--border-subtle)',
-          cursor: validationOk ? 'pointer' : 'not-allowed',
+          cursor: validationOk && !executing ? 'pointer' : 'not-allowed',
           fontWeight: 500,
+          opacity: executing ? 0.7 : 1,
         }}
         onClick={() => {
-          if (validationOk) onExecute();
+          if (validationOk && !executing) onExecute();
         }}
-        disabled={!validationOk}
+        disabled={!validationOk || executing}
       >
-        <Play size={14} /> Executar
+        <Play size={14} /> {executing ? 'Executando…' : 'Executar'}
       </button>
     </div>
   );

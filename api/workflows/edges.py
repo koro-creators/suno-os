@@ -38,6 +38,11 @@ ALLOWED_SOURCE_HANDLES = frozenset(
     {"out", "error", "then", "else", "approved", "rejected", "modified"}
 )
 ALLOWED_TARGET_HANDLES = frozenset({"in"})
+# `condition` aceita 2 entradas nomeadas adicionais: `in_a` (CAMPO) e
+# `in_b` (VALOR) — ver .claude/rules/canvas-conventions.md.
+ALLOWED_TARGET_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
+    "condition": frozenset({"in", "in_a", "in_b"}),
+}
 
 
 class EdgeValidationError(ValueError):
@@ -58,16 +63,22 @@ def _step_ids(workflow: dict) -> set[str]:
     return {step["id"] for step in workflow["definition"].get("steps", [])}
 
 
-def _check_handles(edge: WorkflowEdge, *, idx: int) -> None:
+def _check_handles(edge: WorkflowEdge, steps_by_id: dict[str, dict], *, idx: int) -> None:
     if edge.source_handle not in ALLOWED_SOURCE_HANDLES:
         raise EdgeValidationError(
             f"edge[{idx}]: source_handle '{edge.source_handle}' "
             f"not in {sorted(ALLOWED_SOURCE_HANDLES)}",
             edge_index=idx,
         )
-    if edge.target_handle not in ALLOWED_TARGET_HANDLES:
+    target_step = steps_by_id.get(edge.target_step_id)
+    allowed_target = (
+        ALLOWED_TARGET_HANDLES_BY_TYPE.get(target_step["type"], ALLOWED_TARGET_HANDLES)
+        if target_step is not None
+        else ALLOWED_TARGET_HANDLES
+    )
+    if edge.target_handle not in allowed_target:
         raise EdgeValidationError(
-            f"edge[{idx}]: target_handle must be 'in' (got '{edge.target_handle}')",
+            f"edge[{idx}]: target_handle '{edge.target_handle}' not in {sorted(allowed_target)}",
             edge_index=idx,
         )
 
@@ -131,9 +142,10 @@ def set_edges(
         raise KeyError(workflow_id)
 
     step_ids = _step_ids(workflow)
+    steps_by_id = {s["id"]: s for s in workflow["definition"].get("steps", [])}
     for idx, edge in enumerate(edges):
-        _check_handles(edge, idx=idx)
         _check_step_refs(edge, step_ids, idx=idx)
+        _check_handles(edge, steps_by_id, idx=idx)
     _check_unique(edges)
 
     persisted: list[dict] = []

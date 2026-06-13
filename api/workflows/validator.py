@@ -3,6 +3,8 @@
 Surfaces 7 ValidationError kinds (spec.md §6.3):
   • cycle                       — DFS 3-color detects back edges
   • fan_in_without_merge        — node with in-degree > 1 that is not type='merge'
+                                   ('condition' is exempt up to in-degree 2 via
+                                   the named in_a/in_b handles)
   • merge_with_zero_inputs      — type='merge' node with in-degree 0
   • edge_to_nonexistent_handle  — handle vocabulary mismatch with source step type
   • unauthorized_tool           — tool referenced not in user's RBAC scope
@@ -70,6 +72,23 @@ def _build_adjacency(
         out_adj[edge["source_step_id"]].append((edge["target_step_id"], edge.get("edge_id", "")))
         in_degree[edge["target_step_id"]] += 1
     return out_adj, in_degree
+
+
+def _build_in_handles(edges: Iterable[dict]) -> dict[str, list[str]]:
+    """Build {target_step_id: [target_handle, ...]} for per-step handle checks."""
+    in_handles: dict[str, list[str]] = defaultdict(list)
+    for edge in edges:
+        in_handles[edge["target_step_id"]].append(edge["target_handle"])
+    return in_handles
+
+
+def _is_dual_condition_input(handles: list[str]) -> bool:
+    """True if `handles` is exactly one `in_a` (CAMPO) + one `in_b` (VALOR).
+
+    Legacy `in` edges (single-input migration default) count as `in_a`.
+    """
+    normalized = sorted("in_a" if h == "in" else h for h in handles)
+    return normalized == ["in_a", "in_b"]
 
 
 def has_cycle(edges: Iterable[dict]) -> bool:
@@ -171,6 +190,7 @@ def validate(
 
     # Build adjacency for subsequent per-step checks.
     out_adj, in_degree = _build_adjacency(edges)
+    in_handles = _build_in_handles(edges)
     step_by_id = {s["id"]: s for s in steps}
 
     # 3. edge_to_nonexistent_handle — source_handle must be allowed for type
@@ -214,6 +234,21 @@ def validate(
                     ValidationError(
                         kind="merge_with_zero_inputs",
                         detail=f"merge node '{step['id']}' has no inbound edges",
+                        step_id=step["id"],
+                    )
+                )
+        elif step["type"] == "condition":
+            # `condition` aceita 1 entrada (CAMPO ou VALOR, qualquer handle)
+            # ou 2 entradas via handles distintos in_a (CAMPO) + in_b (VALOR).
+            step_in_handles = in_handles.get(step["id"], [])
+            if deg > 2 or (deg == 2 and not _is_dual_condition_input(step_in_handles)):
+                findings.append(
+                    ValidationError(
+                        kind="fan_in_without_merge",
+                        detail=(
+                            f"step '{step['id']}' (type=condition) has {deg} inbound edges; "
+                            "condition accepts at most 2 (in_a + in_b)"
+                        ),
                         step_id=step["id"],
                     )
                 )

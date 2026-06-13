@@ -9,7 +9,7 @@
  *
  * Field policy:
  *   tool / action  — `tool_name` (select), `config` (textarea JSON).
- *   llm            — `prompt` (textarea), `config`.
+ *   llm            — `model` (select, default gemini-flash), `prompt` (textarea), `config`.
  *   condition      — `field`, `operator`, `value`. Targets are visual edges.
  *   hitl           — `review_instructions` in `config`.
  *   workflow       — `workflow_id` (select of other workflows), `input_mapping`.
@@ -25,6 +25,14 @@ import { useEffect, useState } from 'react';
 import { Close } from '@carbon/icons-react';
 import type { Node } from '@xyflow/react';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
+import type { WorkflowLLMModel } from '@/lib/workflow-types';
+
+const LLM_MODEL_OPTIONS: { value: WorkflowLLMModel; label: string }[] = [
+  { value: 'gemini-flash', label: 'Gemini Flash' },
+  { value: 'gemini-pro', label: 'Gemini Pro' },
+  { value: 'gpt-4o', label: 'GPT-4o' },
+  { value: 'claude', label: 'Claude' },
+];
 
 interface DrawerProps {
   node: Node | null;
@@ -57,6 +65,7 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
   const [name, setName] = useState('');
   const [toolName, setToolName] = useState('');
   const [prompt, setPrompt] = useState('');
+  const [model, setModel] = useState<WorkflowLLMModel>('gemini-flash');
   const [configJson, setConfigJson] = useState('{}');
   const [conditionField, setConditionField] = useState('');
   const [conditionOperator, setConditionOperator] = useState('eq');
@@ -72,6 +81,7 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
     setName((data.name as string) ?? '');
     setToolName((data.tool_name as string) ?? '');
     setPrompt((data.prompt as string) ?? '');
+    setModel((data.model as WorkflowLLMModel) ?? 'gemini-flash');
     setConfigJson(JSON.stringify(data.config ?? {}, null, 2));
     const cond = (data.condition as Record<string, unknown> | undefined) ?? {};
     setConditionField((cond.field as string) ?? '');
@@ -162,38 +172,48 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
       )}
 
       {stepType === 'llm' && (
-        <div style={{ marginBottom: 12 }}>
-          <label style={LABEL}>Prompt</label>
-          <textarea
-            style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
-            value={prompt}
-            onChange={(e) => {
-              setPrompt(e.target.value);
-              emit({ prompt: e.target.value });
-            }}
-          />
-        </div>
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Modelo</label>
+            <select
+              style={TEXT_INPUT}
+              value={model}
+              onChange={(e) => {
+                const v = e.target.value as WorkflowLLMModel;
+                setModel(v);
+                emit({ model: v });
+              }}
+            >
+              {LLM_MODEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Prompt</label>
+            <textarea
+              style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
+              value={prompt}
+              onChange={(e) => {
+                setPrompt(e.target.value);
+                emit({ prompt: e.target.value });
+              }}
+            />
+          </div>
+        </>
       )}
 
       {stepType === 'condition' && (
         <>
-          <div style={{ marginBottom: 12 }}>
-            <label style={LABEL}>Campo</label>
-            <input
-              style={TEXT_INPUT}
-              value={conditionField}
-              onChange={(e) => {
-                setConditionField(e.target.value);
-                emit({
-                  condition: {
-                    field: e.target.value,
-                    operator: conditionOperator,
-                    value: conditionValue,
-                  },
-                });
-              }}
-            />
-          </div>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+            Compara o resultado do step anterior com o valor abaixo. Se for{' '}
+            <code>true</code>, segue pelo handle <code>then</code>; senão, pelo <code>else</code>.
+            Este node tem 2 entradas opcionais à esquerda: <code>campo</code> alimenta o
+            lado esquerdo da comparação e <code>valor</code> o lado direito — conecte um
+            step a elas para usar o <code>output</code> dele em vez do step anterior.
+          </p>
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Operador</label>
             <select
@@ -219,9 +239,15 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Valor</label>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>
+              Deixe vazio para comparar com o <code>output</code> do step conectado na
+              entrada <code>valor</code> (ou do step anterior, se nada estiver conectado).
+              Se preencher, o texto digitado aqui é usado como o lado direito da comparação.
+            </p>
             <input
               style={TEXT_INPUT}
               value={conditionValue}
+              placeholder="(vazio = output do step anterior)"
               onChange={(e) => {
                 setConditionValue(e.target.value);
                 emit({
@@ -234,6 +260,35 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
               }}
             />
           </div>
+          <details style={{ marginBottom: 12 }}>
+            <summary style={{ fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer' }}>
+              Avançado: comparar um valor fixo
+            </summary>
+            <div style={{ marginTop: 8 }}>
+              <label style={LABEL}>Campo</label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>
+                Deixe vazio para comparar o <code>output</code> do step conectado na
+                entrada <code>campo</code> (ou do step anterior, se nada estiver
+                conectado). Se preencher, o texto digitado aqui é usado diretamente como
+                o valor do lado esquerdo da comparação.
+              </p>
+              <input
+                style={TEXT_INPUT}
+                value={conditionField}
+                placeholder="(vazio = output do step anterior)"
+                onChange={(e) => {
+                  setConditionField(e.target.value);
+                  emit({
+                    condition: {
+                      field: e.target.value,
+                      operator: conditionOperator,
+                      value: conditionValue,
+                    },
+                  });
+                }}
+              />
+            </div>
+          </details>
         </>
       )}
 
@@ -307,6 +362,11 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
       {stepType !== 'condition' && stepType !== 'hitl' && stepType !== 'merge' && (
         <div style={{ marginBottom: 12 }}>
           <label style={LABEL}>Config (JSON)</label>
+          {(stepType === 'llm' || stepType === 'workflow') && (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>
+              Não utilizado neste tipo de step.
+            </p>
+          )}
           <textarea
             style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
             value={configJson}

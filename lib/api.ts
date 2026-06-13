@@ -487,6 +487,11 @@ export async function listWorkflowRuns(workflowId: string): Promise<WorkflowRun[
   return res.runs;
 }
 
+/** Get a single run, including per-step logs (status/output/timing). */
+export async function getWorkflowRun(workflowId: string, runId: string): Promise<WorkflowRun> {
+  return workflowFetch<WorkflowRun>(`/api/workflows/${workflowId}/runs/${runId}`);
+}
+
 // ---------------------------------------------------------------------------
 // SPEC-006 — Drive Read-Only (Phase 18 scaffolding)
 // ---------------------------------------------------------------------------

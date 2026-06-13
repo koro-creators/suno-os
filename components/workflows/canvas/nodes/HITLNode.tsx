@@ -9,12 +9,13 @@
 
 import { UserFollow } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeShell, type HandleSpec } from './NodeShell';
+import { NodeShell, type ExecutionStatus, type HandleSpec } from './NodeShell';
 
 interface HITLNodeData {
   type: 'hitl';
   name: string;
   config?: { review_instructions?: string };
+  _executionStatus?: ExecutionStatus;
   [key: string]: unknown;
 }
 
@@ -37,6 +38,7 @@ export default function HITLNode({ data, selected }: NodeProps) {
       accentColor="rgba(255,200,1,0.15)"
       sourceHandles={sources}
       selected={selected}
+      executionStatus={d._executionStatus}
     />
   );
 }

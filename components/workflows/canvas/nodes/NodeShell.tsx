@@ -25,6 +25,9 @@ export interface HandleSpec {
   position?: Position;
 }
 
+/** Per-node execution state, stamped on `data._executionStatus` while a run is in flight. */
+export type ExecutionStatus = 'running' | 'completed' | 'failed';
+
 export interface NodeShellProps {
   title: string;
   preview?: string;
@@ -36,9 +39,17 @@ export interface NodeShellProps {
   /** Target handles default to the canonical `in` on the left if omitted. */
   targetHandles?: HandleSpec[];
   selected?: boolean;
+  /** Visual overlay showing the node's status during/after "Executar". */
+  executionStatus?: ExecutionStatus;
   /** Optional extra slot below the preview (e.g. badge for confidence). */
   children?: ReactNode;
 }
+
+const EXECUTION_COLOR: Record<ExecutionStatus, string> = {
+  running: '#3B82F6',
+  completed: '#22C55E',
+  failed: '#EF4444',
+};
 
 const CARD_BASE: CSSProperties = {
   width: 220,
@@ -63,30 +74,44 @@ export function NodeShell({
   sourceHandles,
   targetHandles,
   selected,
+  executionStatus,
   children,
 }: NodeShellProps) {
   const tgts: HandleSpec[] = targetHandles ?? [
     { id: 'in', color: 'var(--text-muted)', position: Position.Left, label: 'in' },
   ];
+  const statusColor = executionStatus ? EXECUTION_COLOR[executionStatus] : undefined;
   return (
     <div
       role="group"
-      aria-label={`Workflow node ${title}`}
+      aria-label={
+        executionStatus
+          ? `Workflow node ${title} — execução ${executionStatus}`
+          : `Workflow node ${title}`
+      }
       style={{
         ...CARD_BASE,
-        border: `1px solid ${selected ? 'var(--sun)' : borderColor}`,
-        boxShadow: selected
-          ? '0 0 0 2px rgba(255,200,1,0.15)'
-          : '0 1px 0 var(--border-subtle)',
+        border: `1px solid ${statusColor ?? (selected ? 'var(--sun)' : borderColor)}`,
+        boxShadow: statusColor
+          ? `0 0 0 2px ${statusColor}33`
+          : selected
+            ? '0 0 0 2px rgba(255,200,1,0.15)'
+            : '0 1px 0 var(--border-subtle)',
+        animation: executionStatus === 'running' ? 'sunos-node-pulse 1.4s ease-in-out infinite' : undefined,
       }}
     >
-      {tgts.map((tgt) => (
+      {tgts.map((tgt, idx) => (
         <Handle
           key={`tgt-${tgt.id}`}
           id={tgt.id}
           type="target"
           position={tgt.position ?? Position.Left}
-          style={{ background: tgt.color, width: 10, height: 10 }}
+          style={{
+            background: tgt.color,
+            width: 10,
+            height: 10,
+            top: tgts.length === 1 ? '50%' : `${30 + idx * 25}%`,
+          }}
           aria-label={`Entrada ${tgt.label ?? tgt.id}`}
         />
       ))}
@@ -101,6 +126,18 @@ export function NodeShell({
       >
         <Icon size={14} color={borderColor} />
         <span style={{ fontWeight: 500 }}>{title}</span>
+        {statusColor && (
+          <span
+            aria-hidden="true"
+            style={{
+              marginLeft: 'auto',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: statusColor,
+            }}
+          />
+        )}
       </div>
       {preview && (
         <div

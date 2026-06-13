@@ -14,7 +14,7 @@
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Play, RecentlyViewed } from '@carbon/icons-react';
+import { RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { apiAvailable, getWorkflowDetail, getWorkflowEdges, migrateWorkflowV2 } from '@/lib/api';
@@ -110,7 +110,7 @@ interface CanvasPayload {
 export default function WorkflowEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const { workflows, updateWorkflow, deleteWorkflow, runWorkflow } = useWorkflows();
+  const { workflows, updateWorkflow, deleteWorkflow } = useWorkflows();
   const workflowId = params.workflowId as string;
 
   const ctxWorkflow = workflows.find((w) => w.id === workflowId);
@@ -184,6 +184,23 @@ export default function WorkflowEditorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workflowId]);
 
+  // Editable workflow name (header). Synced from the loaded workflow and
+  // committed on blur/Enter via updateWorkflow (already wired end-to-end).
+  const [nameDraft, setNameDraft] = useState('');
+  useEffect(() => {
+    setNameDraft(workflow?.name ?? '');
+  }, [workflow?.id, workflow?.name]);
+
+  const commitNameDraft = () => {
+    if (!workflow) return;
+    const trimmed = nameDraft.trim();
+    if (trimmed && trimmed !== workflow.name) {
+      updateWorkflow(workflow.id, { name: trimmed });
+    } else {
+      setNameDraft(workflow.name);
+    }
+  };
+
   const onPersistSteps = useMemo(
     () => async (steps: WorkflowStepV2[]) => {
       if (!workflow) return;
@@ -234,7 +251,30 @@ export default function WorkflowEditorPage() {
           { label: workflow.name, href: `/workflows/${workflow.id}` },
         ]}
         rightSection={
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              aria-label="Nome do workflow"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onBlur={commitNameDraft}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                } else if (e.key === 'Escape') {
+                  setNameDraft(workflow.name);
+                  e.currentTarget.blur();
+                }
+              }}
+              style={{
+                fontSize: 12,
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: '1px solid var(--border-subtle)',
+                background: 'var(--deep)',
+                color: 'var(--text-primary)',
+                minWidth: 200,
+              }}
+            />
             <button
               onClick={() => router.push(`/workflows/${workflow.id}/runs`)}
               style={{
@@ -302,7 +342,6 @@ export default function WorkflowEditorPage() {
           initialSteps={payload.steps}
           initialEdges={payload.edges}
           onPersistSteps={onPersistSteps}
-          onExecute={() => runWorkflow(workflow.id)}
         />
       )}
     </>

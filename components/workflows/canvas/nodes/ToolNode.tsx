@@ -10,7 +10,7 @@
 
 import { Tools } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeShell, type HandleSpec } from './NodeShell';
+import { NodeShell, type ExecutionStatus, type HandleSpec } from './NodeShell';
 
 interface ToolNodeData {
   type: 'tool';
@@ -18,6 +18,7 @@ interface ToolNodeData {
   tool_name?: string;
   config?: Record<string, unknown>;
   _hasErrorEdge?: boolean;
+  _executionStatus?: ExecutionStatus;
   [key: string]: unknown;
 }
 
@@ -40,6 +41,7 @@ export default function ToolNode({ data, selected }: NodeProps) {
       accentColor="rgba(59,130,246,0.15)"
       sourceHandles={sources}
       selected={selected}
+      executionStatus={d._executionStatus}
     />
   );
 }

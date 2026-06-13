@@ -42,11 +42,27 @@ Source handles permitidos por step type:
 | `hitl` | `approved`, `rejected`, `modified` |
 | `merge` | `out` |
 
-Target handles: sempre `in`. Sem exceção (constitution §2.4 da SPEC-005).
+Target handles: sempre `in`, **exceto `condition`** (exceção introduzida pós-SPEC-005, revertendo parcialmente a constitution §2.4 original).
+
+### Exceção: `condition` com 2 entradas nomeadas (`in_a`/`in_b`)
+
+`condition` aceita até 2 edges de entrada via handles nomeados:
+
+| target handle | alimenta |
+|----------------|----------|
+| `in_a` | CAMPO (lado esquerdo da comparação, `actual`) |
+| `in_b` | VALOR (lado direito da comparação, `value`) |
+| `in` (legado) | tratado como `in_a` — edges de migração v1→v2 usam `in` |
+
+Ambos opcionais. Se não conectado, CAMPO/VALOR seguem o fallback de sempre (texto digitado no drawer, ou `output` do step anterior em `steps_output`). Se conectado, o `output` do step específico ligado em `in_a`/`in_b` é usado — a menos que o campo correspondente no drawer esteja preenchido (texto digitado sempre tem prioridade sobre a edge).
+
+`fan_in_without_merge` permite `condition` com in-degree 2 **somente** se os 2 handles forem `in_a` + `in_b` (distintos); in-degree 1 é livre (qualquer handle); in-degree > 2, ou 2 edges no mesmo handle, ainda é finding. Lógica em `api/workflows/validator.py:_is_dual_condition_input` ↔ `useGraphValidation.ts` (findings.fanInWithoutMerge).
+
+Resolução de `actual`/`value` por edge específica (não "último output do dict") vive em `api/workflows/compiler.py:_make_step_node` (`input_sources` param, calculado em `_compile_v2_with_edges` como `condition_inputs`).
 
 `success` foi removido — `out` é universal. Migration v1→v2 converte `next_step → out` sem special-case por tipo.
 
-A **mesma matriz** vive em `api/workflows/validator.py:ALLOWED_SOURCE_HANDLES_BY_TYPE` (Python) e `components/workflows/canvas/hooks/useGraphValidation.ts` (TypeScript). Mudanças na regra exigem editar **ambos os lados** para manter paridade.
+A **mesma matriz** vive em `api/workflows/validator.py:ALLOWED_SOURCE_HANDLES_BY_TYPE` (Python) e `components/workflows/canvas/hooks/useGraphValidation.ts` (TypeScript). Mudanças na regra exigem editar **ambos os lados** para manter paridade. Target handles por tipo: `api/workflows/edges.py:ALLOWED_TARGET_HANDLES_BY_TYPE`.
 
 ## NodeShell pattern
 
@@ -54,7 +70,7 @@ Os 7 node types compartilham `components/workflows/canvas/nodes/NodeShell.tsx` (
 
 - Cor (border + accent)
 - Ícone (`@carbon/icons-react`, `size={14}`, sem `strokeWidth`)
-- Lista de `sourceHandles` (matrix acima)
+- Lista de `sourceHandles` (matrix acima) e, se não for o `in` padrão, `targetHandles` (hoje só `ConditionNode` usa — `in_a`/`in_b`)
 - Preview text (1 linha, truncado)
 
 Adicionar um novo node type: copiar `ToolNode.tsx` (~35 linhas), trocar essas 4 coisas. Não duplicar chrome.

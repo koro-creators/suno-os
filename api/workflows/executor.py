@@ -168,7 +168,21 @@ class WorkflowExecutor:
                 "error": f"Rate limit exceeded: max {MAX_RUNS_PER_HOUR} runs/hour",
             }
 
-        graph = self.compiler.compile(definition, edges=edges)
+        # compile() roda fora do try/except do _drive() abaixo; sem este guard,
+        # um erro de compilacao (ex.: definicao malformada) propagaria e o
+        # caller (router) nunca chamaria update_run — o registro do run ficaria
+        # travado em "running" para sempre.
+        try:
+            graph = self.compiler.compile(definition, edges=edges)
+        except Exception as e:  # noqa: BLE001 — capture so the run can be persisted as failed
+            logger.error("Workflow %s compile failed: %s", workflow_id, e)
+            return {
+                "steps_output": {},
+                "step_logs": [],
+                "status": "failed",
+                "error": f"Erro ao compilar workflow: {e}",
+            }
+
         max_time = definition.get("max_execution_time", 300)
 
         initial_state = {

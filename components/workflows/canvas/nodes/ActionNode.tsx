@@ -6,13 +6,14 @@
 
 import { Flash } from '@carbon/icons-react';
 import type { NodeProps } from '@xyflow/react';
-import { NodeShell, type HandleSpec } from './NodeShell';
+import { NodeShell, type ExecutionStatus, type HandleSpec } from './NodeShell';
 
 interface ActionNodeData {
   type: 'action';
   name: string;
   tool_name?: string;
   _hasErrorEdge?: boolean;
+  _executionStatus?: ExecutionStatus;
   [key: string]: unknown;
 }
 
@@ -35,6 +36,7 @@ export default function ActionNode({ data, selected }: NodeProps) {
       accentColor="rgba(34,197,94,0.15)"
       sourceHandles={sources}
       selected={selected}
+      executionStatus={d._executionStatus}
     />
   );
 }

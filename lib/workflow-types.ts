@@ -8,8 +8,15 @@ export type SourceHandle =
   | 'approved'
   | 'rejected'
   | 'modified';
-export type TargetHandle = 'in';
+/**
+ * Target handles. `in` is the universal default. `condition` steps may
+ * additionally accept up to 2 named inputs: `in_a` feeds CAMPO, `in_b`
+ * feeds VALOR (see .claude/rules/canvas-conventions.md).
+ */
+export type TargetHandle = 'in' | 'in_a' | 'in_b';
 export type MergePolicy = 'all' | 'any';
+// LLMs disponíveis no sistema (paridade com api/chat/schemas/chat.py::ChatModel).
+export type WorkflowLLMModel = 'gemini-flash' | 'gemini-pro' | 'gpt-4o' | 'claude';
 export type ValidationErrorKind =
   | 'cycle'
   | 'fan_in_without_merge'
@@ -25,6 +32,7 @@ export interface WorkflowStep {
   type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge';
   tool_name?: string;
   prompt?: string;
+  model?: WorkflowLLMModel; // type="llm": modelo a usar (default: gemini-flash)
   workflow_id?: string;
   input_mapping?: Record<string, string>;
   config: Record<string, unknown>;
