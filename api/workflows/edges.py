@@ -78,8 +78,7 @@ def _check_handles(edge: WorkflowEdge, steps_by_id: dict[str, dict], *, idx: int
     )
     if edge.target_handle not in allowed_target:
         raise EdgeValidationError(
-            f"edge[{idx}]: target_handle '{edge.target_handle}' "
-            f"not in {sorted(allowed_target)}",
+            f"edge[{idx}]: target_handle '{edge.target_handle}' not in {sorted(allowed_target)}",
             edge_index=idx,
         )
 

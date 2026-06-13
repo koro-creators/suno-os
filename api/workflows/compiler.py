@@ -652,9 +652,7 @@ class WorkflowCompiler:
                     if source_id is not None:
                         source_output = prev_outputs.get(source_id)
                         return (
-                            source_output.get("output")
-                            if isinstance(source_output, dict)
-                            else None
+                            source_output.get("output") if isinstance(source_output, dict) else None
                         )
                     return prev_output_value
 
@@ -775,9 +773,7 @@ class WorkflowCompiler:
             cond_value = condition.get("value") or ""
             outputs = state.get("steps_output", {})
             last_output = list(outputs.values())[-1] if outputs else {}
-            prev_output_value = (
-                last_output.get("output") if isinstance(last_output, dict) else None
-            )
+            prev_output_value = last_output.get("output") if isinstance(last_output, dict) else None
             actual = field if field else prev_output_value
             value = cond_value if cond_value else prev_output_value
             return _evaluate_condition(actual, operator, value)
