@@ -156,6 +156,25 @@ def _lookup_client_ontology(client_id: str | None) -> str:
     return text or "(ontologia ainda não disponível para este cliente)"
 
 
+def _lookup_workflow_definition(workflow_id: str) -> dict | None:
+    """Fetch a persisted workflow (for `workflow`/sub-workflow steps).
+
+    Opens its own short-lived session — sub-workflow compilation happens
+    inside a node_fn, outside the request-scoped session.
+    """
+    try:
+        from core.db import get_sync_session
+        from workflows import repository
+    except ImportError:  # test import root (repo root on sys.path)
+        from api.core.db import get_sync_session
+        from api.workflows import repository
+    session = get_sync_session()
+    try:
+        return repository.get_workflow(session, workflow_id)
+    finally:
+        session.close()
+
+
 def _load_tool_registry() -> None:
     """Lazy-load tools from chat/tools/ into the registry."""
     global TOOL_REGISTRY
@@ -199,6 +218,25 @@ def _evaluate_condition(actual: Any, operator: str, value: Any) -> str:
     `actual` ja foi resolvido pelo chamador: "output" do step anterior
     (campo vazio) ou o literal digitado no campo "Campo" (campo preenchido).
     """
+    # Normaliza bool vs string "true"/"false" digitada no campo: em Python
+    # `True == "true"` e False e `float("true")` falha, entao sem isso a
+    # comparacao cairia sempre em "else" quando `actual`/`value` vem de um
+    # step `condition` (output e booleano) e o outro lado foi digitado como
+    # texto "true"/"false".
+    bool_strings = ("true", "false")
+    if (
+        isinstance(actual, bool)
+        and isinstance(value, str)
+        and value.strip().lower() in bool_strings
+    ):
+        value = value.strip().lower() == "true"
+    elif (
+        isinstance(value, bool)
+        and isinstance(actual, str)
+        and actual.strip().lower() in bool_strings
+    ):
+        actual = actual.strip().lower() == "true"
+
     # `value` vem da UI como string; `actual` pode ser numero, bool, str etc.
     # Tenta comparar numericamente quando ambos convertem pra float (ex.:
     # actual=5 (int), value="10" -> 5.0 < 10.0), senao cai pra comparacao
@@ -686,9 +724,7 @@ class WorkflowCompiler:
                 input_mapping = step.get("input_mapping") or {}
 
                 # 1. Buscar definition do sub-workflow
-                from workflows.router import _workflows
-
-                sub_def = _workflows.get(target_wf_id) if target_wf_id else None
+                sub_def = _lookup_workflow_definition(target_wf_id) if target_wf_id else None
                 if not target_wf_id or not sub_def:
                     result = {"error": f"Workflow '{target_wf_id}' not found"}
                 else:
@@ -705,7 +741,7 @@ class WorkflowCompiler:
                         # 4. Compilar sub-workflow
                         sub_compiler = WorkflowCompiler()
                         sub_definition = sub_def["definition"]
-                        sub_graph = sub_compiler.compile(sub_definition)
+                        sub_graph = sub_compiler.compile(sub_definition, edges=sub_def.get("edges"))
 
                         # 5. Criar state inicial do sub-workflow e executar
                         sub_state = {
@@ -718,10 +754,8 @@ class WorkflowCompiler:
                             "messages": [],
                             "human_input": None,
                             "started_at": datetime.now(timezone.utc).isoformat(),
-                            "model": sub_definition.get(
-                                "default_model",
-                                state.get("model", "gemini-flash"),
-                            ),
+                            "model": sub_def.get("default_model")
+                            or state.get("model", "gemini-flash"),
                             "error": None,
                             "_depth": current_depth + 1,
                             "config_overrides": resolved_mapping,
