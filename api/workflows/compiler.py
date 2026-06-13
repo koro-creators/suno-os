@@ -24,6 +24,7 @@ from __future__ import annotations
 import logging
 import operator
 import re
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Annotated, Any, Callable, TypedDict
 
@@ -384,11 +385,22 @@ class WorkflowCompiler:
                 source_id = edge["source_step_id"]
                 condition_inputs.setdefault(edge["target_step_id"], {})[input_key] = source_id
 
+        # For `merge` steps: collect the source steps feeding the single
+        # `in` handle, sorted for deterministic aggregation order.
+        merge_inputs: dict[str, list[str]] = defaultdict(list)
+        for edge in edges:
+            tgt = steps_by_id.get(edge["target_step_id"])
+            if tgt is not None and tgt["type"] == "merge":
+                merge_inputs[edge["target_step_id"]].append(edge["source_step_id"])
+        for sources in merge_inputs.values():
+            sources.sort()
+
         for step in steps:
             base_fn = self._make_step_node(
                 step,
                 definition.get("default_model", "gemini-flash"),
                 input_sources=condition_inputs.get(step["id"]),
+                merge_inputs=merge_inputs.get(step["id"]),
             )
             if step["type"] == "merge" and step.get("merge_policy") == "any":
                 node_fn = self._make_merge_any_node(step, base_fn)
@@ -620,6 +632,7 @@ class WorkflowCompiler:
         step: dict,
         default_model: str,
         input_sources: dict[str, str] | None = None,
+        merge_inputs: list[str] | None = None,
     ) -> Callable:
         step_type = step["type"]
         step_id = step["id"]
@@ -764,6 +777,17 @@ class WorkflowCompiler:
                         # Pegar o final output (ultimo valor em steps_output)
                         sub_outputs = sub_result.get("steps_output", {})
                         result = list(sub_outputs.values())[-1] if sub_outputs else sub_result
+
+            elif step_type == "merge":
+                # `merge_policy='any'` is handled upstream by
+                # `_make_merge_any_node`, which only falls back to this
+                # branch if every predecessor produced empty output — so
+                # this is the common path for `'all'` (and the fallback for
+                # `'any'`). Aggregates each predecessor's output by step id
+                # (CA-11).
+                outputs = state.get("steps_output", {})
+                merged = {sid: outputs.get(sid) for sid in (merge_inputs or [])}
+                result = {"merged": merged, "policy": step.get("merge_policy") or "all"}
 
             else:
                 result = {"error": f"Unknown step type: {step_type}"}

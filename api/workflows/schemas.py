@@ -106,7 +106,7 @@ class CronSchedule(BaseModel):
 class WorkflowCreate(BaseModel):
     name: str
     description: str = ""
-    steps: list[WorkflowStep]
+    steps: list[WorkflowStepV2]
     schedule: CronSchedule | None = None
     client_scope: list[str] = []
     default_model: str = "gemini-flash"
@@ -116,7 +116,7 @@ class WorkflowCreate(BaseModel):
 class WorkflowUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
-    steps: list[WorkflowStep] | None = None
+    steps: list[WorkflowStepV2] | None = None
     schedule: CronSchedule | None = None
     status: str | None = None
     client_scope: list[str] | None = None
