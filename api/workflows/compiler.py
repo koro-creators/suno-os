@@ -21,6 +21,7 @@ fallback decays to zero before sunset (Fase D / E).
 
 from __future__ import annotations
 
+import json
 import logging
 import operator
 import re
@@ -395,12 +396,24 @@ class WorkflowCompiler:
         for sources in merge_inputs.values():
             sources.sort()
 
+        # For any step fed via the default `in` handle (everything except
+        # `condition`, which uses in_a/in_b): collect connected source step
+        # ids so a node can auto-receive upstream output without requiring
+        # an explicit {{...}} placeholder (used by `llm` below).
+        connected_inputs: dict[str, list[str]] = defaultdict(list)
+        for edge in edges:
+            if edge["target_handle"] == "in":
+                connected_inputs[edge["target_step_id"]].append(edge["source_step_id"])
+        for sources in connected_inputs.values():
+            sources.sort()
+
         for step in steps:
             base_fn = self._make_step_node(
                 step,
                 definition.get("default_model", "gemini-flash"),
                 input_sources=condition_inputs.get(step["id"]),
                 merge_inputs=merge_inputs.get(step["id"]),
+                connected_inputs=connected_inputs.get(step["id"]),
             )
             if step["type"] == "merge" and step.get("merge_policy") == "any":
                 node_fn = self._make_merge_any_node(step, base_fn)
@@ -633,6 +646,7 @@ class WorkflowCompiler:
         default_model: str,
         input_sources: dict[str, str] | None = None,
         merge_inputs: list[str] | None = None,
+        connected_inputs: list[str] | None = None,
     ) -> Callable:
         step_type = step["type"]
         step_id = step["id"]
@@ -658,6 +672,17 @@ class WorkflowCompiler:
                 resolved_prompt = self._resolve_template_string(
                     prompt, state.get("steps_output", {})
                 )
+                # Sem placeholder explicito ({{previous}}/{{steps...}}),
+                # anexa o output dos steps conectados na entrada como
+                # contexto — para o LLM receber os dados de qualquer node
+                # conectado sem exigir template manual.
+                if connected_inputs and "{{previous}}" not in prompt and "{{steps." not in prompt:
+                    outputs = state.get("steps_output", {})
+                    context = {sid: outputs.get(sid) for sid in connected_inputs}
+                    resolved_prompt = (
+                        f"Dados recebidos:\n{json.dumps(context, ensure_ascii=False, indent=2)}"
+                        f"\n\n{resolved_prompt}"
+                    )
                 llm = _get_llm(step.get("model") or default_model)
                 response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
                 result = response.content
