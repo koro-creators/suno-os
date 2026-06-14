@@ -30,10 +30,45 @@ function formatDuration(startedAt: string | null, completedAt: string | null): s
   return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
 }
 
+/**
+ * Tool steps wrap the tool's return value as `{ output: "<json string>" }`.
+ * If that JSON has an image `url` (data URI or image file URL), return the
+ * url plus a sanitized version of `output` for the raw JSON view — the
+ * base64 payload of a data URI can be hundreds of KB and would otherwise
+ * blow up the <pre> dump.
+ */
+function processOutput(output: unknown): { imageUrl: string | null; displayOutput: unknown } {
+  if (!output || typeof output !== 'object') return { imageUrl: null, displayOutput: output };
+  const inner = (output as { output?: unknown }).output;
+  if (typeof inner !== 'string') return { imageUrl: null, displayOutput: output };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(inner);
+  } catch {
+    return { imageUrl: null, displayOutput: output };
+  }
+  if (!parsed || typeof parsed !== 'object') return { imageUrl: null, displayOutput: output };
+
+  const url = (parsed as { url?: unknown }).url;
+  if (typeof url !== 'string' || !(url.startsWith('data:image') || /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(url))) {
+    return { imageUrl: null, displayOutput: output };
+  }
+
+  const sanitized = url.startsWith('data:image')
+    ? { ...(parsed as Record<string, unknown>), url: `<imagem base64 omitida, ${url.length} caracteres>` }
+    : parsed;
+  return {
+    imageUrl: url,
+    displayOutput: { ...(output as Record<string, unknown>), output: JSON.stringify(sanitized, null, 2) },
+  };
+}
+
 function StepLogItem({ log }: { log: StepLog }) {
   const [expanded, setExpanded] = useState(false);
   const cfg = RUN_STATUS_CONFIG[log.status] || RUN_STATUS_CONFIG.pending;
   const hasResult = log.output != null || log.input != null;
+  const { imageUrl, displayOutput } = processOutput(log.output);
 
   return (
     <div style={{ marginLeft: 14 }}>
@@ -99,7 +134,22 @@ function StepLogItem({ log }: { log: StepLog }) {
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 Resultado
               </span>
-              <pre style={PRE_STYLE}>{JSON.stringify(log.output, null, 2)}</pre>
+              {imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imageUrl}
+                  alt="Imagem gerada"
+                  style={{
+                    display: 'block',
+                    maxWidth: '100%',
+                    maxHeight: 320,
+                    borderRadius: 8,
+                    border: '1px solid var(--border-subtle)',
+                    marginTop: 4,
+                  }}
+                />
+              )}
+              <pre style={PRE_STYLE}>{JSON.stringify(displayOutput, null, 2)}</pre>
             </div>
           )}
         </div>

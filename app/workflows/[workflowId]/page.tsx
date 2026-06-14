@@ -16,6 +16,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
+import { useClients } from '@/contexts/ClientsContext';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { apiAvailable, getWorkflowDetail, getWorkflowEdges, migrateWorkflowV2 } from '@/lib/api';
 import type {
@@ -111,6 +112,7 @@ export default function WorkflowEditorPage() {
   const params = useParams();
   const router = useRouter();
   const { workflows, updateWorkflow, deleteWorkflow } = useWorkflows();
+  const { clients } = useClients();
   const workflowId = params.workflowId as string;
 
   const ctxWorkflow = workflows.find((w) => w.id === workflowId);
@@ -201,6 +203,14 @@ export default function WorkflowEditorPage() {
     }
   };
 
+  // Editable client_scope (header). Same local-draft pattern as nameDraft —
+  // `workflow` doesn't re-sync after updateWorkflow, so the <select> needs
+  // its own state or it snaps back to the stale value.
+  const [clientIdDraft, setClientIdDraft] = useState('');
+  useEffect(() => {
+    setClientIdDraft(workflow?.client_scope?.[0] ?? '');
+  }, [workflow?.id, workflow?.client_scope]);
+
   const onPersistSteps = useMemo(
     () => async (steps: WorkflowStepV2[]) => {
       if (!workflow) return;
@@ -275,6 +285,31 @@ export default function WorkflowEditorPage() {
                 minWidth: 200,
               }}
             />
+            <select
+              aria-label="Cliente do workflow"
+              value={clientIdDraft}
+              onChange={(e) => {
+                const value = e.target.value;
+                setClientIdDraft(value);
+                updateWorkflow(workflow.id, { client_scope: value ? [value] : [] });
+              }}
+              style={{
+                fontSize: 12,
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: '1px solid var(--border-subtle)',
+                background: 'var(--deep)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">— Sem cliente —</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
             <button
               onClick={() => router.push(`/workflows/${workflow.id}/runs`)}
               style={{

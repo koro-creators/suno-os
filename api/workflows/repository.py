@@ -189,6 +189,7 @@ def update_workflow(session: Session, workflow_id: str, fields: dict) -> dict | 
         "updated_by",
         "default_model",
         "max_execution_time",
+        "client_scope",
     ):
         if key in fields and fields[key] is not None:
             setattr(wf, key, fields[key])
