@@ -112,7 +112,10 @@ def generate_image(
     aspect_ratio: str = "1:1",
     style: str | None = None,
 ) -> str:
-    """Generate an image from a text prompt. Returns JSON with the image as a data URI and metadata."""
+    """Generate an image from a text prompt.
+
+    Returns JSON with the image as a data URI and metadata.
+    """
     final_prompt = f"{prompt}, {style} style" if style else prompt
     width, height = ASPECT_RATIOS.get(aspect_ratio, ASPECT_RATIOS["1:1"])
 
