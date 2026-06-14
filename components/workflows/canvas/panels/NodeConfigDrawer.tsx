@@ -9,6 +9,13 @@
  *
  * Field policy:
  *   tool / action  — `tool_name` (select), `config` (textarea JSON).
+ *   tool generate_text — exposes `prompt`, `content_type`, `tone`, `length`,
+ *                         `model`, `max_tokens` as dedicated fields (write into
+ *                         `config`); no raw JSON textarea for this tool.
+ *   tool generate_image — exposes `prompt`, `model`, `aspect_ratio`, `style`
+ *                          as dedicated fields (write into `config`); no raw
+ *                          JSON textarea for this tool.
+ *   tool consultar_ontologia — no config; shows an explanatory note instead.
  *   llm            — `model` (select, default gemini-flash), `prompt` (textarea), `config`.
  *   condition      — `field`, `operator`, `value`. Targets are visual edges.
  *   hitl           — `review_instructions` in `config`.
@@ -32,6 +39,43 @@ const LLM_MODEL_OPTIONS: { value: WorkflowLLMModel; label: string }[] = [
   { value: 'gemini-pro', label: 'Gemini Pro' },
   { value: 'gpt-4o', label: 'GPT-4o' },
   { value: 'claude', label: 'Claude' },
+];
+
+const CONTENT_TYPE_OPTIONS = [
+  { value: 'social_post', label: 'Post social' },
+  { value: 'article', label: 'Artigo' },
+  { value: 'caption', label: 'Legenda' },
+  { value: 'email', label: 'Email' },
+  { value: 'script', label: 'Roteiro' },
+];
+
+const TONE_OPTIONS = [
+  { value: 'formal', label: 'Formal' },
+  { value: 'casual', label: 'Casual' },
+  { value: 'professional', label: 'Profissional' },
+  { value: 'creative', label: 'Criativo' },
+  { value: 'friendly', label: 'Amigável' },
+];
+
+const LENGTH_OPTIONS = [
+  { value: 'short', label: 'Curto (~100 palavras)' },
+  { value: 'medium', label: 'Médio (~300 palavras)' },
+  { value: 'long', label: 'Longo (~600 palavras)' },
+];
+
+const IMAGE_MODEL_OPTIONS = [
+  { value: 'imagen-4-standard', label: 'Imagen 4 — padrão (Gemini API)' },
+  { value: 'imagen-4-fast', label: 'Imagen 4 Fast (Gemini API)' },
+  { value: 'imagen-4-ultra', label: 'Imagen 4 Ultra (Gemini API)' },
+  { value: 'nano-banana', label: 'Nano Banana (Gemini 2.5 Flash Image)' },
+  { value: 'dall-e-3', label: 'DALL-E 3 (OpenAI)' },
+];
+
+const ASPECT_RATIO_OPTIONS = [
+  { value: '1:1', label: 'Quadrado (1:1)' },
+  { value: '16:9', label: 'Paisagem (16:9)' },
+  { value: '9:16', label: 'Retrato (9:16)' },
+  { value: '4:3', label: 'Clássico (4:3)' },
 ];
 
 interface DrawerProps {
@@ -111,6 +155,17 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
 
   const otherWorkflows = workflows.filter((w) => w.id !== currentWorkflowId);
 
+  const isGenerateText = stepType === 'tool' && toolName === 'generate_text';
+  const isGenerateImage = stepType === 'tool' && toolName === 'generate_image';
+  const isOntologia = stepType === 'tool' && toolName === 'consultar_ontologia';
+  const toolConfig = parseJsonOrFallback(configJson, {}) as Record<string, unknown>;
+
+  const updateToolConfig = (updates: Record<string, unknown>) => {
+    const newConfig = { ...toolConfig, ...updates };
+    setConfigJson(JSON.stringify(newConfig, null, 2));
+    emit({ config: newConfig });
+  };
+
   return (
     <aside
       aria-label="Configuração do node"
@@ -169,6 +224,145 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
             }}
           />
         </div>
+      )}
+
+      {isOntologia && (
+        <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+          Sem configuração. Este step carrega automaticamente a ontologia do
+          cliente atual (posicionamento, persona, tom de voz, etc.) e disponibiliza
+          o resultado para os steps conectados depois dele.
+        </p>
+      )}
+
+      {isGenerateText && (
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Prompt</label>
+            <textarea
+              style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
+              value={(toolConfig.prompt as string) ?? ''}
+              placeholder="Instrução do que gerar"
+              onChange={(e) => updateToolConfig({ prompt: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Tipo de conteúdo</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.content_type as string) ?? 'social_post'}
+              onChange={(e) => updateToolConfig({ content_type: e.target.value })}
+            >
+              {CONTENT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Tom</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.tone as string) ?? 'creative'}
+              onChange={(e) => updateToolConfig({ tone: e.target.value })}
+            >
+              {TONE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Tamanho</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.length as string) ?? 'medium'}
+              onChange={(e) => updateToolConfig({ length: e.target.value })}
+            >
+              {LENGTH_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Modelo</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.model as string) ?? 'gemini-flash'}
+              onChange={(e) => updateToolConfig({ model: e.target.value })}
+            >
+              {LLM_MODEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Max tokens</label>
+            <input
+              type="number"
+              min={1}
+              style={TEXT_INPUT}
+              value={(toolConfig.max_tokens as number) ?? 1024}
+              onChange={(e) => updateToolConfig({ max_tokens: Number(e.target.value) })}
+            />
+          </div>
+        </>
+      )}
+
+      {isGenerateImage && (
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Prompt</label>
+            <textarea
+              style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
+              value={(toolConfig.prompt as string) ?? ''}
+              placeholder="Descreva a imagem que deseja gerar"
+              onChange={(e) => updateToolConfig({ prompt: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Modelo</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.model as string) ?? 'imagen-4-standard'}
+              onChange={(e) => updateToolConfig({ model: e.target.value })}
+            >
+              {IMAGE_MODEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Proporção</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.aspect_ratio as string) ?? '1:1'}
+              onChange={(e) => updateToolConfig({ aspect_ratio: e.target.value })}
+            >
+              {ASPECT_RATIO_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Estilo (opcional)</label>
+            <input
+              style={TEXT_INPUT}
+              value={(toolConfig.style as string) ?? ''}
+              placeholder="ex: fotorrealista, aquarela, 3D render"
+              onChange={(e) => updateToolConfig({ style: e.target.value })}
+            />
+          </div>
+        </>
       )}
 
       {stepType === 'llm' && (
@@ -359,7 +553,7 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
         </div>
       )}
 
-      {stepType !== 'condition' && stepType !== 'hitl' && stepType !== 'merge' && (
+      {stepType !== 'condition' && stepType !== 'hitl' && stepType !== 'merge' && !isGenerateText && !isGenerateImage && !isOntologia && (
         <div style={{ marginBottom: 12 }}>
           <label style={LABEL}>Config (JSON)</label>
           {(stepType === 'llm' || stepType === 'workflow') && (
