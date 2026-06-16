@@ -16,6 +16,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const isDev = process.env.NODE_ENV === 'development';
+
   // Auth-skip only when Firebase isn't configured (local dev without creds).
   // When Firebase IS configured, the guard always enforces auth — so logging out
   // redirects to /login instead of leaving protected pages viewable.
