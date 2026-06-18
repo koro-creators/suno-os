@@ -73,7 +73,28 @@ import NodePalette from './panels/NodePalette';
 import NodeConfigDrawer from './panels/NodeConfigDrawer';
 import CanvasToolbar from './panels/CanvasToolbar';
 import CanvasStatusBanner from './panels/CanvasStatusBanner';
-import CanvasContextMenu, { type ContextMenuPayload } from './panels/CanvasContextMenu';
+import CanvasContextMenu from './panels/CanvasContextMenu';
+import { type StepPayload } from './shared/step-catalog';
+
+function buildCanvasNode(payload: StepPayload, position: { x: number; y: number }): Node {
+  const id = `${payload.step_type}-${Date.now()}`;
+  return {
+    id,
+    type: payload.step_type,
+    position,
+    data: {
+      type: payload.step_type,
+      name: payload.name ?? payload.tool_name ?? payload.step_type,
+      tool_name: payload.tool_name,
+      agent_id: payload.agent_id,
+      condition_operator: payload.condition_operator ?? (payload.step_type === 'condition' ? 'if_else' : undefined),
+      action_type: payload.action_type,
+      workflow_id: payload.workflow_id,
+      config: payload.default_config ?? {},
+      merge_policy: payload.step_type === 'merge' ? (payload.merge_policy ?? 'all') : undefined,
+    },
+  };
+}
 
 const NODE_TYPES = {
   tool: ToolNode,
@@ -453,40 +474,14 @@ function CanvasInner(props: WorkflowCanvasProps) {
       if (isMobile) return;
       const raw = e.dataTransfer.getData('application/sunos-canvas');
       if (!raw) return;
-      let payload: {
-        step_type: WorkflowStepV2['type'];
-        tool_name?: string;
-        agent_id?: string;
-        condition_operator?: string;
-        action_type?: string;
-        workflow_id?: string;
-        merge_policy?: 'all' | 'any';
-        name?: string;
-        default_config?: Record<string, unknown>;
-      };
+      let payload: StepPayload;
       try {
-        payload = JSON.parse(raw);
+        payload = JSON.parse(raw) as StepPayload;
       } catch {
         return;
       }
       const position = flow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      const id = `${payload.step_type}-${Date.now()}`;
-      const newNode: Node = {
-        id,
-        type: payload.step_type,
-        position,
-        data: {
-          type: payload.step_type,
-          name: payload.name ?? payload.tool_name ?? payload.step_type,
-          tool_name: payload.tool_name,
-          agent_id: payload.agent_id,
-          condition_operator: payload.condition_operator ?? (payload.step_type === 'condition' ? 'if_else' : undefined),
-          action_type: payload.action_type,
-          workflow_id: payload.workflow_id,
-          config: payload.default_config ?? {},
-          merge_policy: payload.step_type === 'merge' ? (payload.merge_policy ?? 'all') : undefined,
-        },
-      };
+      const newNode = buildCanvasNode(payload, position);
       setContextMenu(null);
       pushHistory();
       setNodes((cur) => {
@@ -520,26 +515,9 @@ function CanvasInner(props: WorkflowCanvasProps) {
   );
 
   const addNodeFromContextMenu = useCallback(
-    (payload: ContextMenuPayload) => {
+    (payload: StepPayload) => {
       if (!contextMenu) return;
-      const id = `${payload.step_type}-${Date.now()}`;
-      const newNode: Node = {
-        id,
-        type: payload.step_type,
-        position: contextMenu.flowPos,
-        data: {
-          type: payload.step_type,
-          name: payload.name ?? payload.tool_name ?? payload.step_type,
-          tool_name: payload.tool_name,
-          agent_id: payload.agent_id,
-          condition_operator:
-            payload.condition_operator ?? (payload.step_type === 'condition' ? 'if_else' : undefined),
-          action_type: payload.action_type,
-          workflow_id: payload.workflow_id,
-          config: payload.default_config ?? {},
-          merge_policy: payload.step_type === 'merge' ? (payload.merge_policy ?? 'all') : undefined,
-        },
-      };
+      const newNode = buildCanvasNode(payload, contextMenu.flowPos);
       pushHistory();
       setNodes((cur) => {
         const next = [...cur, newNode];

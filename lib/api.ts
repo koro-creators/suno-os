@@ -7,6 +7,13 @@
 
 import type { SkillAdmin } from './admin-types';
 import type { ClientAdmin } from './client-types';
+import type {
+  ApprovalSubmission,
+  ApprovalEvent,
+  ApprovalFilters,
+  ApprovalSubmitPayload,
+  ApprovalDecisionPayload,
+} from '@/lib/approval-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -651,14 +658,6 @@ export async function validateDriveFolder(
 // ---------------------------------------------------------------------------
 // SPEC-004 — Approval Hierarchy API (Phase 20)
 // ---------------------------------------------------------------------------
-
-import type {
-  ApprovalSubmission,
-  ApprovalEvent,
-  ApprovalFilters,
-  ApprovalSubmitPayload,
-  ApprovalDecisionPayload,
-} from '@/lib/approval-types';
 
 async function approvalFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = getApiUrl(path);
