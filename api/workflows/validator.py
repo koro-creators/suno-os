@@ -220,8 +220,10 @@ def validate(
             findings.append(
                 ValidationError(
                     kind="isolated_node",
-                    detail=f"step '{step['id']}' ('{step.get('name', step['id'])}') "
-                    "has no connections — connect or remove it",
+                    detail=(
+                        f"step '{step['id']}' ('{step.get('name', step['id'])}') "
+                        "has no connections — connect or remove it"
+                    ),
                     step_id=step["id"],
                 )
             )

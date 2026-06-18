@@ -242,7 +242,7 @@ class WorkflowExecutor:
                                 "started_at": last_ts,
                                 "completed_at": now,
                                 "duration_ms": int((now - last_ts).total_seconds() * 1000),
-                            },
+                            }
                         )
                         logged_step_ids.add(sid)
 
@@ -260,7 +260,7 @@ class WorkflowExecutor:
                             "started_at": last_ts,
                             "completed_at": now,
                             "duration_ms": int((now - last_ts).total_seconds() * 1000),
-                        },
+                        }
                     )
                     logged_step_ids.add(node_name)
                     last_ts = now
