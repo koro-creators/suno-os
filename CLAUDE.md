@@ -93,7 +93,7 @@ api/                    # Backend (FastAPI + LangGraph) — deploy separado
 ## Restrictions
 
 - **NÃO modifique `data/clients.ts`** — é o source do sistema solar e deve permanecer intacto
-- **NÃO instale novas dependências** sem necessidade (Tailwind + Lucide já estão)
+- **NÃO instale novas dependências** sem necessidade (Tailwind + @carbon/icons-react já estão)
 - **NÃO mude o visual** das páginas existentes do sistema solar (Home, Client, Skill, Moon)
 - **NÃO use `.env` files no frontend** — tudo é mocado (exceto `NEXT_PUBLIC_API_URL` para backend)
 - **Backend** usa `.env` em `api/` (ver `api/.env.example`)

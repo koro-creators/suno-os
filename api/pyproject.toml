@@ -22,8 +22,10 @@ dependencies = [
     # Pydantic
     "pydantic>=2.7.0",
     "pydantic-settings>=2.2.0",
-    # ML Observability
-    "mlflow>=2.10.0",
+    # LLM Observability (ADR-013)
+    "langfuse>=2.0.0",
+    # Agents scheduler
+    "apscheduler>=3.10.0",
     # GCP
     "google-cloud-aiplatform>=1.52.0",
     "google-cloud-secret-manager>=2.16.0",

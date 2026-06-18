@@ -8,7 +8,7 @@ ultima_atualizacao: 2026-05-15
 autor: Heitor Miranda + Claude (Koro Docs Pipeline)
 status: Ativo — Índice de Redirecionamento
 fonte_adr: docs/adr/
-total_adrs: 12
+total_adrs: 14
 ---
 
 # SRD Parte 7 — Architecture Decision Records (ADRs)
@@ -19,7 +19,7 @@ total_adrs: 12
 
 ## 1. Catálogo Canônico (Fonte Única de Verdade)
 
-Os 12 ADRs do sunOS estão em `docs/adr/` no formato Michael Nygard:
+Os 13 ADRs do sunOS estão em `docs/adr/` no formato Michael Nygard:
 
 | ADR | Arquivo canônico | Título | Status | Data |
 |-----|-----------------|--------|--------|------|
@@ -35,6 +35,8 @@ Os 12 ADRs do sunOS estão em `docs/adr/` no formato Michael Nygard:
 | **ADR-010** | `docs/adr/ADR-010-langgraph-orchestration-framework.md` | LangGraph como Framework de Orquestração | **Aceito** | 2026-05-15 |
 | **ADR-011** | `docs/adr/ADR-011-firebase-auth-identity-provider.md` | Firebase Authentication como Provedor de Identidade | **Aceito** | 2026-05-15 |
 | **ADR-012** | `docs/adr/ADR-012-deepagents-harness-bc04-bc07.md` | `deepagents` como Harness para BC-04 e BC-07 | **Proposto** | 2026-05-15 |
+| **ADR-013** | `docs/adr/ADR-013-langfuse-llm-observability.md` | Langfuse como Plataforma de Observabilidade LLM (substitui MLflow) | **Aceito** | 2026-05-28 |
+| **ADR-014** | `docs/adr/ADR-014-infra-piloto-cloud-sql-cloud-run.md` | Infra Piloto — Cloud SQL + Cloud Run monolito (AlloyDB deferido) | **Aceito** | 2026-05-28 |
 
 ---
 

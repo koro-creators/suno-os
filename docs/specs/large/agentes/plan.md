@@ -87,15 +87,16 @@ upstream:
 
 **Sequência:**
 
-23. `api/agents/graph.py` — `AgentState` + `build_agent_graph()` com LangGraph StateGraph
-24. `api/agents/skill_loader.py` — `skill_to_tool()`: converte Skill sunOS em LangChain StructuredTool
-25. `api/agents/memory.py` — `load_memory_context()`: concatena conteúdo de memory files (mock: arquivos em filesystem local, não GCS)
-26. `api/agents/runner.py` — `run_agent()` assíncrono: verifica status, permissions, cria `agent_run`, executa graph, atualiza status
-27. `api/agents/router.py` — `POST /api/agents/{id}/run` com BackgroundTasks + `GET /api/agents/{id}/runs` + `GET /api/agents/{id}/runs/{run_id}`
-28. Frontend: polling no `AtividadeTab.tsx` — `useEffect` com `setInterval(1000ms)` enquanto `status='running'`; cancelar ao montar/desmontar
-29. `api/agents/preview.py` — `run_preview()`: executa sandboxed, persiste em `preview_runs`
-30. Frontend: painel preview em `AgentEditorPage` — input text + trigger preview + exibir output
-31. `api/agents/scheduler.py` — APScheduler in-process: carregar `agent_schedules.enabled=true` ao startup; disparar `run_agent()` no horário configurado
+23. **Migração Langfuse** (ADR-013) — `api/core/observability.py`: `get_langfuse_handler()` retorna `CallbackHandler` ou `None`; remover `mlflow` de `requirements.txt` e bloco de init em `main.py`; adicionar `langfuse>=2.0`; vars de env `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_HOST` em `config.py` e `.env.example`; remover `chat/eval/tracing.py` (substituído pelo handler)
+24. `api/agents/graph.py` — `AgentState` + `build_agent_graph()` com LangGraph StateGraph; passar `config={"callbacks": [get_langfuse_handler()]}` na invocação
+25. `api/agents/skill_loader.py` — `skill_to_tool()`: converte Skill sunOS em LangChain StructuredTool
+26. `api/agents/memory.py` — `load_memory_context()`: concatena conteúdo de memory files (mock: arquivos em filesystem local, não GCS)
+27. `api/agents/runner.py` — `run_agent()` assíncrono: verifica status, permissions, cria `agent_run`, executa graph com Langfuse handler, atualiza status; timeout via `asyncio.wait_for` (CA-14)
+28. `api/agents/router.py` — `POST /api/agents/{id}/run` com BackgroundTasks + `GET /api/agents/{id}/runs` + `GET /api/agents/{id}/runs/{run_id}`
+29. Frontend: polling no `AtividadeTab.tsx` — `useEffect` com `setInterval(1000ms)` enquanto `status='running'`; cancelar ao montar/desmontar
+30. `api/agents/preview.py` — `run_preview()`: executa sandboxed, persiste em `preview_runs`
+31. Frontend: painel preview em `AgentEditorPage` — input text + trigger preview + exibir output
+32. `api/agents/scheduler.py` — APScheduler in-process: carregar `agent_schedules.enabled=true` ao startup; disparar `run_agent()` no horário configurado
 
 **Gate de saída:** CA-04 (executar agente ativo), CA-13 (preview sandbox), CA-14 (timeout) passam com backend real.
 
@@ -142,7 +143,7 @@ Fase D: requer PRE-01 (GCS bucket) + PRE-04 (Cloud Scheduler)
 | Memory Storage | GCS + `google-cloud-storage` | D |
 | Schedule (stub) | APScheduler in-process | C |
 | Schedule (prod) | Cloud Scheduler + HTTP target | D |
-| Observabilidade | MLflow tracing em `run_agent()` | C |
+| Observabilidade | Langfuse CallbackHandler em `run_agent()` (ADR-013) | C |
 
 ## Estimativa Total
 
