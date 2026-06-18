@@ -64,13 +64,6 @@ TOOL_CATALOG: list[ToolDescriptor] = [
         default_config={},
     ),
     ToolDescriptor(
-        tool_name="generate_image",
-        label="Compor imagem",
-        category="criacao",
-        description="Imagem via Vertex AI (Imagen).",
-        default_config={"aspect_ratio": "1:1"},
-    ),
-    ToolDescriptor(
         tool_name="query_data",
         label="Consultar métricas",
         category="midia",
