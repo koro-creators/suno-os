@@ -66,7 +66,6 @@ class EdgeValidationError(ValueError):
         self.edge_index = edge_index
 
 
-
 def _check_handles(edge: WorkflowEdge, steps_by_id: dict[str, dict], *, idx: int) -> None:
     if edge.source_handle not in ALLOWED_SOURCE_HANDLES:
         raise EdgeValidationError(
@@ -87,7 +86,6 @@ def _check_handles(edge: WorkflowEdge, steps_by_id: dict[str, dict], *, idx: int
             f"edge[{idx}]: target_handle '{edge.target_handle}' not in {sorted(allowed_target)}",
             edge_index=idx,
         )
-
 
 
 def _check_unique(edges: Iterable[WorkflowEdge]) -> None:

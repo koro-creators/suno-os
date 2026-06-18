@@ -193,7 +193,8 @@ def validate(
     # Silently filter them out so they don't pollute real graph-logic checks;
     # they will be cleaned up on the next successful auto-save.
     valid_edges = [
-        e for e in edges
+        e
+        for e in edges
         if e["source_step_id"] in step_ids and e["target_step_id"] in step_ids
     ]
 
