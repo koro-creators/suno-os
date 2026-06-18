@@ -505,7 +505,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
   }, []);
 
   const onPaneContextMenu = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent | React.MouseEvent) => {
       e.preventDefault();
       if (isMobile) return;
       const flowPos = flow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
