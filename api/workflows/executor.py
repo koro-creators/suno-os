@@ -205,6 +205,7 @@ class WorkflowExecutor:
         step_names = {s["id"]: s.get("name") for s in definition.get("steps", [])}
         step_logs: list[dict] = []
         final_outputs: dict = {}
+        logged_step_ids: set[str] = set()
         status = "completed"
         error: str | None = None
         last_ts = datetime.now(timezone.utc)
@@ -221,6 +222,30 @@ class WorkflowExecutor:
                         update.get("steps_output", {}) if isinstance(update, dict) else {}
                     )
                     final_outputs = {**final_outputs, **node_outputs}
+
+                    # Embedded tool steps ran inside this node — their outputs
+                    # appear in node_outputs alongside the main node output.
+                    # Log them first (execution order), then log the main node.
+                    for sid in node_outputs:
+                        if sid in logged_step_ids or sid == node_name:
+                            continue
+                        traw = node_outputs[sid]
+                        is_terr = isinstance(traw, dict) and bool(traw.get("error"))
+                        tout_obj = traw if isinstance(traw, (dict, list)) else {"value": traw}
+                        step_logs.append(
+                            {
+                                "step_id": sid,
+                                "step_name": step_names.get(sid),
+                                "status": "failed" if is_terr else "completed",
+                                "output": tout_obj,
+                                "error": traw.get("error") if is_terr else None,
+                                "started_at": last_ts,
+                                "completed_at": now,
+                                "duration_ms": int((now - last_ts).total_seconds() * 1000),
+                            }
+                        )
+                        logged_step_ids.add(sid)
+
                     raw = node_outputs.get(node_name)
                     is_err = isinstance(raw, dict) and bool(raw.get("error"))
                     # StepLog.output is JSON object — wrap scalars/strings.
@@ -237,6 +262,7 @@ class WorkflowExecutor:
                             "duration_ms": int((now - last_ts).total_seconds() * 1000),
                         }
                     )
+                    logged_step_ids.add(node_name)
                     last_ts = now
 
         try:
@@ -305,6 +331,7 @@ class WorkflowExecutor:
 
         try:
             step_start = time.time()
+            streamed_step_ids: set[str] = set()
 
             async for event in graph.astream(initial_state, config, stream_mode="updates"):
                 # Check overall timeout
@@ -317,13 +344,23 @@ class WorkflowExecutor:
                     return
 
                 for node_name, update in event.items():
+                    all_outputs = (
+                        update.get("steps_output", {}) if isinstance(update, dict) else {}
+                    )
+                    # Yield embedded tool outputs first (they ran before the LLM).
+                    for sid in all_outputs:
+                        if sid in streamed_step_ids or sid == node_name:
+                            continue
+                        yield SSEEvent(
+                            "step_completed",
+                            {"step_id": sid, "output": all_outputs[sid]},
+                        )
+                        streamed_step_ids.add(sid)
                     yield SSEEvent(
                         "step_completed",
-                        {
-                            "step_id": node_name,
-                            "output": update.get("steps_output", {}).get(node_name),
-                        },
+                        {"step_id": node_name, "output": all_outputs.get(node_name)},
                     )
+                    streamed_step_ids.add(node_name)
 
             yield SSEEvent(
                 "workflow_completed",

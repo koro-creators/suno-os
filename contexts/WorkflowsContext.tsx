@@ -31,6 +31,9 @@ interface WorkflowsContextValue {
   updateWorkflow: (id: string, data: Partial<Workflow>) => Promise<void>;
   deleteWorkflow: (id: string) => Promise<void>;
   runWorkflow: (id: string) => Promise<void>;
+  /** validationOk[workflowId] — true after the user clicks "Validar" with 0 findings. */
+  validationOk: Record<string, boolean>;
+  setValidationOk: (workflowId: string, ok: boolean) => void;
 }
 
 const WorkflowsContext = createContext<WorkflowsContextValue | null>(null);
@@ -42,6 +45,11 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
   );
   const [loading, setLoading] = useState<boolean>(apiAvailable());
   const [error, setError] = useState<string | null>(null);
+  const [validationOk, setValidationOkMap] = useState<Record<string, boolean>>({});
+
+  function setValidationOk(workflowId: string, ok: boolean) {
+    setValidationOkMap((prev) => ({ ...prev, [workflowId]: ok }));
+  }
 
   // Load the workflow list from the backend on mount (real-mode only).
   // On any failure, degrade to the mock fixtures so the UI keeps working
@@ -170,7 +178,7 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
 
   return (
     <WorkflowsContext.Provider
-      value={{ workflows, loading, error, createWorkflow, updateWorkflow, deleteWorkflow, runWorkflow }}
+      value={{ workflows, loading, error, createWorkflow, updateWorkflow, deleteWorkflow, runWorkflow, validationOk, setValidationOk }}
     >
       {children}
     </WorkflowsContext.Provider>

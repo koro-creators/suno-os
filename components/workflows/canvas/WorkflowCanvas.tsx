@@ -58,6 +58,7 @@ import type { WorkflowEdge, WorkflowStepV2 } from '@/lib/workflow-types';
 import { useWorkflowAutoSave } from '@/hooks/useWorkflowAutoSave';
 import { useGraphValidation } from './hooks/useGraphValidation';
 import { useAutoLayout } from './hooks/useAutoLayout';
+import { useWorkflows } from '@/contexts/WorkflowsContext';
 
 import type { ExecutionStatus } from './nodes/NodeShell';
 import ToolNode from './nodes/ToolNode';
@@ -72,6 +73,7 @@ import NodePalette from './panels/NodePalette';
 import NodeConfigDrawer from './panels/NodeConfigDrawer';
 import CanvasToolbar from './panels/CanvasToolbar';
 import CanvasStatusBanner from './panels/CanvasStatusBanner';
+import CanvasContextMenu, { type ContextMenuPayload } from './panels/CanvasContextMenu';
 
 const NODE_TYPES = {
   tool: ToolNode,
@@ -158,6 +160,12 @@ function CanvasInner(props: WorkflowCanvasProps) {
 
   // Mouse position (in flow coordinates) for the small readout beside the minimap.
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+
+  // Context menu: shown when the user right-clicks on empty canvas space.
+  const [contextMenu, setContextMenu] = useState<{
+    screenPos: { x: number; y: number };
+    flowPos: { x: number; y: number };
+  } | null>(null);
   const onPaneMouseMove = useCallback(
     (e: React.MouseEvent) => {
       const pos = flow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
@@ -197,19 +205,51 @@ function CanvasInner(props: WorkflowCanvasProps) {
           config: (data.config as Record<string, unknown>) ?? {},
         };
       });
+      // Mock mode: persist steps to localStorage so dynamically added nodes
+      // (e.g. Tool nodes) survive page reload — analogous to edge persistence.
+      if (!apiAvailable()) {
+        try {
+          localStorage.setItem(
+            `sunos-steps-v2-${workflowId}`,
+            JSON.stringify(stepsToSave),
+          );
+        } catch { /* localStorage unavailable */ }
+      }
       await onPersistSteps(stepsToSave);
     },
-    [onPersistSteps],
+    [onPersistSteps, workflowId],
   );
 
   const persistEdges = useCallback(
     async (latestEdges: Edge[]) => {
-      // Mock-mode: edges live only in canvas state, not persisted server-side.
-      // Real-mode: hit the backend /edges endpoint that landed in Phase B.
-      if (!apiAvailable()) return;
-      await setWorkflowEdges(workflowId, flowEdgesToWorkflowEdges(latestEdges));
+      if (!apiAvailable()) {
+        // Mock mode: save to localStorage so edges survive page refresh.
+        try {
+          localStorage.setItem(
+            `sunos-edges-v2-${workflowId}`,
+            JSON.stringify(flowEdgesToWorkflowEdges(latestEdges)),
+          );
+        } catch {
+          // localStorage unavailable (private browsing with storage blocked)
+        }
+        return;
+      }
+      // Fire steps and edges in parallel — the backend no longer hard-rejects
+      // edges for unknown step refs (_check_step_refs removed), so ordering
+      // no longer matters. Parallel saves also mean both requests are in-flight
+      // at the same time, reducing the window where a page reload (F5) can
+      // cancel one but not the other.
+      try {
+        await Promise.all([
+          persistSteps(nodesRef.current),
+          setWorkflowEdges(workflowId, flowEdgesToWorkflowEdges(latestEdges)),
+        ]);
+      } catch (err) {
+        if (err instanceof TypeError) return;
+        throw err;
+      }
     },
-    [workflowId],
+    [workflowId, persistSteps],
   );
 
   const stepsAutoSave = useWorkflowAutoSave<Node[]>({
@@ -219,9 +259,13 @@ function CanvasInner(props: WorkflowCanvasProps) {
     saveFn: persistEdges,
   });
 
-  // Validation status (server-side).
+  // Validation status — validationOk is lifted to WorkflowsContext so the
+  // history page can read the same value and gate its "Executar Agora" button.
+  const { validationOk: validationOkMap, setValidationOk: setValidationOkCtx } = useWorkflows();
+  const validationOk = validationOkMap[workflowId] ?? false;
+  const setValidationOk = (ok: boolean) => setValidationOkCtx(workflowId, ok);
+
   const [validating, setValidating] = useState(false);
-  const [validationOk, setValidationOk] = useState(false);
   const [hardErrorCount, setHardErrorCount] = useState(0);
   const [hardErrorSample, setHardErrorSample] = useState<string | undefined>();
 
@@ -360,6 +404,16 @@ function CanvasInner(props: WorkflowCanvasProps) {
     pushHistory();
   }, [isMobile, pushHistory]);
 
+  // Save the final position once the drag ends.  We can't rely solely on
+  // onNodesChange because calling markDirty inside a setNodes updater is a
+  // React 18 side-effect anti-pattern (may fire twice in Strict Mode and
+  // misses the definitive drag-end position). nodesRef is always up-to-date
+  // by the time this fires (React commits state before calling drag-stop).
+  const onNodeDragStop = useCallback(() => {
+    if (isMobile) return;
+    stepsAutoSave.markDirty(nodesRef.current);
+  }, [isMobile, stepsAutoSave]);
+
   const isValidConnection: IsValidConnection = useCallback(
     (connection) => {
       // ReactFlow passes a Connection or an Edge; both have source/target.
@@ -380,13 +434,15 @@ function CanvasInner(props: WorkflowCanvasProps) {
     (connection: Connection) => {
       if (isMobile) return;
       pushHistory();
-      setEdges((cur) => {
-        const next = addEdge({ ...connection, type: 'custom' }, cur);
-        edgesAutoSave.markDirty(next);
-        setValidationOk(false);
-        setExecutionStatus(null);
-        return next;
-      });
+      // Compute next outside the updater so markDirty + forceSave can run
+      // synchronously with the correct payload — avoids the 500ms debounce
+      // window where the user could navigate away before the save fires.
+      const next = addEdge({ ...connection, type: 'custom' }, edgesRef.current);
+      setEdges(next);
+      setValidationOk(false);
+      setExecutionStatus(null);
+      edgesAutoSave.markDirty(next);
+      void edgesAutoSave.forceSave();
     },
     [isMobile, edgesAutoSave, pushHistory],
   );
@@ -397,7 +453,17 @@ function CanvasInner(props: WorkflowCanvasProps) {
       if (isMobile) return;
       const raw = e.dataTransfer.getData('application/sunos-canvas');
       if (!raw) return;
-      let payload: { step_type: WorkflowStepV2['type']; tool_name?: string; default_config?: Record<string, unknown> };
+      let payload: {
+        step_type: WorkflowStepV2['type'];
+        tool_name?: string;
+        agent_id?: string;
+        condition_operator?: string;
+        action_type?: string;
+        workflow_id?: string;
+        merge_policy?: 'all' | 'any';
+        name?: string;
+        default_config?: Record<string, unknown>;
+      };
       try {
         payload = JSON.parse(raw);
       } catch {
@@ -411,12 +477,17 @@ function CanvasInner(props: WorkflowCanvasProps) {
         position,
         data: {
           type: payload.step_type,
-          name: payload.tool_name ?? payload.step_type,
+          name: payload.name ?? payload.tool_name ?? payload.step_type,
           tool_name: payload.tool_name,
+          agent_id: payload.agent_id,
+          condition_operator: payload.condition_operator ?? (payload.step_type === 'condition' ? 'if_else' : undefined),
+          action_type: payload.action_type,
+          workflow_id: payload.workflow_id,
           config: payload.default_config ?? {},
-          merge_policy: payload.step_type === 'merge' ? 'all' : undefined,
+          merge_policy: payload.step_type === 'merge' ? (payload.merge_policy ?? 'all') : undefined,
         },
       };
+      setContextMenu(null);
       pushHistory();
       setNodes((cur) => {
         const next = [...cur, newNode];
@@ -434,8 +505,61 @@ function CanvasInner(props: WorkflowCanvasProps) {
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const onPaneContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (isMobile) return;
+      const flowPos = flow.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      setContextMenu({ screenPos: { x: e.clientX, y: e.clientY }, flowPos });
+    },
+    [isMobile, flow],
+  );
+
+  const addNodeFromContextMenu = useCallback(
+    (payload: ContextMenuPayload) => {
+      if (!contextMenu) return;
+      const id = `${payload.step_type}-${Date.now()}`;
+      const newNode: Node = {
+        id,
+        type: payload.step_type,
+        position: contextMenu.flowPos,
+        data: {
+          type: payload.step_type,
+          name: payload.name ?? payload.tool_name ?? payload.step_type,
+          tool_name: payload.tool_name,
+          agent_id: payload.agent_id,
+          condition_operator:
+            payload.condition_operator ?? (payload.step_type === 'condition' ? 'if_else' : undefined),
+          action_type: payload.action_type,
+          workflow_id: payload.workflow_id,
+          config: payload.default_config ?? {},
+          merge_policy: payload.step_type === 'merge' ? (payload.merge_policy ?? 'all') : undefined,
+        },
+      };
+      pushHistory();
+      setNodes((cur) => {
+        const next = [...cur, newNode];
+        stepsAutoSave.markDirty(next);
+        return next;
+      });
+      setValidationOk(false);
+      setExecutionStatus(null);
+    },
+    [contextMenu, stepsAutoSave, pushHistory],
+  );
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+    setContextMenu(null);
+  }, []);
+
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
+    setContextMenu(null);
   }, []);
 
   // Drawer edits collapse into a single undo step per node selection: the
@@ -494,8 +618,21 @@ function CanvasInner(props: WorkflowCanvasProps) {
     setValidating(true);
     try {
       if (apiAvailable()) {
+        // Flush current canvas state to the server before asking it to validate.
+        // We call markDirty first with the current refs so that `latest.current`
+        // is never null — even on a fresh page load where no edit triggered
+        // markDirty yet. Without this, forceSave returns early and the server
+        // validates stale DB state, causing false-positive `isolated_node` for
+        // edges that exist in React state but weren't persisted (e.g. after a
+        // prior 422 error-stall).
+        stepsAutoSave.markDirty(nodesRef.current);
+        edgesAutoSave.markDirty(edgesRef.current);
+        await Promise.all([stepsAutoSave.forceSave(), edgesAutoSave.forceSave()]);
         const result = await validateWorkflow(workflowId);
-        const errs = result.errors ?? [];
+        // Treat both hard errors and soft warnings as findings for the
+        // validate button — warnings (isolated_node, fan-in, etc.) should
+        // be visible to the user even though they don't block auto-save.
+        const errs = [...(result.errors ?? []), ...(result.warnings ?? [])];
         setHardErrorCount(errs.length);
         setHardErrorSample(errs[0]?.detail);
         setValidationOk(errs.length === 0);
@@ -506,8 +643,9 @@ function CanvasInner(props: WorkflowCanvasProps) {
         // mergeWithZeroInputs as ok for a Validate flash.
         const localOk =
           findings.mergeWithZeroInputs.length === 0 &&
-          findings.fanInWithoutMerge.length === 0;
-        setHardErrorCount(localOk ? 0 : findings.mergeWithZeroInputs.length + findings.fanInWithoutMerge.length);
+          findings.fanInWithoutMerge.length === 0 &&
+          findings.isolatedNodes.length === 0;
+        setHardErrorCount(localOk ? 0 : findings.mergeWithZeroInputs.length + findings.fanInWithoutMerge.length + findings.isolatedNodes.length);
         setHardErrorSample(localOk ? undefined : 'Validação local — corrija avisos acima.');
         setValidationOk(localOk);
       }
@@ -518,7 +656,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
     } finally {
       setValidating(false);
     }
-  }, [workflowId, findings]);
+  }, [workflowId, findings, stepsAutoSave, edgesAutoSave, nodesRef, edgesRef]);
 
   // "Executar": runs the workflow (blocking server-side) and paints each
   // node's final status (completed/failed) once the run finishes. All nodes
@@ -607,10 +745,10 @@ function CanvasInner(props: WorkflowCanvasProps) {
         </div>
       )}
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        {!isMobile && <NodePalette />}
+        {!isMobile && <NodePalette currentWorkflowId={currentWorkflowId} />}
         <div
           className="sunos-canvas-pane"
-          style={{ flex: 1, position: 'relative', background: '#000000' }}
+          style={{ flex: 1, position: 'relative', background: 'var(--void)' }}
           ref={wrapperRef}
           onMouseMove={onPaneMouseMove}
           onMouseLeave={() => setMousePosition(null)}
@@ -638,24 +776,27 @@ function CanvasInner(props: WorkflowCanvasProps) {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeDragStart={onNodeDragStart}
+            onNodeDragStop={onNodeDragStop}
             isValidConnection={isValidConnection}
             onNodeClick={onNodeClick}
-            onPaneClick={() => setSelectedNodeId(null)}
+            onPaneClick={onPaneClick}
+            onPaneContextMenu={onPaneContextMenu}
             onDrop={onDrop}
             onDragOver={onDragOver}
             nodesDraggable={!isMobile}
             nodesConnectable={!isMobile}
             elementsSelectable={!isMobile}
+            connectionRadius={40}
             fitView
-            style={{ background: '#000000' }}
+            style={{ background: 'var(--void)' }}
             proOptions={{ hideAttribution: true }}
           >
-            <Background gap={16} color="rgba(255,255,255,0.07)" />
+            <Background gap={24} size={1.5} color="rgba(148,178,255,0.18)" />
             <MiniMap
               pannable
               zoomable
               onClick={(_, position) => flow.setCenter(position.x, position.y, { zoom: flow.getZoom(), duration: 400 })}
-              style={{ width: 230, height: 161, background: '#000000', border: '1px solid var(--border-subtle)', borderRadius: 8 }}
+              style={{ width: 207, height: 145, background: '#000000', border: '1px solid var(--border-subtle)', borderRadius: 8, marginBottom: 45 }}
               maskColor="rgba(0,0,0,0.65)"
               maskStrokeColor="var(--sun)"
               maskStrokeWidth={1}
@@ -664,15 +805,15 @@ function CanvasInner(props: WorkflowCanvasProps) {
               nodeBorderRadius={4}
             />
           </ReactFlow>
-          {/* Mouse-position readout beside the minimap (bottom-right, minimap
-              is 230px wide with the default 15px panel margin — sit just to
-              its left). */}
+          {/* Mouse-position readout below the minimap (bottom-right, aligned
+              with minimap width of 207px + 15px panel margin). */}
           <div
             style={{
               position: 'absolute',
               bottom: 15,
-              right: 255,
+              right: 15,
               zIndex: 10,
+              width: 207,
               padding: '4px 8px',
               fontSize: 11,
               fontFamily: 'monospace',
@@ -690,6 +831,45 @@ function CanvasInner(props: WorkflowCanvasProps) {
               otherwise pass underneath neighbouring step cards and look
               "cut off". @xyflow stacks `.react-flow__edges` below
               `.react-flow__nodes` by default; flip that for this canvas. */}
+          {/* Empty-canvas hint — visible only when workflow has no steps yet */}
+          {nodes.length === 0 && (
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+                zIndex: 5,
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  border: '2px dashed rgba(148,178,255,0.20)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28,
+                  opacity: 0.35,
+                }}
+              >
+                ↙
+              </div>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, opacity: 0.5, fontWeight: 500 }}>
+                arraste aqui
+              </p>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, opacity: 0.35 }}>
+                ou clique no canvas para escolher um step
+              </p>
+            </div>
+          )}
           <style jsx global>{`
             .sunos-canvas-pane .react-flow__edges {
               z-index: 1000;
@@ -698,8 +878,20 @@ function CanvasInner(props: WorkflowCanvasProps) {
               0%, 100% { box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
               50% { box-shadow: 0 0 0 5px rgba(59,130,246,0.35); }
             }
+            @keyframes sunos-diamond-pulse {
+              0%, 100% { filter: drop-shadow(0 0 3px rgba(59,130,246,0.25)); }
+              50%       { filter: drop-shadow(0 0 9px rgba(59,130,246,0.65)); }
+            }
           `}</style>
         </div>
+        {contextMenu && !isMobile && (
+          <CanvasContextMenu
+            screenPosition={contextMenu.screenPos}
+            currentWorkflowId={currentWorkflowId}
+            onSelect={addNodeFromContextMenu}
+            onClose={closeContextMenu}
+          />
+        )}
         {!isMobile && selectedNode && (
           <NodeConfigDrawer
             node={selectedNode}
@@ -710,7 +902,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
         )}
       </div>
       {/* Findings preview (lightweight read-only summary; full UI is V2). */}
-      {(findings.fanInWithoutMerge.length > 0 || findings.mergeWithZeroInputs.length > 0) && (
+      {(findings.fanInWithoutMerge.length > 0 || findings.mergeWithZeroInputs.length > 0 || findings.isolatedNodes.length > 0) && (
         <div
           role="status"
           style={{
@@ -720,6 +912,9 @@ function CanvasInner(props: WorkflowCanvasProps) {
             borderTop: '1px solid var(--border-subtle)',
           }}
         >
+          {findings.isolatedNodes.length > 0 && (
+            <span style={{ color: '#EF4444' }}>{findings.isolatedNodes.length} step{findings.isolatedNodes.length > 1 ? 's' : ''} solto{findings.isolatedNodes.length > 1 ? 's' : ''} · </span>
+          )}
           {findings.fanInWithoutMerge.length > 0 && (
             <span>{findings.fanInWithoutMerge.length} fan-in sem merge · </span>
           )}

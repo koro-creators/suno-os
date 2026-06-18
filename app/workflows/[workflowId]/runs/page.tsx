@@ -60,11 +60,16 @@ const MOCK_RUNS: Record<string, WorkflowRun[]> = {
 export default function WorkflowRunsPage() {
   const params = useParams();
   const router = useRouter();
-  const { workflows, runWorkflow } = useWorkflows();
+  const { workflows, runWorkflow, validationOk } = useWorkflows();
 
   const workflowId = params.workflowId as string;
   const workflow = workflows.find((w) => w.id === workflowId);
   const [runs, setRuns] = useState<WorkflowRun[]>(MOCK_RUNS[workflowId] || []);
+  const [isRunning, setIsRunning] = useState(false);
+
+  // Mirror the canvas "Executar" gate: only enabled after the user has clicked
+  // "Validar" on the canvas with 0 findings (same shared state in context).
+  const canvasValidationOk = validationOk[workflowId] ?? false;
 
   const loadRuns = useCallback(async () => {
     if (!apiAvailable()) {
@@ -91,11 +96,19 @@ export default function WorkflowRunsPage() {
     return () => clearTimeout(timer);
   }, [runs, loadRuns]);
 
+  const hasActiveRun = !canvasValidationOk || isRunning || runs.some((r) => r.status === 'running' || r.status === 'paused');
+
   // Trigger a run, then refresh the history once it completes server-side.
   const handleRun = useCallback(async () => {
-    await runWorkflow(workflowId);
-    await loadRuns();
-  }, [runWorkflow, workflowId, loadRuns]);
+    if (hasActiveRun) return;
+    setIsRunning(true);
+    try {
+      await runWorkflow(workflowId);
+      await loadRuns();
+    } finally {
+      setIsRunning(false);
+    }
+  }, [runWorkflow, workflowId, loadRuns, hasActiveRun]);
 
   if (!workflow) {
     return (
@@ -139,25 +152,24 @@ export default function WorkflowRunsPage() {
           </div>
           <button
             onClick={handleRun}
+            disabled={hasActiveRun}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              backgroundColor: '#22C55E',
-              color: '#fff',
-              border: 'none',
+              backgroundColor: hasActiveRun ? 'var(--deep)' : '#22C55E',
+              color: hasActiveRun ? 'var(--text-muted)' : '#fff',
+              border: `1px solid ${hasActiveRun ? 'var(--border-subtle)' : '#22C55E'}`,
               borderRadius: 9999,
               padding: '8px 16px',
               fontSize: '0.8rem',
               fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'opacity 150ms ease',
+              cursor: hasActiveRun ? 'not-allowed' : 'pointer',
+              transition: 'background-color 150ms ease, color 150ms ease',
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.9'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
           >
             <Play size={14} />
-            Executar Agora
+            {isRunning ? 'Executando…' : 'Executar Agora'}
           </button>
         </div>
 

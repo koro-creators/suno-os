@@ -29,7 +29,7 @@ interface NodeData {
 }
 
 const ALLOWED_SOURCE_HANDLES_BY_TYPE: Record<NodeData['type'], string[]> = {
-  tool: ['out', 'error'],
+  tool: ['out'], // tool emite só 'out' (para agente) — paridade com validator.py
   llm: ['out', 'error'],
   action: ['out', 'error'],
   workflow: ['out', 'error'],
@@ -37,6 +37,8 @@ const ALLOWED_SOURCE_HANDLES_BY_TYPE: Record<NodeData['type'], string[]> = {
   hitl: ['approved', 'rejected', 'modified'],
   merge: ['out'],
 };
+
+const ALLOWED_LLM_TARGET_HANDLES = new Set(['in', 'tool_0', 'tool_1', 'tool_2']);
 
 export function useGraphValidation(
   nodes: Node<NodeData>[],
@@ -99,10 +101,12 @@ export function useGraphValidation(
   /** Collected canvas-local findings ready to render in the validation panel. */
   const findings = useMemo(() => {
     const inDegree = new Map<string, number>();
+    const outDegree = new Map<string, number>();
     const inHandles = new Map<string, string[]>();
-    for (const n of nodes) inDegree.set(n.id, 0);
+    for (const n of nodes) { inDegree.set(n.id, 0); outDegree.set(n.id, 0); }
     for (const e of edges) {
       inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
+      outDegree.set(e.source, (outDegree.get(e.source) ?? 0) + 1);
       const handles = inHandles.get(e.target) ?? [];
       handles.push(e.targetHandle ?? 'in');
       inHandles.set(e.target, handles);
@@ -111,10 +115,13 @@ export function useGraphValidation(
     const orphans: string[] = []; // in-degree 0 — fine if there's at least one entry node
     const fanInWithoutMerge: string[] = [];
     const mergeWithZeroInputs: string[] = [];
+    const isolatedNodes: string[] = [];
 
     for (const node of nodes) {
       const deg = inDegree.get(node.id) ?? 0;
+      const outDeg = outDegree.get(node.id) ?? 0;
       const type = (node.data?.type ?? 'tool') as NodeData['type'];
+      if (deg === 0 && outDeg === 0) isolatedNodes.push(node.id);
       if (deg === 0) orphans.push(node.id);
       if (type === 'merge') {
         if (deg === 0) mergeWithZeroInputs.push(node.id);
@@ -127,6 +134,16 @@ export function useGraphValidation(
           .sort();
         const isDualInput = deg === 2 && handles[0] === 'in_a' && handles[1] === 'in_b';
         if (deg > 2 || (deg === 2 && !isDualInput)) fanInWithoutMerge.push(node.id);
+      } else if (type === 'llm') {
+        // llm aceita: 1 edge de controle (in) + até 3 edges de tool (tool_0/1/2).
+        // Todos os handles devem ser distintos e pertencer ao conjunto permitido.
+        const handles = inHandles.get(node.id) ?? [];
+        const uniqueHandles = new Set(handles);
+        const isValid =
+          handles.length <= 4 &&
+          handles.length === uniqueHandles.size &&
+          handles.every((h) => ALLOWED_LLM_TARGET_HANDLES.has(h));
+        if (!isValid) fanInWithoutMerge.push(node.id);
       } else {
         if (deg > 1) fanInWithoutMerge.push(node.id);
       }
@@ -138,6 +155,7 @@ export function useGraphValidation(
       orphans,
       fanInWithoutMerge,
       mergeWithZeroInputs,
+      isolatedNodes,
     };
   }, [nodes, edges]);
 

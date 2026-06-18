@@ -289,6 +289,9 @@ export async function setWorkflowEdges(
   return workflowFetch<WorkflowEdge[]>(`/api/workflows/${workflowId}/edges`, {
     method: 'POST',
     body: JSON.stringify({ edges }),
+    // keepalive lets the browser complete this request even if the page
+    // is unloaded (user presses F5 or navigates away mid-save).
+    keepalive: true,
   });
 }
 
@@ -455,6 +458,7 @@ export async function updateWorkflow(
     await workflowFetch<ApiWorkflowDetail>(`/api/workflows/${workflowId}`, {
       method: 'PUT',
       body: JSON.stringify(body),
+      keepalive: true,
     }),
   );
 }

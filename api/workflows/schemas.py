@@ -14,9 +14,9 @@ from pydantic import BaseModel, Field
 # Source handles allowed by spec.md §4.1 + design.md §2.1 CHECK constraint.
 # `success` was removed (constitution §2 — `out` is universal).
 SourceHandle = Literal["out", "error", "then", "else", "approved", "rejected", "modified"]
-# `in` e o default universal. `condition` aceita tambem `in_a` (CAMPO) e
-# `in_b` (VALOR) — ver .claude/rules/canvas-conventions.md.
-TargetHandle = Literal["in", "in_a", "in_b"]
+# `in` é o default universal. `condition` aceita `in_a`/`in_b`; `llm` aceita
+# `tool_0/1/2` (saídas de tool nodes) — ver .claude/rules/canvas-conventions.md.
+TargetHandle = Literal["in", "in_a", "in_b", "tool_0", "tool_1", "tool_2"]
 MergePolicy = Literal["all", "any"]
 ValidationErrorKind = Literal[
     "cycle",
@@ -26,6 +26,7 @@ ValidationErrorKind = Literal[
     "unauthorized_tool",
     "max_nodes_exceeded",
     "no_entry_node",
+    "isolated_node",
 ]
 
 
@@ -41,6 +42,10 @@ class WorkflowStep(BaseModel):
     tool_name: str | None = None
     prompt: str | None = None
     model: str | None = None  # For type="llm": modelo a usar (default: workflow.default_model)
+    agent_id: str | None = None  # For type="llm": agente (aba Agentes) cujas instructions
+    # entram como contexto de sistema antes do prompt do step.
+    condition_operator: str | None = None  # For type="condition": "if_else"|"and"|"or"|"not"
+    action_type: str | None = None  # For type="action": "slack"|"email"|"whatsapp"|"telegram"
     workflow_id: str | None = None  # For type="workflow": ID of sub-workflow to execute
     input_mapping: dict[str, str] | None = (
         None  # For type="workflow": map parent output → child input
