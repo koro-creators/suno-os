@@ -82,7 +82,10 @@ def test_edges_post_replaces_atomically(client, seed_workflow_v2_linear):
     assert body[0]["edge_id"]  # server assigns
 
 
-def test_edges_post_rejects_missing_step_ref(client, seed_workflow_v2_linear):
+def test_edges_post_accepts_dangling_step_ref(client, seed_workflow_v2_linear):
+    """Step-ref existence is NOT enforced at the edge layer (race-condition tolerance:
+    step PUT and edge POST can arrive out of order when the canvas saves on onConnect).
+    Dangling edges are filtered by validator.py at /validate time."""
     new = {
         "edges": [
             {
@@ -94,8 +97,7 @@ def test_edges_post_rejects_missing_step_ref(client, seed_workflow_v2_linear):
         ]
     }
     response = client.post(f"/api/workflows/{seed_workflow_v2_linear}/edges", json=new)
-    assert response.status_code == 400
-    assert "ghost" in response.json()["detail"]["error"]
+    assert response.status_code == 200
 
 
 def test_edges_delete_returns_204(client, seed_workflow_v2_linear):
