@@ -344,9 +344,7 @@ class WorkflowExecutor:
                     return
 
                 for node_name, update in event.items():
-                    all_outputs = (
-                        update.get("steps_output", {}) if isinstance(update, dict) else {}
-                    )
+                    all_outputs = update.get("steps_output", {}) if isinstance(update, dict) else {}
                     # Yield embedded tool outputs first (they ran before the LLM).
                     for sid in all_outputs:
                         if sid in streamed_step_ids or sid == node_name:
