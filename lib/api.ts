@@ -1023,8 +1023,8 @@ export async function listAgents(): Promise<Agent[]> {
     if (!res.ok) return [];
     const rows = (await res.json()) as Agent[];
     return rows.map((a) => ({
-      instructions: '',
       ...a,
+      instructions: a.instructions ?? '',
       assigned_skills: [],
       apps: [],
       memory_files: [],
