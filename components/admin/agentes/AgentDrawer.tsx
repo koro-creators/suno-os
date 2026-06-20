@@ -38,10 +38,11 @@ export default function AgentDrawer({ agent, onClose }: AgentDrawerProps) {
   if (!agent) return null;
 
   const status = STATUS_CONFIG[agent.status];
+  const instructions = agent.instructions ?? '';
   const previewInstructions =
-    agent.instructions.length > 200
-      ? agent.instructions.slice(0, 200) + '…'
-      : agent.instructions;
+    instructions.length > 200
+      ? instructions.slice(0, 200) + '…'
+      : instructions;
 
   return (
     <>

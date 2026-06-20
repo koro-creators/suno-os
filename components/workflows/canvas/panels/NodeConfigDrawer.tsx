@@ -320,21 +320,12 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
         <>
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Agente</label>
-            <select
-              style={TEXT_INPUT}
-              value={agentId}
-              onChange={(e) => {
-                setAgentId(e.target.value);
-                emit({ agent_id: e.target.value || undefined });
-              }}
-            >
-              <option value="">— nenhum (prompt manual) —</option>
-              {activeAgents.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.icon} {a.name}
-                </option>
-              ))}
-            </select>
+            <div style={{ ...TEXT_INPUT, color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+              {(() => {
+                const agent = activeAgents.find((a) => a.id === agentId);
+                return agent ? `${agent.icon} ${agent.name}` : agentId || '— nenhum —';
+              })()}
+            </div>
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Modelo</label>

@@ -14,6 +14,7 @@ import type {
   ApprovalSubmitPayload,
   ApprovalDecisionPayload,
 } from '@/lib/approval-types';
+import type { Agent, AgentCreate, AgentUpdate } from './agents-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -1002,6 +1003,74 @@ export async function archiveClient(slug: string): Promise<boolean> {
   if (!apiAvailable()) return false;
   try {
     const res = await fetch(getApiUrl(`/api/clients/${slug}`), {
+      method: 'DELETE',
+      headers: await getHeaders(),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Agents — SPEC-021 FA-17
+// ---------------------------------------------------------------------------
+
+export async function listAgents(): Promise<Agent[]> {
+  if (!apiAvailable()) return [];
+  try {
+    const res = await fetch(getApiUrl('/api/agents/'), { headers: await getHeaders() });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Agent[];
+    return rows.map((a) => ({
+      instructions: '',
+      ...a,
+      assigned_skills: [],
+      apps: [],
+      memory_files: [],
+      schedule: null,
+      permissions: [],
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function createAgentApi(data: AgentCreate): Promise<Agent | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl('/api/agents/'), {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    const a = (await res.json()) as Agent;
+    return { ...a, assigned_skills: [], apps: [], memory_files: [], schedule: null, permissions: [] };
+  } catch {
+    return null;
+  }
+}
+
+export async function updateAgentApi(id: string, data: AgentUpdate): Promise<Agent | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl(`/api/agents/${id}`), {
+      method: 'PATCH',
+      headers: await getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as Agent;
+  } catch {
+    return null;
+  }
+}
+
+export async function archiveAgentApi(id: string): Promise<boolean> {
+  if (!apiAvailable()) return false;
+  try {
+    const res = await fetch(getApiUrl(`/api/agents/${id}`), {
       method: 'DELETE',
       headers: await getHeaders(),
     });
