@@ -52,10 +52,10 @@ export default function AgentNewForm() {
     return Object.keys(errs).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    const agent = createAgent({
+    const agent = await createAgent({
       name: name.trim(),
       icon: effectiveIcon,
       instructions: instructions.trim(),

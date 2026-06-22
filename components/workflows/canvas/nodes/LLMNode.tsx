@@ -37,9 +37,7 @@ export default function LLMNode({ data, selected }: NodeProps) {
   }
   const targets: HandleSpec[] = [
     { id: 'in', color: 'var(--text-muted)', position: Position.Left, label: 'in' },
-    { id: 'tool_0', color: '#A78BFA', position: Position.Bottom, label: 'ferramenta 1' },
-    { id: 'tool_1', color: '#A78BFA', position: Position.Bottom, label: 'ferramenta 2' },
-    { id: 'tool_2', color: '#A78BFA', position: Position.Bottom, label: 'ferramenta 3' },
+    { id: 'tool_0', color: '#A78BFA', position: Position.Bottom, label: 'ferramenta' },
   ];
   return (
     <NodeShell
@@ -65,13 +63,10 @@ export default function LLMNode({ data, selected }: NodeProps) {
         <Tools size={10} color="var(--text-muted)" />
         <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Ferramentas</span>
         <div style={{ display: 'flex', gap: 18, marginLeft: 'auto' }}>
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              style={{ width: 8, height: 8, borderRadius: '50%', background: '#A78BFA', opacity: 0.45 }}
-              aria-hidden="true"
-            />
-          ))}
+          <span
+            style={{ width: 8, height: 8, borderRadius: '50%', background: '#A78BFA', opacity: 0.45 }}
+            aria-hidden="true"
+          />
         </div>
       </div>
     </NodeShell>

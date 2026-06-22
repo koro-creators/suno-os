@@ -46,7 +46,7 @@ export default function ConfiguracaoTab({ agent }: Props) {
   const [customIcon, setCustomIcon] = useState(
     AGENT_ICON_PRESETS.includes(agent.icon) ? '' : agent.icon,
   );
-  const [instructions, setInstructions] = useState(agent.instructions);
+  const [instructions, setInstructions] = useState(agent.instructions ?? '');
   const [status, setStatus] = useState<AgentStatus>(
     isArchived ? agent.status : (agent.status as Exclude<AgentStatus, 'archived'>),
   );

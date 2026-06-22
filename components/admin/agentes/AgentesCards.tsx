@@ -138,7 +138,7 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
           lineHeight: 1.5,
         }}
       >
-        {agent.instructions}
+        {agent.instructions ?? ''}
       </p>
 
       {/* Metadata row */}
