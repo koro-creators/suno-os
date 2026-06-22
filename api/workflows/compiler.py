@@ -131,7 +131,11 @@ def _get_llm(model: str, temperature: float = 0.7) -> Any:
             model=model_id, temperature=temperature, api_key=settings.ANTHROPIC_API_KEY
         )
 
-    if model_id.startswith("gemini") and settings.GOOGLE_API_KEY and ChatGoogleGenerativeAI is not None:
+    if (
+        model_id.startswith("gemini")
+        and settings.GOOGLE_API_KEY
+        and ChatGoogleGenerativeAI is not None
+    ):
         return ChatGoogleGenerativeAI(
             model=model_id, temperature=temperature, google_api_key=settings.GOOGLE_API_KEY
         )
@@ -856,7 +860,8 @@ class WorkflowCompiler:
                             effective_outputs[tsid] = tresult
                     prompt = step.get("prompt", "")
                     resolved_prompt = self._resolve_template_string(prompt, effective_outputs)
-                    if connected_inputs and "{{previous}}" not in prompt and "{{steps." not in prompt:
+                    no_tpl = "{{previous}}" not in prompt and "{{steps." not in prompt
+                    if connected_inputs and no_tpl:
                         context = {sid: effective_outputs.get(sid) for sid in connected_inputs}
                         resolved_prompt = (
                             f"Dados recebidos:\n{json.dumps(context, ensure_ascii=False, indent=2)}"

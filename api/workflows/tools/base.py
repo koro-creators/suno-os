@@ -53,9 +53,10 @@ class WorkflowTool:
                     xouts[sid] = {"output": res}
                 return res
 
+            default_desc = (self.func.__doc__ or "").strip() or f"Ferramenta {self.name}"
             return StructuredTool.from_function(
                 name=self.name,
-                description=description or (self.func.__doc__ or "").strip() or f"Ferramenta {self.name}",
+                description=description or default_desc,
                 func=_bound,
                 args_schema=_NoArgs,
             )

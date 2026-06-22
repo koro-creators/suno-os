@@ -284,7 +284,8 @@ def validate(
             # permitidas — o ReAct loop as coleta e decide qual invocar.
             step_in_handles = in_handles.get(step["id"], [])
             in_count = step_in_handles.count(_LLM_CONTROL_HANDLE)
-            bad_handles = [h for h in step_in_handles if h not in {_LLM_CONTROL_HANDLE, _LLM_TOOL_HANDLE}]
+            allowed = {_LLM_CONTROL_HANDLE, _LLM_TOOL_HANDLE}
+            bad_handles = [h for h in step_in_handles if h not in allowed]
             if in_count > 1 or bad_handles:
                 findings.append(
                     ValidationError(

@@ -12,7 +12,7 @@ For state-bound tools (need client_id from run state, LLM passes no args):
 For chat tool bridges (already @tool decorated in chat/tools/):
   Add to chat_bridge.py using register_tool().
 """
+from . import chat_bridge, cliente, ontologia  # noqa: F401 — trigger registration
 from .base import WorkflowTool, get_registry, register_tool, workflow_tool
-from . import cliente, chat_bridge, ontologia  # noqa: F401 — trigger registration
 
 __all__ = ["WorkflowTool", "workflow_tool", "register_tool", "get_registry"]

@@ -11,7 +11,7 @@ except ImportError:
 
 @workflow_tool("consultar_ontologia", state_bound=True)
 def consultar_ontologia(client_id: str | None) -> str:
-    """Carrega a ontologia do cliente: posicionamento, persona, competidores, produto, tom de voz e briefing."""
+    """Carrega ontologia do cliente: posicionamento, persona, competidores, produto, tom de voz."""
     if not client_id:
         return "(nenhum cliente associado a este workflow)"
     session = _get_sessionmaker()()
