@@ -1,6 +1,13 @@
 """Workflow tool: consultar_cliente — state-bound, reads client profile fields."""
 from .base import workflow_tool
 
+try:
+    from core.db import _get_sessionmaker
+except ImportError:
+    from api.core.db import _get_sessionmaker
+
+from sqlalchemy import text as sa_text
+
 _COR_NAMES = {
     "#EF4444": "vermelho", "#8B5CF6": "roxo", "#F97316": "laranja",
     "#06B6D4": "ciano", "#22C55E": "verde", "#F472B6": "rosa",
@@ -13,13 +20,6 @@ def consultar_cliente(client_id: str | None) -> str:
     """Retorna nome, slug, descrição, cor de identidade visual, sponsor e status do cliente."""
     if not client_id:
         return "(nenhum cliente associado a este workflow)"
-    try:
-        from core.db import _get_sessionmaker
-        from sqlalchemy import text as sa_text
-    except ImportError:
-        from api.core.db import _get_sessionmaker
-        from sqlalchemy import text as sa_text
-
     session = _get_sessionmaker()()
     try:
         row = session.execute(

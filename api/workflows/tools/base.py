@@ -4,6 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel
+
 _REGISTRY: dict[str, "WorkflowTool"] = {}
 
 
@@ -36,9 +39,6 @@ class WorkflowTool:
         never sees or provides it (caixa-preta RN-009/010). Tool results are
         also written to extra_outputs for step_logs persistence.
         """
-        from langchain_core.tools import StructuredTool
-        from pydantic import BaseModel
-
         class _NoArgs(BaseModel):
             pass
 

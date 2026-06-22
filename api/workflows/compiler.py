@@ -34,6 +34,36 @@ from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import interrupt
 
+from config import settings
+
+try:
+    from langchain_anthropic import ChatAnthropic
+except ImportError:
+    ChatAnthropic = None  # type: ignore[assignment,misc]
+
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except ImportError:
+    ChatGoogleGenerativeAI = None  # type: ignore[assignment,misc]
+
+try:
+    from langchain_openai import ChatOpenAI
+except ImportError:
+    ChatOpenAI = None  # type: ignore[assignment,misc]
+
+try:
+    from agents import repository as agents_repository
+    from core.db import get_sync_session
+    from models.skill import Skill
+    from workflows import repository as workflows_repository
+    from workflows.tools import get_registry as _get_registry_fn
+except ImportError:
+    from api.agents import repository as agents_repository
+    from api.core.db import get_sync_session
+    from api.models.skill import Skill
+    from api.workflows import repository as workflows_repository
+    from api.workflows.tools import get_registry as _get_registry_fn
+
 logger = logging.getLogger(__name__)
 
 
@@ -91,37 +121,27 @@ def _get_llm(model: str, temperature: float = 0.7) -> Any:
     Falls back to Gemini Flash if the requested model's API key is missing,
     same as the chat agents' `_get_llm`.
     """
-    from config import settings
-
     model_id = LLM_MODEL_MAP.get(model, "gemini-2.5-flash")
 
-    if model_id.startswith("gpt") and settings.OPENAI_API_KEY:
-        from langchain_openai import ChatOpenAI
-
+    if model_id.startswith("gpt") and settings.OPENAI_API_KEY and ChatOpenAI is not None:
         return ChatOpenAI(model=model_id, temperature=temperature, api_key=settings.OPENAI_API_KEY)
 
-    if model_id.startswith("claude") and settings.ANTHROPIC_API_KEY:
-        from langchain_anthropic import ChatAnthropic
-
+    if model_id.startswith("claude") and settings.ANTHROPIC_API_KEY and ChatAnthropic is not None:
         return ChatAnthropic(
             model=model_id, temperature=temperature, api_key=settings.ANTHROPIC_API_KEY
         )
 
-    if model_id.startswith("gemini") and settings.GOOGLE_API_KEY:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-
+    if model_id.startswith("gemini") and settings.GOOGLE_API_KEY and ChatGoogleGenerativeAI is not None:
         return ChatGoogleGenerativeAI(
             model=model_id, temperature=temperature, google_api_key=settings.GOOGLE_API_KEY
         )
 
     # Fallback: always use Gemini Flash if available
-    if settings.GOOGLE_API_KEY:
+    if settings.GOOGLE_API_KEY and ChatGoogleGenerativeAI is not None:
         if model != "gemini-flash":
             logger.warning(
                 "API key for model '%s' not configured, falling back to Gemini Flash", model
             )
-        from langchain_google_genai import ChatGoogleGenerativeAI
-
         return ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
             temperature=temperature,
@@ -132,12 +152,7 @@ def _get_llm(model: str, temperature: float = 0.7) -> Any:
 
 
 def _get_tool_registry() -> dict:
-    """Return the workflow tool registry (triggers auto-registration on first call)."""
-    try:
-        from workflows.tools import get_registry
-    except ImportError:
-        from api.workflows.tools import get_registry
-    return get_registry()
+    return _get_registry_fn()
 
 
 def _lookup_agent_context(agent_id: str | None) -> str | None:
@@ -150,14 +165,6 @@ def _lookup_agent_context(agent_id: str | None) -> str | None:
     """
     if not agent_id:
         return None
-    try:
-        from agents import repository as agents_repository
-        from core.db import get_sync_session
-        from models.skill import Skill
-    except ImportError:
-        from api.agents import repository as agents_repository
-        from api.core.db import get_sync_session
-        from api.models.skill import Skill
 
     session = get_sync_session()
     try:
@@ -199,15 +206,9 @@ def _lookup_workflow_definition(workflow_id: str) -> dict | None:
     Opens its own short-lived session — sub-workflow compilation happens
     inside a node_fn, outside the request-scoped session.
     """
-    try:
-        from core.db import get_sync_session
-        from workflows import repository
-    except ImportError:  # test import root (repo root on sys.path)
-        from api.core.db import get_sync_session
-        from api.workflows import repository
     session = get_sync_session()
     try:
-        return repository.get_workflow(session, workflow_id)
+        return workflows_repository.get_workflow(session, workflow_id)
     finally:
         session.close()
 
