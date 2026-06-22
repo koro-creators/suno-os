@@ -73,11 +73,11 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     listAgents().then((rows) => {
       if (!cancelled) {
-        const stored = loadStoredSkills();
+        // Skills now come from the DB (assigned_skills column).
+        // localStorage is only used in mock-mode (no API).
         setAgents(rows.map((a) => ({
           ...a,
-          assigned_skills: stored[a.id] ?? [],
-          skill_count: (stored[a.id] ?? []).length,
+          skill_count: (a.assigned_skills ?? []).length,
         })));
         setLoading(false);
       }
@@ -140,11 +140,16 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
         const nextSkills = has ? current.filter((s) => s !== skillSlug) : [...current, skillSlug];
         return { ...a, assigned_skills: nextSkills, skill_count: nextSkills.length, updated_at: new Date().toISOString() };
       });
-      // persist to localStorage
-      const stored = loadStoredSkills();
       const agent = next.find((a) => a.id === agentId);
-      if (agent) stored[agentId] = agent.assigned_skills ?? [];
-      saveStoredSkills(stored);
+      const nextSkills = agent?.assigned_skills ?? [];
+      // Persist: API first, localStorage as fallback for mock-mode.
+      if (apiAvailable()) {
+        void updateAgentApi(agentId, { assigned_skills: nextSkills });
+      } else {
+        const stored = loadStoredSkills();
+        stored[agentId] = nextSkills;
+        saveStoredSkills(stored);
+      }
       return next;
     });
   };

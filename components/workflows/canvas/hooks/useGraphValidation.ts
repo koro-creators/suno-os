@@ -38,7 +38,8 @@ const ALLOWED_SOURCE_HANDLES_BY_TYPE: Record<NodeData['type'], string[]> = {
   merge: ['out'],
 };
 
-const ALLOWED_LLM_TARGET_HANDLES = new Set(['in', 'tool_0', 'tool_1', 'tool_2']);
+const LLM_CONTROL_HANDLE = 'in';
+const LLM_TOOL_HANDLE = 'tool_0';
 
 export function useGraphValidation(
   nodes: Node<NodeData>[],
@@ -135,15 +136,12 @@ export function useGraphValidation(
         const isDualInput = deg === 2 && handles[0] === 'in_a' && handles[1] === 'in_b';
         if (deg > 2 || (deg === 2 && !isDualInput)) fanInWithoutMerge.push(node.id);
       } else if (type === 'llm') {
-        // llm aceita: 1 edge de controle (in) + até 3 edges de tool (tool_0/1/2).
-        // Todos os handles devem ser distintos e pertencer ao conjunto permitido.
+        // llm aceita: no máximo 1 edge de controle ('in') + N edges de
+        // ferramenta ('tool_0'). Múltiplos tools no mesmo handle são permitidos.
         const handles = inHandles.get(node.id) ?? [];
-        const uniqueHandles = new Set(handles);
-        const isValid =
-          handles.length <= 4 &&
-          handles.length === uniqueHandles.size &&
-          handles.every((h) => ALLOWED_LLM_TARGET_HANDLES.has(h));
-        if (!isValid) fanInWithoutMerge.push(node.id);
+        const inCount = handles.filter((h) => h === LLM_CONTROL_HANDLE).length;
+        const hasBadHandle = handles.some((h) => h !== LLM_CONTROL_HANDLE && h !== LLM_TOOL_HANDLE);
+        if (inCount > 1 || hasBadHandle) fanInWithoutMerge.push(node.id);
       } else {
         if (deg > 1) fanInWithoutMerge.push(node.id);
       }

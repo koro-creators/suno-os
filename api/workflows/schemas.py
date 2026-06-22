@@ -226,8 +226,8 @@ class StepLogResponse(BaseModel):
     step_id: str
     step_name: str | None
     status: str
-    input: dict[str, Any] | None
-    output: dict[str, Any] | None
+    input: dict[str, Any] | list | None
+    output: dict[str, Any] | list | None
     error: str | None
     duration_ms: int | None
     started_at: datetime | None

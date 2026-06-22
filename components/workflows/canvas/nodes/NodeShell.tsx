@@ -98,7 +98,7 @@ export function NodeShell({
             width: 64,
             height: 64,
             borderRadius: '50%',
-            background: borderColor,
+            background: statusColor ?? borderColor,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

@@ -26,6 +26,7 @@ class AgentCreate(BaseModel):
     icon: str = Field(default="🤖", max_length=100)
     instructions: str = Field(default="")
     status: AgentStatus = "draft"
+    assigned_skills: list[str] = Field(default_factory=list)
 
 
 class AgentUpdate(BaseModel):
@@ -33,6 +34,7 @@ class AgentUpdate(BaseModel):
     icon: str | None = Field(default=None, max_length=100)
     instructions: str | None = None
     status: AgentStatus | None = None
+    assigned_skills: list[str] | None = None
 
 
 class AgentSummary(BaseModel):
@@ -40,6 +42,7 @@ class AgentSummary(BaseModel):
     name: str
     icon: str
     status: AgentStatus
+    assigned_skills: list[str] = Field(default_factory=list)
     skill_count: int = 0
     client_count: int = 0
     last_run_at: datetime | None = None

@@ -34,6 +34,7 @@ import { useEffect, useState } from 'react';
 import { Close } from '@carbon/icons-react';
 import type { Node } from '@xyflow/react';
 import { useAgents } from '@/contexts/AgentsContext';
+import { useSkills } from '@/contexts/SkillsContext';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { listAvailableTools, type ToolDescriptor } from '@/lib/api';
 import type { WorkflowLLMModel } from '@/lib/workflow-types';
@@ -93,11 +94,22 @@ const LABEL: React.CSSProperties = {
   display: 'block',
 };
 
+// Introductions injected automatically for state-bound tools (not configurable by users).
+// Used as LangChain tool descriptions in bind_tools so the LLM knows when to call each.
+const STATE_BOUND_INTRODUCTIONS: Record<string, string> = {
+  consultar_ontologia:
+    'Use para obter o contexto completo de marca do cliente: posicionamento, persona, competidores, produto, tom de voz e briefing. Acione quando a tarefa envolver criação ou validação de conteúdo alinhado à identidade do cliente. Não use se o contexto de marca já foi obtido neste fluxo ou se a tarefa não envolve comunicação.',
+  consultar_cliente:
+    'Use para obter os dados cadastrais do cliente: nome, slug, descrição, cor de identidade visual, sponsor e status. Acione quando precisar identificar o cliente ou verificar informações de cadastro. Não use para obter contexto de marca ou tom de voz — para isso use "Ontologia do cliente".',
+};
+
 export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkflowId }: DrawerProps) {
   const { workflows } = useWorkflows();
   const { agents } = useAgents();
+  const { skills } = useSkills();
   const [name, setName] = useState('');
   const [toolName, setToolName] = useState('');
+  const [introduction, setIntroduction] = useState('');
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState<WorkflowLLMModel>('gemini-flash');
   const [configJson, setConfigJson] = useState('{}');
@@ -129,7 +141,16 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
     if (!node) return;
     const data = (node.data ?? {}) as Record<string, unknown>;
     setName((data.name as string) ?? '');
-    setToolName((data.tool_name as string) ?? '');
+    const tName = (data.tool_name as string) ?? '';
+    setToolName(tName);
+    const storedIntro = (data.introduction as string) ?? '';
+    const fixedIntro = STATE_BOUND_INTRODUCTIONS[tName] ?? '';
+    const resolvedIntro = storedIntro || fixedIntro;
+    setIntroduction(resolvedIntro);
+    // Auto-persist the fixed intro so the compiler can use it as tool description.
+    if (!storedIntro && fixedIntro) {
+      onChange(node.id, { ...data, introduction: fixedIntro });
+    }
     setPrompt((data.prompt as string) ?? '');
     setModel((data.model as WorkflowLLMModel) ?? 'gemini-flash');
     setAgentId((data.agent_id as string) ?? '');
@@ -166,6 +187,7 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
 
   const isGenerateText = stepType === 'tool' && toolName === 'generate_text';
   const isOntologia = stepType === 'tool' && toolName === 'consultar_ontologia';
+  const isStateBound = stepType === 'tool' && toolName in STATE_BOUND_INTRODUCTIONS;
   const toolConfig = parseJsonOrFallback(configJson, {}) as Record<string, unknown>;
 
   const updateToolConfig = (updates: Record<string, unknown>) => {
@@ -220,19 +242,49 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
       </div>
 
       {stepType === 'tool' && (
-        <div style={{ marginBottom: 12 }}>
-          <label style={LABEL}>Tool</label>
-          <div style={{ ...TEXT_INPUT, color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
-            {tools.find((t) => t.tool_name === toolName)?.label ?? toolName ?? '—'}
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Ferramenta</label>
+            <div style={{ ...TEXT_INPUT, color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+              {tools.find((t) => t.tool_name === toolName)?.label ?? toolName ?? '—'}
+            </div>
           </div>
-        </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>
+              Introdução (para o agente)
+              {isStateBound && (
+                <span style={{
+                  marginLeft: 6, fontSize: 9, fontWeight: 600,
+                  background: 'rgba(139,92,246,0.15)', color: '#A78BFA',
+                  padding: '1px 5px', borderRadius: 4,
+                }}>
+                  automática
+                </span>
+              )}
+            </label>
+            <textarea
+              readOnly={isStateBound}
+              style={{
+                ...TEXT_INPUT, minHeight: 72, resize: 'vertical', fontFamily: 'inherit',
+                ...(isStateBound ? { opacity: 0.75, cursor: 'default', background: 'var(--nebula)' } : {}),
+              }}
+              value={introduction}
+              placeholder="Descreva para que serve esta ferramenta, quando o agente deve usá-la…"
+              onChange={(e) => {
+                if (isStateBound) return;
+                setIntroduction(e.target.value);
+                emit({ introduction: e.target.value });
+              }}
+            />
+          </div>
+        </>
       )}
 
-      {isOntologia && (
+      {isStateBound && (
         <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
-          Sem configuração. Este step carrega automaticamente a ontologia do
-          cliente atual (posicionamento, persona, tom de voz, etc.) e disponibiliza
-          o resultado para os steps conectados depois dele.
+          {isOntologia
+            ? 'Sem configuração. Carrega automaticamente a ontologia do cliente atual (posicionamento, persona, tom de voz, etc.).'
+            : 'Sem configuração. Carrega automaticamente os dados cadastrais do cliente selecionado (nome, slug, cor, sponsor, status).'}
         </p>
       )}
 
@@ -327,6 +379,44 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
               })()}
             </div>
           </div>
+          {(() => {
+            const agent = activeAgents.find((a) => a.id === agentId);
+            const agentSkills = agent?.assigned_skills ?? [];
+            if (agentSkills.length === 0) return null;
+            return (
+              <div style={{ marginBottom: 12 }}>
+                <label style={LABEL}>Skills do agente</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {agentSkills.map((slug) => {
+                    const skill = skills.find((s) => s.slug === slug);
+                    return (
+                      <span
+                        key={slug}
+                        style={{
+                          fontSize: 11,
+                          padding: '3px 8px',
+                          borderRadius: 9999,
+                          background: 'var(--nebula)',
+                          border: '1px solid var(--border-subtle)',
+                          color: 'var(--text-secondary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        {skill?.icon && <span>{skill.icon}</span>}
+                        {skill?.name ?? slug}
+                      </span>
+                    );
+                  })}
+                </div>
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  O agente escolherá qual skill utilizar com base no contexto.
+                </p>
+              </div>
+            );
+          })()}
+
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Modelo</label>
             <select

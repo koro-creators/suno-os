@@ -29,7 +29,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Annotated, Any, Callable, TypedDict
 
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import interrupt
@@ -69,10 +69,8 @@ class WorkflowState(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# Tool registry — lazy-loads existing chat tools to avoid circular imports
+# Tool registry — auto-discovered from workflows/tools/
 # ---------------------------------------------------------------------------
-
-TOOL_REGISTRY: dict[str, Any] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -133,52 +131,66 @@ def _get_llm(model: str, temperature: float = 0.7) -> Any:
     raise ValueError("No LLM API key configured. Set GOOGLE_API_KEY in .env")
 
 
-def _lookup_client_ontology(client_id: str | None) -> str:
-    """Load the client's ontology (6 Oráculo entities) as prompt-ready text.
-
-    Reads the client_id from the run state (server-side) — never from user
-    config — so a tool step can inject the client's brand context without
-    leaking which client a step belongs to (caixa-preta RN-009/010). Returns a
-    benign message (not an error) when there's no client or no ontology yet, so
-    the run never fails just because the Oráculo hasn't been seeded.
-    """
-    if not client_id:
-        return "(nenhum cliente associado a este workflow)"
+def _get_tool_registry() -> dict:
+    """Return the workflow tool registry (triggers auto-registration on first call)."""
     try:
-        from core.db import _get_sessionmaker
-        from onboarding.service import get_ontology_text
-    except ImportError:  # test import root (repo root on sys.path)
-        from api.core.db import _get_sessionmaker
-        from api.onboarding.service import get_ontology_text
-    session = _get_sessionmaker()()
-    try:
-        text = get_ontology_text(session, client_id)
-    finally:
-        session.close()
-    return text or "(ontologia ainda não disponível para este cliente)"
+        from workflows.tools import get_registry
+    except ImportError:
+        from api.workflows.tools import get_registry
+    return get_registry()
 
 
-def _lookup_agent_instructions(agent_id: str | None) -> str | None:
-    """Load an Agent's `instructions` (aba Agentes) for an `llm` step's `agent_id`.
+def _lookup_agent_context(agent_id: str | None) -> str | None:
+    """Load agent instructions + assigned skill descriptions for an llm step.
 
-    Opens its own short-lived session, mirroring `_lookup_workflow_definition`.
-    Returns None if no agent_id is set or the agent no longer exists — a stale
-    reference silently degrades to "no agent context" instead of failing the run.
+    Returns a combined system-prompt string: the agent's own instructions
+    followed by a block listing each assigned skill's name and description,
+    so the LLM can reason about which tools to invoke based on its expertise.
+    Returns None when agent_id is absent or the agent no longer exists.
     """
     if not agent_id:
         return None
     try:
         from agents import repository as agents_repository
         from core.db import get_sync_session
-    except ImportError:  # test import root (repo root on sys.path)
+        from models.skill import Skill
+    except ImportError:
         from api.agents import repository as agents_repository
         from api.core.db import get_sync_session
+        from api.models.skill import Skill
+
     session = get_sync_session()
     try:
         agent = agents_repository.get_agent(session, agent_id)
+        if not agent:
+            return None
+
+        parts: list[str] = []
+        if agent.get("instructions"):
+            parts.append(agent["instructions"])
+
+        slugs: list[str] = agent.get("assigned_skills") or []
+        if slugs:
+            skills = (
+                session.query(Skill)
+                .filter(Skill.slug.in_(slugs), Skill.status == "active")
+                .all()
+            )
+            for s in skills:
+                if s.system_prompt and s.system_prompt.strip():
+                    parts.append(
+                        f"## Skill: {s.name}\n{s.system_prompt.strip()}"
+                    )
     finally:
         session.close()
-    return agent["instructions"] if agent else None
+
+    return "\n\n".join(parts) if parts else None
+
+
+# Keep old name as alias so tests that import it directly still work.
+_lookup_agent_instructions = _lookup_agent_context
+
+
 
 
 def _lookup_workflow_definition(workflow_id: str) -> dict | None:
@@ -200,35 +212,113 @@ def _lookup_workflow_definition(workflow_id: str) -> dict | None:
         session.close()
 
 
-def _load_tool_registry() -> None:
-    """Lazy-load tools from chat/tools/ into the registry."""
-    global TOOL_REGISTRY
-    if TOOL_REGISTRY:
-        return
-    # The tool objects are the @tool-decorated functions; their module-level
-    # names match the function names (generate_text / generate_image /
-    # web_search), NOT the *_tool aliases this used to import (which silently
-    # ImportError'd, leaving the registry empty and every tool step failing).
-    try:
-        from chat.tools.text_tools import generate_text
+async def _run_react_llm_step(
+    step: dict,
+    embedded_tool_steps: list[dict],
+    effective_outputs: dict,
+    client_id: str | None,
+    agent_instructions: str | None,
+    resolve_template: Any,
+    default_model: str,
+    extra_outputs: dict | None = None,
+) -> str:
+    """ReAct tool-use loop: LLM decides which tools to invoke.
 
-        TOOL_REGISTRY["generate_text"] = generate_text
-        TOOL_REGISTRY["text_generation"] = generate_text
-    except ImportError:
-        pass
-    try:
-        from chat.tools.image_tools import generate_image
+    Builds LangChain tools from connected tool steps, using each step's
+    `introduction` field as the tool description so the LLM can reason about
+    when to use each one. State-bound tools (consultar_ontologia/consultar_cliente)
+    are wrapped with client_id in a closure so the LLM can choose to call them
+    without needing to pass any arguments. Runs until the LLM returns a plain text
+    response (no tool_calls) or MAX_ITER is reached.
+    """
+    registry = _get_tool_registry()
 
-        TOOL_REGISTRY["generate_image"] = generate_image
-    except ImportError:
-        pass
-    try:
-        from chat.tools.search_tools import web_search
+    # Build LangChain tools from connected tool steps.
+    # Each tool's `introduction` field overrides its default description so the
+    # LLM can reason about when to invoke it based on the user's wording.
+    lc_tools: list[Any] = []
+    for ts in embedded_tool_steps:
+        tname = ts.get("tool_name", "")
+        intro = (ts.get("introduction") or "").strip()
+        wf_tool = registry.get(tname)
+        if wf_tool is None:
+            continue
+        lc_tools.append(
+            wf_tool.as_lc_tool(
+                description=intro or None,
+                client_id=client_id,
+                extra_outputs=extra_outputs,
+                step_id=ts["id"],
+            )
+        )
 
-        TOOL_REGISTRY["search_knowledge"] = web_search
-        TOOL_REGISTRY["web_search"] = web_search
-    except ImportError:
-        pass
+    def _extract_text(content: Any) -> str:
+        """Extract plain text from an LLM response content field.
+
+        Handles both string responses (Gemini/OpenAI) and list-of-blocks
+        responses (Claude/Anthropic), where each block is a dict with
+        {"type": "text", "text": "..."}.
+        """
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            return " ".join(
+                block.get("text", "") if isinstance(block, dict) else str(block)
+                for block in content
+                if not isinstance(block, dict) or block.get("type") == "text"
+            ).strip()
+        return str(content) if content else ""
+
+    prompt = step.get("prompt", "")
+    resolved = resolve_template(prompt, effective_outputs)
+
+    llm = _get_llm(step.get("model") or default_model)
+
+    if not lc_tools:
+        # No bindable tools — plain completion with agent context.
+        msgs: list[Any] = []
+        if agent_instructions:
+            msgs.append(SystemMessage(content=agent_instructions))
+        msgs.append(HumanMessage(content=resolved))
+        resp = await llm.ainvoke(msgs)
+        return _extract_text(resp.content)
+
+    llm_with_tools = llm.bind_tools(lc_tools)
+
+    msgs = []
+    if agent_instructions:
+        msgs.append(SystemMessage(content=agent_instructions))
+    msgs.append(HumanMessage(content=resolved))
+
+    MAX_ITER = 5
+    for _ in range(MAX_ITER):
+        resp = await llm_with_tools.ainvoke(msgs)
+        msgs.append(resp)
+
+        if not getattr(resp, "tool_calls", None):
+            return _extract_text(resp.content)
+
+        for tc in resp.tool_calls:
+            matched = next((t for t in lc_tools if t.name == tc["name"]), None)
+            if matched:
+                try:
+                    tool_output = str(await matched.ainvoke(tc["args"]))
+                except Exception as exc:  # noqa: BLE001
+                    tool_output = f"Erro ao executar {tc['name']}: {exc}"
+            else:
+                tool_output = f"Ferramenta '{tc['name']}' não encontrada."
+            msgs.append(ToolMessage(content=tool_output, tool_call_id=tc["id"]))
+            if extra_outputs is not None:
+                for ts in embedded_tool_steps:
+                    if ts.get("tool_name") == tc["name"] and ts["id"] not in extra_outputs:
+                        extra_outputs[ts["id"]] = {"output": tool_output}
+
+    # Fallback: return the last text content found in the message chain.
+    for m in reversed(msgs):
+        text = _extract_text(getattr(m, "content", None))
+        if text:
+            return text
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -301,7 +391,7 @@ class WorkflowCompiler:
     """Compiles a workflow definition dict into a LangGraph CompiledStateGraph."""
 
     def __init__(self) -> None:
-        _load_tool_registry()
+        pass
 
     def compile(
         self,
@@ -429,7 +519,7 @@ class WorkflowCompiler:
             if (
                 tgt is not None
                 and tgt["type"] == "llm"
-                and edge["target_handle"] in ("tool_0", "tool_1", "tool_2")
+                and edge["target_handle"] == "tool_0"
             ):
                 connected_inputs[edge["target_step_id"]].append(edge["source_step_id"])
         for sources in connected_inputs.values():
@@ -714,56 +804,68 @@ class WorkflowCompiler:
 
             if step_type == "tool":
                 tool_name = step.get("tool_name", "")
-                if tool_name == "consultar_ontologia":
-                    # Client-scoped: reads client_id from run state, not config.
-                    result = _lookup_client_ontology(state.get("client_id"))
+                wf_tool = _get_tool_registry().get(tool_name)
+                if wf_tool is None:
+                    result = {"error": f"Tool '{tool_name}' not found in registry"}
+                elif wf_tool.state_bound:
+                    result = wf_tool.func(state.get("client_id"))
                 else:
-                    tool = TOOL_REGISTRY.get(tool_name)
-                    if tool:
-                        result = await tool.ainvoke(resolved_config)
-                    else:
-                        result = {"error": f"Tool '{tool_name}' not found in registry"}
+                    result = await wf_tool.ainvoke(resolved_config)
 
             elif step_type == "llm":
-                # Execute embedded tool steps inline first (option-2 semantics:
-                # tools only run when this LLM node is actually triggered).
-                # effective_outputs grows as each tool finishes so later tools
-                # can reference earlier ones via {{steps.X.output}} templates.
                 effective_outputs = dict(state.get("steps_output", {}))
-                if embedded_tool_steps:
-                    for tool_step in embedded_tool_steps:
-                        tsid = tool_step["id"]
-                        tname = tool_step.get("tool_name", "")
-                        tconfig = self._resolve_templates(
-                            tool_step.get("config", {}), effective_outputs
-                        )
-                        if tname == "consultar_ontologia":
-                            tresult = _lookup_client_ontology(state.get("client_id"))
-                        else:
-                            tool = TOOL_REGISTRY.get(tname)
-                            tresult = (
-                                await tool.ainvoke(tconfig)
-                                if tool
-                                else {"error": f"Tool '{tname}' not found in registry"}
-                            )
-                        if not isinstance(tresult, (dict, list)):
-                            tresult = {"output": tresult}
-                        extra_outputs[tsid] = tresult
-                        effective_outputs[tsid] = tresult
-                prompt = step.get("prompt", "")
-                resolved_prompt = self._resolve_template_string(prompt, effective_outputs)
-                if connected_inputs and "{{previous}}" not in prompt and "{{steps." not in prompt:
-                    context = {sid: effective_outputs.get(sid) for sid in connected_inputs}
-                    resolved_prompt = (
-                        f"Dados recebidos:\n{json.dumps(context, ensure_ascii=False, indent=2)}"
-                        f"\n\n{resolved_prompt}"
+                agent_id = step.get("agent_id")
+                agent_instructions = _lookup_agent_instructions(agent_id)
+
+                if agent_id and embedded_tool_steps:
+                    # ReAct mode: LLM decides which tools to call based on
+                    # their `introduction` descriptions. State-bound tools are
+                    # real LangChain tools with client_id captured in a closure
+                    # — the LLM chooses if/when to invoke them.
+                    result = await _run_react_llm_step(
+                        step=step,
+                        embedded_tool_steps=embedded_tool_steps,
+                        effective_outputs=effective_outputs,
+                        client_id=state.get("client_id"),
+                        agent_instructions=agent_instructions,
+                        resolve_template=self._resolve_template_string,
+                        default_model=default_model,
+                        extra_outputs=extra_outputs,
                     )
-                agent_instructions = _lookup_agent_instructions(step.get("agent_id"))
-                if agent_instructions:
-                    resolved_prompt = f"{agent_instructions}\n\n{resolved_prompt}"
-                llm = _get_llm(step.get("model") or default_model)
-                response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
-                result = response.content
+                else:
+                    # Deterministic mode: run all tools first, then call LLM.
+                    if embedded_tool_steps:
+                        registry = _get_tool_registry()
+                        for tool_step in embedded_tool_steps:
+                            tsid = tool_step["id"]
+                            tname = tool_step.get("tool_name", "")
+                            tconfig = self._resolve_templates(
+                                tool_step.get("config", {}), effective_outputs
+                            )
+                            wf_tool = registry.get(tname)
+                            if wf_tool is None:
+                                tresult = {"error": f"Tool '{tname}' not found in registry"}
+                            elif wf_tool.state_bound:
+                                tresult = wf_tool.func(state.get("client_id"))
+                            else:
+                                tresult = await wf_tool.ainvoke(tconfig)
+                            if not isinstance(tresult, (dict, list)):
+                                tresult = {"output": tresult}
+                            extra_outputs[tsid] = tresult
+                            effective_outputs[tsid] = tresult
+                    prompt = step.get("prompt", "")
+                    resolved_prompt = self._resolve_template_string(prompt, effective_outputs)
+                    if connected_inputs and "{{previous}}" not in prompt and "{{steps." not in prompt:
+                        context = {sid: effective_outputs.get(sid) for sid in connected_inputs}
+                        resolved_prompt = (
+                            f"Dados recebidos:\n{json.dumps(context, ensure_ascii=False, indent=2)}"
+                            f"\n\n{resolved_prompt}"
+                        )
+                    if agent_instructions:
+                        resolved_prompt = f"{agent_instructions}\n\n{resolved_prompt}"
+                    llm = _get_llm(step.get("model") or default_model)
+                    response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
+                    result = response.content
 
             elif step_type == "hitl":
                 last_output = state.get("steps_output", {})
@@ -825,9 +927,9 @@ class WorkflowCompiler:
 
             elif step_type == "action":
                 tool_name = step.get("tool_name", "")
-                tool = TOOL_REGISTRY.get(tool_name)
-                if tool:
-                    result = await tool.ainvoke(resolved_config)
+                wf_tool = _get_tool_registry().get(tool_name)
+                if wf_tool and not wf_tool.state_bound:
+                    result = await wf_tool.ainvoke(resolved_config)
                 else:
                     result = {
                         "action": tool_name,

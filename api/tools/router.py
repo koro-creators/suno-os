@@ -64,6 +64,13 @@ TOOL_CATALOG: list[ToolDescriptor] = [
         default_config={},
     ),
     ToolDescriptor(
+        tool_name="consultar_cliente",
+        label="Perfil do cliente",
+        category="criacao",
+        description="Retorna nome, slug, descrição, cor, sponsor e status do cliente selecionado.",
+        default_config={},
+    ),
+    ToolDescriptor(
         tool_name="query_data",
         label="Consultar métricas",
         category="midia",
