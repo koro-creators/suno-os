@@ -158,6 +158,29 @@ def _lookup_client_ontology(client_id: str | None) -> str:
     return text or "(ontologia ainda não disponível para este cliente)"
 
 
+def _lookup_agent_instructions(agent_id: str | None) -> str | None:
+    """Load an Agent's `instructions` (aba Agentes) for an `llm` step's `agent_id`.
+
+    Opens its own short-lived session, mirroring `_lookup_workflow_definition`.
+    Returns None if no agent_id is set or the agent no longer exists — a stale
+    reference silently degrades to "no agent context" instead of failing the run.
+    """
+    if not agent_id:
+        return None
+    try:
+        from agents import repository as agents_repository
+        from core.db import get_sync_session
+    except ImportError:  # test import root (repo root on sys.path)
+        from api.agents import repository as agents_repository
+        from api.core.db import get_sync_session
+    session = get_sync_session()
+    try:
+        agent = agents_repository.get_agent(session, agent_id)
+    finally:
+        session.close()
+    return agent["instructions"] if agent else None
+
+
 def _lookup_workflow_definition(workflow_id: str) -> dict | None:
     """Fetch a persisted workflow (for `workflow`/sub-workflow steps).
 
@@ -396,24 +419,45 @@ class WorkflowCompiler:
         for sources in merge_inputs.values():
             sources.sort()
 
-        # For any step fed via the default `in` handle (everything except
-        # `condition`, which uses in_a/in_b): collect connected source step
-        # ids so a node can auto-receive upstream output without requiring
-        # an explicit {{...}} placeholder (used by `llm` below).
+        # For `llm` steps: collect tool data connections (tool_0/1/2 handles).
+        # Tool steps connected here are "embedded" — they are NOT independent
+        # graph nodes; instead they execute inside the LLM node when it runs
+        # (option-2 semantics: tool fires only when its LLM is triggered).
         connected_inputs: dict[str, list[str]] = defaultdict(list)
         for edge in edges:
-            if edge["target_handle"] == "in":
+            tgt = steps_by_id.get(edge["target_step_id"])
+            if (
+                tgt is not None
+                and tgt["type"] == "llm"
+                and edge["target_handle"] in ("tool_0", "tool_1", "tool_2")
+            ):
                 connected_inputs[edge["target_step_id"]].append(edge["source_step_id"])
         for sources in connected_inputs.values():
             sources.sort()
 
+        # Build the embedded-tool index and the exclusion set.
+        embedded_tool_steps: dict[str, list[dict]] = {}
+        excluded_from_graph: set[str] = set()
+        for llm_id, tool_ids in connected_inputs.items():
+            tool_dicts = [
+                steps_by_id[tid]
+                for tid in tool_ids
+                if steps_by_id.get(tid, {}).get("type") == "tool"
+            ]
+            if tool_dicts:
+                embedded_tool_steps[llm_id] = tool_dicts
+                excluded_from_graph.update(s["id"] for s in tool_dicts)
+
         for step in steps:
+            if step["id"] in excluded_from_graph:
+                continue
             base_fn = self._make_step_node(
                 step,
                 definition.get("default_model", "gemini-flash"),
                 input_sources=condition_inputs.get(step["id"]),
                 merge_inputs=merge_inputs.get(step["id"]),
                 connected_inputs=connected_inputs.get(step["id"]),
+                embedded_tool_steps=embedded_tool_steps.get(step["id"]),
             )
             if step["type"] == "merge" and step.get("merge_policy") == "any":
                 node_fn = self._make_merge_any_node(step, base_fn)
@@ -424,17 +468,26 @@ class WorkflowCompiler:
             graph.add_node(step["id"], node_fn)
 
         # Group edges by source for handle-aware routing.
+        # Edges from embedded tool steps are now internal to the LLM node —
+        # exclude them from the graph-level wiring.
         edges_by_source: dict[str, list[dict]] = {}
         for edge in edges:
+            if edge["source_step_id"] in excluded_from_graph:
+                continue
             edges_by_source.setdefault(edge["source_step_id"], []).append(edge)
         # Stable order — guarantees deterministic StateGraph construction so
         # the v1↔v2 byte-equivalence test (CA-26) is reliable.
         for src in edges_by_source:
             edges_by_source[src].sort(key=lambda e: (e["source_handle"], e["target_step_id"]))
 
-        in_degree: dict[str, int] = {sid: 0 for sid in steps_by_id}
+        in_degree: dict[str, int] = {
+            sid: 0 for sid in steps_by_id if sid not in excluded_from_graph
+        }
         for edge in edges:
-            in_degree[edge["target_step_id"]] = in_degree.get(edge["target_step_id"], 0) + 1
+            src, tgt = edge["source_step_id"], edge["target_step_id"]
+            if src in excluded_from_graph or tgt in excluded_from_graph:
+                continue
+            in_degree[tgt] = in_degree.get(tgt, 0) + 1
 
         # START → entry nodes (every step with in_degree 0). Spec-005 has at
         # least one entry (validator catches `no_entry_node`); we sort for
@@ -456,6 +509,8 @@ class WorkflowCompiler:
 
         # Any node with no outbound edge — and no error handle — points to END.
         for step in steps:
+            if step["id"] in excluded_from_graph:
+                continue
             if step["id"] in edges_by_source:
                 continue
             if step.get("_error_target"):
@@ -647,6 +702,7 @@ class WorkflowCompiler:
         input_sources: dict[str, str] | None = None,
         merge_inputs: list[str] | None = None,
         connected_inputs: list[str] | None = None,
+        embedded_tool_steps: list[dict] | None = None,
     ) -> Callable:
         step_type = step["type"]
         step_id = step["id"]
@@ -654,6 +710,7 @@ class WorkflowCompiler:
 
         async def node_fn(state: WorkflowState) -> dict:
             resolved_config = self._resolve_templates(step_config, state.get("steps_output", {}))
+            extra_outputs: dict = {}
 
             if step_type == "tool":
                 tool_name = step.get("tool_name", "")
@@ -668,21 +725,42 @@ class WorkflowCompiler:
                         result = {"error": f"Tool '{tool_name}' not found in registry"}
 
             elif step_type == "llm":
+                # Execute embedded tool steps inline first (option-2 semantics:
+                # tools only run when this LLM node is actually triggered).
+                # effective_outputs grows as each tool finishes so later tools
+                # can reference earlier ones via {{steps.X.output}} templates.
+                effective_outputs = dict(state.get("steps_output", {}))
+                if embedded_tool_steps:
+                    for tool_step in embedded_tool_steps:
+                        tsid = tool_step["id"]
+                        tname = tool_step.get("tool_name", "")
+                        tconfig = self._resolve_templates(
+                            tool_step.get("config", {}), effective_outputs
+                        )
+                        if tname == "consultar_ontologia":
+                            tresult = _lookup_client_ontology(state.get("client_id"))
+                        else:
+                            tool = TOOL_REGISTRY.get(tname)
+                            tresult = (
+                                await tool.ainvoke(tconfig)
+                                if tool
+                                else {"error": f"Tool '{tname}' not found in registry"}
+                            )
+                        if not isinstance(tresult, (dict, list)):
+                            tresult = {"output": tresult}
+                        extra_outputs[tsid] = tresult
+                        effective_outputs[tsid] = tresult
                 prompt = step.get("prompt", "")
-                resolved_prompt = self._resolve_template_string(
-                    prompt, state.get("steps_output", {})
-                )
-                # Sem placeholder explicito ({{previous}}/{{steps...}}),
-                # anexa o output dos steps conectados na entrada como
-                # contexto — para o LLM receber os dados de qualquer node
-                # conectado sem exigir template manual.
+                resolved_prompt = self._resolve_template_string(prompt, effective_outputs)
                 if connected_inputs and "{{previous}}" not in prompt and "{{steps." not in prompt:
-                    outputs = state.get("steps_output", {})
-                    context = {sid: outputs.get(sid) for sid in connected_inputs}
+                    context = {sid: effective_outputs.get(sid) for sid in connected_inputs}
                     resolved_prompt = (
                         f"Dados recebidos:\n{json.dumps(context, ensure_ascii=False, indent=2)}"
                         f"\n\n{resolved_prompt}"
                     )
+                agent_instructions = _lookup_agent_instructions(step.get("agent_id"))
+                if agent_instructions:
+                    resolved_prompt = f"{agent_instructions}\n\n{resolved_prompt}"
                 llm = _get_llm(step.get("model") or default_model)
                 response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
                 result = response.content
@@ -825,7 +903,7 @@ class WorkflowCompiler:
             if not isinstance(result, (dict, list)):
                 result = {"output": result}
 
-            new_outputs = {**state.get("steps_output", {}), step_id: result}
+            new_outputs = {**state.get("steps_output", {}), **extra_outputs, step_id: result}
             return {"current_step": step_id, "steps_output": new_outputs}
 
         return node_fn

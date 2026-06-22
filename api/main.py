@@ -38,7 +38,9 @@ async def lifespan(app: FastAPI):
     if settings.LANGFUSE_SECRET_KEY:
         logger.info("Langfuse observability active (host: %s)", settings.LANGFUSE_HOST)
     else:
-        logger.info("Langfuse not configured — tracing disabled (set LANGFUSE_SECRET_KEY to enable)")
+        logger.info(
+            "Langfuse not configured — tracing disabled (set LANGFUSE_SECRET_KEY to enable)"
+        )
 
     # Start preview-runs cleanup loop (TASK-C12 — deletes TTL-expired runs every 30min)
     import asyncio

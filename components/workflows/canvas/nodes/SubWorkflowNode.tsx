@@ -1,5 +1,5 @@
 /**
- * SubWorkflowNode — chamada a outro workflow (SPEC-005 TASK-C05). Pink accent.
+ * SubWorkflowNode — chamada a outro workflow (SPEC-005 TASK-C05). Pink swatch.
  */
 'use client';
 
@@ -20,7 +20,6 @@ const BORDER = '#EC4899';
 
 export default function SubWorkflowNode({ data, selected }: NodeProps) {
   const d = data as SubWorkflowNodeData;
-  const preview = d.workflow_id ? `→ ${d.workflow_id.slice(0, 18)}…` : 'sub-workflow não selecionado';
   const sources: HandleSpec[] = [
     { id: 'out', color: '#22C55E', label: 'sucesso' },
   ];
@@ -30,13 +29,31 @@ export default function SubWorkflowNode({ data, selected }: NodeProps) {
   return (
     <NodeShell
       title={d.name}
-      preview={preview}
+      typeLabel="Sub-workflow"
       Icon={Flow}
       borderColor={BORDER}
-      accentColor="rgba(236,72,153,0.15)"
       sourceHandles={sources}
       selected={selected}
       executionStatus={d._executionStatus}
-    />
+      shape="square"
+    >
+      {/* Nested indicator */}
+      <div
+        style={{
+          margin: '2px 8px 8px',
+          padding: '2px 6px',
+          border: '1px dashed rgba(236,72,153,0.30)',
+          borderRadius: 5,
+          fontSize: 8.5,
+          color: 'var(--text-muted)',
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {d.workflow_id ? '⊃ aninhado' : 'selecionar…'}
+      </div>
+    </NodeShell>
   );
 }

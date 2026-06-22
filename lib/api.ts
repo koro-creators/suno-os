@@ -7,6 +7,13 @@
 
 import type { SkillAdmin } from './admin-types';
 import type { ClientAdmin } from './client-types';
+import type {
+  ApprovalSubmission,
+  ApprovalEvent,
+  ApprovalFilters,
+  ApprovalSubmitPayload,
+  ApprovalDecisionPayload,
+} from '@/lib/approval-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -289,6 +296,9 @@ export async function setWorkflowEdges(
   return workflowFetch<WorkflowEdge[]>(`/api/workflows/${workflowId}/edges`, {
     method: 'POST',
     body: JSON.stringify({ edges }),
+    // keepalive lets the browser complete this request even if the page
+    // is unloaded (user presses F5 or navigates away mid-save).
+    keepalive: true,
   });
 }
 
@@ -455,6 +465,7 @@ export async function updateWorkflow(
     await workflowFetch<ApiWorkflowDetail>(`/api/workflows/${workflowId}`, {
       method: 'PUT',
       body: JSON.stringify(body),
+      keepalive: true,
     }),
   );
 }
@@ -647,14 +658,6 @@ export async function validateDriveFolder(
 // ---------------------------------------------------------------------------
 // SPEC-004 — Approval Hierarchy API (Phase 20)
 // ---------------------------------------------------------------------------
-
-import type {
-  ApprovalSubmission,
-  ApprovalEvent,
-  ApprovalFilters,
-  ApprovalSubmitPayload,
-  ApprovalDecisionPayload,
-} from '@/lib/approval-types';
 
 async function approvalFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = getApiUrl(path);

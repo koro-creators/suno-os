@@ -8,8 +8,17 @@
  * auto-save hook.
  *
  * Field policy:
- *   tool / action  — `tool_name` (select), `config` (textarea JSON).
- *   llm            — `model` (select, default gemini-flash), `prompt` (textarea), `config`.
+ *   tool           — `tool_name` (select, options from GET /api/tools),
+ *                     `config` (textarea JSON).
+ *   action         — `config` (textarea JSON) only; no `tool_name` select.
+ *   tool generate_text — exposes `prompt`, `content_type`, `tone`, `length`,
+ *                         `model`, `max_tokens` as dedicated fields (write into
+ *                         `config`); no raw JSON textarea for this tool.
+ *   tool consultar_ontologia — no config; shows an explanatory note instead.
+ *   llm            — `agent_id` (select, optional, options = active agents from
+ *                     AgentsContext/aba Agentes; when set, the agent's `instructions`
+ *                     are prepended as system context — see compiler.py), `model`
+ *                     (select, default gemini-flash), `prompt` (textarea), `config`.
  *   condition      — `field`, `operator`, `value`. Targets are visual edges.
  *   hitl           — `review_instructions` in `config`.
  *   workflow       — `workflow_id` (select of other workflows), `input_mapping`.
@@ -24,7 +33,9 @@
 import { useEffect, useState } from 'react';
 import { Close } from '@carbon/icons-react';
 import type { Node } from '@xyflow/react';
+import { useAgents } from '@/contexts/AgentsContext';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
+import { listAvailableTools, type ToolDescriptor } from '@/lib/api';
 import type { WorkflowLLMModel } from '@/lib/workflow-types';
 
 const LLM_MODEL_OPTIONS: { value: WorkflowLLMModel; label: string }[] = [
@@ -32,6 +43,28 @@ const LLM_MODEL_OPTIONS: { value: WorkflowLLMModel; label: string }[] = [
   { value: 'gemini-pro', label: 'Gemini Pro' },
   { value: 'gpt-4o', label: 'GPT-4o' },
   { value: 'claude', label: 'Claude' },
+];
+
+const CONTENT_TYPE_OPTIONS = [
+  { value: 'social_post', label: 'Post social' },
+  { value: 'article', label: 'Artigo' },
+  { value: 'caption', label: 'Legenda' },
+  { value: 'email', label: 'Email' },
+  { value: 'script', label: 'Roteiro' },
+];
+
+const TONE_OPTIONS = [
+  { value: 'formal', label: 'Formal' },
+  { value: 'casual', label: 'Casual' },
+  { value: 'professional', label: 'Profissional' },
+  { value: 'creative', label: 'Criativo' },
+  { value: 'friendly', label: 'Amigável' },
+];
+
+const LENGTH_OPTIONS = [
+  { value: 'short', label: 'Curto (~100 palavras)' },
+  { value: 'medium', label: 'Médio (~300 palavras)' },
+  { value: 'long', label: 'Longo (~600 palavras)' },
 ];
 
 interface DrawerProps {
@@ -62,6 +95,7 @@ const LABEL: React.CSSProperties = {
 
 export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkflowId }: DrawerProps) {
   const { workflows } = useWorkflows();
+  const { agents } = useAgents();
   const [name, setName] = useState('');
   const [toolName, setToolName] = useState('');
   const [prompt, setPrompt] = useState('');
@@ -71,8 +105,24 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
   const [conditionOperator, setConditionOperator] = useState('eq');
   const [conditionValue, setConditionValue] = useState('');
   const [workflowRef, setWorkflowRef] = useState('');
-  const [inputMappingJson, setInputMappingJson] = useState('');
+  const [reviewInstructions, setReviewInstructions] = useState('');
   const [mergePolicy, setMergePolicy] = useState<'all' | 'any'>('all');
+  const [tools, setTools] = useState<ToolDescriptor[]>([]);
+  const [agentId, setAgentId] = useState('');
+
+  // Tool catalog for the `tool` step's "Tool" select (TASK-C08b).
+  useEffect(() => {
+    let cancelled = false;
+    listAvailableTools().then((list) => {
+      if (!cancelled) setTools(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Agentes ativos (mesma fonte da aba /agentes — AgentsContext).
+  const activeAgents = agents.filter((a) => a.status === 'active');
 
   // Sync drawer state when the selected node changes.
   useEffect(() => {
@@ -82,14 +132,15 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
     setToolName((data.tool_name as string) ?? '');
     setPrompt((data.prompt as string) ?? '');
     setModel((data.model as WorkflowLLMModel) ?? 'gemini-flash');
+    setAgentId((data.agent_id as string) ?? '');
     setConfigJson(JSON.stringify(data.config ?? {}, null, 2));
     const cond = (data.condition as Record<string, unknown> | undefined) ?? {};
     setConditionField((cond.field as string) ?? '');
     setConditionOperator((cond.operator as string) ?? 'eq');
     setConditionValue(cond.value !== undefined ? String(cond.value) : '');
     setWorkflowRef((data.workflow_id as string) ?? '');
-    setInputMappingJson(
-      data.input_mapping ? JSON.stringify(data.input_mapping, null, 2) : '',
+    setReviewInstructions(
+      ((data.config as Record<string, unknown> | undefined)?.review_instructions as string) ?? '',
     );
     setMergePolicy((data.merge_policy as 'all' | 'any') ?? 'all');
   }, [node]);
@@ -111,6 +162,18 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
 
   const otherWorkflows = workflows.filter((w) => w.id !== currentWorkflowId);
 
+  const stepTypeLabel = stepType === 'llm' ? 'AGENTE' : stepType.toUpperCase();
+
+  const isGenerateText = stepType === 'tool' && toolName === 'generate_text';
+  const isOntologia = stepType === 'tool' && toolName === 'consultar_ontologia';
+  const toolConfig = parseJsonOrFallback(configJson, {}) as Record<string, unknown>;
+
+  const updateToolConfig = (updates: Record<string, unknown>) => {
+    const newConfig = { ...toolConfig, ...updates };
+    setConfigJson(JSON.stringify(newConfig, null, 2));
+    emit({ config: newConfig });
+  };
+
   return (
     <aside
       aria-label="Configuração do node"
@@ -128,7 +191,7 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}
       >
         <h2 style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
-          {stepType.toUpperCase()} · {name || node.id}
+          {stepTypeLabel} · {name || node.id}
         </h2>
         <button
           aria-label="Fechar"
@@ -156,23 +219,123 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
         />
       </div>
 
-      {(stepType === 'tool' || stepType === 'action') && (
+      {stepType === 'tool' && (
         <div style={{ marginBottom: 12 }}>
           <label style={LABEL}>Tool</label>
-          <input
-            style={TEXT_INPUT}
-            value={toolName}
-            placeholder="ex: search_knowledge"
-            onChange={(e) => {
-              setToolName(e.target.value);
-              emit({ tool_name: e.target.value });
-            }}
-          />
+          <div style={{ ...TEXT_INPUT, color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+            {tools.find((t) => t.tool_name === toolName)?.label ?? toolName ?? '—'}
+          </div>
         </div>
+      )}
+
+      {isOntologia && (
+        <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
+          Sem configuração. Este step carrega automaticamente a ontologia do
+          cliente atual (posicionamento, persona, tom de voz, etc.) e disponibiliza
+          o resultado para os steps conectados depois dele.
+        </p>
+      )}
+
+      {isGenerateText && (
+        <>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Prompt</label>
+            <textarea
+              style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
+              value={(toolConfig.prompt as string) ?? ''}
+              placeholder="Instrução do que gerar"
+              onChange={(e) => updateToolConfig({ prompt: e.target.value })}
+            />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Tipo de conteúdo</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.content_type as string) ?? 'social_post'}
+              onChange={(e) => updateToolConfig({ content_type: e.target.value })}
+            >
+              {CONTENT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Tom</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.tone as string) ?? 'creative'}
+              onChange={(e) => updateToolConfig({ tone: e.target.value })}
+            >
+              {TONE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Tamanho</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.length as string) ?? 'medium'}
+              onChange={(e) => updateToolConfig({ length: e.target.value })}
+            >
+              {LENGTH_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Modelo</label>
+            <select
+              style={TEXT_INPUT}
+              value={(toolConfig.model as string) ?? 'gemini-flash'}
+              onChange={(e) => updateToolConfig({ model: e.target.value })}
+            >
+              {LLM_MODEL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Max tokens</label>
+            <input
+              type="number"
+              min={1}
+              style={TEXT_INPUT}
+              value={(toolConfig.max_tokens as number) ?? 1024}
+              onChange={(e) => updateToolConfig({ max_tokens: Number(e.target.value) })}
+            />
+          </div>
+        </>
       )}
 
       {stepType === 'llm' && (
         <>
+          <div style={{ marginBottom: 12 }}>
+            <label style={LABEL}>Agente</label>
+            <select
+              style={TEXT_INPUT}
+              value={agentId}
+              onChange={(e) => {
+                setAgentId(e.target.value);
+                emit({ agent_id: e.target.value || undefined });
+              }}
+            >
+              <option value="">— nenhum (prompt manual) —</option>
+              {activeAgents.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.icon} {a.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Modelo</label>
             <select
@@ -208,83 +371,50 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
       {stepType === 'condition' && (
         <>
           <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
-            Compara o resultado do step anterior com o valor abaixo. Se for{' '}
-            <code>true</code>, segue pelo handle <code>then</code>; senão, pelo <code>else</code>.
-            Este node tem 2 entradas opcionais à esquerda: <code>campo</code> alimenta o
-            lado esquerdo da comparação e <code>valor</code> o lado direito — conecte um
-            step a elas para usar o <code>output</code> dele em vez do step anterior.
+            Compara um valor com o resultado do step anterior. Se for{' '}
+            <code>true</code>, segue por <code>then</code>; senão por <code>else</code>.
           </p>
           <div style={{ marginBottom: 12 }}>
-            <label style={LABEL}>Operador</label>
+            <label style={LABEL}>Operador de comparação</label>
             <select
               style={TEXT_INPUT}
               value={conditionOperator}
               onChange={(e) => {
                 setConditionOperator(e.target.value);
-                emit({
-                  condition: {
-                    field: conditionField,
-                    operator: e.target.value,
-                    value: conditionValue,
-                  },
-                });
+                emit({ condition: { field: conditionField, operator: e.target.value, value: conditionValue } });
               }}
             >
-              <option value="eq">==</option>
-              <option value="neq">≠</option>
-              <option value="gt">&gt;</option>
-              <option value="lt">&lt;</option>
+              <option value="eq">== igual a</option>
+              <option value="neq">≠ diferente de</option>
+              <option value="gt">&gt; maior que</option>
+              <option value="lt">&lt; menor que</option>
               <option value="contains">contém</option>
             </select>
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={LABEL}>Valor</label>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>
-              Deixe vazio para comparar com o <code>output</code> do step conectado na
-              entrada <code>valor</code> (ou do step anterior, se nada estiver conectado).
-              Se preencher, o texto digitado aqui é usado como o lado direito da comparação.
-            </p>
             <input
               style={TEXT_INPUT}
               value={conditionValue}
-              placeholder="(vazio = output do step anterior)"
+              placeholder="(vazio = output do step conectado)"
               onChange={(e) => {
                 setConditionValue(e.target.value);
-                emit({
-                  condition: {
-                    field: conditionField,
-                    operator: conditionOperator,
-                    value: e.target.value,
-                  },
-                });
+                emit({ condition: { field: conditionField, operator: conditionOperator, value: e.target.value } });
               }}
             />
           </div>
           <details style={{ marginBottom: 12 }}>
             <summary style={{ fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer' }}>
-              Avançado: comparar um valor fixo
+              Avançado: campo fixo (lado esquerdo)
             </summary>
             <div style={{ marginTop: 8 }}>
-              <label style={LABEL}>Campo</label>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>
-                Deixe vazio para comparar o <code>output</code> do step conectado na
-                entrada <code>campo</code> (ou do step anterior, se nada estiver
-                conectado). Se preencher, o texto digitado aqui é usado diretamente como
-                o valor do lado esquerdo da comparação.
-              </p>
               <input
                 style={TEXT_INPUT}
                 value={conditionField}
                 placeholder="(vazio = output do step anterior)"
                 onChange={(e) => {
                   setConditionField(e.target.value);
-                  emit({
-                    condition: {
-                      field: e.target.value,
-                      operator: conditionOperator,
-                      value: conditionValue,
-                    },
-                  });
+                  emit({ condition: { field: e.target.value, operator: conditionOperator, value: conditionValue } });
                 }}
               />
             </div>
@@ -297,86 +427,33 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
           <label style={LABEL}>Instruções de revisão</label>
           <textarea
             style={{ ...TEXT_INPUT, minHeight: 80 }}
-            value={(parseJsonOrFallback(configJson, {}) as { review_instructions?: string }).review_instructions ?? ''}
+            value={reviewInstructions}
             onChange={(e) => {
-              const newConfig = { review_instructions: e.target.value };
-              setConfigJson(JSON.stringify(newConfig, null, 2));
-              emit({ config: newConfig });
+              setReviewInstructions(e.target.value);
+              emit({ config: { review_instructions: e.target.value } });
             }}
           />
         </div>
       )}
 
       {stepType === 'workflow' && (
-        <>
-          <div style={{ marginBottom: 12 }}>
-            <label style={LABEL}>Sub-workflow</label>
-            <select
-              style={TEXT_INPUT}
-              value={workflowRef}
-              onChange={(e) => {
-                setWorkflowRef(e.target.value);
-                emit({ workflow_id: e.target.value });
-              }}
-            >
-              <option value="">— selecione —</option>
-              {otherWorkflows.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
+        <div style={{ marginBottom: 12 }}>
+          <label style={LABEL}>Sub-workflow</label>
+          <div style={{ ...TEXT_INPUT, color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+            {otherWorkflows.find((w) => w.id === workflowRef)?.name ?? workflowRef ?? '—'}
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={LABEL}>Input mapping (JSON)</label>
-            <textarea
-              style={{ ...TEXT_INPUT, minHeight: 80, fontFamily: 'monospace' }}
-              value={inputMappingJson}
-              onChange={(e) => {
-                setInputMappingJson(e.target.value);
-                emit({ input_mapping: parseJsonOrFallback(e.target.value, {}) });
-              }}
-            />
-          </div>
-        </>
+        </div>
       )}
 
       {stepType === 'merge' && (
         <div style={{ marginBottom: 12 }}>
           <label style={LABEL}>Política de merge</label>
-          <select
-            style={TEXT_INPUT}
-            value={mergePolicy}
-            onChange={(e) => {
-              const v = e.target.value as 'all' | 'any';
-              setMergePolicy(v);
-              emit({ merge_policy: v });
-            }}
-          >
-            <option value="all">all (aguarda todos)</option>
-            <option value="any">any (primeiro vence)</option>
-          </select>
+          <div style={{ ...TEXT_INPUT, color: 'var(--text-secondary)', cursor: 'default', userSelect: 'none' }}>
+            {mergePolicy === 'all' ? 'all (aguarda todos)' : 'any (primeiro vence)'}
+          </div>
         </div>
       )}
 
-      {stepType !== 'condition' && stepType !== 'hitl' && stepType !== 'merge' && (
-        <div style={{ marginBottom: 12 }}>
-          <label style={LABEL}>Config (JSON)</label>
-          {(stepType === 'llm' || stepType === 'workflow') && (
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 4px' }}>
-              Não utilizado neste tipo de step.
-            </p>
-          )}
-          <textarea
-            style={{ ...TEXT_INPUT, minHeight: 100, fontFamily: 'monospace' }}
-            value={configJson}
-            onChange={(e) => {
-              setConfigJson(e.target.value);
-              emit({ config: parseJsonOrFallback(e.target.value, {}) });
-            }}
-          />
-        </div>
-      )}
     </aside>
   );
 }

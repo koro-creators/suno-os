@@ -203,7 +203,13 @@ async def get_workflow(
 async def update_workflow(
     workflow_id: str, req: WorkflowUpdate, session: Session = Depends(get_session)
 ) -> WorkflowDetailResponse:
-    """Update an existing workflow (SPEC-005 TASK-B01b: hard validation no PUT)."""
+    """Update an existing workflow.
+
+    Auto-save: never blocked by semantic validation (cycles, isolated nodes,
+    edge references). Steps and edges are saved in separate requests so
+    validation against both would cause false positives due to race conditions.
+    Semantic validation is deferred to POST /validate (explicit user action).
+    """
     wf = _require_workflow(session, workflow_id)
 
     fields: dict = {}
@@ -219,18 +225,6 @@ async def update_workflow(
         if step_errors:
             raise HTTPException(status_code=422, detail=step_errors)
         wf["definition"]["steps"] = step_dicts
-
-        from .validator import hard_validate_for_put
-
-        hard_errors = hard_validate_for_put(wf)
-        if hard_errors:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "error": "validation_failed",
-                    "errors": [e.model_dump() for e in hard_errors],
-                },
-            )
         fields["definition"] = wf["definition"]
     if req.schedule is not None:
         fields["schedule_cron"] = req.schedule.cron

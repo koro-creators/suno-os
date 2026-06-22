@@ -223,6 +223,7 @@ async def get_agent_schedule(agent_id: str, session: Session = Depends(get_sessi
     sch = repository.get_schedule(session, agent_id)
     return _schedule_response(agent_id, sch)
 
+
 # ---------------------------------------------------------------------------
 # Preview — CA-13 (synchronous sandbox execution)
 # ---------------------------------------------------------------------------

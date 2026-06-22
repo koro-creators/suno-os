@@ -16,7 +16,7 @@
  */
 'use client';
 
-import { BaseEdge, getSmoothStepPath, Position, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, getBezierPath, Position, type EdgeProps } from '@xyflow/react';
 
 const HANDLE_COLOR: Record<string, string> = {
   out: '#22C55E',
@@ -60,7 +60,7 @@ export default function CustomEdge(props: EdgeProps) {
   let path: string;
 
   // Loop-back case: the target sits behind the source (to the left, given
-  // source exits right / target enters left). A direct smoothstep here would
+  // source exits right / target enters left). A direct bezier here would
   // cut a diagonal straight across whatever node sits between them. Instead,
   // drop below the whole row and come back — never crosses a node body.
   const isLoopBack =
@@ -82,10 +82,9 @@ export default function CustomEdge(props: EdgeProps) {
       RADIUS,
     );
   } else {
-    [path] = getSmoothStepPath({
+    [path] = getBezierPath({
       sourceX, sourceY, targetX, targetY,
       sourcePosition, targetPosition,
-      borderRadius: RADIUS,
     });
   }
 

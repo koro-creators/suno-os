@@ -18,10 +18,15 @@ from the PUT handler (TASK-B01b). This module enforces only the structural
 invariants that the data layer would enforce in DB:
 
   1. workflow exists (404 caixa-preta otherwise)
-  2. each edge references step IDs that exist in the workflow definition
-  3. tuple uniqueness `(workflow, src, src_handle, tgt, tgt_handle)`
-  4. handle vocabulary (Pydantic Literal already enforces; defensive re-check
-     for direct internal callers that bypass the schema layer)
+  2. tuple uniqueness `(workflow, src, src_handle, tgt, tgt_handle)`
+  3. handle vocabulary when the target step IS known; skips when step is absent
+     (race-condition tolerance: step PUT and edge POST can arrive out of order
+      when the canvas saves immediately on `onConnect`; /validate enforces
+      graph correctness at run-time)
+
+Note: step-ref existence is NOT enforced here. The compiler and validator
+handle dangling edges gracefully, and enforcing it at the edge layer caused
+400 errors under normal canvas usage (step save and edge save racing).
 
 Anything richer (acyclicity, RBAC on tools, fan-in policy) belongs to
 `validator.py` because it is graph-shape concerns, not edge-shape concerns.
@@ -38,10 +43,13 @@ ALLOWED_SOURCE_HANDLES = frozenset(
     {"out", "error", "then", "else", "approved", "rejected", "modified"}
 )
 ALLOWED_TARGET_HANDLES = frozenset({"in"})
-# `condition` aceita 2 entradas nomeadas adicionais: `in_a` (CAMPO) e
-# `in_b` (VALOR) — ver .claude/rules/canvas-conventions.md.
+# Per-type overrides for target handles.
+# `condition` aceita in_a (CAMPO) + in_b (VALOR); `in` como legado v1→v2.
+# `llm` aceita `in` (controle de fluxo) + tool_0/1/2 (saídas de tool nodes).
+# ver .claude/rules/canvas-conventions.md.
 ALLOWED_TARGET_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
     "condition": frozenset({"in", "in_a", "in_b"}),
+    "llm": frozenset({"in", "tool_0", "tool_1", "tool_2"}),
 }
 
 
@@ -58,11 +66,6 @@ class EdgeValidationError(ValueError):
         self.edge_index = edge_index
 
 
-def _step_ids(workflow: dict) -> set[str]:
-    """Collect step IDs declared in the workflow's JSONB definition."""
-    return {step["id"] for step in workflow["definition"].get("steps", [])}
-
-
 def _check_handles(edge: WorkflowEdge, steps_by_id: dict[str, dict], *, idx: int) -> None:
     if edge.source_handle not in ALLOWED_SOURCE_HANDLES:
         raise EdgeValidationError(
@@ -71,27 +74,16 @@ def _check_handles(edge: WorkflowEdge, steps_by_id: dict[str, dict], *, idx: int
             edge_index=idx,
         )
     target_step = steps_by_id.get(edge.target_step_id)
-    allowed_target = (
-        ALLOWED_TARGET_HANDLES_BY_TYPE.get(target_step["type"], ALLOWED_TARGET_HANDLES)
-        if target_step is not None
-        else ALLOWED_TARGET_HANDLES
-    )
+    if target_step is None:
+        # Step not found — may be a race condition where the step PUT and
+        # edge POST arrive in the wrong order. Skip target-handle validation
+        # here; the compiler handles dangling edges gracefully (skips them),
+        # and the /validate endpoint enforces graph correctness at run time.
+        return
+    allowed_target = ALLOWED_TARGET_HANDLES_BY_TYPE.get(target_step["type"], ALLOWED_TARGET_HANDLES)
     if edge.target_handle not in allowed_target:
         raise EdgeValidationError(
             f"edge[{idx}]: target_handle '{edge.target_handle}' not in {sorted(allowed_target)}",
-            edge_index=idx,
-        )
-
-
-def _check_step_refs(edge: WorkflowEdge, step_ids: set[str], *, idx: int) -> None:
-    if edge.source_step_id not in step_ids:
-        raise EdgeValidationError(
-            f"edge[{idx}]: source_step_id '{edge.source_step_id}' not in workflow steps",
-            edge_index=idx,
-        )
-    if edge.target_step_id not in step_ids:
-        raise EdgeValidationError(
-            f"edge[{idx}]: target_step_id '{edge.target_step_id}' not in workflow steps",
             edge_index=idx,
         )
 
@@ -141,10 +133,8 @@ def set_edges(
     if workflow is None:
         raise KeyError(workflow_id)
 
-    step_ids = _step_ids(workflow)
     steps_by_id = {s["id"]: s for s in workflow["definition"].get("steps", [])}
     for idx, edge in enumerate(edges):
-        _check_step_refs(edge, step_ids, idx=idx)
         _check_handles(edge, steps_by_id, idx=idx)
     _check_unique(edges)
 

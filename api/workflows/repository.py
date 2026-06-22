@@ -189,6 +189,7 @@ def update_workflow(session: Session, workflow_id: str, fields: dict) -> dict | 
         "updated_by",
         "default_model",
         "max_execution_time",
+        "client_scope",
     ):
         if key in fields and fields[key] is not None:
             setattr(wf, key, fields[key])
@@ -238,13 +239,19 @@ def delete_workflow(session: Session, workflow_id: str) -> bool:
 
 def replace_edges(session: Session, workflow_id: str, edges: list[dict]) -> None:
     wid = _coerce(workflow_id)
+    # synchronize_session=False: bulk DELETE bypasses the identity map on the
+    # Python side. The old WorkflowEdge objects remain in the map (not dirty,
+    # so SQLAlchemy won't re-emit them on commit) but their PKs must NOT be
+    # reused by the incoming inserts — hence uuid.uuid4() always, never the
+    # edge_id sent by the frontend. This prevents the InvalidRequestError that
+    # fires when session.add() sees a PK already registered in the identity map.
     session.query(WorkflowEdge).filter(WorkflowEdge.workflow_id == wid).delete(
         synchronize_session=False
     )
     for e in edges:
         session.add(
             WorkflowEdge(
-                edge_id=_coerce(e.get("edge_id")) or uuid.uuid4(),
+                edge_id=uuid.uuid4(),  # always fresh — never reuse identity-map PKs
                 workflow_id=wid,
                 source_step_id=e["source_step_id"],
                 source_handle=e["source_handle"],

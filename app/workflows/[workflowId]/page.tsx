@@ -16,6 +16,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { RecentlyViewed } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
+import { useClients } from '@/contexts/ClientsContext';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { apiAvailable, getWorkflowDetail, getWorkflowEdges, migrateWorkflowV2 } from '@/lib/api';
 import type {
@@ -111,6 +112,7 @@ export default function WorkflowEditorPage() {
   const params = useParams();
   const router = useRouter();
   const { workflows, updateWorkflow, deleteWorkflow } = useWorkflows();
+  const { clients } = useClients();
   const workflowId = params.workflowId as string;
 
   const ctxWorkflow = workflows.find((w) => w.id === workflowId);
@@ -151,6 +153,26 @@ export default function WorkflowEditorPage() {
         } catch {
           wf = ctxWorkflow ?? null;
         }
+      } else {
+        // Mock mode: load edges from localStorage (saved by WorkflowCanvas persistEdges).
+        try {
+          const stored = localStorage.getItem(`sunos-edges-v2-${workflowId}`);
+          if (stored) persistedEdges = JSON.parse(stored) as WorkflowEdge[];
+        } catch {
+          // ignore malformed JSON or unavailable localStorage
+        }
+        // Mock mode: load steps from localStorage (saved by WorkflowCanvas persistSteps).
+        // Overrides the context fixture so dynamically added nodes (e.g. Tool)
+        // survive page reload — same pattern as edge persistence.
+        try {
+          const storedSteps = localStorage.getItem(`sunos-steps-v2-${workflowId}`);
+          if (storedSteps && wf) {
+            const parsedSteps = JSON.parse(storedSteps) as WorkflowStepV2[];
+            wf = { ...wf, steps: parsedSteps as unknown as WorkflowStep[] };
+          }
+        } catch {
+          // ignore malformed JSON or unavailable localStorage
+        }
       }
 
       if (cancelled) return;
@@ -161,12 +183,17 @@ export default function WorkflowEditorPage() {
       }
 
       const steps = wf.steps as WorkflowStep[];
-      const positions = buildPositions(steps);
-      const v2Steps: WorkflowStepV2[] = steps.map((s) => ({
-        ...s,
-        position_x: positions[s.id]?.x ?? 0,
-        position_y: positions[s.id]?.y ?? 0,
-      }));
+      const v2Steps: WorkflowStepV2[] = steps.map((s, i) => {
+        const sv2 = s as Partial<WorkflowStepV2>;
+        // Use persisted positions (x or y defined). Fall back to a tidy row
+        // only for genuinely unpositioned steps (backend returns no position fields).
+        const hasSaved = sv2.position_x !== undefined || sv2.position_y !== undefined;
+        return {
+          ...s,
+          position_x: hasSaved ? (sv2.position_x ?? 0) : i * 300,
+          position_y: hasSaved ? (sv2.position_y ?? 0) : 0,
+        };
+      });
       // Prefer the edges persisted in workflow_edges (v2). Only synthesize from
       // v1 linkage (next_step/condition) when there are no stored edges yet.
       const v2Edges =
@@ -201,17 +228,28 @@ export default function WorkflowEditorPage() {
     }
   };
 
+  // Editable client_scope (header). Same local-draft pattern as nameDraft —
+  // `workflow` doesn't re-sync after updateWorkflow, so the <select> needs
+  // its own state or it snaps back to the stale value.
+  const [clientIdDraft, setClientIdDraft] = useState('');
+  useEffect(() => {
+    setClientIdDraft(workflow?.client_scope?.[0] ?? '');
+  }, [workflow?.id, workflow?.client_scope]);
+
   const onPersistSteps = useMemo(
     () => async (steps: WorkflowStepV2[]) => {
       if (!workflow) return;
-      // Strip canvas-only fields before persisting in the local context's
-      // WorkflowStep shape; positions live alongside in `definition.steps[]`
-      // when persistence reaches the backend (cf. api/workflows/migration_v1_v2.py).
-      const stripped: WorkflowStep[] = steps.map((s) => {
-        const { position_x: _x, position_y: _y, merge_policy, ...rest } = s;
-        return { ...rest, ...(merge_policy ? ({ merge_policy } as Partial<WorkflowStep>) : {}) } as WorkflowStep;
-      });
-      updateWorkflow(workflow.id, { steps: stripped });
+      try {
+        // Await so the auto-save hook sees HTTP errors (400/422) as real failures.
+        // WorkflowStepV2 is a strict superset of WorkflowStep — cast is safe;
+        // position_x/position_y survive JSON serialisation to the backend.
+        await updateWorkflow(workflow.id, { steps: steps as unknown as WorkflowStep[] });
+      } catch (err) {
+        // TypeError = network unreachable. Steps are preserved in canvas state;
+        // swallow silently. Re-throw HTTP errors so the banner shows them.
+        if (err instanceof TypeError) return;
+        throw err;
+      }
     },
     [updateWorkflow, workflow],
   );
@@ -275,6 +313,31 @@ export default function WorkflowEditorPage() {
                 minWidth: 200,
               }}
             />
+            <select
+              aria-label="Cliente do workflow"
+              value={clientIdDraft}
+              onChange={(e) => {
+                const value = e.target.value;
+                setClientIdDraft(value);
+                updateWorkflow(workflow.id, { client_scope: value ? [value] : [] });
+              }}
+              style={{
+                fontSize: 12,
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: '1px solid var(--border-subtle)',
+                background: 'var(--deep)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">— Sem cliente —</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
             <button
               onClick={() => router.push(`/workflows/${workflow.id}/runs`)}
               style={{

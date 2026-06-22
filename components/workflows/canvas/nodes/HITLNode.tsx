@@ -1,8 +1,5 @@
 /**
- * HITLNode — human-in-the-loop review step (SPEC-005 TASK-C05).
- *
- * Sun-coloured (Suno brand) because aprovação humana é o ponto de
- * intersecção entre a esteira automatizada e o vocabulário Suno.
+ * HITLNode — human-in-the-loop review step (SPEC-005 TASK-C05). Sun/yellow swatch.
  * Handles: 1× target (`in`), 3× source (`approved` / `rejected` / `modified`).
  */
 'use client';
@@ -19,11 +16,10 @@ interface HITLNodeData {
   [key: string]: unknown;
 }
 
-const BORDER = 'var(--sun)';
+const BORDER = '#FFC801';
 
 export default function HITLNode({ data, selected }: NodeProps) {
   const d = data as HITLNodeData;
-  const preview = d.config?.review_instructions ?? 'aprovação humana';
   const sources: HandleSpec[] = [
     { id: 'approved', color: '#22C55E', label: 'aprovado' },
     { id: 'rejected', color: '#EF4444', label: 'rejeitado' },
@@ -32,13 +28,27 @@ export default function HITLNode({ data, selected }: NodeProps) {
   return (
     <NodeShell
       title={d.name}
-      preview={preview}
+      typeLabel="Aprovação Humana"
       Icon={UserFollow}
       borderColor={BORDER}
-      accentColor="rgba(255,200,1,0.15)"
       sourceHandles={sources}
       selected={selected}
       executionStatus={d._executionStatus}
-    />
+      shape="square"
+    >
+      {/* Output lane labels — align visually with the 3 source handles */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '2px 7px 8px',
+          borderTop: '1px solid rgba(255,200,1,0.10)',
+        }}
+      >
+        <span style={{ fontSize: 7.5, color: '#22C55E', fontWeight: 500 }}>✓ sim</span>
+        <span style={{ fontSize: 7.5, color: '#EF4444', fontWeight: 500 }}>✗ não</span>
+        <span style={{ fontSize: 7.5, color: '#F59E0B', fontWeight: 500 }}>~ mod</span>
+      </div>
+    </NodeShell>
   );
 }
