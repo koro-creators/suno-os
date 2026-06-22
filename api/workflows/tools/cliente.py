@@ -1,4 +1,5 @@
 """Workflow tool: consultar_cliente — state-bound, reads client profile fields."""
+
 from .base import workflow_tool
 
 try:
@@ -9,9 +10,14 @@ except ImportError:
 from sqlalchemy import text as sa_text
 
 _COR_NAMES = {
-    "#EF4444": "vermelho", "#8B5CF6": "roxo", "#F97316": "laranja",
-    "#06B6D4": "ciano", "#22C55E": "verde", "#F472B6": "rosa",
-    "#A3E635": "verde-limão", "#FFC801": "amarelo",
+    "#EF4444": "vermelho",
+    "#8B5CF6": "roxo",
+    "#F97316": "laranja",
+    "#06B6D4": "ciano",
+    "#22C55E": "verde",
+    "#F472B6": "rosa",
+    "#A3E635": "verde-limão",
+    "#FFC801": "amarelo",
 }
 
 

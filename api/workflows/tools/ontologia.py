@@ -1,4 +1,5 @@
 """Workflow tool: consultar_ontologia — state-bound, reads client ontology."""
+
 from .base import workflow_tool
 
 try:

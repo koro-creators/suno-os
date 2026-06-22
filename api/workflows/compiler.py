@@ -183,15 +183,11 @@ def _lookup_agent_context(agent_id: str | None) -> str | None:
         slugs: list[str] = agent.get("assigned_skills") or []
         if slugs:
             skills = (
-                session.query(Skill)
-                .filter(Skill.slug.in_(slugs), Skill.status == "active")
-                .all()
+                session.query(Skill).filter(Skill.slug.in_(slugs), Skill.status == "active").all()
             )
             for s in skills:
                 if s.system_prompt and s.system_prompt.strip():
-                    parts.append(
-                        f"## Skill: {s.name}\n{s.system_prompt.strip()}"
-                    )
+                    parts.append(f"## Skill: {s.name}\n{s.system_prompt.strip()}")
     finally:
         session.close()
 
@@ -200,8 +196,6 @@ def _lookup_agent_context(agent_id: str | None) -> str | None:
 
 # Keep old name as alias so tests that import it directly still work.
 _lookup_agent_instructions = _lookup_agent_context
-
-
 
 
 def _lookup_workflow_definition(workflow_id: str) -> dict | None:
@@ -521,11 +515,7 @@ class WorkflowCompiler:
         connected_inputs: dict[str, list[str]] = defaultdict(list)
         for edge in edges:
             tgt = steps_by_id.get(edge["target_step_id"])
-            if (
-                tgt is not None
-                and tgt["type"] == "llm"
-                and edge["target_handle"] == "tool_0"
-            ):
+            if tgt is not None and tgt["type"] == "llm" and edge["target_handle"] == "tool_0":
                 connected_inputs[edge["target_step_id"]].append(edge["source_step_id"])
         for sources in connected_inputs.values():
             sources.sort()

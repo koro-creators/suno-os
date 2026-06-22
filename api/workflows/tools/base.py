@@ -1,4 +1,5 @@
 """Workflow tool registry — @workflow_tool decorator and WorkflowTool descriptor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,6 +40,7 @@ class WorkflowTool:
         never sees or provides it (caixa-preta RN-009/010). Tool results are
         also written to extra_outputs for step_logs persistence.
         """
+
         class _NoArgs(BaseModel):
             pass
 
@@ -88,9 +90,11 @@ def workflow_tool(name: str, *, state_bound: bool = False) -> Callable:
         @workflow_tool("consultar_ontologia", state_bound=True)
         def consultar_ontologia(client_id: str | None) -> str: ...
     """
+
     def decorator(fn: Callable) -> Callable:
         _REGISTRY[name] = WorkflowTool(name=name, func=fn, state_bound=state_bound)
         return fn
+
     return decorator
 
 

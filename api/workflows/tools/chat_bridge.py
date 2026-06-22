@@ -3,6 +3,7 @@
 Each import is guarded so the workflow module can load even when individual
 chat tool dependencies (OpenAI, etc.) are missing in the test environment.
 """
+
 from .base import register_tool
 
 try:
