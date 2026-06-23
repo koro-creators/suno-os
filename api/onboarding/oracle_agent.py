@@ -42,13 +42,17 @@ class OracleState(TypedDict):
 _LLM_MAX_ATTEMPTS = 3
 
 # Termo de busca por entidade (A2) — combinado com o nome da marca.
+# CONTRACTED_SCOPE: sem busca web — deriva exclusivamente dos docs do wizard.
 _SEARCH_TERMS: dict[str, str] = {
-    "Posicionamento": "posicionamento de marca proposta de valor diferenciais",
-    "Persona": "público-alvo persona perfil de cliente",
-    "Competidor": "concorrentes mercado análise competitiva",
-    "Produto": "produtos serviços portfólio",
-    "TomDeVoz": "tom de voz comunicação identidade verbal",
-    "Briefing": "marca comunicação campanha briefing",
+    "CLIENT_PROFILE": "empresa perfil institucional história fundação missão",
+    "MARKET_CONTEXT": "mercado setor tendências crescimento oportunidades",
+    "COMPETITORS": "concorrentes análise competitiva benchmark mercado",
+    "BRAND_VOICE": "tom de voz comunicação identidade verbal",
+    "TARGET_PERSONAS": "público-alvo persona perfil consumidor comportamento",
+    "LEGAL_CONSTRAINTS": "regulação compliance restrições legais comunicação",
+    "BUSINESS_OBJECTIVES": "objetivos estratégia metas crescimento negócio",
+    "CONTRACTED_SCOPE": "",
+    "MARTECH_STACK": "ferramentas marketing CRM automação analytics tecnologia",
 }
 
 
@@ -57,42 +61,52 @@ _SEARCH_TERMS: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 _FALLBACK_TEMPLATES: dict[str, str] = {
-    "Posicionamento": (
-        "{name} é uma marca que se posiciona como referência em seu segmento, "
-        "combinando expertise técnica com comunicação acessível. "
-        "Seu diferencial está na consistência de entrega e no relacionamento próximo com o público."
+    "CLIENT_PROFILE": (
+        "{name} é uma empresa com atuação consolidada em seu segmento, "
+        "reconhecida pela qualidade de seus produtos e serviços. "
+        "Sua missão une propósito e resultado, entregando valor consistente ao público que atende."
     ),
-    "Persona": (
-        "O público principal de {name} é composto por profissionais e entusiastas "
-        "que valorizam qualidade e autenticidade. "
-        "São pessoas conectadas, exigentes e dispostas a investir em experiências "
-        "que agreguem valor real à sua rotina."
+    "MARKET_CONTEXT": (
+        "O mercado em que {name} atua é dinâmico e em constante evolução, "
+        "impulsionado por mudanças no comportamento do consumidor e pela transformação digital. "
+        "A marca está posicionada para capturar as principais oportunidades deste cenário."
     ),
-    "Competidor": (
+    "COMPETITORS": (
         "{name} opera em um mercado com concorrentes consolidados que disputam "
         "atenção por preço ou volume. "
         "O diferencial competitivo da marca está na profundidade de conteúdo e na "
-        "curadoria da experiência, "
-        "o que cria uma barreira difícil de replicar apenas com escala."
+        "curadoria da experiência, criando uma barreira difícil de replicar apenas com escala."
     ),
-    "Produto": (
-        "O portfólio de {name} reúne soluções desenvolvidas para atender às "
-        "necessidades específicas de seu público, "
-        "com foco em resultado prático e experiência de uso. "
-        "Cada produto carrega a identidade da marca: clara, direta e comprometida com a entrega."
-    ),
-    "TomDeVoz": (
+    "BRAND_VOICE": (
         "{name} comunica-se de forma direta, acolhedora e sem jargões desnecessários. "
         "O tom é confiante sem ser arrogante, próximo sem ser informal demais — "
         "a voz de quem conhece profundamente o assunto e sabe traduzir isso para "
         "quem está aprendendo."
     ),
-    "Briefing": (
-        "{name} tem como norte criar conteúdo que informe, engaje e converta, "
-        "sempre alinhado à sua proposta de valor central. "
-        "Cada briefing deve refletir clareza de objetivo, linguagem adequada à "
-        "persona e chamada para ação relevante."
+    "TARGET_PERSONAS": (
+        "O público principal de {name} é composto por profissionais e entusiastas "
+        "que valorizam qualidade e autenticidade. "
+        "São pessoas conectadas, exigentes e dispostas a investir em experiências "
+        "que agreguem valor real à sua rotina."
     ),
+    "LEGAL_CONSTRAINTS": (
+        "A comunicação de {name} deve seguir as diretrizes do CONAR e as regulamentações "
+        "aplicáveis ao seu setor. "
+        "Evitar claims absolutos sem comprovação e conteúdo que possa ser interpretado "
+        "como propaganda enganosa."
+    ),
+    "BUSINESS_OBJECTIVES": (
+        "{name} busca ampliar sua presença digital, aumentar reconhecimento de marca "
+        "e converter audiência em clientes qualificados. "
+        "O marketing de conteúdo é um pilar estratégico para atingir essas metas "
+        "de forma sustentável."
+    ),
+    "CONTRACTED_SCOPE": (
+        "Escopo contratado com a Suno United Creators. "
+        "Revise os documentos da proposta comercial para detalhamento completo "
+        "dos serviços, volumes e canais acordados."
+    ),
+    "MARTECH_STACK": "Não identificado no escopo atual",
 }
 
 
@@ -145,35 +159,53 @@ def _get_llm():
 # ---------------------------------------------------------------------------
 
 _ENTITY_PROMPTS: dict[str, str] = {
-    "Posicionamento": (
-        "Elabore o posicionamento estratégico da marca. "
-        "Descreva em 2-3 parágrafos: proposta de valor, diferenciais competitivos "
-        "e como a marca se apresenta no mercado."
+    "CLIENT_PROFILE": (
+        "Elabore o perfil institucional completo do cliente. "
+        "Inclua: história e fundação, missão e visão, modelo de negócio, "
+        "produtos/serviços principais e posicionamento no mercado."
     ),
-    "Persona": (
-        "Descreva a persona principal do público da marca. "
-        "Inclua: perfil demográfico, comportamentos, dores, motivações e como a "
-        "marca resolve seus problemas."
+    "MARKET_CONTEXT": (
+        "Descreva o contexto de mercado em que o cliente opera. "
+        "Inclua: tamanho e maturidade do setor, principais tendências, "
+        "oportunidades e ameaças relevantes para a marca."
     ),
-    "Competidor": (
-        "Analise o cenário competitivo da marca. "
-        "Descreva os principais tipos de concorrentes, como a marca se diferencia "
-        "e quais são seus pontos fortes frente à concorrência."
+    "COMPETITORS": (
+        "Mapeie o cenário competitivo do cliente. "
+        "Descreva os principais concorrentes diretos e indiretos, "
+        "como a marca se diferencia e quais são suas vantagens e vulnerabilidades competitivas."
     ),
-    "Produto": (
-        "Descreva o portfólio de produtos ou serviços da marca. "
-        "Inclua: categorias principais, proposta de cada produto, benefícios para "
-        "o usuário e como se relacionam com o posicionamento."
-    ),
-    "TomDeVoz": (
-        "Defina o tom de voz da marca. "
+    "BRAND_VOICE": (
+        "Defina o tom de voz e a identidade verbal da marca. "
         "Inclua: adjetivos que descrevem a voz, o que evitar na comunicação, "
-        "exemplos de como falar e como não falar, e o estilo de escrita preferido."
+        "exemplos de como falar e como não falar, e estilo de escrita preferido."
     ),
-    "Briefing": (
-        "Crie um briefing padrão para produção de conteúdo da marca. "
-        "Inclua: objetivos de comunicação, mensagens-chave, estrutura sugerida de "
-        "conteúdo e diretrizes de chamada para ação."
+    "TARGET_PERSONAS": (
+        "Descreva as personas-alvo da marca. "
+        "Para cada persona: perfil demográfico e psicográfico, comportamentos digitais, "
+        "dores e motivações, e como a marca resolve seus problemas."
+    ),
+    "LEGAL_CONSTRAINTS": (
+        "Identifique as restrições legais e regulatórias relevantes para a comunicação da marca. "
+        "Inclua: setores regulados, termos proibidos, disclaimers obrigatórios "
+        "e limitações para comunicação em plataformas digitais."
+    ),
+    "BUSINESS_OBJECTIVES": (
+        "Defina os objetivos de negócio que orientam a estratégia de comunicação. "
+        "Inclua: metas de crescimento, indicadores-chave, prioridades estratégicas "
+        "e como o marketing contribui para os resultados."
+    ),
+    "CONTRACTED_SCOPE": (
+        "Resuma o escopo contratado com a Suno United Creators. "
+        "Baseie-se exclusivamente no briefing e nos documentos fornecidos no wizard. "
+        "Inclua: serviços contratados, canais contemplados, volumes acordados "
+        "e quaisquer exclusões explícitas do contrato."
+    ),
+    "MARTECH_STACK": (
+        "Mapeie o stack de martech (ferramentas de marketing e tecnologia) da marca. "
+        "Se informações sobre ferramentas não estiverem disponíveis no contexto fornecido, "
+        "responda exatamente com: 'Não identificado no escopo atual'. "
+        "Caso contrário, inclua: CRM, plataformas de automação, ferramentas de analytics, "
+        "ad platforms e integrações relevantes."
     ),
 }
 

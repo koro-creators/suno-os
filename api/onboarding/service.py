@@ -18,7 +18,7 @@ import logging
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from .constants import ONTOLOGY_ENTITY_TYPES, ORACLE_STUB_DELAY_SECONDS
+from .constants import ENTITY_CONDITIONAL, ONTOLOGY_ENTITY_TYPES, ORACLE_STUB_DELAY_SECONDS
 from .oracle_agent import _fallback_content, invoke_oracle
 
 try:
@@ -244,10 +244,15 @@ async def run_oracle_agent(client_id: str) -> None:
             entity = repository.get_entity(session, client_id, entity_type)
             if entity:
                 provenance_source = "Fallback local" if oracle_error else "Oráculo Gemini"
+                # Entidades condicionais (MARTECH_STACK) com conteúdo vazio ou sentinel
+                # são auto-aceitas — sem HITL necessário para conteúdo fora do escopo.
+                is_empty = content.strip() in ("", "Não identificado no escopo atual")
+                auto_accept = entity_type in ENTITY_CONDITIONAL and is_empty
+                final_status = "accepted" if auto_accept else "generated"
                 repository.update_entity(
                     session,
                     entity,
-                    status="generated",
+                    status=final_status,
                     content=content,
                     provenance=_build_provenance(sources, provenance_source, entity_type),
                 )
@@ -275,21 +280,20 @@ def _oracle_now():
 
 
 def _oracle_inputs(client) -> tuple[str, str]:
-    """Monta (brand_context, wizard_briefing) a partir dos dados do cliente (A1).
-
-    Antes ia tudo vazio para o agente; agora a descrição da marca e os dados do
-    wizard (sponsor, domínios de referência) alimentam o prompt do Oráculo.
-    """
+    """Monta (brand_context, wizard_briefing) a partir dos dados do cliente (A1)."""
     brand_context = (getattr(client, "description", None) or "").strip()
 
     cfg = getattr(client, "oracle_config", None) or {}
     domains = cfg.get("allowed_domains") or []
+    doc_ids = getattr(client, "selected_doc_ids", None) or []
 
     briefing_parts: list[str] = []
     if getattr(client, "sponsor_name", None):
         briefing_parts.append(f"Sponsor responsável: {client.sponsor_name}")
     if domains:
         briefing_parts.append("Fontes de referência (domínios): " + ", ".join(domains))
+    if doc_ids:
+        briefing_parts.append(f"Documentos vinculados ao wizard: {len(doc_ids)} arquivo(s)")
     wizard_briefing = ". ".join(briefing_parts)
 
     return brand_context, wizard_briefing
@@ -403,30 +407,17 @@ def add_reunion_context_to_oraculo(
     meeting_id: str,
     selected_segments: list[dict],
 ) -> None:
-    """FA-15: injeta segmentos curados de reunião no contexto Briefings do cliente.
+    """FA-15: injeta segmentos curados de reunião na ontologia do cliente.
 
-    Chamado pelo router de reuniões (sem sessão) — abre a própria. Best-effort:
-    nunca levanta.
+    Em Oracle v2, reuniões alimentam a camada L5 RAG (SPEC-016), não são
+    injetadas diretamente numa entidade wiki. Esta função é um no-op até a
+    implementação da integração Gemini Meet (Fase D).
     """
-    session = _open_session()
-    try:
-        entity = repository.get_entity(session, client_id, "Briefings")
-        if not entity:
-            return  # caixa-preta: silently skip
-        reunion_text = "\n\n".join(
-            seg.get("text", "") for seg in selected_segments if seg.get("selected")
-        )
-        if not reunion_text:
-            return
-        new_content = (entity.content or "") + f"\n\n[Reunião {meeting_id}]:\n{reunion_text}"
-        repository.update_entity(session, entity, content=new_content)
-        logger.info(
-            "FA-15: reunion %s context added to Briefings for client %s", meeting_id, client_id
-        )
-    except Exception as exc:  # noqa: BLE001 — best-effort
-        logger.warning("FA-15: failed to add reunion context (non-fatal): %s", exc)
-    finally:
-        session.close()
+    logger.info(
+        "FA-15: meeting %s for client %s — integration deferred to Phase D (SPEC-016 L5 RAG)",
+        meeting_id,
+        client_id,
+    )
 
 
 async def regenerate_entity_stub(client_id: str, entity_type: str) -> None:

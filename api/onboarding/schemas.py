@@ -14,12 +14,15 @@ from pydantic import BaseModel, Field, field_validator
 # ---------------------------------------------------------------------------
 
 OntologyEntityType = Literal[
-    "Posicionamento",
-    "Persona",
-    "Competidor",
-    "Produto",
-    "TomDeVoz",
-    "Briefing",
+    "CLIENT_PROFILE",
+    "MARKET_CONTEXT",
+    "COMPETITORS",
+    "BRAND_VOICE",
+    "TARGET_PERSONAS",
+    "LEGAL_CONSTRAINTS",
+    "BUSINESS_OBJECTIVES",
+    "CONTRACTED_SCOPE",
+    "MARTECH_STACK",
 ]
 
 EntityStatus = Literal["pending", "generated", "accepted", "regenerating"]

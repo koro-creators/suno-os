@@ -7,13 +7,23 @@ IMPORTANT: Keep in sync with lib/onboarding-types.ts (ONTOLOGY_ENTITY_TYPES).
 # Ordered list of entity types — UI derives its card order from this.
 # Constitution §6.8: "não hardcodar número de entidades — UI deriva dela".
 ONTOLOGY_ENTITY_TYPES: list[str] = [
-    "Posicionamento",
-    "Persona",
-    "Competidor",
-    "Produto",
-    "TomDeVoz",
-    "Briefing",
+    "CLIENT_PROFILE",
+    "MARKET_CONTEXT",
+    "COMPETITORS",
+    "BRAND_VOICE",
+    "TARGET_PERSONAS",
+    "LEGAL_CONSTRAINTS",
+    "BUSINESS_OBJECTIVES",
+    "CONTRACTED_SCOPE",
+    "MARTECH_STACK",
 ]
+
+# Admin/sponsor-only entities (RN-009 caixa-preta: 404, not 403).
+ENTITY_ADMIN_ONLY: set[str] = {"CONTRACTED_SCOPE"}
+
+# Conditional entities — Oracle may generate empty when out of contracted scope.
+# Empty content triggers auto-accept (no HITL needed for an empty entity).
+ENTITY_CONDITIONAL: set[str] = {"MARTECH_STACK"}
 
 # Valid entity status values
 ENTITY_STATUS_VALUES: list[str] = [
