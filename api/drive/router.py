@@ -19,12 +19,20 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import secrets
+import urllib.parse
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel
+
+try:
+    from config import settings
+except ImportError:
+    from api.config import settings  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +112,20 @@ _files_store: dict[str, list] = {}
 # Maps suggestion_id → "accepted" | "rejected"
 _curation_decisions: dict[str, str] = {}
 
+# In-flight OAuth states: state_token → {user_id, created_at}
+# TODO(SPEC-006 Fase B): move to Redis/DB with TTL instead of in-process dict
+_pending_oauth_states: dict[str, dict] = {}
+
+# Per-user OAuth tokens (plaintext, in-memory only)
+# TODO(SPEC-006 Fase B): persist to drive_tokens table via SQLAlchemy
+# TODO(SPEC-006 Fase D, NFR-008): encrypt with Cloud KMS before persisting
+_token_store: dict[str, dict] = {}
+
+_OAUTH_SCOPES = (
+    "https://www.googleapis.com/auth/drive.readonly "
+    "https://www.googleapis.com/auth/drive.metadata.readonly"
+)
+
 
 # ---------------------------------------------------------------------------
 # Endpoints
@@ -132,64 +154,143 @@ async def drive_auth_start(current_user: str = Depends(get_current_user)) -> Dri
     NEVER include write/create/delete scopes — code review must block any PR
     that changes this.
 
-    TODO(SPEC-006 Fase B): build real OAuth URL using google-auth-oauthlib:
-      from google_auth_oauthlib.flow import Flow
-      flow = Flow.from_client_config(
-          {"client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
-           "client_secret": settings.GOOGLE_OAUTH_CLIENT_SECRET, ...},
-          scopes=["https://www.googleapis.com/auth/drive.readonly",
-                  "https://www.googleapis.com/auth/drive.metadata.readonly"],
-          redirect_uri=settings.GOOGLE_OAUTH_REDIRECT_URI,
-      )
-      auth_url, state = flow.authorization_url(
-          access_type="offline",
-          include_granted_scopes="true",
-          state=current_user,  # pass user_id as state for callback correlation
-          hd="sunounited.com",  # REST-08 v2: restrict to @sunounited accounts
-      )
-      return DriveAuthResponse(auth_url=auth_url)
+    Returns ``#oauth-not-configured`` sentinel when credentials are absent so
+    the frontend can show a "configure credentials" prompt instead of a broken link.
     """
-    # Placeholder — real credentials not yet configured (Phase 18 scaffolding).
-    # Sentinel value "#oauth-not-configured" is recognized by the frontend
-    # to show a "configure credentials" message instead of navigating to Google.
-    placeholder_url = "#oauth-not-configured"
-    logger.info("drive_auth_start: returning placeholder OAuth URL for user=%s", current_user)
-    return DriveAuthResponse(auth_url=placeholder_url)
+    if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
+        logger.warning("drive_auth_start: OAuth credentials not configured")
+        return DriveAuthResponse(auth_url="#oauth-not-configured")
+
+    # Random state token for CSRF protection — tied to this user in _pending_oauth_states.
+    state = secrets.token_urlsafe(32)
+    _pending_oauth_states[state] = {
+        "user_id": current_user,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    params: dict[str, str] = {
+        "client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
+        "redirect_uri": settings.GOOGLE_OAUTH_REDIRECT_URI,
+        "response_type": "code",
+        "scope": _OAUTH_SCOPES,
+        "access_type": "offline",
+        "include_granted_scopes": "true",
+        "state": state,
+    }
+    if settings.GOOGLE_OAUTH_HD:
+        params["hd"] = settings.GOOGLE_OAUTH_HD
+
+    auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+    logger.info("drive_auth_start: OAuth URL generated for user=%s", current_user)
+    return DriveAuthResponse(auth_url=auth_url)
 
 
 @router.get("/callback", response_model=DriveCallbackResponse, summary="Callback OAuth")
 async def drive_auth_callback(
-    code: str,
-    state: str,
     request: Request,
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
 ) -> DriveCallbackResponse:
     """Exchange the OAuth authorization code for access + refresh tokens.
 
-    The ``state`` param carries the user_id set in drive_auth_start.
+    Google redirects here after the user grants (or denies) Drive access.
+    State carries a random token that is verified against _pending_oauth_states
+    to prevent CSRF.
 
-    TODO(SPEC-006 Fase B): implement real token exchange:
-      1. Validate `state` matches an in-flight OAuth session (CSRF protection).
-      2. Exchange `code` for tokens via google-auth-oauthlib Flow.
-      3. Verify token.hd == "sunounited.com" (REST-08 v2).
-      4. TODO(NFR-008, Fase D): encrypt tokens via Cloud KMS before persist.
-      5. Upsert drive_tokens row for the user.
-      6. Redirect frontend to /configuracoes/drive with ?connected=true.
+    TODO(SPEC-006 Fase C): return RedirectResponse to frontend URL on success.
+    TODO(SPEC-006 Fase B): upsert drive_tokens table via SQLAlchemy.
+    TODO(SPEC-006 Fase D, NFR-008): encrypt tokens via Cloud KMS before persist.
     """
-    # Stub: simulate a successful token exchange
-    user_id = state  # in real flow, validate state is a known pending session
-    logger.info("drive_auth_callback: stub token exchange for user=%s", user_id)
+    if error:
+        logger.warning("drive_auth_callback: OAuth denied by user or Google: %s", error)
+        raise HTTPException(status_code=400, detail=f"OAuth authorization denied: {error}")
 
+    if not code or not state:
+        raise HTTPException(status_code=400, detail="Missing OAuth code or state")
+
+    # 1. CSRF: verify state exists and extract user_id
+    pending = _pending_oauth_states.pop(state, None)
+    if pending is None:
+        logger.warning("drive_auth_callback: unknown or replayed OAuth state")
+        raise HTTPException(status_code=400, detail="Invalid OAuth state")
+
+    user_id = pending["user_id"]
+
+    # 2. Exchange authorization code for tokens
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        token_resp = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
+                "client_secret": settings.GOOGLE_OAUTH_CLIENT_SECRET,
+                "redirect_uri": settings.GOOGLE_OAUTH_REDIRECT_URI,
+                "grant_type": "authorization_code",
+            },
+        )
+
+    if token_resp.status_code != 200:
+        logger.error(
+            "drive_auth_callback: token exchange failed for user=%s: %s",
+            user_id,
+            token_resp.text,
+        )
+        raise HTTPException(status_code=502, detail="OAuth token exchange failed")
+
+    token_data = token_resp.json()
+    access_token: str = token_data["access_token"]
+    refresh_token: Optional[str] = token_data.get("refresh_token")
+    expires_in: int = token_data.get("expires_in", 3600)
+
+    # 3. Fetch user info and verify hosted domain (REST-08)
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        info_resp = await client.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"access_token": access_token},
+        )
+
+    if info_resp.status_code != 200:
+        logger.error(
+            "drive_auth_callback: tokeninfo failed for user=%s: %s",
+            user_id,
+            info_resp.text,
+        )
+        raise HTTPException(status_code=502, detail="Failed to verify token info")
+
+    token_info = info_resp.json()
+    email: str = token_info.get("email", "")
+    hd: str = token_info.get("hd", "")
+
+    if settings.GOOGLE_OAUTH_HD and hd != settings.GOOGLE_OAUTH_HD:
+        logger.warning(
+            "drive_auth_callback: HD mismatch user=%s email=%s hd=%s expected=%s",
+            user_id,
+            email,
+            hd,
+            settings.GOOGLE_OAUTH_HD,
+        )
+        raise HTTPException(
+            status_code=403, detail="Google account is not from the allowed domain"
+        )
+
+    # 4. Persist tokens in-memory (plaintext — Fase B will move to drive_tokens table)
+    expires_at = (datetime.now(timezone.utc) + timedelta(seconds=expires_in)).isoformat()
+    _token_store[user_id] = {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_at": expires_at,
+        "email": email,
+    }
     _stub_connections[user_id] = {
         "connected": True,
-        "email": "stub@sunounited.com",
+        "email": email,
         "last_sync": None,
         "doc_count": 0,
     }
 
-    return DriveCallbackResponse(
-        status="ok",
-        message="Drive connected (stub). Configure real OAuth credentials to complete the flow.",
-    )
+    logger.info("drive_auth_callback: Drive connected for user=%s email=%s", user_id, email)
+    return DriveCallbackResponse(status="ok", message=f"Drive conectado: {email}")
 
 
 async def _run_sync_job(user_id: str, job_id: str) -> None:
@@ -428,5 +529,6 @@ async def drive_disconnect(
       server-side: POST https://oauth2.googleapis.com/revoke?token=<access_token>
     """
     _stub_connections.pop(current_user, None)
-    logger.info("drive_disconnect: stub revoke for user=%s", current_user)
+    _token_store.pop(current_user, None)
+    logger.info("drive_disconnect: revoked connection for user=%s", current_user)
     return DriveDisconnectResponse(status="disconnected")

@@ -52,6 +52,17 @@ class Settings(BaseSettings):
     # exibido na UI para o admin saber com quem compartilhar.
     DRIVE_SA_EMAIL: str = "sunos-backend@koro-creators.iam.gserviceaccount.com"
 
+    # Google OAuth 2.0 — acesso por usuário ao Drive (SPEC-006 FA-14).
+    # Fonte: Secret Manager gws-oauth-client (project: koro-creators).
+    # ATENÇÃO: adicionar redirect URI em GCP Console antes de usar em prod:
+    #   Local dev: http://localhost:8080/api/drive/callback
+    #   Cloud Run: https://<service-url>/api/drive/callback
+    GOOGLE_OAUTH_CLIENT_ID: str = ""
+    GOOGLE_OAUTH_CLIENT_SECRET: str = ""
+    GOOGLE_OAUTH_REDIRECT_URI: str = "http://localhost:8080/api/drive/callback"
+    # Restringe contas ao domínio G Suite (ex: "korocreators.com"). Vazio = sem restrição.
+    GOOGLE_OAUTH_HD: str = ""
+
     # Logging
     LOG_LEVEL: str = "INFO"
 
