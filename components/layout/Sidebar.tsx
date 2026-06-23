@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { CarbonIconType, Book, Bot, CheckmarkFilled, ChevronLeft, ChevronRight, Flash, Globe, Group, Logout, Settings, Star } from '@carbon/icons-react';
+import { CarbonIconType, Book, Bot, CheckmarkFilled, ChevronLeft, ChevronRight, Flash, Flow, Globe, Group, Logout, Settings, Star } from '@carbon/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
@@ -16,6 +16,7 @@ interface NavItemDef {
 const NAV_ITEMS: NavItemDef[] = [
   { label: 'Home', icon: Globe, href: '/' },
   { label: 'Clientes', icon: Group, href: '/clientes', adminOnly: true },
+  { label: 'Projetos', icon: Flow, href: '/projetos', adminOnly: true },
   { label: 'Skills', icon: Star, href: '/skills', adminOnly: true },
   { label: 'Biblioteca', icon: Book, href: '/biblioteca', adminOnly: true },
   { label: 'Workflows', icon: Flash, href: '/workflows', adminOnly: true },
