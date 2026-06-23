@@ -76,10 +76,8 @@ export default function WikiPage() {
               display: 'flex',
               justifyContent: 'flex-end',
               gap: 8,
-              padding: '16px 24px 0',
-              maxWidth: 768,
-              margin: '0 auto',
-              width: '100%',
+              padding: '12px 24px',
+              borderBottom: '1px solid var(--border-subtle)',
             }}
           >
             <button

@@ -7,15 +7,36 @@
 // ---------------------------------------------------------------------------
 
 export const ONTOLOGY_ENTITY_TYPES = [
-  'Posicionamento',
-  'Persona',
-  'Competidor',
-  'Produto',
-  'TomDeVoz',
-  'Briefing',
+  'CLIENT_PROFILE',
+  'MARKET_CONTEXT',
+  'COMPETITORS',
+  'BRAND_VOICE',
+  'TARGET_PERSONAS',
+  'LEGAL_CONSTRAINTS',
+  'BUSINESS_OBJECTIVES',
+  'CONTRACTED_SCOPE',
+  'MARTECH_STACK',
 ] as const;
 
 export type OntologyEntityType = (typeof ONTOLOGY_ENTITY_TYPES)[number];
+
+export const ENTITY_LABELS: Record<OntologyEntityType, string> = {
+  CLIENT_PROFILE: 'Perfil do Cliente',
+  MARKET_CONTEXT: 'Contexto de Mercado',
+  COMPETITORS: 'Concorrentes',
+  BRAND_VOICE: 'Tom de Voz',
+  TARGET_PERSONAS: 'Personas-alvo',
+  LEGAL_CONSTRAINTS: 'Restrições Legais',
+  BUSINESS_OBJECTIVES: 'Objetivos de Negócio',
+  CONTRACTED_SCOPE: 'Escopo Contratado',
+  MARTECH_STACK: 'Stack de Martech',
+};
+
+/** Entidades visíveis apenas para roles admin/sponsor (RN-009: caixa-preta). */
+export const ENTITY_ADMIN_ONLY = new Set<OntologyEntityType>(['CONTRACTED_SCOPE']);
+
+/** Entidades que o Oracle pode gerar vazias quando fora do escopo contratado. */
+export const ENTITY_CONDITIONAL = new Set<OntologyEntityType>(['MARTECH_STACK']);
 
 // ---------------------------------------------------------------------------
 // Client status (SPEC-018 aligned)
@@ -100,6 +121,21 @@ export interface OracleConfig {
   depth: 'shallow' | 'standard' | 'deep';
 }
 
+export type DocType = 'Proposta Comercial' | 'Ata de Kickoff' | 'Contrato' | 'Outro';
+
+export interface DocEntry {
+  id: string;
+  type: DocType;
+  driveUrl: string;
+  isValidated: boolean;
+}
+
+export interface TeamRow {
+  id: string;
+  role: string;
+  person: string;
+}
+
 export interface WizardState {
   step: 1 | 2 | 3 | 4;
   // Step 1: metadata
@@ -111,7 +147,10 @@ export interface WizardState {
   sponsorEmail: string;
   // Step 2: oracle config
   oracleConfig: OracleConfig;
-  // Step 3: drive docs
+  // Step 3: docs + team + folder
+  docEntries: DocEntry[];
+  teamRows: TeamRow[];
+  /** IDs/links dos documentos — derivados de docEntries ao submeter. */
   selectedDocIds: string[];
   /** Pasta do Drive da Suno validada no passo 3 (URL/ID); vinculada após criar o cliente. */
   driveFolder: string;
@@ -122,7 +161,7 @@ export interface WizardState {
 export const WIZARD_STEP_LABELS: Record<1 | 2 | 3 | 4, string> = {
   1: 'Dados do Cliente',
   2: 'Configurar Oráculo',
-  3: 'Documentos Drive',
+  3: 'Documentos',
   4: 'Confirmar',
 };
 

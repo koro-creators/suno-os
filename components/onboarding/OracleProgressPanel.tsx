@@ -7,7 +7,7 @@
 
 import { CheckmarkFilled, CircleDash, InProgress, Warning } from '@carbon/icons-react';
 import type { OnboardingJobStatus, OntologyEntityType } from '@/lib/onboarding-types';
-import { ONTOLOGY_ENTITY_TYPES } from '@/lib/onboarding-types';
+import { ONTOLOGY_ENTITY_TYPES, ENTITY_LABELS, ENTITY_ADMIN_ONLY, ENTITY_CONDITIONAL } from '@/lib/onboarding-types';
 
 interface Props {
   status: OnboardingJobStatus;
@@ -18,7 +18,7 @@ function EntityRow({ entityType, status, isCurrent }: {
   status: string;
   isCurrent: boolean;
 }) {
-  const iconProps = { size: 14, strokeWidth: 1.5 };
+  const iconProps = { size: 14 };
 
   let icon: React.ReactNode;
   let color: string;
@@ -45,6 +45,9 @@ function EntityRow({ entityType, status, isCurrent }: {
     color = 'var(--text-muted)';
   }
 
+  const isAdminOnly = ENTITY_ADMIN_ONLY.has(entityType);
+  const isConditional = ENTITY_CONDITIONAL.has(entityType);
+
   return (
     <div
       style={{
@@ -60,8 +63,40 @@ function EntityRow({ entityType, status, isCurrent }: {
     >
       <span style={{ color, flexShrink: 0 }}>{icon}</span>
       <span style={{ flex: 1, fontSize: '0.85rem', color: isCurrent ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-        {entityType}
+        {ENTITY_LABELS[entityType]}
       </span>
+      {isAdminOnly && (
+        <span
+          style={{
+            padding: '1px 6px',
+            borderRadius: 9999,
+            fontSize: '0.6rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            backgroundColor: 'rgba(139,92,246,0.1)',
+            color: '#8B5CF6',
+            border: '1px solid rgba(139,92,246,0.2)',
+            flexShrink: 0,
+          }}
+        >
+          admins
+        </span>
+      )}
+      {isConditional && (
+        <span
+          style={{
+            padding: '1px 6px',
+            borderRadius: 9999,
+            fontSize: '0.6rem',
+            color: 'var(--text-muted)',
+            border: '1px solid var(--border-subtle)',
+            flexShrink: 0,
+          }}
+        >
+          condicional
+        </span>
+      )}
       <span
         style={{
           fontSize: '0.65rem',

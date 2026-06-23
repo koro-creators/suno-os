@@ -2,8 +2,8 @@
 
 /**
  * SPEC-015 — T-36: HITL gate page.
- * Lists 6 entity validation cards.
- * "Finalizar" only enabled when all 6 are accepted.
+ * Lists 9 entity validation cards (Oracle v2).
+ * CONTRACTED_SCOPE hidden for non-admin (RN-009 caixa-preta).
  * Constitution §1.3: HITL per entity — no "Aceitar tudo" button.
  * ADR-LOCAL-04: gate enforced server-side.
  */
@@ -13,9 +13,9 @@ import { useParams, useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/AppHeader';
 import EntityValidationCard from '@/components/onboarding/EntityValidationCard';
 import { useOnboardingOraculo } from '@/contexts/OnboardingOraculoContext';
-import { ONTOLOGY_ENTITY_TYPES, type EntityBadge, type EntityStatus, type HITLAction, type OntologyEntityType, type WikiEntity, isEntityStale } from '@/lib/onboarding-types';
+import { useAuth } from '@/contexts/AuthContext';
+import { ONTOLOGY_ENTITY_TYPES, ENTITY_LABELS, ENTITY_ADMIN_ONLY, ENTITY_CONDITIONAL, type EntityBadge, type EntityStatus, type HITLAction, type OntologyEntityType, isEntityStale } from '@/lib/onboarding-types';
 import { WarningAlt } from '@carbon/icons-react';
-import { apiAvailable } from '@/lib/api';
 
 interface LocalEntityState {
   content: string;
@@ -30,7 +30,7 @@ function buildInitialEntityState(jobStatus: { entities: Record<OntologyEntityTyp
       et,
       {
         content: jobStatus
-          ? `[Conteúdo gerado pelo Oráculo para ${et}]`
+          ? `[Conteúdo gerado pelo Oráculo para ${ENTITY_LABELS[et]}]`
           : '',
         status: (jobStatus?.entities[et] ?? 'pending') as EntityStatus,
         badge: 'seed_auto' as EntityBadge,
@@ -44,7 +44,13 @@ export default function OnboardingValidatePage() {
   const router = useRouter();
   const clientId = params.clientId as string;
 
+  const { isAdmin } = useAuth();
   const { jobStatus, validateEntity, loadWiki, wikiEntities, error } = useOnboardingOraculo();
+
+  // Entities visible to current user (RN-009: CONTRACTED_SCOPE hidden for non-admin)
+  const visibleEntityTypes = ONTOLOGY_ENTITY_TYPES.filter(
+    (et) => isAdmin || !ENTITY_ADMIN_ONLY.has(et)
+  );
 
   const [entityStates, setEntityStates] = useState<Record<OntologyEntityType, LocalEntityState>>(
     () => buildInitialEntityState(jobStatus)
@@ -63,7 +69,7 @@ export default function OnboardingValidatePage() {
             next[et] = {
               ...next[et],
               status: jsStatus,
-              content: `[Conteúdo gerado pelo Oráculo para ${et} — cliente ${jobStatus.clientSlug}]`,
+              content: `[Conteúdo gerado pelo Oráculo para ${ENTITY_LABELS[et]} — cliente ${jobStatus.clientSlug}]`,
             };
           }
         }
@@ -125,7 +131,7 @@ export default function OnboardingValidatePage() {
     [clientId, validateEntity, router]
   );
 
-  const allAccepted = ONTOLOGY_ENTITY_TYPES.every(
+  const allAccepted = visibleEntityTypes.every(
     (et) => entityStates[et]?.status === 'accepted'
   );
 
@@ -136,12 +142,12 @@ export default function OnboardingValidatePage() {
     router.push(`/clientes/${clientId}/wiki`);
   };
 
-  const acceptedCount = ONTOLOGY_ENTITY_TYPES.filter(
+  const acceptedCount = visibleEntityTypes.filter(
     (et) => entityStates[et]?.status === 'accepted'
   ).length;
 
   // FR-185: stale entity count for banner
-  const staleCount = ONTOLOGY_ENTITY_TYPES.filter(
+  const staleCount = visibleEntityTypes.filter(
     (et) => isEntityStale(entityStates[et] ?? { status: 'pending' })
   ).length;
 
@@ -177,7 +183,7 @@ export default function OnboardingValidatePage() {
             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               Revise e aprove cada entidade gerada pelo Oráculo.
               {' '}<strong style={{ color: 'var(--text-secondary)' }}>
-                {acceptedCount} de {ONTOLOGY_ENTITY_TYPES.length}
+                {acceptedCount} de {visibleEntityTypes.length}
               </strong> aprovadas.
             </p>
           </div>
@@ -244,16 +250,19 @@ export default function OnboardingValidatePage() {
 
           {/* Entity cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-            {ONTOLOGY_ENTITY_TYPES.map((et) => {
+            {visibleEntityTypes.map((et) => {
               const state = entityStates[et];
               return (
                 <EntityValidationCard
                   key={et}
                   entityType={et}
+                  label={ENTITY_LABELS[et]}
                   content={state.content}
                   status={state.status}
                   badge={state.badge}
                   createdAt={state.createdAt}
+                  isAdminOnly={ENTITY_ADMIN_ONLY.has(et)}
+                  isConditional={ENTITY_CONDITIONAL.has(et)}
                   onValidate={(action, editedContent) =>
                     handleValidate(et, action, editedContent)
                   }
@@ -274,7 +283,7 @@ export default function OnboardingValidatePage() {
             <button
               onClick={handleFinish}
               disabled={!allAccepted || isFinishing}
-              title={!allAccepted ? 'Aprove todas as 6 entidades para finalizar' : 'Finalizar onboarding'}
+              title={!allAccepted ? `Aprove todas as ${visibleEntityTypes.length} entidades visíveis para finalizar` : 'Finalizar onboarding'}
               style={{
                 padding: '10px 28px',
                 borderRadius: 8,

@@ -6,7 +6,7 @@
 
 import { Document, Globe, Time, User } from '@carbon/icons-react';
 import { useOnboardingOraculo } from '@/contexts/OnboardingOraculoContext';
-import { ONTOLOGY_ENTITY_TYPES } from '@/lib/onboarding-types';
+import { ONTOLOGY_ENTITY_TYPES, ENTITY_LABELS } from '@/lib/onboarding-types';
 
 const DEPTH_LABELS = { shallow: 'Rápida (~5 min)', standard: 'Padrão (~15 min)', deep: 'Profunda (~30 min)' };
 
@@ -130,7 +130,7 @@ export default function WizardStep4Confirm() {
                 color: 'var(--text-secondary)',
               }}
             >
-              {et}
+              {ENTITY_LABELS[et]}
             </span>
           ))}
         </div>

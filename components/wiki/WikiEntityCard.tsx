@@ -7,6 +7,7 @@
 
 import { ChevronDown, ChevronUp, Launch } from '@carbon/icons-react';
 import type { WikiEntity } from '@/lib/onboarding-types';
+import { ENTITY_LABELS } from '@/lib/onboarding-types';
 import { useWikiOntologica } from '@/contexts/WikiOntologicaContext';
 import WikiEntityBadge from './WikiEntityBadge';
 
@@ -70,7 +71,7 @@ export default function WikiEntityCard({ entity }: Props) {
             flex: 1,
           }}
         >
-          {entity.entityType}
+          {ENTITY_LABELS[entity.entityType] ?? entity.entityType}
         </span>
 
         <WikiEntityBadge badge={entity.badge} />

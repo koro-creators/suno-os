@@ -28,6 +28,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isPublic = PUBLIC_PATHS.includes(pathname);
+  const isOnboarding = pathname.includes('/onboarding/');
 
   // Public pages (login) render without app chrome
   if (isPublic || !user) {
@@ -48,7 +49,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex-1 flex flex-col min-w-0">
           {children}
         </div>
-        <ChatPanel />
+        {!isOnboarding && <ChatPanel />}
       </div>
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </>

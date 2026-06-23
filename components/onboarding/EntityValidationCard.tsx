@@ -12,14 +12,17 @@ import { isEntityStale } from '@/lib/onboarding-types';
 
 interface Props {
   entityType: OntologyEntityType;
+  label: string;
   content: string;
   status: EntityStatus;
   badge: EntityBadge;
   createdAt?: string;
+  isAdminOnly?: boolean;
+  isConditional?: boolean;
   onValidate: (action: HITLAction, editedContent?: string) => Promise<void>;
 }
 
-export default function EntityValidationCard({ entityType, content, status, badge, createdAt, onValidate }: Props) {
+export default function EntityValidationCard({ entityType, label, content, status, badge, createdAt, isAdminOnly, isConditional, onValidate }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
@@ -91,12 +94,48 @@ export default function EntityValidationCard({ entityType, content, status, badg
           )}
         </span>
 
-        {/* Entity type */}
+        {/* Entity name */}
         <span style={{ flex: 1, fontSize: '0.88rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-          {entityType}
+          {label}
         </span>
 
-        {/* Badge */}
+        {/* Admin-only badge */}
+        {isAdminOnly && (
+          <span
+            style={{
+              padding: '2px 7px',
+              borderRadius: 9999,
+              fontSize: '0.6rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              backgroundColor: 'rgba(139,92,246,0.1)',
+              color: '#8B5CF6',
+              border: '1px solid rgba(139,92,246,0.2)',
+              flexShrink: 0,
+            }}
+          >
+            só admins
+          </span>
+        )}
+
+        {/* Conditional badge */}
+        {isConditional && (
+          <span
+            style={{
+              padding: '2px 7px',
+              borderRadius: 9999,
+              fontSize: '0.6rem',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--border-subtle)',
+              flexShrink: 0,
+            }}
+          >
+            condicional
+          </span>
+        )}
+
+        {/* Status badge */}
         {isAccepted && (
           <span
             style={{

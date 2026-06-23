@@ -58,6 +58,8 @@ function emptyWizardState(): WizardState {
       language: 'pt-BR',
       depth: 'standard',
     },
+    docEntries: [{ id: 'default-doc-0', type: 'Proposta Comercial' as const, driveUrl: '', isValidated: false }],
+    teamRows: [{ id: 'default-team-0', role: '', person: '' }],
     selectedDocIds: [],
     driveFolder: '',
     driveFolderName: null,
@@ -212,7 +214,9 @@ export function OnboardingOraculoProvider({ children }: { children: ReactNode })
             language: wizardState.oracleConfig.language,
             depth: wizardState.oracleConfig.depth,
           },
-          selected_doc_ids: wizardState.selectedDocIds,
+          selected_doc_ids: wizardState.docEntries
+            .filter((d) => d.driveUrl.trim() !== '')
+            .map((d) => d.driveUrl.trim()),
         }),
       });
 
