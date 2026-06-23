@@ -2,15 +2,15 @@
 documento: SRD Parte 2 - Domain Model
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
-versao: 1.0
+versao: 1.3
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-06-23
 autor: Heitor Miranda + Claude (Koro Docs Pipeline)
 status: Rascunho
 fonte_brd: docs/brd/parte2-glossario.md, docs/brd/parte3-requisitos.md, docs/brd/parte4-regras.md
 fonte_prd: docs/prd/parte1-feature-map.md, docs/prd/parte2-personas-jtbd.md
 fonte_srd: docs/srd/parte1-NFRs.md, docs/srd/parte5-arch-as-is.md, docs/srd/parte7-ADRs.md
-total_objetos: 60 (Aggregates + Entities + Value Objects)
+total_objetos: 62 (Aggregates + Entities + Value Objects)
 total_bounded_contexts: 7
 ---
 
@@ -229,13 +229,14 @@ flowchart LR
 | DO-53 | CurationSuggestion | Entity (AR) | BC-07 | Sugestão de curadoria (mover, renomear, taggear) gerada por agente sobre DriveDocument | FA-14 | BR-018, RN-029 |
 | DO-54 | DriveCleanupReport | Entity (AR) | BC-07 | Relatório periódico de duplicatas, órfãos e candidatos a arquivamento no Drive | FA-14 | BR-018, RN-029 |
 | DO-55 | ValidatedStamp | VO | BC-03/04 | Carimbo "Validado" anexado a Spark/Turn após ValidationReport sem erros bloqueantes | FA-13 | BR-017, RN-023 |
-| DO-56 | WikiEntity | Entity (AR) | BC-07 | Entidade ontológica do cliente gerada pelo Oráculo e validada por HITL (PROFILE, MARKET, COMPETITORS, TARGET_PERSONAS, CAMPAIGN_HISTORY, LEGAL_CONSTRAINTS) | FA-15 | BR-021, RN-032 |
+| DO-56 | WikiEntity | Entity (AR) | BC-07 | Entidade ontológica do cliente gerada pelo Oráculo (Type A: CLIENT_PROFILE, MARKET_CONTEXT, COMPETITORS, BRAND_VOICE, TARGET_PERSONAS, LEGAL_CONSTRAINTS, BUSINESS_OBJECTIVES, CONTRACTED_SCOPE, MARTECH_STACK) — 9 entidades backbone com embedding vector(768) e role_visibility | FA-15 | BR-021, BR-022, RN-032 |
 | DO-57 | EntityHITLEvent | Entity | BC-07 | Registro imutável de ação HITL sobre WikiEntity (accept/edit_accept/reject_regenerate) — audit log append-only | FA-15 | BR-021, RN-032 |
-| DO-58 | OnboardingJob | Entity | BC-06 | Estado do job assíncrono do Oráculo — rastreia progresso de drive sync + geração de entidades com checkpoint por entidade | FA-15 | BR-021 |
+| DO-58 | OnboardingJob | Entity | BC-06 | Estado do job assíncrono do Oráculo — rastreia progresso de drive sync + geração de entidades com checkpoint por entidade (0–9) | FA-15 | BR-021 |
 | DO-59 | MeetingCapture | Entity (AR) | BC-02 | Sessão de reunião capturada seletivamente para processamento em conhecimento — consentimento LGPD obrigatório | FA-16 | BR-020, RN-033 (previsto) |
-| DO-60 | MeetingTranscript | Entity | BC-02 | Transcrição processada de MeetingCapture com segmentação por speaker e resumo gerado | FA-16 | BR-020 |
+| DO-60 | MeetingTranscript | Entity | BC-02 | Transcrição processada de MeetingCapture com dual HITL: HITL 1 (sanitização de conteúdo, pré-AI) e HITL 2 (proposta de atualização ontológica, via LangGraph interrupt). Campos: raw_content, sanitized_content, indexing_status (hot\|cold\|pending_hitl1) | FA-16 | BR-020 |
+| DO-61 | Stakeholder | Entity (AR) | BC-07 | Pessoa de contato do cliente (Type B registry acumulativo — não gerado pelo Oracle). Lifecycle próprio: 3 camadas (clientes diretos → times de produto → áreas específicas). Indexado em wiki_entities e knowledge_entities para RAG | FA-15 | BR-021, BR-022 |
 
-> Total: **60 objetos** distribuídos em 7 Bounded Contexts. **23 Aggregate Roots** consolidam invariantes; demais são entities/VOs internos a aggregates.
+> Total: **62 objetos** distribuídos em 7 Bounded Contexts. **24 Aggregate Roots** consolidam invariantes; demais são entities/VOs internos a aggregates.
 
 ---
 
@@ -975,45 +976,75 @@ Proposta gerada por agente curador sobre um `DriveDocument` (mover/renomear/tagg
 
 **Descrição de Negócio**
 
-Uma das **6 entidades ontológicas** geradas pelo Oráculo do Cliente para um `Client` durante o onboarding (FA-15). Cada entidade representa um aspecto estratégico do cliente: perfil, mercado, concorrentes, personas-alvo, histórico de campanhas e restrições legais. Gerada automaticamente pelo agente LangGraph (Oráculo) a partir de documentos do Drive + pesquisa web allow-list; validada por HITL obrigatório (RN-032). Visível somente para Admin/Curador (Wiki Ontológica T-39) — **caixa-preta para Operacional** (RN-011 pattern: 404, não 403).
+Uma das **9 entidades ontológicas backbone (Type A)** geradas pelo Oracle deep agent para um `Client` durante o onboarding (FA-15). Cada entidade representa um aspecto estratégico do cliente. Gerada automaticamente por subagente especializado por tipo de entidade; validada por HITL obrigatório (RN-032). Visível somente para Admin/Curador (Wiki Ontológica T-39) — **caixa-preta para Operacional** (RN-011 pattern: 404, não 403).
+
+**Tipo A vs. Tipo B**
+
+WikiEntity cobre exclusivamente entidades **Type A**: texto narrativo blob, **um registro ativo por cliente por entity_type**, gerado ou substituído pelo Oracle a cada ciclo de atualização. O histórico é arquivado, não acumulado. Entidades com lifecycle acumulativo (ex: stakeholders) vivem em `DO-61 Stakeholder` (Type B) com tabela e ciclo de vida próprios.
+
+**9 entity_types canônicos (ADR-007 v2)**
+
+| ID | entity_type | Descrição | Subagente Oracle |
+|----|-------------|-----------|------------------|
+| E1 | `CLIENT_PROFILE` | Perfil geral: setor, porte, posicionamento, história | `subagent-profile` |
+| E2 | `MARKET_CONTEXT` | Contexto de mercado: categoria, sazonalidade, dinâmicas | `subagent-market` |
+| E3 | `COMPETITORS` | Análise de concorrentes: players, diferenciação, posicionamento | `subagent-competitors` |
+| E4 | `BRAND_VOICE` | Tom e voz: personalidade, estilo, palavras a evitar, exemplos | `subagent-brand` |
+| E5 | `TARGET_PERSONAS` | Personas-alvo: perfis comportamentais, dores, canais | `subagent-personas` |
+| E6 | `LEGAL_CONSTRAINTS` | Restrições legais: CONAR, ANATEL, claims proibidos | `subagent-legal` |
+| E7 | `BUSINESS_OBJECTIVES` | Objetivos do período: foco, campanhas ativas, KPIs | `subagent-objectives` |
+| E8 | `CONTRACTED_SCOPE` | Escopo contratado: serviços, tier financeiro, SLAs, responsáveis Suno | `subagent-contract` |
+| E9 | `MARTECH_STACK` | Stack de tecnologia: ferramentas, integrações, plataformas de mídia | `subagent-martech` |
 
 **Atributos Principais**
 
 | Atributo | Descrição | Obrigatório |
 |----------|-----------|-------------|
 | `entity_id` | UUID | Sim |
-| `client_id` | FK → Client | Sim |
-| `entity_type` | `PROFILE` / `MARKET` / `COMPETITORS` / `TARGET_PERSONAS` / `CAMPAIGN_HISTORY` / `LEGAL_CONSTRAINTS` | Sim |
-| `content` | Texto mínimo 100 palavras gerado pelo Oráculo | Sim |
+| `client_id` | FK → Client (denormalizado para cross-tenant guard) | Sim |
+| `entity_type` | Um dos 9 canônicos acima (ADR-007 v2) | Sim |
+| `content` | Texto narrativo mínimo 100 palavras gerado pelo Oracle | Sim |
+| `embedding` | `vector(768)` — `text-embedding-004` (Gemini); obrigatório para RAG semântica (ADR-003, ADR-007 v2) | Não (populado pós-HITL) |
 | `provenance` | `ProvenanceEntry[]` — fontes (drive_file_id, web_url, snippet) | Sim |
-| `status` | `pending` / `generated` / `accepted` / `regenerating` | Sim |
+| `status` | `PENDING_REVIEW` / `ACTIVE` / `ARCHIVED` / `EMPTY` | Sim |
 | `badge` | `seed_auto` / `hitl_accepted` / `hitl_edited` / `capture` | Sim |
+| `role_visibility` | Roles mínimas para visualizar — default `operator`; `CONTRACTED_SCOPE` requer `sponsor` ou `admin` | Sim |
+| `confidence` | Score do subagente Oracle (0.0–1.0) | Não |
 | `updated_by` | FK → User (último editor HITL) | Não |
 | `created_at`, `updated_at` | Timestamps | Sim |
+
+**Guardrails específicos**
+
+- **CONTRACTED_SCOPE (E8):** `role_visibility = 'sponsor'` — contém tier financeiro sensível. Perfis `operator` recebem 404 ao tentar acessar — nunca 403 (caixa-preta, `.claude/rules/caixa-preta.md`). Implementado como row-level filter por `role` no JWT.
+- **MARTECH_STACK (E9):** Se não houver evidência de ferramentas/integrações nos documentos, entidade fica com `status = EMPTY` — não cria registro fantasma com conteúdo inventado.
 
 **Invariantes (Aggregate)**
 
 1. Cada `client_id` tem exatamente **1 WikiEntity por entity_type** (UNIQUE constraint)
-2. `content` deve ter ≥ 100 palavras — validado pelo Oráculo pós-geração (CA-09 da SPEC-015)
-3. Transição para `accepted` só ocorre via ação HITL explícita — nunca automática (RN-032)
-4. `badge` reflete a história: `seed_auto` → gerado pelo Oráculo; `hitl_edited` → conteúdo alterado pelo curador
+2. `content` deve ter ≥ 100 palavras — validado pelo Oracle pós-geração (CA-09 da SPEC-015)
+3. Transição para `ACTIVE` só ocorre via ação HITL explícita — nunca automática (RN-032)
+4. `badge` reflete a história: `seed_auto` → gerado pelo Oracle; `hitl_edited` → conteúdo alterado pelo curador
 5. WikiEntity de client em status `DRAFT` / `PRE_ACTIVE` visível apenas a Admin/Curador (CA-15 da SPEC-015)
+6. `embedding` deve ser recalculado via `text-embedding-004` sempre que `content` for atualizado (pipeline pós-HITL 2)
+7. `CONTRACTED_SCOPE` nunca visível a roles `operator` — `role_visibility` imutável para esta entity_type
 
 **Domain Events Emitidos**
 
 | Evento | Quando |
 |--------|--------|
-| `EV-43 EntityGenerated` | Oráculo concluiu geração de uma entidade |
+| `EV-43 EntityGenerated` | Oracle concluiu geração de uma entidade |
 | `EV-44 EntityValidated` | HITL aceitou ou editou a entidade |
+| `EV-47 EntityEmbeddingUpdated` | Pipeline pós-HITL recalculou embedding após aprovação |
 
 **Rastreabilidade**
 
 | Tipo | IDs |
 |------|-----|
 | Features | FA-15 |
-| BRs | BR-021 |
+| BRs | BR-021, BR-022 |
 | RNs | RN-032 |
 | NFRs | NFR-009 (RBAC), NFR-010 (cross-client), NFR-011 (caixa-preta) |
+| ADRs | ADR-003 (pgvector), ADR-007 v2 (schema canônico) |
 | SPEC | SPEC-015 |
 
 ---
@@ -1062,7 +1093,7 @@ Rastreia o estado assíncrono do job do Oráculo para um cliente específico. Se
 | `drive_sync_status` | `pending` / `running` / `done` / `error` | Sim |
 | `oracle_status` | `pending` / `running` / `done` / `error` | Sim |
 | `current_entity` | Entidade sendo processada no momento (checkpoint) | Não |
-| `entities_done` | Contagem de entidades concluídas (0–6) | Sim |
+| `entities_done` | Contagem de entidades concluídas (0–9) | Sim |
 | `error_detail` | Mensagem de erro se status = `error` | Não |
 | `started_at`, `completed_at` | Timestamps | Não |
 | `eta_hours` | Estimativa de conclusão em horas (default 24) | Sim |
@@ -1070,8 +1101,8 @@ Rastreia o estado assíncrono do job do Oráculo para um cliente específico. Se
 **Invariantes**
 
 1. Exatamente **1 OnboardingJob por Client** (UNIQUE em `client_id`)
-2. `entities_done` cresce monotonicamente de 0 a 6 — nunca regride
-3. Client só transita para `ACTIVE` quando `oracle_status = done` E todos WikiEntity `status = accepted` (RN-032)
+2. `entities_done` cresce monotonicamente de 0 a 9 — nunca regride
+3. Client só transita para `ACTIVE` quando `oracle_status = done` E todos WikiEntity `status = ACTIVE` (RN-032) — mínimo obrigatório: 8 entidades (MARTECH_STACK pode ficar `EMPTY` se cliente não tiver stack)
 
 **Rastreabilidade**: BR-021; FA-15; ADR-LOCAL-02 (SPEC-015).
 
@@ -1118,7 +1149,11 @@ Sessão de reunião **capturada seletivamente** pelo Creator para processamento 
 
 **Descrição de Negócio**
 
-Transcrição processada de uma `MeetingCapture`. Contém segmentação por speaker, resumo gerado por LLM e referências aos `KnowledgeItem`s criados a partir do conteúdo da reunião. Entidade interna ao aggregate `MeetingCapture`.
+Transcrição processada de uma `MeetingCapture`. Passa por **Dual HITL** antes de entrar no pipeline de AI:
+- **HITL 1 (Content safety — fora do Oracle):** revisor humano sanitiza PII, conteúdo de RH, fofoca e menções pessoais. Somente após aprovação o conteúdo entra no pipeline de AI. Resultado em `sanitized_content`.
+- **HITL 2 (Ontology update proposal — dentro do Oracle deep agent):** Oracle propõe atualização de WikiEntity com âncora de evidência; Admin/Sponsor aprova/rejeita via UI (LangGraph interrupt pattern).
+
+Após HITL 1, classificada como **hot** (< 60 dias → CAG: transcript completo no contexto) ou **cold** (≥ 60 dias → RAG: chunks semânticos indexados no pgvector).
 
 **Atributos Principais**
 
@@ -1126,19 +1161,100 @@ Transcrição processada de uma `MeetingCapture`. Contém segmentação por spea
 |----------|-----------|-------------|
 | `transcript_id` | UUID | Sim |
 | `capture_id` | FK → MeetingCapture | Sim |
-| `client_id` | Desnormalizado para cross-client guard | Sim |
-| `content_text` | Texto completo da transcrição | Sim |
+| `client_id` | Desnormalizado para cross-client guard (RN-010) | Sim |
+| `title` | Título da reunião | Sim |
+| `raw_content` | Texto bruto da transcrição (pré-HITL 1, acesso restrito) | Sim |
+| `sanitized_content` | Texto pós-HITL 1 (PII removido, aprovado para AI) | Não (preenchido após HITL 1) |
 | `speaker_segments` | `SpeakerSegment[]` (speaker, start_ms, end_ms, text) | Sim |
-| `summary` | Resumo LLM (tópicos, decisões, action items) | Não |
+| `indexing_status` | `pending_hitl1` / `hot` / `cold` | Sim |
+| `hitl1_approved_at` | Timestamp de aprovação do HITL 1 | Não |
+| `hitl1_approved_by` | FK → User (revisor HITL 1) | Não |
+| `summary` | Resumo LLM (tópicos, decisões, action items) — gerado pós-HITL 1 | Não |
 | `knowledge_items_generated` | `UUID[]` — IDs dos KnowledgeItems criados | Não |
 | `processed_at` | Timestamp do processamento | Não |
+| `created_at` | Timestamp de criação | Sim |
 
 **Invariantes**
 
 1. `client_id` desnormalizado para cross-client guard (RN-010)
 2. Transcript criado somente após `MeetingCapture.status = DONE`
+3. AI nunca lê `raw_content` — somente `sanitized_content` (gate HITL 1)
+4. `indexing_status = hot` enquanto idade < 60 dias; transição automática para `cold` por job diário que chunka e indexa no pgvector
+5. `raw_content` tem acesso restrito (Admin/Sponsor apenas); `sanitized_content` segue RBAC normal do cliente
 
-**Rastreabilidade**: BR-020; FA-16 (planejada); SPEC-016 (a criar).
+**Rastreabilidade**: BR-020; FA-16 (planejada); SPEC-016 (a criar); ADR-016 (Meeting Processing CAG/RAG — a criar).
+
+---
+
+### 4.10. BC-07 Approval & Validation — FA-15 Extensão (Stakeholders Type B)
+
+#### DO-61 — Stakeholder (Aggregate Root)
+
+**Descrição de Negócio**
+
+Pessoa de contato do cliente — **Type B registry acumulativo**. Ao contrário das entidades Type A (WikiEntity), stakeholders **não são gerados pelo Oracle** e **não são substituídos a cada ciclo**. São acumulados incrementalmente ao longo do ciclo de vida do relacionamento com o cliente.
+
+**Distinção Type A vs. Type B (ADR-007 v2)**
+
+| | Type A (WikiEntity) | Type B (Stakeholder) |
+|--|---------------------|----------------------|
+| Lifecycle | Substituição a cada ciclo Oracle | Acumulação incremental |
+| Geração | Oracle deep agent (subagentes) | Onboarding manual + captura de atas + edição direta |
+| Cardinalidade | 1 por (client_id, entity_type) | N por client_id |
+| Histórico | Versão anterior arquivada | Registro editado in-place (imutável via AuditEntry) |
+
+**3 Camadas de crescimento**
+
+| Camada | Momento | Fonte |
+|--------|---------|-------|
+| Camada 1 | Início do contrato | Clientes diretos + time de compras |
+| Camada 2 | Primeiras reuniões | Times de produto |
+| Camada 3 | Ao longo do tempo | Áreas específicas do cliente |
+
+**Atributos Principais**
+
+| Atributo | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `stakeholder_id` | UUID | Sim |
+| `client_id` | FK → Client (denormalizado para cross-tenant guard) | Sim |
+| `name` | Nome completo | Sim |
+| `email` | Email de contato | Não |
+| `role_at_client` | Cargo/função no cliente | Não |
+| `area` | Área/departamento (compras, produto, TI, etc.) | Não |
+| `layer` | Camada de origem: `1` / `2` / `3` (ADR-007 v2) | Sim |
+| `source` | `onboarding_manual` / `meeting_capture` / `direct_edit` | Sim |
+| `is_primary_contact` | Boolean — contato principal do cliente | Não |
+| `status` | `ACTIVE` / `INACTIVE` (soft delete) | Sim |
+| `notes` | Notas livres sobre o stakeholder | Não |
+| `created_at`, `updated_at` | Timestamps | Sim |
+
+**Indexação para RAG**
+
+Stakeholders são indexados em `wiki_entities` (com `entity_type = 'STAKEHOLDERS'`) e `knowledge_entities` para busca semântica por `client_id`. Isso permite ao Oracle e aos agentes de chat responder perguntas como "quem é o responsável de TI no cliente X?" usando RAG semântico (camada L5 da arquitetura de conhecimento).
+
+**Invariantes**
+
+1. `client_id` garante escopo — stakeholder de cliente A nunca visível a cliente B (RN-010)
+2. Soft delete (status `INACTIVE`) preserva histórico; stakeholder inativo não aparece em retrievals padrão
+3. `layer` é imutável após criação — reflete como o stakeholder foi descoberto, não seu cargo atual
+4. Toda edição de `name`, `role_at_client` ou `area` gera `AuditEntry` (rastreabilidade)
+
+**Domain Events Emitidos**
+
+| Evento | Quando |
+|--------|--------|
+| `EV-48 StakeholderAdded` | Novo stakeholder cadastrado (qualquer camada) |
+| `EV-49 StakeholderUpdated` | Dados editados por Builder/Sponsor |
+
+**Rastreabilidade**
+
+| Tipo | IDs |
+|------|-----|
+| Features | FA-15 |
+| BRs | BR-021, BR-022 |
+| RNs | RN-010 (cross-client), RN-032 |
+| NFRs | NFR-009 (RBAC), NFR-010 (cross-client) |
+| ADRs | ADR-007 v2 (Type B formalizado) |
 
 ---
 
@@ -1192,6 +1308,9 @@ Eventos são **fatos** publicados por aggregates e consumidos por outros context
 | EV-44 | EntityValidated | BC-07 | BC-06 (gate check), BC-05 | client_id, entity_type, action, user_id |
 | EV-45 | ClientActivated | BC-06 | BC-02, BC-03, BC-05 | client_id, activated_by, activated_at |
 | EV-46 | MeetingCaptured | BC-02 | BC-05 | capture_id, client_id, source_type |
+| EV-47 | EntityEmbeddingUpdated | BC-07 | BC-05 | entity_id, client_id, entity_type |
+| EV-48 | StakeholderAdded | BC-07 | BC-05 | stakeholder_id, client_id, layer |
+| EV-49 | StakeholderUpdated | BC-07 | BC-05 | stakeholder_id, client_id, changed_fields |
 
 ---
 
@@ -1403,9 +1522,10 @@ classDiagram
 | **DriveSync Aggregate** | DriveSync | OAuthCredential, DriveDocument | Read-only (RN-027, ADR-009); ACL Drive ∩ RBAC sunOS (RN-028) |
 | **CurationSuggestion Aggregate** | CurationSuggestion | — | Sempre sugestiva (RN-029); aceitar cria KnowledgeItem em BC-02 |
 | **DriveCleanupReport Aggregate** | DriveCleanupReport | — | Apenas relatório; nenhuma ação destrutiva no Drive (RN-027, RN-029) |
-| **WikiEntity Aggregate** | WikiEntity | EntityHITLEvent | UNIQUE(client_id, entity_type); content ≥ 100 palavras; aceite somente via HITL (RN-032) |
-| **OnboardingJob Aggregate** | OnboardingJob | — | UNIQUE(client_id); entities_done monotônico; Client→ACTIVE só quando job done + todos WikiEntity accepted (RN-032) |
-| **MeetingCapture Aggregate** | MeetingCapture | MeetingTranscript | consent_confirmed obrigatório (LGPD Art. 7); cross-client guard via client_id (RN-010) |
+| **WikiEntity Aggregate** | WikiEntity | EntityHITLEvent | 9 entity_types (Type A); UNIQUE(client_id, entity_type); content ≥ 100 palavras; aceite somente via HITL (RN-032); embedding recalculado pós-HITL; CONTRACTED_SCOPE restrito a sponsor/admin |
+| **OnboardingJob Aggregate** | OnboardingJob | — | UNIQUE(client_id); entities_done monotônico (0–9); Client→ACTIVE só quando job done + mínimo 8 WikiEntity ACTIVE (MARTECH_STACK pode ser EMPTY) (RN-032) |
+| **MeetingCapture Aggregate** | MeetingCapture | MeetingTranscript | consent_confirmed obrigatório (LGPD Art. 7); cross-client guard via client_id (RN-010); Dual HITL (sanitização + proposta ontológica) |
+| **Stakeholder Aggregate** | Stakeholder | — | Type B registry acumulativo; 3 camadas de crescimento; client_id garante isolamento (RN-010); soft delete preserva histórico |
 
 ---
 
@@ -1485,4 +1605,5 @@ classDiagram
 |--------|------|-------|------------|
 | 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. **6 Bounded Contexts** (Identity & Access, Content & Knowledge, Conversation & Inference, Insight & Provocation, Measurement & Observability, Multi-tenant Sistema Solar) com **15 Aggregates Roots** e ~42 objetos de domínio totais (entities + VOs). **27 Domain Events** catalogados. Linguagem ubíqua derivada do Glossário do BRD (Devorar, Provocar, Faísca, Brasa, Bioma, Skill, Moon, Biblioteca, Caixa-preta, Sistema Solar). Diagramas Mermaid de Context Map, hierarquia conceitual e Class Diagram. Rastreabilidade completa a BRs/RNs (Parte 3/4 do BRD), NFRs (Parte 1 do SRD) e Features (Parte 1 do PRD). Status: Rascunho aguardando revisão técnica. |
 | 1.2 | 2026-05-15 | Heitor Miranda + Claude | Adicionado **5 Domain Objects** (DO-56 a DO-60) para FA-15 (Onboarding com Oráculo do Cliente) e FA-16 (Captura Seletiva de Reuniões). +3 Aggregate Roots (WikiEntity, OnboardingJob, MeetingCapture), +5 Domain Events (EV-42 a EV-46). WikiEntity e EntityHITLEvent estendem BC-07 (Approval & Validation) com HITL gate de onboarding; OnboardingJob estende BC-06 (Multi-tenant); MeetingCapture e MeetingTranscript estendem BC-02 (Content & Knowledge). Atualizado BC↔Features (FA-15→BC-07, FA-16→BC-02). Total: 60 objetos, 46 eventos. |
+| 1.3 | 2026-06-23 | Heitor Miranda + Claude | **Oracle v2 redesign** — alinhamento com ADR-007 v2 e design doc `2026-06-23-oracle-deep-agent-design.md`. (1) **DO-56 WikiEntity** atualizado: 6 entidades hardcoded → **9 entidades backbone canônicas** (CLIENT_PROFILE, MARKET_CONTEXT, COMPETITORS, BRAND_VOICE, TARGET_PERSONAS, LEGAL_CONSTRAINTS, BUSINESS_OBJECTIVES, CONTRACTED_SCOPE, MARTECH_STACK); formalização **Type A vs. Type B**; adição de campo `embedding vector(768)` para RAG semântica; adição de campo `role_visibility` para controle de acesso granular (CONTRACTED_SCOPE → sponsor/admin); guardrails específicos por entity_type documentados. (2) **DO-60 MeetingTranscript** expandido: adicionados campos `raw_content`, `sanitized_content`, `indexing_status` (hot/cold/pending_hitl1), `hitl1_approved_at`, `hitl1_approved_by`; documentado Dual HITL pattern (HITL 1 content safety + HITL 2 ontology update proposal). (3) **DO-61 Stakeholder** adicionado como novo Aggregate Root (Type B, BC-07): registry acumulativo de contatos do cliente, 3 camadas de crescimento, lifecycle próprio separado do backbone Oracle. (4) **DO-58 OnboardingJob** atualizado: `entities_done` de 0–6 para 0–9; invariante de ativação do cliente revisada (MARTECH_STACK pode ser EMPTY). (5) +3 Domain Events (EV-47 EntityEmbeddingUpdated, EV-48 StakeholderAdded, EV-49 StakeholderUpdated). Total: **62 objetos**, **49 eventos**, **24 Aggregate Roots**. |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude | Adicionado **BC-07 Approval & Validation (External Sources)** para FA-13 (Aprovação Hierárquica) + FA-14 (Google Drive como Fonte). +13 objetos de domínio (DO-43 a DO-55), +5 Aggregate Roots (ApprovalRequest, ValidationReport, DriveSync, CurationSuggestion, DriveCleanupReport), +14 Domain Events (EV-28 a EV-41). Atualizados Context Map (relacionamentos com BC-01/02/03/04/05/06), tabela BC↔Containers (CTM-08 Approval Engine, CTM-09 Drive Connector), mapeamento NFR↔Aggregates, assunções (ASS-DM-06/07/08), TODOs (TODO-DM-07 a TODO-DM-10). Vocabulário ubíquo expandido com `Validado`, `Aprovador`, `Drive Sync`, `Curadoria Sugestiva`. Rastreabilidade a BR-017/018, RN-023 a RN-030, ADR-008/009/010. |

@@ -3,9 +3,9 @@ documento: BRD Parte 3 — Requisitos de Negócio (BR-XXX)
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
 bu: Tecnologia e Dados para Marketing
-versao: 1.2
+versao: 1.5
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-05-14
+ultima_atualizacao: 2026-06-23
 autor: Heitor Miranda + Claude (assistido)
 status: Rascunho
 aprovacoes:
@@ -29,12 +29,12 @@ Esta parte traduz os **5 Objetivos de Negócio** da Parte 1 e as **7 Capacidades
 ## Como Usar
 
 - BRs estão organizados em **6 categorias temáticas** que correspondem a frentes de valor do projeto
-- Cada BR tem ID sequencial (BR-001 a BR-022), prioridade, stakeholder demandante, critérios de aceite e dependências
+- Cada BR tem ID sequencial (BR-001 a BR-023), prioridade, stakeholder demandante, critérios de aceite e dependências
 - **BR ≠ FR (Functional Requirement)**: BR descreve a necessidade; FR descreve a solução. FRs vivem em PRDs/FRDs separados
 - **Quando uma feature já tem FRD próprio (ex: Moon Shot), o BR aponta para ele** — nunca duplica
 - Critérios de aceite são **verificáveis**, não desejos vagos
 
-## Sumário Executivo (21 BRs)
+## Sumário Executivo (23 BRs)
 
 | ID | Título resumido | Prioridade | Categoria | Fase |
 |----|----------------|:----------:|----------|----|
@@ -60,6 +60,7 @@ Esta parte traduz os **5 Objetivos de Negócio** da Parte 1 e as **7 Capacidades
 | **BR-020** | Captura seletiva de inputs operacionais via gravação assistida | Média | G — Workflow & Governança | Momento 2 |
 | **BR-021** | Wiki Ontológica — repositório de entidades estruturadas por cliente | Alta | G — Workflow & Governança | Piloto |
 | **BR-022** | Onboarding automatizado de cliente com Oráculo do Cliente | Alta | G — Workflow & Governança | Piloto |
+| **BR-023** | Reuniões como fonte de atualização ontológica | Alta | G — Workflow & Governança | Piloto |
 
 ---
 
@@ -566,7 +567,7 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 
 ### BR-021 — Wiki Ontológica — repositório de entidades estruturadas por cliente
 
-**Descrição**: O sunOS deve manter uma **Wiki Ontológica** por cliente — repositório estruturado de entidades de negócio que qualificam o cliente em profundidade para todos os agentes da plataforma. A Wiki é o "estado de verdade" do cliente: cada entidade (pessoa-chave, sistema, objetivo de negócio, contrato vigente, jornada-foco, brand voice) tem tipo, valor, fonte, data de validação e responsável humano. A Wiki é alimentada continuamente por três fluxos: onboarding automatizado (BR-022 / FA-15), sync do Drive corporativo da Suno (BR-018), e captura seletiva de reuniões (BR-020 / FA-16). Cada entidade exige validação humana antes de se tornar oficial (RN-032). Skills processuais do sunOS consultam a Wiki via RAG ontológico antes de gerar outputs.
+**Descrição**: O sunOS deve manter uma **Wiki Ontológica** por cliente — repositório estruturado de entidades de negócio que qualificam o cliente em profundidade para todos os agentes da plataforma. A Wiki é o "estado de verdade" do cliente: cada entidade tem tipo, valor, fonte, data de validação e responsável humano. A Wiki é alimentada continuamente por três fluxos: onboarding automatizado (BR-022 / FA-15), sync do Drive corporativo da Suno (BR-018), e captura seletiva de reuniões (BR-020 / BR-023 / FA-16). Cada entidade exige validação humana antes de se tornar oficial (RN-032). Skills processuais do sunOS consultam a Wiki via RAG ontológico antes de gerar outputs.
 
 **Prioridade**: Alta
 
@@ -574,19 +575,21 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 
 **Critérios de Aceite**:
 - [ ] Wiki Ontológica existe por cliente, acessível em `/clientes/:slug/wiki`
-- [ ] Suporta no mínimo 6 tipos de entidade core: `pessoa-chave`, `sistema`, `objetivo-de-negocio`, `contrato-vigente`, `jornada-foco`, `brand-voice`
+- [ ] Suporta as 9 entidades backbone (Type A — narrativa): `CLIENT_PROFILE`, `MARKET_CONTEXT`, `COMPETITORS`, `BRAND_VOICE`, `TARGET_PERSONAS`, `LEGAL_CONSTRAINTS`, `BUSINESS_OBJECTIVES`, `CONTRACTED_SCOPE`, `MARTECH_STACK`
 - [ ] Cada entidade tem campos: tipo, valor, fonte (Drive / reunião / onboarding / manual), data de validação, responsável (Builder ou Sponsor), status (`PENDING_REVIEW | ACTIVE | ARCHIVED`)
 - [ ] Entidade só vira `ACTIVE` após validação humana explícita (HITL obrigatório — RN-032)
-- [ ] Cliente permanece `PRE_ACTIVE` até no mínimo as 6 entidades core terem status `ACTIVE`
+- [ ] Cliente permanece `PRE_ACTIVE` até no mínimo as 9 entidades backbone terem status `ACTIVE`
+- [ ] `CONTRACTED_SCOPE` acessível apenas a roles `admin`/`sponsor` (guardrail de tier financeiro sensível — ADR-015)
+- [ ] `MARTECH_STACK` pode permanecer vazia se cliente não tem ferramentas identificadas (não cria registro fantasma)
 - [ ] Skills processuais consultam automaticamente a Wiki do cliente ativo antes de gerar output — sem ação do operador
 - [ ] Wiki é caixa-preta para perfis operacionais: conteúdo não exibido diretamente, consumido apenas via Skills (RN-011)
 - [ ] Audit log de cada entidade: quem criou, quem aprovou, de que fonte veio, histórico de edições
 - [ ] Wiki admite atualização incremental: nova entidade ou edição não invalida as já aprovadas
 - [ ] Proveniência rastreável: cada entidade indica a fonte específica (nome do arquivo no Drive, timestamp da reunião, etc.)
 
-**Dependências**: BR-018 (Drive como fonte de seed), BR-022 (Onboarding Oráculo como fluxo de criação), BR-020 (Captura Seletiva como fonte contínua), BR-007 (RBAC / caixa-preta), BR-009 (Auditabilidade)
+**Dependências**: BR-018 (Drive como fonte de seed), BR-022 (Onboarding Oráculo como fluxo de criação), BR-020 (Captura Seletiva como fonte contínua), BR-023 (Reuniões como fonte de atualização ontológica), BR-007 (RBAC / caixa-preta), BR-009 (Auditabilidade)
 
-**Fonte**: Reunião 13/05/2026 (Heitor: *"esse DP agent aqui pra descobrir, seria um oráculo do cliente, ele teria todas as informações do cliente"*). Reunião 07/05/2026 (Guga sobre Drive: *"qualquer documento que entra no drive de MRV ele atualiza a WIKI automaticamente"*). Consolidação 14/05/2026 como entidade central que BR-018, BR-020 e BR-022 alimentam.
+**Fonte**: Reunião 13/05/2026 (Heitor: *"esse DP agent aqui pra descobrir, seria um oráculo do cliente, ele teria todas as informações do cliente"*). Reunião 07/05/2026 (Guga sobre Drive: *"qualquer documento que entra no drive de MRV ele atualiza a WIKI automaticamente"*). Consolidação 14/05/2026 como entidade central que BR-018, BR-020 e BR-022 alimentam. Revisão 23/06/2026: schema atualizado de 6 para 9 entidades backbone canônicas alinhadas ao ADR-007 v2 e ADR-015 (Oracle Deep Agent Architecture).
 
 ---
 
@@ -616,6 +619,43 @@ Como o sunOS suporta o fluxo de submissão → pré-validação automática → 
 **Fonte**: Reunião 13/05/2026 (Heitor descrevendo o "oráculo do cliente"). Decisão de design 14/05/2026 (Heitor + Elton sobre dono do fluxo no MVP).
 
 **Observação**: Este BR adota a Hipótese C (Discovery automatizado pesado) da análise de cobertura, em vez de wizard simples.
+
+---
+
+### BR-023 — Reuniões como fonte de atualização ontológica
+
+**Descrição**: As atas de reunião entre time Suno e cliente devem ser processadas como fonte contínua de atualização da ontologia do cliente. Reuniões contêm decisões estratégicas, mudanças de escopo, novos stakeholders e contexto vivo que complementam as fontes estáticas (Drive, onboarding inicial). O processamento deve respeitar restrições rigorosas de privacidade e controle humano, dado que atas tipicamente contêm conteúdo sensível (PII, RH, vida pessoal) misturado com conteúdo relevante para a ontologia.
+
+**Prioridade**: Alta
+
+**Stakeholders demandantes**: Guga (sponsor), Elton (Operações), Cíntia (Planejamento), Heitor (tutela técnica)
+
+**Critérios de Aceite**:
+
+a) **Sanitização obrigatória pré-AI (HITL 1):** Conteúdo sensível — PII de não-stakeholders cadastrados, dados de RH (promoções, demissões, avaliações, salários), informações pessoais (férias, família, saúde), fofoca organizacional e informações de gestão de pessoas — deve ser removido por revisor humano ANTES de qualquer processamento por IA. `indexing_status = 'pending_hitl1'` bloqueia acesso ao pipeline até aprovação explícita.
+
+b) **Retrieval diferenciado por recência:** Sistema deve diferenciar reuniões recentes (< 60 dias) de reuniões antigas (≥ 60 dias) no mecanismo de retrieval. Reuniões recentes usam CAG (transcript sanitizado completo no contexto); reuniões antigas usam RAG (chunks semânticos indexados em pgvector). Transição hot→cold executada por job diário idempotente.
+
+c) **HITL 2 para atualizações ontológicas:** Atualizações propostas pela IA com base em reuniões devem passar por aprovação humana (Admin ou Sponsor) via LangGraph `interrupt()`. A proposta deve incluir: entidade a atualizar, trecho exato da ata que fundamenta a proposta, diff legível antes/depois e score de confiança. Sem aprovação humana, nenhuma entidade é modificada.
+
+d) **Proibição de conteúdo de gestão de pessoas:** Nenhuma informação de gestão de pessoas (avaliações de performance, promoções, demissões, conflitos de equipe, reestruturações organizacionais) pode ser incorporada à ontologia do cliente. Esta restrição é aplicada tanto no checklist do HITL 1 quanto no guardrail de output do Oracle (Guardrail 2 — ADR-016).
+
+- [ ] Upload de nova ata aciona status `pending_hitl1` — conteúdo inacessível ao pipeline de AI até aprovação humana
+- [ ] Interface de revisão HITL 1 apresenta checklist de categorias sensíveis ao revisor; aprovação registra `hitl1_approved_by` e `hitl1_approved_at`
+- [ ] Reuniões com `indexing_status = 'hot'` (< 60 dias) carregadas como CAG no contexto do Oracle; reuniões `cold` (≥ 60 dias) acessadas via RAG semântico em pgvector
+- [ ] Job diário `hot_to_cold` transiciona atas, chunka via `RecursiveCharacterTextSplitter` e indexa em `meeting_chunks` (mesmo schema AlloyDB do ADR-008)
+- [ ] Proposta de atualização ontológica gerada pelo Oracle inclui campo `evidence_anchor` com trecho literal da ata que motiva a mudança
+- [ ] Revisor (Admin/Sponsor) aprova ou rejeita cada proposta individualmente via UI. Aprovação dispara pipeline embed + GraphRAG seed (ADR-013)
+- [ ] Nenhum conteúdo de gestão de pessoas (avaliações, promoções, demissões, conflitos) presente em `sanitized_content` de nenhuma ata (verificável por auditoria)
+- [ ] Audit log registra cada ata: quem fez upload, quem aprovou HITL 1, quais proposals HITL 2 foram aprovadas/rejeitadas, tempo total do pipeline
+- [ ] Caixa-preta: endpoint de aprovação HITL 1 retorna 404 (não 403) para `meeting_id` de outro cliente (RN-010)
+- [ ] Acesso às transcrições segue RBAC: operacionais não veem reuniões a que não estiveram presentes
+
+**Dependências**: BR-021 (Wiki Ontológica como destino das atualizações), BR-020 (Captura Seletiva como fonte de atas), BR-007 (RBAC / caixa-preta), BR-008 (privacidade), BR-009 (Auditabilidade)
+
+**Fonte**: Design session 23/06/2026 (`docs/superpowers/specs/2026-06-23-oracle-deep-agent-design.md`, Decisões 5 e 6). ADR-016 (Pipeline de processamento de reuniões — Dual HITL + CAG/RAG híbrido). Guga 07/05/2026: *"a gente tem que achar um jeito de a gente gravar, e com uma caixa preta, isso não tá à disposição de todo mundo"*.
+
+**Observação**: Este BR especifica as **restrições de negócio** para o processamento de reuniões. A arquitetura técnica (CAG/RAG híbrido, schema de dados, pipelines pós-HITL) está documentada no ADR-016. A feature de captura (gravação, transcrição, notificação de participantes) está em BR-020.
 
 ---
 
@@ -686,9 +726,10 @@ Cada BR deve cobrir pelo menos um Objetivo da Parte 1. Matriz garante que nenhum
 | BR-020 — Captura seletiva | | ✓ | ✓ | ✓ | |
 | BR-021 — Wiki Ontológica | ✓ | ✓ | ✓ | ✓ | |
 | BR-022 — Onboarding Oráculo do Cliente | ✓ | ✓ | ✓ | ✓ | |
+| BR-023 — Reuniões como fonte ontológica | ✓ | ✓ | ✓ | ✓ | |
 
 **Cobertura**: cada um dos 5 OBJ tem ≥3 BRs associados — boa redundância sem inflação.
-**Nota**: BR-021 adicionado na v1.3 com linha na rastreabilidade: BR-021 cobre OBJ-01, OBJ-02, OBJ-03, OBJ-04.
+**Nota**: BR-021 adicionado na v1.3 com linha na rastreabilidade: BR-021 cobre OBJ-01, OBJ-02, OBJ-03, OBJ-04. BR-023 adicionado na v1.5: cobre OBJ-01, OBJ-02, OBJ-03, OBJ-04.
 
 
 ---
@@ -708,3 +749,4 @@ Cada BR deve cobrir pelo menos um Objetivo da Parte 1. Matriz garante que nenhum
 | 1.2 | 2026-05-14 | +BR-019 (UX estruturada — Categoria H), +BR-020 (Captura Seletiva), +BR-022 (Onboarding Oráculo do Cliente). BR-018 atualizado para v2 (Drive limitado ao Drive interno da Suno). Matriz BR ↔ OBJ atualizada. |
 | 1.4 | 2026-05-15 | **Ponto 9 resolvido**: BR-001 mantém prioridade **Alta** — explicitada como Alta *dentro do Momento 2*. |
 | 1.3 | 2026-05-14 | **+BR-021** (Wiki Ontológica — repositório de entidades estruturadas por cliente). Sumário expandido com coluna **Fase** (Piloto / Momento 2) para cada BR. BR-017, BR-020 marcados como Momento 2 (FA-13, FA-16 movidas). BR-001, BR-014 marcados como Momento 2 (Moon Shot pós-Piloto). Matriz BR ↔ OBJ: BR-021 adicionado. |
+| 1.5 | 2026-06-23 | **BR-021 revisado**: schema atualizado de 6 entidades (`pessoa-chave`, `sistema`, `objetivo-de-negocio`, `contrato-vigente`, `jornada-foco`, `brand-voice`) para 9 entidades backbone canônicas (`CLIENT_PROFILE`, `MARKET_CONTEXT`, `COMPETITORS`, `BRAND_VOICE`, `TARGET_PERSONAS`, `LEGAL_CONSTRAINTS`, `BUSINESS_OBJECTIVES`, `CONTRACTED_SCOPE`, `MARTECH_STACK`), alinhado ao redesign Oracle v2 (ADR-007 v2, ADR-015). **+BR-023** (Reuniões como fonte de atualização ontológica): Dual HITL obrigatório, CAG/RAG híbrido com threshold 60 dias, proibição de conteúdo de gestão de pessoas. Fundamento: ADR-016 e design session 23/06/2026. Sumário expandido para 23 BRs. Matriz BR ↔ OBJ: BR-023 adicionado. |

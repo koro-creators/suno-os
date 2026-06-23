@@ -2,9 +2,9 @@
 documento: SRD Parte 6 - Architecture To-Be
 projeto: sunOS
 cliente: Suno United Creators (uso 100% interno)
-versao: 1.0
+versao: 1.2
 data_criacao: 2026-04-28
-ultima_atualizacao: 2026-04-28
+ultima_atualizacao: 2026-06-23
 autor: Heitor Miranda + Claude (Koro Docs Pipeline)
 status: Rascunho
 fonte_prd: docs/prd/parte1-feature-map.md
@@ -600,6 +600,286 @@ flowchart TB
 
 ---
 
+## 4.6. Oracle v2 — Onboarding como Deep Agent [NOVO]
+
+> **Referências:** ADR-015 (Oracle Deep Agent Architecture), ADR-016 (Meeting Processing CAG/RAG), `docs/superpowers/specs/2026-06-23-oracle-deep-agent-design.md`
+
+### 4.6.1. Contexto e Motivação
+
+O Oracle v1 (`api/onboarding/oracle_agent.py`) é um LangGraph de 2 nós (`research → extract`) invocado serialmente uma vez por entidade. Tem quatro limitações críticas que o redesign v2 resolve:
+
+| Limitação v1 | Solução v2 |
+|---|---|
+| Sem paralelização nativa (9 × ~10s ≈ 90s serial) | Subagentes com `concurrency=9` (~15–20s total) |
+| Contexto monolítico causa interferência semântica entre entidades | Contexto isolado por subagente |
+| Sem HITL nativo (não há interrupt no grafo) | LangGraph `interrupt()` nativo via harness `deepagents` |
+| Sem planning adaptativo (caller orquestra externamente) | Agente principal planeja via `write_todos` |
+
+### 4.6.2. Arquitetura: deep agent com subagentes por entidade
+
+O Oracle v2 é um **único deep agent principal** (`create_deep_agent`) com **9 subagentes especializados** por tipo de entidade. Integra-se ao backend como módulo `api/onboarding/` (novo ou reescrito), orquestrado pelo Knowledge & Skills Service (CTM-02) e pelo Onboarding Service.
+
+```
+OracleDeepAgent (create_deep_agent)
+│
+├── Agente principal
+│   ├── tools: write_todos, list_client_documents, get_entity_current_state
+│   ├── Planeja via write_todos quais entidades atualizar (ciclo 1/2/3)
+│   ├── Despacha subagentes em paralelo (concurrency=9)
+│   ├── Coleta resultados compactos de cada subagente
+│   └── LangGraph interrupt → HITL 2 quando proposed_update_flag=True
+│
+└── Subagentes (um por entity_type — contexto isolado)
+    ├── subagent-profile      → CLIENT_PROFILE
+    ├── subagent-market       → MARKET_CONTEXT
+    ├── subagent-competitors  → COMPETITORS
+    ├── subagent-brand        → BRAND_VOICE
+    ├── subagent-personas     → TARGET_PERSONAS
+    ├── subagent-legal        → LEGAL_CONSTRAINTS
+    ├── subagent-objectives   → BUSINESS_OBJECTIVES
+    ├── subagent-contract     → CONTRACTED_SCOPE
+    └── subagent-martech      → MARTECH_STACK
+```
+
+#### Fontes por subagente
+
+| Subagente | entity_type | Fontes primárias |
+|---|---|---|
+| `subagent-profile` | `CLIENT_PROFILE` | Drive cliente + web (Tavily) |
+| `subagent-market` | `MARKET_CONTEXT` | Drive + web + Tavily |
+| `subagent-competitors` | `COMPETITORS` | Drive + web + Tavily |
+| `subagent-brand` | `BRAND_VOICE` | Drive + brand guidelines do cliente |
+| `subagent-personas` | `TARGET_PERSONAS` | Drive + brief |
+| `subagent-legal` | `LEGAL_CONSTRAINTS` | Drive + contrato |
+| `subagent-objectives` | `BUSINESS_OBJECTIVES` | Drive + proposta comercial |
+| `subagent-contract` | `CONTRACTED_SCOPE` | Proposta comercial PDF + JDs Suno |
+| `subagent-martech` | `MARTECH_STACK` | Drive + proposta + tech docs |
+
+**`subagent-contract`** é especializado: lê proposta comercial final/contrato assinado (PDF) e job descriptions das pessoas/departamentos Suno relevantes. Extrai serviços contratados por área (criação/mídia/planejamento/data), tier financeiro, SLAs implícitos e responsáveis internos. Output tem flag `min_role=sponsor` — roles `admin` e `sponsor` apenas; Operacional recebe 404 (caixa-preta — ver `.claude/rules/caixa-preta.md`).
+
+**`subagent-martech`** é condicional: verifica evidência de ferramentas/integrações antes de popular. Se não houver dados suficientes, retorna `status=EMPTY` sem criar entidade fantasma.
+
+### 4.6.3. Diagrama de fluxo do deep agent
+
+```mermaid
+flowchart TB
+    trigger([Trigger: onboarding / revisão periódica / evento Drive])
+
+    subgraph oracle["OracleDeepAgent (create_deep_agent)"]
+        plan[Agente principal\nwrite_todos — planeja quais entidades processar]
+
+        subgraph parallel["Subagentes em paralelo (concurrency=9)"]
+            sa1[subagent-profile]
+            sa2[subagent-market]
+            sa3[subagent-competitors]
+            sa4[subagent-brand]
+            sa5[subagent-personas]
+            sa6[subagent-legal]
+            sa7[subagent-objectives]
+            sa8[subagent-contract]
+            sa9[subagent-martech]
+        end
+
+        consolidate[Agente principal\nconsolida resultados compactos]
+
+        decision{proposed_update_flag?}
+        interrupt_node[LangGraph interrupt\nOntologyUpdateProposal]
+        persist[Persistir em wiki_entities\nstatus=PENDING_REVIEW ou ACTIVE]
+    end
+
+    sources_drive[(Drive cliente\nDocs / Proposta / Brand Guidelines)]
+    sources_web([Tavily Web Search])
+    sources_suno[(JDs Suno\nProposta comercial PDF)]
+
+    hitl2([Revisor Admin/Sponsor\nUI — aprova ou rejeita])
+
+    pipeline1[Pipeline 1: Embed entity\nwiki_entities.embedding via text-embedding-004]
+    pipeline2[Pipeline 2: GraphRAG seed\nLLMGraphTransformer → knowledge_entities badge=oracle_seed]
+
+    trigger --> plan
+    plan --> parallel
+    sa1 & sa2 & sa3 --> sources_drive
+    sa1 & sa2 & sa3 --> sources_web
+    sa4 --> sources_drive
+    sa5 --> sources_drive
+    sa6 --> sources_drive
+    sa7 --> sources_drive
+    sa8 --> sources_suno
+    sa9 --> sources_drive
+    parallel --> consolidate
+    consolidate --> decision
+    decision -- "Não (Ciclo 1 / sem contradição)" --> persist
+    decision -- "Sim (Ciclo 2/3 — entidade ativa com contradição)" --> interrupt_node
+    interrupt_node --> hitl2
+    hitl2 -- "Aprovado" --> pipeline1
+    hitl2 -- "Aprovado" --> pipeline2
+    hitl2 -- "Rejeitado" --> persist
+    pipeline1 --> persist
+    pipeline2 --> persist
+```
+
+### 4.6.4. HITL 2 — LangGraph interrupt para aprovação de ontologia
+
+HITL 2 é acionado quando um subagente detecta contradição com uma entidade existente (`status=ACTIVE`) ou quando `confidence < 0.75`. Implementado via `interrupt()` nativo do harness `deepagents`.
+
+```python
+# api/onboarding/oracle_graph.py — padrão do LangGraph interrupt
+if agent_proposes_update:
+    interrupt(value=OntologyUpdateProposal(
+        entity_id=entity_id,          # UUID em wiki_entities
+        entity_type=entity_type,      # ex: "BRAND_VOICE"
+        evidence_anchor=excerpt,      # trecho exato da fonte
+        proposed_change=diff,         # diff semântico antes/depois
+        confidence=score,             # 0.0–1.0
+        source_path=path,             # Drive path ou URL
+    ))
+    # Grafo pausa — retoma após decisão humana
+```
+
+**Não se aplica no Ciclo 1** (onboarding inicial) — não há entidade anterior para contradizer. Todos os 9 subagentes persistem diretamente com `status=PENDING_REVIEW`.
+
+**Pipelines pós-HITL 2 (após aprovação):**
+
+- **Pipeline 1 — Embed entity:** `UPDATE wiki_entities.content` → `embed_text(text-embedding-004)` → `UPDATE wiki_entities.embedding` → invalidate cache L1
+- **Pipeline 2 — GraphRAG seed (ADR-013):** `LLMGraphTransformer` → UPSERT `knowledge_entities` (`badge=oracle_seed`) + `entity_relationships` → enqueue pgvector
+
+---
+
+## 4.7. Pipeline de Reuniões — Dual HITL + CAG/RAG [NOVO]
+
+> **Referência:** ADR-016 (Meeting Processing — Dual HITL + CAG/RAG híbrido)
+
+### 4.7.1. Posição na arquitetura
+
+O pipeline de reuniões é parte do módulo `api/onboarding/` e alimenta a Camada L4 da arquitetura de conhecimento (ver §4.8). Atas de reunião contêm decisões estratégicas relevantes para a ontologia do cliente mas também conteúdo sensível (PII, RH, fofoca). O pipeline resolve ambos os problemas com dois checkpoints humanos obrigatórios antes de qualquer processamento por AI.
+
+### 4.7.2. Dual HITL
+
+```
+Upload de ata
+    │
+    ▼
+[HITL 1 — Content Safety]           ← fora do deep agent, pré-AI
+    Revisor: Admin/Sponsor
+    Remove: PII, RH, fofoca, vida pessoal, gestão confidencial
+    Resultado: meeting_transcripts.sanitized_content preenchida
+    Gate: indexing_status muda de 'pending_hitl1' → 'hot'
+    Conteúdo bruto NUNCA é lido por LLM antes desta etapa
+    │
+    ▼ (somente conteúdo sanitizado)
+[Deep Agent Oracle — Ciclo 3 (evento)]
+    Subagentes leem sanitized_content
+    │
+    ▼ (se contradição com entidade existente)
+[HITL 2 — Ontology Update Proposal] ← dentro do deep agent, LangGraph interrupt
+    Revisor: Admin/Sponsor
+    Payload: entity_id, evidence_anchor, proposed_change, confidence
+    Aprovado → Pipelines pós-HITL 2 (embed + GraphRAG seed)
+    Rejeitado → entidade permanece; feedback armazenado
+```
+
+**Caixa-preta:** Endpoint de aprovação HITL 1 retorna 404 (não 403) para `meeting_id` de outro cliente. `client_id` é coluna denormalizada em todas as queries (RN-010).
+
+### 4.7.3. CAG/RAG híbrido com critério temporal
+
+Reuniões aprovadas pelo HITL 1 são servidas por dois mecanismos de retrieval conforme a idade da ata:
+
+| Estado | Critério | Mecanismo | Localização |
+|---|---|---|---|
+| `hot` | `created_at >= NOW() - INTERVAL '60 days'` | **CAG** — transcript completo no context window | `meeting_transcripts.sanitized_content` |
+| `cold` | `created_at < NOW() - INTERVAL '60 days'` | **RAG** — chunks semânticos no pgvector | `meeting_chunks` (pgvector, schema ADR-008) |
+| `pending_hitl1` | Aguardando aprovação | **Bloqueado** — inacessível ao AI | `meeting_transcripts.raw_content` |
+
+**CAG (hot):** Transcript completo carregado no context window. Gemini 2.5 Flash (1M token window) comporta múltiplas atas completas. Reuniões ordenadas por data DESC; carregadas até ≈70% do context budget. Prompt caching para queries repetidas na mesma sessão.
+
+**RAG (cold):** `RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=102)` — 20% de sobreposição para preservar contexto de fala. Mesmo schema AlloyDB + pgvector do ADR-008 (tabela `meeting_chunks`).
+
+**Transição hot→cold:** Job diário. Atas com `created_at < NOW() - INTERVAL '60 days' AND indexing_status = 'hot'` são indexadas no pgvector e marcadas `cold`. Job é idempotente — falha é não-fatal.
+
+```mermaid
+flowchart LR
+    subgraph pipeline["Pipeline de Reuniões"]
+        upload([Upload de ata])
+        h1[HITL 1\nContent Safety]
+        hot_store[(meeting_transcripts\nsanitized_content\nstatus=hot)]
+        job[Job diário\nhot→cold\n60 dias]
+        cold_store[(meeting_chunks\npgvector\nstatus=cold)]
+    end
+
+    subgraph retrieval["Retrieval no Oracle / Chat"]
+        cag[CAG\ntranscript completo\nreuniões hot]
+        rag[RAG semântico\nchunks pgvector\nreuniões cold]
+    end
+
+    upload --> h1
+    h1 -- "Aprovado\n(sanitized_content)" --> hot_store
+    h1 -- "Rejeitado\n(bloqueado)" --> upload
+    hot_store --> cag
+    hot_store --> job
+    job --> cold_store
+    cold_store --> rag
+```
+
+---
+
+## 4.8. Arquitetura de Conhecimento — Camadas L1–L5 [NOVO]
+
+> **Referência:** ADR-015 §Decisão 4 — Camadas de conhecimento
+
+O sunOS organiza o conhecimento em **5 camadas** com retrieval e estabilidade distintos. A prioridade de retrieval quando há sobreposição é L1 > L2 > L5 > L3 > L4.
+
+| Camada | Nome | Conteúdo | Retrieval | Estabilidade | Componente |
+|---|---|---|---|---|---|
+| **L1** | Ontologia | `wiki_entities` — 9 entidades backbone (Type A) | Semantic RAG (pgvector 768d, `text-embedding-004`) | Alta — curada via Oracle + HITL 2 | CTM-02 + `api/onboarding/` |
+| **L2** | Biblioteca | Docs `biblioteca_documents` | Semantic + BM25 + Compressão (ADR-008) | Média — curada por Líder/Admin | CTM-02 (Knowledge & Skills) |
+| **L3** | Drive Raw | Documentos brutos sincronizados do Drive cliente | Semantic RAG — chunks pgvector | Contínua — sync via Drive Connector | CTM-09 (Drive Connector) |
+| **L4** | Reuniões | Atas processadas (HITL 1 + CAG/RAG híbrido) | CAG hot (< 60 dias) + RAG cold (≥ 60 dias) | Quente/sensível — dual HITL obrigatório | `api/onboarding/` + ADR-016 |
+| **L5** | Stakeholders | Registry de stakeholders por cliente (Type B) | Semantic RAG (by `client_id`) | Viva — acumulada ao longo do tempo | CTM-02 + tabela `stakeholders` |
+
+### Notas de design das camadas
+
+**L1 — Ontologia (wiki_entities):** 9 entidades backbone (Type A — texto blob, um registro por cliente, substituível a cada ciclo). Requer coluna `embedding vector(768)` — migration: `ALTER TABLE wiki_entities ADD COLUMN embedding vector(768)`. Busca semântica substitui `SELECT *` atual (context stuffing). STAKEHOLDERS (Type B — N registros acumulados) vive em tabela separada como L5, **não** é gerado pelo Oracle.
+
+**L4 — Reuniões:** Camada mais sensível. Conteúdo bruto nunca entra no pipeline de AI antes do HITL 1. `indexing_status = 'pending_hitl1'` é gate programático, não apenas convencional.
+
+**Isolamento cross-tenant:** Toda query em todas as camadas filtra `client_id` no SELECT (padrão caixa-preta RN-010 — `.claude/rules/caixa-preta.md`). Endpoints retornam 404 genérico para recursos de outro client.
+
+---
+
+## 4.9. Oracle Guardrails — 3 Camadas [NOVO]
+
+> **Referência:** ADR-015 §Decisão 8 — Guardrails do Oracle
+
+O Oracle v2 opera sob 3 camadas de guardrails que se aplicam ao agente principal e a todos os subagentes.
+
+### Guardrail 1 — Input (o que o Oracle pode ler)
+
+| Regra | Implementação |
+|---|---|
+| Somente documentos com status `ready` ou `approved` no Drive | Filtro em `drive_documents.status` antes de passar paths aos subagentes |
+| Somente reuniões que passaram por HITL 1 | `WHERE indexing_status != 'pending_hitl1'` em todas as queries |
+| Nunca lê `system_prompts` ou `brand_guidelines` de **outros** clientes | Virtual FS do harness `deepagents` com wrapper `client_id`-scoped; paths fora de `/{client_id}/oracle/` bloqueados |
+
+### Guardrail 2 — Output (o que o Oracle pode escrever)
+
+| Regra | Implementação |
+|---|---|
+| PII filter | Nomes de pessoas físicas removidos ou anonimizados, exceto stakeholders explicitamente cadastrados |
+| Sensitive topic detector — valores financeiros | Detecta valores monetários específicos no output; filtra para CONTRACTED_SCOPE (acesso restrito) |
+| Sensitive topic detector — RH | Detecta menção a dados de RH; filtra do output público |
+| Informação de concorrência confidencial | Detecta e flag para revisão (não bloqueia automaticamente) |
+
+### Guardrail 3 — Acesso à ontologia gerada
+
+| Entidade | Roles com acesso | Mecanismo |
+|---|---|---|
+| `CONTRACTED_SCOPE` (tier financeiro) | `admin`, `sponsor` somente | Row-level filter em `wiki_entities` via `min_role` flag |
+| Demais 8 entidades backbone | Roles normais do cliente | Acesso padrão com filtro `client_id` |
+
+**Caixa-preta:** Operacional que tenta acessar `CONTRACTED_SCOPE` recebe 404 — nunca 403. A existência da entidade com acesso restrito não é revelada.
+
+---
+
 ## 5. C4 Level 3 — Componentes (Backend To-Be)
 
 ### 5.1. Componentes EVOLUÍDOS — Conversation Service (CTM-03)
@@ -895,6 +1175,8 @@ flowchart TB
 | Looker Studio (CT-10) | FA-10 | — | — |
 | **Approval Engine (CTM-08)** | **FA-13** | **NFR-001 (TODO-DM-08), NFR-008, NFR-009, NFR-010, NFR-026** | **ADR-008, ADR-010** |
 | **Drive Connector (CTM-09)** | **FA-14** | **NFR-008 (KMS), NFR-010 (ACL∩RBAC), NFR-011** | **ADR-009** |
+| **Oracle v2 Deep Agent** (`api/onboarding/`) | **FA-15 (Onboarding Oracle v2 — SPEC-015 v2)** | **NFR-010 (caixa-preta), NFR-026 (tracing MLflow)** | **ADR-015, ADR-007 v2, ADR-012, ADR-013** |
+| **Meeting Pipeline** (`api/onboarding/meeting_*`) | **FA-16 (Meeting Capture — SPEC-016)** | **NFR-010 (caixa-preta), NFR-009 (RBAC HITL 1/2)** | **ADR-016, ADR-008 (schema pgvector)** |
 
 ---
 
@@ -915,8 +1197,11 @@ ADRs já catalogados na **Parte 7** sustentam a arquitetura To-Be. Decisões adi
 | **ADR-009** (proposto) | **Pub/Sub para Domain Events entre Bounded Contexts** | **A escrever** | Define quando usar event-driven (cross-BC) vs. síncrono (intra-BC) |
 | **ADR-010** (proposto) | **Safety Gateway como interceptor obrigatório nas fronteiras de saída** | **A escrever** | Define padrão de validação de invariantes (visual mark, vocabulary, cross-client) |
 | **ADR-011** (proposto, opcional) | **Looker Studio para Executive Reports vs. dashboard custom** | **A discutir** | Time + UX |
+| **ADR-015** | **Oracle v2 — deep agent com subagentes por entidade** | **Proposto** | Oracle migra de LangGraph 2-nós para `create_deep_agent` + 9 subagentes em paralelo com HITL 2 via interrupt |
+| **ADR-016** | **Pipeline de reuniões — Dual HITL + CAG/RAG híbrido** | **Proposto** | Atas de reunião: HITL 1 (content safety pré-AI) + CAG hot (< 60 dias) + RAG cold (≥ 60 dias) + HITL 2 (ontology update via interrupt) |
 
 > Veja seção **§10 (ADRs Adicionais Sugeridos)** abaixo para racional dos novos ADRs.
+> ADR-015 e ADR-016 já documentados em `docs/adr/`.
 
 ---
 
@@ -965,6 +1250,11 @@ ADRs já catalogados na **Parte 7** sustentam a arquitetura To-Be. Decisões adi
 - **Cloud KMS** (criptografia de OAuth refresh tokens — FA-14)
 - **Google Drive API + Drive Push webhook** integrations (FA-14)
 - **+10 tabelas** PostgreSQL para BC-07 (ENT-34..ENT-43 — Parte 3)
+- **Oracle v2 Deep Agent** (`api/onboarding/oracle_agent.py` reescrito) — `create_deep_agent` com 9 subagentes em paralelo, isolamento de contexto por entidade, HITL 2 via LangGraph interrupt, 3 ciclos de execução (onboarding / revisão periódica / evento Drive)
+- **Meeting Pipeline** (Dual HITL + CAG/RAG) — HITL 1 (content safety pré-AI), CAG para reuniões hot (< 60 dias), RAG pgvector para reuniões cold (≥ 60 dias), job diário hot→cold, tabela `meeting_transcripts` + `meeting_chunks`
+- **Arquitetura de conhecimento L1–L5** — 5 camadas com retrieval e prioridade distintos (L1 Ontologia > L2 Biblioteca > L5 Stakeholders > L3 Drive Raw > L4 Reuniões)
+- **Oracle Guardrails (3 camadas)** — Input (fontes permitidas), Output (PII filter + sensitive detector), Acesso (row-level filter `CONTRACTED_SCOPE` para admin/sponsor)
+- **`wiki_entities.embedding vector(768)`** — migration necessária para RAG semântico na Camada L1 (substitui context stuffing atual)
 
 ### 9.4. O que foi DEPRECADO ou substituído
 
@@ -1074,3 +1364,4 @@ A construção desta Parte 6 fez **emergir 3 decisões arquiteturais adicionais*
 |--------|------|-------|------------|
 | 1.0 | 2026-04-28 | Heitor Miranda + Claude | Versão inicial. C4 L1/L2/L3 com **diff explícito** vs. Parte 5 (As-Is). Mantém 2 containers Cloud Run físicos (ADR-002), modulariza backend em **7 módulos** por Bounded Context. **Novos containers/integrações**: Cloud Pub/Sub, Vertex AI Imagen/Veo, Looker Studio, Slack/Email. **Novos módulos backend**: Auth Gateway (CTM-01), Provocation Engine (CTM-04), Measurement Service (CTM-05), Safety Gateway (CTM-06), Multi-tenant Resolver (CTM-07). **Evoluções**: retrieval convergente + divergente (Sweet Spot + knowledge graph + MMR), Auth obrigatório, tracing 100%, circuit breaker LLM, HNSW pgvector, jobs Cloud Scheduler para mensuração, cold storage para traces > 12m. **3 ADRs novos sugeridos**: ADR-008 (Pipeline Explorer ↔ Crítico), ADR-009 (Pub/Sub para Domain Events), ADR-010 (Safety Gateway interceptor). 19 integrações catalogadas (12 mantidas/evoluídas + 7 novas). Status: Rascunho aguardando revisão de Eng + arquitetura. |
 | 1.1 | 2026-04-28 | Heitor Miranda + Claude | Adicionados **CTM-08 Approval Engine** (FA-13 — para BC-07) e **CTM-09 Drive Connector** (FA-14 — para BC-07). Diagrama C4 L2 atualizado com novos módulos, sistemas externos (Google Drive API, Cloud KMS) e fluxos de submissão/aprovação/sync. Diagrama C4 L3 expandido com 8 componentes do Approval Engine (SubmitController, ValidationOrchestrator, BrandValidatorAgent, PortuguêsValidatorAgent, ChainRouter, DecisionRecorder, ValidatedStamp, NotificationDispatcher) e 8 componentes do Drive Connector (OAuthVault KMS, WebhookReceiver, ListChangesWorker, SnapshotDiffer, CurationAgent, CleanupJob, Importer, AccessGuard). +7 integrações (INT-TB-20 a INT-TB-26) — Pub/Sub Approval/Drive events, Slack notify, Cloud Scheduler sync, Drive Push webhook, Drive API readonly, Cloud KMS. Rastreabilidade Container↔Features↔NFRs↔ADRs estendida com CTM-08/09→FA-13/14, ADR-008/009/010. Diff §9.3 atualizado. +3 assunções (ASS-TB-07/08/09) e +3 TODOs (TODO-TB-09/10/11). Status: Rascunho aguardando revisão de Eng + arquitetura. |
+| 1.2 | 2026-06-23 | Heitor Miranda + Claude | **Oracle v2 como deep agent (ADR-015):** adicionadas §4.6 (Oracle v2 — deep agent com 9 subagentes em paralelo, isolamento de contexto, HITL 2 via LangGraph interrupt, 3 ciclos de execução, diagrama Mermaid do fluxo), §4.7 (Pipeline de Reuniões — Dual HITL + CAG/RAG com critério temporal 60 dias, HITL 1 content safety pré-AI, HITL 2 ontology update via interrupt, transição hot→cold, diagramas), §4.8 (Arquitetura de Conhecimento L1–L5 com camadas, prioridade de retrieval e migration `wiki_entities.embedding vector(768)`), §4.9 (Oracle Guardrails — 3 camadas: Input, Output, Acesso). **Rastreabilidade**: Oracle v2 + Meeting Pipeline adicionados à tabela §7. **ADRs**: ADR-015 e ADR-016 adicionados à tabela §8. **Diff §9.3**: 5 novos itens (Oracle v2, Meeting Pipeline, camadas L1–L5, guardrails, migration wiki_entities.embedding). Status: Rascunho aguardando revisão de Eng + arquitetura. |
