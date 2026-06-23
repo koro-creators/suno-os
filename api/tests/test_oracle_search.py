@@ -26,12 +26,12 @@ def test_provenance_com_sources_cita_urls():
     sources = [
         {"title": "Marca X", "url": "https://exemplo.com/sobre", "content": "trecho factual"},
     ]
-    prov = _build_provenance(sources, "Oráculo Gemini", "Posicionamento")
+    prov = _build_provenance(sources, "Oráculo Gemini", "CLIENT_PROFILE")
     assert prov[0]["source"] == "https://exemplo.com/sobre"
     assert "trecho factual" in prov[0]["excerpt"]
 
 
 def test_provenance_sem_sources_usa_origem_generica():
-    prov = _build_provenance([], "Fallback local", "Persona")
+    prov = _build_provenance([], "Fallback local", "TARGET_PERSONAS")
     assert prov[0]["source"] == "Fallback local"
-    assert "Persona" in prov[0]["excerpt"]
+    assert "TARGET_PERSONAS" in prov[0]["excerpt"]

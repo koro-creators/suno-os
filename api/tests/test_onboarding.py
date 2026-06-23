@@ -134,7 +134,7 @@ def test_backfill_creates_job_and_entities(ctx):
         cr.create_client(s, name="Legado", slug="legado", status="ACTIVE")
         client_id, job_id = backfill_onboarding(s, "legado", ["cliente.com.br"], "pt-BR")
         assert job_id
-        # 6 placeholders criados
+        # 9 placeholders criados
         for et in ONTOLOGY_ENTITY_TYPES:
             assert repository.get_entity(s, client_id, et) is not None
         # domínios persistidos no oracle_config
@@ -147,11 +147,11 @@ def test_backfill_creates_job_and_entities(ctx):
         s.close()
 
 
-def test_status_lists_six_pending(ctx):
+def test_status_lists_nine_pending(ctx):
     client, _ = ctx
     _create(client)
     st = client.get("/api/clients/cogna/onboarding/status").json()
-    assert st["total_entities"] == 6
+    assert st["total_entities"] == 9
     assert st["entities_done"] == 0
     assert set(st["entities"].values()) == {"pending"}
     assert st["client_status"] == "PRE_ACTIVE"
@@ -166,7 +166,9 @@ def test_validate_pending_entity_409(ctx):
     client, _ = ctx
     _create(client)
     # entidade ainda 'pending' (Oráculo não rodou) → 409
-    resp = client.post("/api/clients/cogna/entities/Persona/validate", json={"action": "accept"})
+    resp = client.post(
+        "/api/clients/cogna/entities/TARGET_PERSONAS/validate", json={"action": "accept"}
+    )
     assert resp.status_code == 409
 
 
@@ -192,8 +194,8 @@ def test_edit_accept_sets_hitl_badge(ctx):
     _create(client)
     _mark_all_generated(TestSession, "cogna")
     resp = client.post(
-        "/api/clients/cogna/entities/Persona/validate",
-        json={"action": "edit_accept", "edited_content": "Persona editada"},
+        "/api/clients/cogna/entities/TARGET_PERSONAS/validate",
+        json={"action": "edit_accept", "edited_content": "Personas editadas"},
     ).json()
     assert resp["status"] == "accepted"
     assert resp["badge"] == "hitl"
@@ -203,11 +205,11 @@ def test_wiki_returns_only_accepted_by_default(ctx):
     client, TestSession = ctx
     _create(client)
     _mark_all_generated(TestSession, "cogna")
-    client.post("/api/clients/cogna/entities/Persona/validate", json={"action": "accept"})
+    client.post("/api/clients/cogna/entities/TARGET_PERSONAS/validate", json={"action": "accept"})
 
     default = client.get("/api/clients/cogna/wiki").json()
     assert len(default["entities"]) == 1
-    assert default["entities"][0]["entity_type"] == "Persona"
+    assert default["entities"][0]["entity_type"] == "TARGET_PERSONAS"
 
     full = client.get("/api/clients/cogna/wiki?include_generated=true").json()
-    assert len(full["entities"]) == 6
+    assert len(full["entities"]) == 9
