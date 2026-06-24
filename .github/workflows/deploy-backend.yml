@@ -1,0 +1,70 @@
+name: Deploy — Backend (produção)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    name: Build + Deploy API → Cloud Run (us-west1)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev
+
+      - name: Build and push image
+        working-directory: api
+        run: |
+          IMAGE=us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sunos/api
+          docker build \
+            --cache-from $IMAGE:latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            -f Dockerfile .
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy sunos-api \
+            --image us-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sunos/api:${{ github.sha }} \
+            --region us-west1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account sunos-backend@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --memory 2Gi \
+            --cpu 2 \
+            --timeout 300 \
+            --min-instances 1 \
+            --max-instances 10 \
+            --set-env-vars "ENVIRONMENT=production,GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},GCP_REGION=us-west1,FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }},LANGFUSE_HOST=https://cloud.langfuse.com" \
+            --set-secrets "DATABASE_URL=sunos-database-url:latest,GOOGLE_API_KEY=sunos-google-api-key:latest,LANGFUSE_SECRET_KEY=sunos-langfuse-secret-key:latest,LANGFUSE_PUBLIC_KEY=sunos-langfuse-public-key:latest"
+
+      - name: Smoke test
+        run: |
+          URL=$(gcloud run services describe sunos-api --region us-west1 --format 'value(status.url)')
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/health")
+          if [ "$STATUS" != "200" ]; then echo "Smoke test FAILED: HTTP $STATUS"; exit 1; fi
+          echo "✅ Smoke test passed: $URL/health → $STATUS"

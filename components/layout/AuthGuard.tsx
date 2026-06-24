@@ -16,14 +16,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Dev bypass — skip auth in local development
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Auth-skip only when Firebase isn't configured (local dev without creds).
+  // When Firebase IS configured, the guard always enforces auth — so logging out
+  // redirects to /login instead of leaving protected pages viewable.
+  const firebaseConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
 
   const isPublic = PUBLIC_PATHS.includes(pathname);
   const needsAdmin = isAdminPath(pathname);
 
   useEffect(() => {
     if (loading) return;
+    if (isDev) return;
     if (!user && !isPublic) {
       router.replace('/login');
     }
@@ -33,9 +38,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     if (user && needsAdmin && !isAdmin) {
       router.replace('/');
     }
-  }, [user, loading, isPublic, needsAdmin, isAdmin, router]);
+  }, [user, loading, isPublic, needsAdmin, isAdmin, router, isDev]);
 
-  if (isDev && !user && !loading) {
+  if (!firebaseConfigured && !user && !loading) {
     return <>{children}</>;
   }
 

@@ -8,8 +8,15 @@ export type SourceHandle =
   | 'approved'
   | 'rejected'
   | 'modified';
-export type TargetHandle = 'in';
+/**
+ * Target handles. `in` is the universal default. `condition` may accept
+ * `in_a`/`in_b`. `llm` may accept `tool_0/1/2` (saídas de tool nodes).
+ * See .claude/rules/canvas-conventions.md for the full matrix.
+ */
+export type TargetHandle = 'in' | 'in_a' | 'in_b' | 'tool_0' | 'tool_1' | 'tool_2';
 export type MergePolicy = 'all' | 'any';
+// LLMs disponíveis no sistema (paridade com api/chat/schemas/chat.py::ChatModel).
+export type WorkflowLLMModel = 'gemini-flash' | 'gemini-pro' | 'gpt-4o' | 'claude';
 export type ValidationErrorKind =
   | 'cycle'
   | 'fan_in_without_merge'
@@ -17,7 +24,8 @@ export type ValidationErrorKind =
   | 'edge_to_nonexistent_handle'
   | 'unauthorized_tool'
   | 'max_nodes_exceeded'
-  | 'no_entry_node';
+  | 'no_entry_node'
+  | 'isolated_node';
 
 export interface WorkflowStep {
   id: string;
@@ -25,6 +33,10 @@ export interface WorkflowStep {
   type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge';
   tool_name?: string;
   prompt?: string;
+  model?: WorkflowLLMModel; // type="llm": modelo a usar (default: gemini-flash)
+  agent_id?: string; // type="llm": agente (aba Agentes) cujas instructions entram como contexto
+  condition_operator?: 'if_else'; // type="condition": porta lógica
+  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram'; // type="action": canal de envio
   workflow_id?: string;
   input_mapping?: Record<string, string>;
   config: Record<string, unknown>;
@@ -134,8 +146,8 @@ export interface StepLog {
   step_id: string;
   step_name: string | null;
   status: string;
-  input: Record<string, unknown> | null;
-  output: Record<string, unknown> | null;
+  input: Record<string, unknown> | unknown[] | null;
+  output: Record<string, unknown> | unknown[] | null;
   error: string | null;
   duration_ms: number | null;
   started_at: string | null;

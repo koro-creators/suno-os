@@ -7,6 +7,14 @@
 
 import type { SkillAdmin } from './admin-types';
 import type { ClientAdmin } from './client-types';
+import type {
+  ApprovalSubmission,
+  ApprovalEvent,
+  ApprovalFilters,
+  ApprovalSubmitPayload,
+  ApprovalDecisionPayload,
+} from '@/lib/approval-types';
+import type { Agent, AgentCreate, AgentUpdate } from './agents-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -289,6 +297,9 @@ export async function setWorkflowEdges(
   return workflowFetch<WorkflowEdge[]>(`/api/workflows/${workflowId}/edges`, {
     method: 'POST',
     body: JSON.stringify({ edges }),
+    // keepalive lets the browser complete this request even if the page
+    // is unloaded (user presses F5 or navigates away mid-save).
+    keepalive: true,
   });
 }
 
@@ -455,6 +466,7 @@ export async function updateWorkflow(
     await workflowFetch<ApiWorkflowDetail>(`/api/workflows/${workflowId}`, {
       method: 'PUT',
       body: JSON.stringify(body),
+      keepalive: true,
     }),
   );
 }
@@ -485,6 +497,11 @@ export async function listWorkflowRuns(workflowId: string): Promise<WorkflowRun[
     `/api/workflows/${workflowId}/runs`,
   );
   return res.runs;
+}
+
+/** Get a single run, including per-step logs (status/output/timing). */
+export async function getWorkflowRun(workflowId: string, runId: string): Promise<WorkflowRun> {
+  return workflowFetch<WorkflowRun>(`/api/workflows/${workflowId}/runs/${runId}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -642,14 +659,6 @@ export async function validateDriveFolder(
 // ---------------------------------------------------------------------------
 // SPEC-004 — Approval Hierarchy API (Phase 20)
 // ---------------------------------------------------------------------------
-
-import type {
-  ApprovalSubmission,
-  ApprovalEvent,
-  ApprovalFilters,
-  ApprovalSubmitPayload,
-  ApprovalDecisionPayload,
-} from '@/lib/approval-types';
 
 async function approvalFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = getApiUrl(path);
@@ -983,6 +992,91 @@ export async function listClients(): Promise<ClientAdmin[] | null> {
     return rows.map(mapClientRow);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Arquiva (soft-delete) um cliente — status INACTIVE no backend. Some das
+ * listagens mas continua no banco (recuperável). Retorna true em sucesso.
+ */
+export async function archiveClient(slug: string): Promise<boolean> {
+  if (!apiAvailable()) return false;
+  try {
+    const res = await fetch(getApiUrl(`/api/clients/${slug}`), {
+      method: 'DELETE',
+      headers: await getHeaders(),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Agents — SPEC-021 FA-17
+// ---------------------------------------------------------------------------
+
+export async function listAgents(): Promise<Agent[]> {
+  if (!apiAvailable()) return [];
+  try {
+    const res = await fetch(getApiUrl('/api/agents/'), { headers: await getHeaders() });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Agent[];
+    return rows.map((a) => ({
+      ...a,
+      instructions: a.instructions ?? '',
+      assigned_skills: a.assigned_skills ?? [],
+      apps: [],
+      memory_files: [],
+      schedule: null,
+      permissions: [],
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function createAgentApi(data: AgentCreate): Promise<Agent | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl('/api/agents/'), {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    const a = (await res.json()) as Agent;
+    return { ...a, assigned_skills: a.assigned_skills ?? [], apps: [], memory_files: [], schedule: null, permissions: [] };
+  } catch {
+    return null;
+  }
+}
+
+export async function updateAgentApi(id: string, data: AgentUpdate): Promise<Agent | null> {
+  if (!apiAvailable()) return null;
+  try {
+    const res = await fetch(getApiUrl(`/api/agents/${id}`), {
+      method: 'PATCH',
+      headers: await getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as Agent;
+  } catch {
+    return null;
+  }
+}
+
+export async function archiveAgentApi(id: string): Promise<boolean> {
+  if (!apiAvailable()) return false;
+  try {
+    const res = await fetch(getApiUrl(`/api/agents/${id}`), {
+      method: 'DELETE',
+      headers: await getHeaders(),
+    });
+    return res.ok;
+  } catch {
+    return false;
   }
 }
 

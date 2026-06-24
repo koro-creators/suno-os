@@ -64,11 +64,11 @@ TOOL_CATALOG: list[ToolDescriptor] = [
         default_config={},
     ),
     ToolDescriptor(
-        tool_name="generate_image",
-        label="Compor imagem",
+        tool_name="consultar_cliente",
+        label="Perfil do cliente",
         category="criacao",
-        description="Imagem via Vertex AI (Imagen).",
-        default_config={"aspect_ratio": "1:1"},
+        description="Retorna nome, slug, descrição, cor, sponsor e status do cliente selecionado.",
+        default_config={},
     ),
     ToolDescriptor(
         tool_name="query_data",

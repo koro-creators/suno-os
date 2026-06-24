@@ -8,6 +8,7 @@ import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { useAuth } from '@/contexts/AuthContext';
 import ClientEditorTabs from './ClientEditorTabs';
 import DriveTab from '@/components/admin/clientes/tabs/DriveTab';
+import WikiTab from '@/components/admin/clientes/tabs/WikiTab';
 import Toast from '@/components/ui/Toast';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -82,8 +83,8 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
   // Use base tabs while auth is resolving to avoid Drive tab flashing in/out
   const editorTabs =
     !authLoading && isAdmin
-      ? ['Identidade', 'Skills', 'Biblioteca', 'Métricas', 'Drive']
-      : ['Identidade', 'Skills', 'Biblioteca', 'Métricas'];
+      ? ['Identidade', 'Skills', 'Biblioteca', 'Wiki', 'Métricas', 'Drive']
+      : ['Identidade', 'Skills', 'Biblioteca', 'Wiki', 'Métricas'];
 
   const [form, setForm] = useState<ClientAdmin>(initial);
   const [savedSnapshot, setSavedSnapshot] = useState<ClientAdmin>(initial);
@@ -534,6 +535,14 @@ export default function ClientEditor({ initial, onSave, onDelete, isNew }: Clien
             </span>
           </div>
         </div>
+      )}
+
+      {/* Tab: Wiki Ontológica (SPEC-015 — 6 entidades do Oráculo) */}
+      {activeTab === 'Wiki' && !isNew && <WikiTab clientSlug={initial.slug} />}
+      {activeTab === 'Wiki' && isNew && (
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          A Wiki Ontológica é gerada pelo Oráculo durante o onboarding — salve o cliente primeiro.
+        </p>
       )}
 
       {/* Tab: Drive (admin-only) */}

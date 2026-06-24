@@ -9,6 +9,7 @@ import MemoriaTab from './tabs/MemoriaTab';
 import AgendamentoTab from './tabs/AgendamentoTab';
 import AtividadeTab from './tabs/AtividadeTab';
 import ClientesTab from './tabs/ClientesTab';
+import PreviewTab from './tabs/PreviewTab';
 
 const TABS = [
   'Configuração',
@@ -18,6 +19,7 @@ const TABS = [
   'Agendamento',
   'Atividade',
   'Clientes',
+  'Preview',
 ] as const;
 
 type Tab = (typeof TABS)[number];
@@ -45,6 +47,7 @@ export default function AgenteEditorTabs({ agent }: Props) {
       >
         {TABS.map((tab) => {
           const isActive = activeTab === tab;
+          const isPreview = tab === 'Preview';
           return (
             <button
               key={tab}
@@ -61,10 +64,14 @@ export default function AgenteEditorTabs({ agent }: Props) {
               style={{
                 padding: '10px 16px',
                 fontSize: '0.8rem',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                color: isActive
+                  ? isPreview ? 'var(--sun)' : 'var(--text-primary)'
+                  : 'var(--text-muted)',
                 backgroundColor: 'transparent',
                 border: 'none',
-                borderBottom: isActive ? '2px solid var(--sun)' : '2px solid transparent',
+                borderBottom: isActive
+                  ? '2px solid var(--sun)'
+                  : '2px solid transparent',
                 cursor: 'pointer',
                 transition: 'color 150ms ease, border-color 150ms ease',
                 whiteSpace: 'nowrap',
@@ -91,6 +98,7 @@ export default function AgenteEditorTabs({ agent }: Props) {
       {activeTab === 'Agendamento' && <AgendamentoTab agent={agent} />}
       {activeTab === 'Atividade' && <AtividadeTab agentId={agent.id} />}
       {activeTab === 'Clientes' && <ClientesTab agent={agent} />}
+      {activeTab === 'Preview' && <PreviewTab agent={agent} />}
     </div>
   );
 }

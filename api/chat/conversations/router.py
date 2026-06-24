@@ -11,8 +11,6 @@ Security (caixa-preta / RN-009):
     users' conversations.
 """
 
-from __future__ import annotations
-
 import logging
 from datetime import datetime
 

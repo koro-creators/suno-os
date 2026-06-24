@@ -29,6 +29,7 @@ class Agent(Base):
     icon = Column(String(100), nullable=False, default="🤖")
     instructions = Column(Text, nullable=False, default="")
     status = Column(String(20), nullable=False, default="draft")
+    assigned_skills = Column(JSON, nullable=False, default=list)
     created_by = Column(Uuid, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=_now, onupdate=_now)
@@ -40,7 +41,8 @@ class Agent(Base):
             "icon": self.icon,
             "instructions": self.instructions,
             "status": self.status,
-            "skill_count": 0,  # populado quando SPEC-017 (skills em DB) chegar
+            "assigned_skills": self.assigned_skills or [],
+            "skill_count": len(self.assigned_skills or []),
             "client_count": 0,
             "last_run_at": last_run_at,
             "created_at": self.created_at,

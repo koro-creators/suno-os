@@ -3,8 +3,9 @@
 /**
  * New workflow page (SPEC-005 TASK-C17).
  *
- * Reset-and-redirect: creates an empty workflow with a single tool entry
- * step and immediately navigates to the canvas editor for that ID.
+ * Reset-and-redirect: creates an empty workflow with no steps and immediately
+ * navigates to the canvas editor for that ID. The canvas shows an "arraste
+ * aqui" hint so the user starts from a blank slate.
  * Templates remain supported through the `?template=` query string.
  */
 
@@ -14,14 +15,6 @@ import AppHeader from '@/components/layout/AppHeader';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
 import { WORKFLOW_TEMPLATES } from '@/data/workflow-templates';
 import type { WorkflowStep } from '@/lib/workflow-types';
-
-const ENTRY_STEP: WorkflowStep = {
-  id: 'entry',
-  name: 'Buscar dados',
-  type: 'tool',
-  tool_name: 'search_knowledge',
-  config: { query: '' },
-};
 
 function CreateWorkflowContent() {
   const router = useRouter();
@@ -37,7 +30,7 @@ function CreateWorkflowContent() {
     const templateId = searchParams.get('template');
     let name = 'Novo workflow';
     let description = '';
-    let steps: WorkflowStep[] = [ENTRY_STEP];
+    let steps: WorkflowStep[] = [];
 
     if (templateId) {
       const template = WORKFLOW_TEMPLATES.find((t) => t.id === templateId);

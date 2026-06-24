@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import {
   Agent,
   AgentCreate,
@@ -12,11 +12,19 @@ import {
   AgentRun,
   AgentRunResponse,
 } from '@/lib/agents-types';
-import { mockAgents, mockAgentRuns } from '@/data/agents-admin';
+import { mockAgentRuns } from '@/data/agents-admin';
+import {
+  apiAvailable,
+  listAgents,
+  createAgentApi,
+  updateAgentApi,
+  archiveAgentApi,
+} from '@/lib/api';
 
 interface AgentsContextType {
   agents: Agent[];
-  createAgent: (data: AgentCreate) => Agent;
+  loading: boolean;
+  createAgent: (data: AgentCreate) => Promise<Agent>;
   updateAgent: (id: string, data: AgentUpdate) => void;
   archiveAgent: (id: string) => void;
   // Skills
@@ -31,7 +39,7 @@ interface AgentsContextType {
   // Permissions
   addPermission: (agentId: string, permission: AgentPermission) => void;
   removePermission: (agentId: string, clientId: string) => void;
-  // Runs — Fase C
+  // Runs
   runAgent: (agentId: string, input: string, triggeredBy?: AgentRun['triggered_by']) => AgentRunResponse;
   listRuns: (agentId: string) => AgentRun[];
 }
@@ -39,10 +47,53 @@ interface AgentsContextType {
 const AgentsContext = createContext<AgentsContextType | null>(null);
 
 export function AgentsProvider({ children }: { children: ReactNode }) {
-  const [agents, setAgents] = useState<Agent[]>(mockAgents);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState<boolean>(apiAvailable());
   const [runs, setRuns] = useState<Record<string, AgentRun[]>>(() => ({ ...mockAgentRuns }));
 
-  const createAgent = (data: AgentCreate): Agent => {
+  const SKILLS_KEY = 'sunos-agent-skills-v1';
+
+  function loadStoredSkills(): Record<string, string[]> {
+    try {
+      return JSON.parse(localStorage.getItem(SKILLS_KEY) ?? '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  function saveStoredSkills(map: Record<string, string[]>) {
+    localStorage.setItem(SKILLS_KEY, JSON.stringify(map));
+  }
+
+  useEffect(() => {
+    if (!apiAvailable()) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    listAgents().then((rows) => {
+      if (!cancelled) {
+        // Skills now come from the DB (assigned_skills column).
+        // localStorage is only used in mock-mode (no API).
+        setAgents(rows.map((a) => ({
+          ...a,
+          skill_count: (a.assigned_skills ?? []).length,
+        })));
+        setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const createAgent = async (data: AgentCreate): Promise<Agent> => {
+    if (apiAvailable()) {
+      const created = await createAgentApi(data);
+      if (created) {
+        setAgents((prev) => [created, ...prev]);
+        return created;
+      }
+    }
+    // mock-mode fallback
     const agent: Agent = {
       id: crypto.randomUUID(),
       name: data.name,
@@ -70,27 +121,37 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
         a.id === id ? { ...a, ...data, updated_at: new Date().toISOString() } : a,
       ),
     );
+    if (apiAvailable()) void updateAgentApi(id, data);
   };
 
   const archiveAgent = (id: string) => {
-    updateAgent(id, { status: 'archived' });
+    setAgents((prev) =>
+      prev.map((a) => a.id === id ? { ...a, status: 'archived' as const, updated_at: new Date().toISOString() } : a),
+    );
+    if (apiAvailable()) void archiveAgentApi(id);
   };
 
   const toggleSkill = (agentId: string, skillSlug: string) => {
-    setAgents((prev) =>
-      prev.map((a) => {
+    setAgents((prev) => {
+      const next = prev.map((a) => {
         if (a.id !== agentId) return a;
         const current = a.assigned_skills ?? [];
         const has = current.includes(skillSlug);
-        const next = has ? current.filter((s) => s !== skillSlug) : [...current, skillSlug];
-        return {
-          ...a,
-          assigned_skills: next,
-          skill_count: next.length,
-          updated_at: new Date().toISOString(),
-        };
-      }),
-    );
+        const nextSkills = has ? current.filter((s) => s !== skillSlug) : [...current, skillSlug];
+        return { ...a, assigned_skills: nextSkills, skill_count: nextSkills.length, updated_at: new Date().toISOString() };
+      });
+      const agent = next.find((a) => a.id === agentId);
+      const nextSkills = agent?.assigned_skills ?? [];
+      // Persist: API first, localStorage as fallback for mock-mode.
+      if (apiAvailable()) {
+        void updateAgentApi(agentId, { assigned_skills: nextSkills });
+      } else {
+        const stored = loadStoredSkills();
+        stored[agentId] = nextSkills;
+        saveStoredSkills(stored);
+      }
+      return next;
+    });
   };
 
   const toggleApp = (agentId: string, appId: string, enabled: boolean) => {
@@ -109,8 +170,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     setAgents((prev) =>
       prev.map((a) => {
         if (a.id !== agentId) return a;
-        const files = [...(a.memory_files ?? []), file];
-        return { ...a, memory_files: files, updated_at: new Date().toISOString() };
+        return { ...a, memory_files: [...(a.memory_files ?? []), file], updated_at: new Date().toISOString() };
       }),
     );
   };
@@ -119,19 +179,14 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     setAgents((prev) =>
       prev.map((a) => {
         if (a.id !== agentId) return a;
-        const files = (a.memory_files ?? []).filter((f) => f.id !== fileId);
-        return { ...a, memory_files: files, updated_at: new Date().toISOString() };
+        return { ...a, memory_files: (a.memory_files ?? []).filter((f) => f.id !== fileId), updated_at: new Date().toISOString() };
       }),
     );
   };
 
   const updateSchedule = (agentId: string, schedule: AgentSchedule | null) => {
     setAgents((prev) =>
-      prev.map((a) =>
-        a.id === agentId
-          ? { ...a, schedule, updated_at: new Date().toISOString() }
-          : a,
-      ),
+      prev.map((a) => a.id === agentId ? { ...a, schedule, updated_at: new Date().toISOString() } : a),
     );
   };
 
@@ -140,12 +195,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
       prev.map((a) => {
         if (a.id !== agentId) return a;
         const permissions = [...(a.permissions ?? []), permission];
-        return {
-          ...a,
-          permissions,
-          client_count: permissions.length,
-          updated_at: new Date().toISOString(),
-        };
+        return { ...a, permissions, client_count: permissions.length, updated_at: new Date().toISOString() };
       }),
     );
   };
@@ -155,12 +205,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
       prev.map((a) => {
         if (a.id !== agentId) return a;
         const permissions = (a.permissions ?? []).filter((p) => p.client_id !== clientId);
-        return {
-          ...a,
-          permissions,
-          client_count: permissions.length,
-          updated_at: new Date().toISOString(),
-        };
+        return { ...a, permissions, client_count: permissions.length, updated_at: new Date().toISOString() };
       }),
     );
   };
@@ -187,7 +232,6 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
 
     setRuns((prev) => ({ ...prev, [agentId]: [run, ...(prev[agentId] ?? [])] }));
 
-    // Simulate progression: pending → running → completed
     setTimeout(() => {
       setRuns((prev) => ({
         ...prev,
@@ -202,13 +246,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
           ...prev,
           [agentId]: (prev[agentId] ?? []).map((r) =>
             r.id === runId
-              ? {
-                  ...r,
-                  status: 'completed',
-                  output: { text: `[Mock] Agente processou: "${input}"` },
-                  duration_ms: elapsed,
-                  finished_at: new Date().toISOString(),
-                }
+              ? { ...r, status: 'completed', output: { text: `[Mock] Agente processou: "${input}"` }, duration_ms: elapsed, finished_at: new Date().toISOString() }
               : r,
           ),
         }));
@@ -224,6 +262,7 @@ export function AgentsProvider({ children }: { children: ReactNode }) {
     <AgentsContext.Provider
       value={{
         agents,
+        loading,
         createAgent,
         updateAgent,
         archiveAgent,

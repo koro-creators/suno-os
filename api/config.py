@@ -23,17 +23,12 @@ class Settings(BaseSettings):
     # Database (shared Cloud SQL)
     DATABASE_URL: str = "postgresql+asyncpg://sunos:sunos_dev_pass@localhost:5432/sunos_db"
 
-    # MLflow
-    MLFLOW_TRACKING_URI: str = "http://localhost:5001"
-    MLFLOW_ARTIFACT_ROOT: str = "gs://toolbox-mlflow-artifacts/sunos"
-
-    # Langfuse (observabilidade) — LOCAL-ONLY por enquanto.
-    # Gated por LANGFUSE_ENABLED: em prod (flag off) o SDK nunca é importado/inicializado,
-    # então não afeta o ambiente. Best-effort: qualquer erro é engolido.
-    LANGFUSE_ENABLED: bool = False
-    LANGFUSE_PUBLIC_KEY: str | None = None
+    # Langfuse (ADR-013 — substitui MLflow como observabilidade LLM)
+    # Gated por LANGFUSE_ENABLED: em prod (flag off) o SDK nunca é importado/inicializado.
     LANGFUSE_SECRET_KEY: str | None = None
-    LANGFUSE_HOST: str = "http://localhost:3000"
+    LANGFUSE_PUBLIC_KEY: str | None = None
+    LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+    LANGFUSE_ENABLED: bool = False
 
     # LLM Models
     GOOGLE_API_KEY: str | None = None

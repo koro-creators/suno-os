@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { CarbonIconType, Book, Bot, CheckmarkFilled, ChevronLeft, ChevronRight, Flash, Flow, Globe, Group, Logout, Settings, Star } from '@carbon/icons-react';
+import { CarbonIconType, Book, Bot, CheckmarkFilled, ChevronLeft, ChevronRight, ColorPalette, Flash, Flow, Globe, Group, Logout, Settings, Star } from '@carbon/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
@@ -11,6 +11,7 @@ interface NavItemDef {
   icon: CarbonIconType;
   href?: string;
   adminOnly?: boolean;
+  devOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItemDef[] = [
@@ -23,6 +24,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { label: 'Agentes', icon: Bot, href: '/agentes', adminOnly: true },
   { label: 'Aprovações', icon: CheckmarkFilled, href: '/aprovacoes', adminOnly: true },
   { label: 'Configurações', icon: Settings, href: '/configuracoes', adminOnly: true },
+  { label: 'Design System', icon: ColorPalette, href: '/design-system', devOnly: true },
 ];
 
 export default function Sidebar() {
@@ -32,7 +34,10 @@ export default function Sidebar() {
   const { user, isAdmin, role, signOut } = useAuth();
   const { recents } = useNavigationHistory();
 
-  const visibleNavItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+  const isDev = process.env.NODE_ENV === 'development';
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => (!item.adminOnly || isAdmin) && (!item.devOnly || isDev),
+  );
 
   // Item ativo derivado só do pathname (fonte única de verdade).
   // Home ('/') exige match exato; demais aceitam rotas aninhadas (ex.: /skills/123).

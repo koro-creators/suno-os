@@ -31,33 +31,96 @@ function formatDuration(startedAt: string | null, completedAt: string | null): s
 }
 
 function StepLogItem({ log }: { log: StepLog }) {
+  const [expanded, setExpanded] = useState(false);
   const cfg = RUN_STATUS_CONFIG[log.status] || RUN_STATUS_CONFIG.pending;
+  const hasResult = log.output != null || log.input != null;
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '6px 12px',
-        borderLeft: `2px solid ${cfg.color}`,
-        marginLeft: 14,
-      }}
-    >
-      <StatusIcon status={log.status} />
-      <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', flex: 1 }}>
-        {log.step_name || log.step_id}
-      </span>
-      {log.duration_ms != null && (
-        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{log.duration_ms}ms</span>
-      )}
-      {log.error && (
-        <span style={{ fontSize: '0.65rem', color: '#EF4444', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {log.error}
+    <div style={{ marginLeft: 14 }}>
+      <div
+        role={hasResult ? 'button' : undefined}
+        tabIndex={hasResult ? 0 : undefined}
+        onClick={hasResult ? () => setExpanded(!expanded) : undefined}
+        onKeyDown={
+          hasResult
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setExpanded(!expanded);
+                }
+              }
+            : undefined
+        }
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '6px 12px',
+          borderLeft: `2px solid ${cfg.color}`,
+          cursor: hasResult ? 'pointer' : 'default',
+          outline: 'none',
+        }}
+      >
+        {hasResult ? (
+          expanded ? (
+            <ChevronDown size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          ) : (
+            <ChevronRight size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          )
+        ) : (
+          <span style={{ width: 12, flexShrink: 0 }} />
+        )}
+        <StatusIcon status={log.status} />
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-primary)', flex: 1 }}>
+          {log.step_name || log.step_id}
         </span>
+        {log.duration_ms != null && (
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{log.duration_ms}ms</span>
+        )}
+        {log.error && (
+          <span style={{ fontSize: '0.65rem', color: '#EF4444', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {log.error}
+          </span>
+        )}
+      </div>
+
+      {expanded && (
+        <div style={{ padding: '6px 12px 10px', marginLeft: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {log.input != null && (
+            <div>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Input
+              </span>
+              <pre style={PRE_STYLE}>{JSON.stringify(log.input, null, 2)}</pre>
+            </div>
+          )}
+          {log.output != null && (
+            <div>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Resultado
+              </span>
+              <pre style={PRE_STYLE}>{JSON.stringify(log.output, null, 2)}</pre>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
 }
+
+const PRE_STYLE: React.CSSProperties = {
+  margin: '4px 0 0',
+  padding: '8px 10px',
+  fontSize: '0.7rem',
+  fontFamily: 'monospace',
+  color: 'var(--text-secondary)',
+  background: 'var(--void)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: 8,
+  overflowX: 'auto',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+};
 
 function RunItem({ run }: { run: WorkflowRun }) {
   const [expanded, setExpanded] = useState(false);

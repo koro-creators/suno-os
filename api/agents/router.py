@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 try:
@@ -221,3 +222,27 @@ async def get_agent_schedule(agent_id: str, session: Session = Depends(get_sessi
     _require_agent(session, agent_id)
     sch = repository.get_schedule(session, agent_id)
     return _schedule_response(agent_id, sch)
+
+
+# ---------------------------------------------------------------------------
+# Preview — CA-13 (synchronous sandbox execution)
+# ---------------------------------------------------------------------------
+
+
+class PreviewRequest(BaseModel):
+    message: str
+
+
+@router.post("/{agent_id}/preview", response_model=AgentRunDetail)
+async def preview_agent(
+    agent_id: str, body: PreviewRequest, session: Session = Depends(get_session)
+) -> dict:
+    """Run the agent in sandbox mode and return the result inline (synchronous).
+
+    Unlike /run (async + background), /preview waits for the result (CA-13).
+    Caixa-preta: 404 for missing agents, never 403.
+    """
+    _require_agent(session, agent_id)
+    from .preview import create_preview_run
+
+    return create_preview_run(session, agent_id, body.message)

@@ -34,14 +34,13 @@ async def lifespan(app: FastAPI):
     get_firebase_app()
     logger.info("Firebase Admin SDK initialized")
 
-    # Initialize MLflow
-    try:
-        import mlflow
-
-        mlflow.set_tracking_uri(settings.MLFLOW_TRACKING_URI)
-        logger.info(f"MLflow tracking URI: {settings.MLFLOW_TRACKING_URI}")
-    except Exception as e:
-        logger.warning(f"MLflow initialization skipped: {e}")
+    # Initialize Langfuse (ADR-013 — no-op when LANGFUSE_SECRET_KEY is absent)
+    if settings.LANGFUSE_SECRET_KEY:
+        logger.info("Langfuse observability active (host: %s)", settings.LANGFUSE_HOST)
+    else:
+        logger.info(
+            "Langfuse not configured — tracing disabled (set LANGFUSE_SECRET_KEY to enable)"
+        )
 
     # Start preview-runs cleanup loop (TASK-C12 — deletes TTL-expired runs every 30min)
     import asyncio

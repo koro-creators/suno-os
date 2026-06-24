@@ -31,6 +31,7 @@ export interface AgentUpdate {
   icon?: string;
   instructions?: string;
   status?: AgentStatus;
+  assigned_skills?: string[];
 }
 
 export interface AgentPermission {

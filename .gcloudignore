@@ -1,0 +1,29 @@
+.gcloudignore
+.git
+.gitignore
+
+# Frontend build artifacts e deps
+node_modules/
+.next/
+out/
+
+# Python virtualenv
+api/.venv/
+api/__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Claude worktrees e memória (grande)
+.claude/worktrees/
+.claire/
+
+# Docs e specs (não necessários para build)
+docs/
+
+# Dev e testes
+api/tests/
+api/.pytest_cache/
+
+# Logs locais
+*.log

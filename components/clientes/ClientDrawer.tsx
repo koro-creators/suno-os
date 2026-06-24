@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Close, Launch, TrashCan, User } from '@carbon/icons-react';
 import { ClientAdmin } from '@/lib/client-types';
@@ -53,6 +53,14 @@ export default function ClientDrawer({
   const overlayRef = useRef<HTMLDivElement>(null);
   const { skills } = useSkills();
   const { documents } = useBiblioteca();
+  // Two-click confirm para ação destrutiva (mesmo padrão de ClientEditor):
+  // 1º clique vira "Confirmar?", 2º arquiva de fato.
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  // Reseta a confirmação ao trocar de cliente ou fechar o drawer.
+  useEffect(() => {
+    setDeleteConfirm(false);
+  }, [client]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -67,6 +75,15 @@ export default function ClientDrawer({
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
   }, [client, handleKeyDown]);
+
+  const handleDeleteClick = () => {
+    if (!client) return;
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    onDelete(client);
+  };
 
   if (!client) return null;
 
@@ -510,30 +527,31 @@ export default function ClientDrawer({
             Abrir Editor
           </button>
           <button
-            onClick={() => onDelete(client)}
+            onClick={handleDeleteClick}
+            title={deleteConfirm ? 'Clique para confirmar' : 'Excluir cliente'}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
               justifyContent: 'center',
-              backgroundColor: 'transparent',
-              border: '1px solid var(--border-subtle)',
+              backgroundColor: deleteConfirm ? '#EF444415' : 'transparent',
+              border: `1px solid ${deleteConfirm ? '#EF4444' : 'var(--border-subtle)'}`,
               borderRadius: 8,
               padding: '10px 16px',
               fontSize: '0.8rem',
               color: '#EF4444',
               cursor: 'pointer',
-              transition: 'border-color 150ms ease',
+              transition: 'border-color 150ms ease, background-color 150ms ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = '#EF444466';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-subtle)';
+              e.currentTarget.style.borderColor = deleteConfirm ? '#EF4444' : 'var(--border-subtle)';
             }}
           >
             <TrashCan size={14} />
-            Excluir
+            {deleteConfirm ? 'Confirmar exclusão?' : 'Excluir'}
           </button>
         </div>
 

@@ -3,6 +3,8 @@
 Surfaces 7 ValidationError kinds (spec.md §6.3):
   • cycle                       — DFS 3-color detects back edges
   • fan_in_without_merge        — node with in-degree > 1 that is not type='merge'
+                                   ('condition' is exempt up to in-degree 2 via
+                                   the named in_a/in_b handles)
   • merge_with_zero_inputs      — type='merge' node with in-degree 0
   • edge_to_nonexistent_handle  — handle vocabulary mismatch with source step type
   • unauthorized_tool           — tool referenced not in user's RBAC scope
@@ -34,7 +36,7 @@ MAX_NODES = 20  # constitution §3 of SPEC-003 + §3 SPEC-005 (max 20 nodes)
 
 # Per-step-type, the set of source handles the step is allowed to emit.
 ALLOWED_SOURCE_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
-    "tool": frozenset({"out", "error"}),
+    "tool": frozenset({"out"}),  # tool emite só 'out' — paridade com useGraphValidation.ts
     "llm": frozenset({"out", "error"}),
     "action": frozenset({"out", "error"}),
     "workflow": frozenset({"out", "error"}),
@@ -42,6 +44,9 @@ ALLOWED_SOURCE_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
     "hitl": frozenset({"approved", "rejected", "modified"}),
     "merge": frozenset({"out"}),
 }
+
+_LLM_CONTROL_HANDLE = "in"
+_LLM_TOOL_HANDLE = "tool_0"
 
 # A subset of validation kinds that the PUT handler treats as blocking.
 HARD_KINDS: frozenset[ValidationErrorKind] = frozenset(
@@ -53,10 +58,13 @@ HARD_KINDS: frozenset[ValidationErrorKind] = frozenset(
         "no_entry_node",
     }
 )
-# The remaining kinds are surfaced as warnings on PUT and as errors on
-# POST /validate (so the canvas can show them without blocking save).
+# Soft kinds: surfaced as warnings on PUT (never block save) and as findings
+# on POST /validate. `isolated_node` is soft because edges are saved in a
+# separate request from steps — the PUT validator reads DB edges which may
+# lag behind the canvas state (race with setWorkflowEdges). Real-time
+# feedback comes from the frontend hook instead.
 SOFT_KINDS: frozenset[ValidationErrorKind] = frozenset(
-    {"fan_in_without_merge", "merge_with_zero_inputs"}
+    {"fan_in_without_merge", "merge_with_zero_inputs", "isolated_node"}
 )
 
 
@@ -70,6 +78,23 @@ def _build_adjacency(
         out_adj[edge["source_step_id"]].append((edge["target_step_id"], edge.get("edge_id", "")))
         in_degree[edge["target_step_id"]] += 1
     return out_adj, in_degree
+
+
+def _build_in_handles(edges: Iterable[dict]) -> dict[str, list[str]]:
+    """Build {target_step_id: [target_handle, ...]} for per-step handle checks."""
+    in_handles: dict[str, list[str]] = defaultdict(list)
+    for edge in edges:
+        in_handles[edge["target_step_id"]].append(edge["target_handle"])
+    return in_handles
+
+
+def _is_dual_condition_input(handles: list[str]) -> bool:
+    """True if `handles` is exactly one `in_a` (CAMPO) + one `in_b` (VALOR).
+
+    Legacy `in` edges (single-input migration default) count as `in_a`.
+    """
+    normalized = sorted("in_a" if h == "in" else h for h in handles)
+    return normalized == ["in_a", "in_b"]
 
 
 def has_cycle(edges: Iterable[dict]) -> bool:
@@ -159,33 +184,54 @@ def validate(
             )
         )
 
-    # 2. cycle (whole-graph)
-    if has_cycle(edges):
+    step_by_id = {s["id"]: s for s in steps}
+    step_ids = set(step_by_id.keys())
+
+    # Edges whose source or target references a step not in the current
+    # definition are stale artifacts from the race between the step-save
+    # (PUT /workflows/{id}) and the edge-save (POST /edges) — both fire in
+    # parallel and a prior PUT failure could have left the definition behind.
+    # Silently filter them out so they don't pollute real graph-logic checks;
+    # they will be cleaned up on the next successful auto-save.
+    valid_edges = [
+        e for e in edges if e["source_step_id"] in step_ids and e["target_step_id"] in step_ids
+    ]
+
+    # 2. cycle (whole-graph, only real edges)
+    if has_cycle(valid_edges):
         findings.append(
             ValidationError(
                 kind="cycle",
                 detail="cycle detected; workflows must be DAGs",
-                edges=cycle_edges(edges),
+                edges=cycle_edges(valid_edges),
             )
         )
 
-    # Build adjacency for subsequent per-step checks.
-    out_adj, in_degree = _build_adjacency(edges)
-    step_by_id = {s["id"]: s for s in steps}
+    # Build adjacency for subsequent per-step checks (only valid edges).
+    out_adj, in_degree = _build_adjacency(valid_edges)
+    in_handles = _build_in_handles(valid_edges)
 
-    # 3. edge_to_nonexistent_handle — source_handle must be allowed for type
-    for edge in edges:
-        src_step = step_by_id.get(edge["source_step_id"])
-        if src_step is None:
+    # 3. isolated_node — step with no inbound AND no outbound edges
+    for step in steps:
+        has_in = in_degree.get(step["id"], 0) > 0
+        has_out = step["id"] in out_adj
+        if not has_in and not has_out:
             findings.append(
                 ValidationError(
-                    kind="edge_to_nonexistent_handle",
-                    detail=f"edge references missing source step '{edge['source_step_id']}'",
-                    step_id=edge["source_step_id"],
-                    edges=[edge.get("edge_id", "")],
+                    kind="isolated_node",
+                    detail=(
+                        f"step '{step['id']}' ('{step.get('name', step['id'])}') "
+                        "has no connections — connect or remove it"
+                    ),
+                    step_id=step["id"],
                 )
             )
-            continue
+
+    # 4. edge_to_nonexistent_handle — source_handle must be allowed for type
+    for edge in valid_edges:
+        src_step = step_by_id.get(edge["source_step_id"])
+        if src_step is None:
+            continue  # already filtered above; defensive guard only
         allowed = ALLOWED_SOURCE_HANDLES_BY_TYPE.get(src_step["type"], frozenset())
         if edge["source_handle"] not in allowed:
             findings.append(
@@ -200,9 +246,9 @@ def validate(
                 )
             )
 
-    # 4. fan_in_without_merge — non-merge node with in-degree > 1
-    # 5. merge_with_zero_inputs — merge node with in-degree 0
-    # 6. no_entry_node — must have at least one node with in-degree 0
+    # 5. fan_in_without_merge — non-merge node with in-degree > 1
+    # 6. merge_with_zero_inputs — merge node with in-degree 0
+    # 7. no_entry_node — must have at least one node with in-degree 0
     has_entry = False
     for step in steps:
         deg = in_degree.get(step["id"], 0)
@@ -214,6 +260,41 @@ def validate(
                     ValidationError(
                         kind="merge_with_zero_inputs",
                         detail=f"merge node '{step['id']}' has no inbound edges",
+                        step_id=step["id"],
+                    )
+                )
+        elif step["type"] == "condition":
+            # `condition` aceita 1 entrada (CAMPO ou VALOR, qualquer handle)
+            # ou 2 entradas via handles distintos in_a (CAMPO) + in_b (VALOR).
+            step_in_handles = in_handles.get(step["id"], [])
+            if deg > 2 or (deg == 2 and not _is_dual_condition_input(step_in_handles)):
+                findings.append(
+                    ValidationError(
+                        kind="fan_in_without_merge",
+                        detail=(
+                            f"step '{step['id']}' (type=condition) has {deg} inbound edges; "
+                            "condition accepts at most 2 (in_a + in_b)"
+                        ),
+                        step_id=step["id"],
+                    )
+                )
+        elif step["type"] == "llm":
+            # llm aceita: no máximo 1 edge de controle ('in') + N edges de
+            # ferramenta ('tool_0'). Múltiplas ferramentas no mesmo handle são
+            # permitidas — o ReAct loop as coleta e decide qual invocar.
+            step_in_handles = in_handles.get(step["id"], [])
+            in_count = step_in_handles.count(_LLM_CONTROL_HANDLE)
+            allowed = {_LLM_CONTROL_HANDLE, _LLM_TOOL_HANDLE}
+            bad_handles = [h for h in step_in_handles if h not in allowed]
+            if in_count > 1 or bad_handles:
+                findings.append(
+                    ValidationError(
+                        kind="fan_in_without_merge",
+                        detail=(
+                            f"step '{step['id']}' (type=llm) has invalid inbound edges "
+                            f"(handles={step_in_handles}); "
+                            "allowed: at most 1×'in' + N×'tool_0'"
+                        ),
                         step_id=step["id"],
                     )
                 )
@@ -237,7 +318,7 @@ def validate(
             )
         )
 
-    # 7. unauthorized_tool — tool_name must be in allowed_tools (if provided)
+    # 8. unauthorized_tool — tool_name must be in allowed_tools (if provided)
     if allowed_tools is not None:
         for step in steps:
             if step["type"] in {"tool", "action"}:

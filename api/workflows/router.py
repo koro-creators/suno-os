@@ -51,17 +51,18 @@ router = APIRouter(tags=["Workflows"])
 
 
 def _validate_workflow_steps(workflow_id: str, steps: list[dict]) -> list[str]:
-    """Validate workflow steps. Returns list of error messages."""
+    """Validate workflow steps. Returns list of error messages.
+
+    A `workflow` step without `workflow_id` yet (just dropped on the canvas,
+    not configured in the drawer) is NOT a hard error here — it must still be
+    persistable by auto-save. The compiler already degrades gracefully at run
+    time (`Workflow '<id>' not found`) for an unconfigured/invalid reference.
+    """
     errors = []
     for step in steps:
         if step.get("type") == "workflow":
             ref_id = step.get("workflow_id")
-            if not ref_id:
-                errors.append(
-                    f"Step '{step.get('name', step.get('id', '?'))}': "
-                    "workflow_id is required for type 'workflow'"
-                )
-            elif ref_id == workflow_id:
+            if ref_id and ref_id == workflow_id:
                 errors.append(
                     f"Step '{step.get('name', step.get('id', '?'))}': "
                     "circular reference — cannot reference self"
@@ -202,7 +203,13 @@ async def get_workflow(
 async def update_workflow(
     workflow_id: str, req: WorkflowUpdate, session: Session = Depends(get_session)
 ) -> WorkflowDetailResponse:
-    """Update an existing workflow (SPEC-005 TASK-B01b: hard validation no PUT)."""
+    """Update an existing workflow.
+
+    Auto-save: never blocked by semantic validation (cycles, isolated nodes,
+    edge references). Steps and edges are saved in separate requests so
+    validation against both would cause false positives due to race conditions.
+    Semantic validation is deferred to POST /validate (explicit user action).
+    """
     wf = _require_workflow(session, workflow_id)
 
     fields: dict = {}
@@ -218,18 +225,6 @@ async def update_workflow(
         if step_errors:
             raise HTTPException(status_code=422, detail=step_errors)
         wf["definition"]["steps"] = step_dicts
-
-        from .validator import hard_validate_for_put
-
-        hard_errors = hard_validate_for_put(wf)
-        if hard_errors:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "error": "validation_failed",
-                    "errors": [e.model_dump() for e in hard_errors],
-                },
-            )
         fields["definition"] = wf["definition"]
     if req.schedule is not None:
         fields["schedule_cron"] = req.schedule.cron

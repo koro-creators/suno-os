@@ -45,6 +45,9 @@ interface Props {
   agentId: string;
 }
 
+const POLL_INTERVAL_MS = 1000;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 export default function AtividadeTab({ agentId }: Props) {
   const { listRuns } = useAgents();
   const [runs, setRuns] = useState<AgentRun[]>(() => listRuns(agentId));
