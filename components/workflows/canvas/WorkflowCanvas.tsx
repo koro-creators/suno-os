@@ -395,10 +395,12 @@ function CanvasInner(props: WorkflowCanvasProps) {
       setNodes((cur) => {
         const next = applyNodeChanges(changes, cur);
         stepsAutoSave.markDirty(next);
-        // Reset validation status whenever the graph mutates so the user
-        // re-runs Validate before Executar lights up.
         setValidationOk(false);
-        setExecutionStatus(null);
+        // Don't wipe execution status for ReactFlow's internal dimension
+        // measurements — they fire immediately after data updates and would
+        // clear the green/red post-run indicators before the user sees them.
+        const isInternalOnly = changes.every((c) => c.type === 'dimensions');
+        if (!isInternalOnly) setExecutionStatus(null);
         return next;
       });
     },

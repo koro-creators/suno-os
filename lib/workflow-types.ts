@@ -146,8 +146,8 @@ export interface StepLog {
   step_id: string;
   step_name: string | null;
   status: string;
-  input: Record<string, unknown> | null;
-  output: Record<string, unknown> | null;
+  input: Record<string, unknown> | unknown[] | null;
+  output: Record<string, unknown> | unknown[] | null;
   error: string | null;
   duration_ms: number | null;
   started_at: string | null;

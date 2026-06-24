@@ -45,7 +45,8 @@ ALLOWED_SOURCE_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
     "merge": frozenset({"out"}),
 }
 
-_ALLOWED_LLM_TARGET_HANDLES = frozenset({"in", "tool_0", "tool_1", "tool_2"})
+_LLM_CONTROL_HANDLE = "in"
+_LLM_TOOL_HANDLE = "tool_0"
 
 # A subset of validation kinds that the PUT handler treats as blocking.
 HARD_KINDS: frozenset[ValidationErrorKind] = frozenset(
@@ -278,23 +279,21 @@ def validate(
                     )
                 )
         elif step["type"] == "llm":
-            # llm aceita: 1 edge de controle (in) + até 3 edges de tool (tool_0/1/2).
-            # Todos os handles devem ser distintos e pertencer ao conjunto permitido.
+            # llm aceita: no máximo 1 edge de controle ('in') + N edges de
+            # ferramenta ('tool_0'). Múltiplas ferramentas no mesmo handle são
+            # permitidas — o ReAct loop as coleta e decide qual invocar.
             step_in_handles = in_handles.get(step["id"], [])
-            unique_handles = set(step_in_handles)
-            is_valid = (
-                len(step_in_handles) <= 4
-                and len(step_in_handles) == len(unique_handles)
-                and unique_handles.issubset(_ALLOWED_LLM_TARGET_HANDLES)
-            )
-            if not is_valid:
+            in_count = step_in_handles.count(_LLM_CONTROL_HANDLE)
+            allowed = {_LLM_CONTROL_HANDLE, _LLM_TOOL_HANDLE}
+            bad_handles = [h for h in step_in_handles if h not in allowed]
+            if in_count > 1 or bad_handles:
                 findings.append(
                     ValidationError(
                         kind="fan_in_without_merge",
                         detail=(
                             f"step '{step['id']}' (type=llm) has invalid inbound edges "
                             f"(handles={step_in_handles}); "
-                            "allowed: at most 1×'in' + 3×'tool_0/1/2', all distinct"
+                            "allowed: at most 1×'in' + N×'tool_0'"
                         ),
                         step_id=step["id"],
                     )

@@ -1025,7 +1025,7 @@ export async function listAgents(): Promise<Agent[]> {
     return rows.map((a) => ({
       ...a,
       instructions: a.instructions ?? '',
-      assigned_skills: [],
+      assigned_skills: a.assigned_skills ?? [],
       apps: [],
       memory_files: [],
       schedule: null,
@@ -1046,7 +1046,7 @@ export async function createAgentApi(data: AgentCreate): Promise<Agent | null> {
     });
     if (!res.ok) return null;
     const a = (await res.json()) as Agent;
-    return { ...a, assigned_skills: [], apps: [], memory_files: [], schedule: null, permissions: [] };
+    return { ...a, assigned_skills: a.assigned_skills ?? [], apps: [], memory_files: [], schedule: null, permissions: [] };
   } catch {
     return null;
   }

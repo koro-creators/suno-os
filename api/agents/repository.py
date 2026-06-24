@@ -53,8 +53,23 @@ def list_agents(session: Session, status: str | None = None, q: str | None = Non
     return [a.to_dict(last_run_at=_last_run_at(session, a.id)) for a in agents]
 
 
-def create_agent(session: Session, *, name: str, icon: str, instructions: str, status: str) -> dict:
-    agent = Agent(id=uuid.uuid4(), name=name, icon=icon, instructions=instructions, status=status)
+def create_agent(
+    session: Session,
+    *,
+    name: str,
+    icon: str,
+    instructions: str,
+    status: str,
+    assigned_skills: list[str] | None = None,
+) -> dict:
+    agent = Agent(
+        id=uuid.uuid4(),
+        name=name,
+        icon=icon,
+        instructions=instructions,
+        status=status,
+        assigned_skills=assigned_skills or [],
+    )
     session.add(agent)
     session.commit()
     session.refresh(agent)
@@ -86,6 +101,8 @@ def update_agent(session: Session, agent_id: str, updates: dict) -> dict | None:
     for key in ("name", "icon", "instructions", "status"):
         if updates.get(key) is not None:
             setattr(agent, key, updates[key])
+    if "assigned_skills" in updates and updates["assigned_skills"] is not None:
+        agent.assigned_skills = updates["assigned_skills"]
     session.commit()
     session.refresh(agent)
     return agent.to_dict(last_run_at=_last_run_at(session, agent.id))
