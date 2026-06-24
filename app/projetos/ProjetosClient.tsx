@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import {
   ProjetosProvider,
@@ -7,6 +8,7 @@ import {
   useWorkspace,
   type NodeType,
 } from "@koro-creators/projetos";
+import { useClients } from "@/contexts/ClientsContext";
 
 // Token do Firebase do sunOS (mesmo projeto do Venus → valida no backend do
 // Venus). Definido fora do componente: não depende de props e evita recriar a
@@ -33,17 +35,50 @@ const ENABLED_NODES: NodeType[] = [
   "prompt", "storyboard", "animate",
 ];
 
-// Seletor de cliente (workspace do Venus). A lista vem do useWorkspace() do
-// pacote — já filtrada pela BU do usuário no backend do Venus (admin vê todos).
-// Trocar aqui re-escopa as telas (WorkflowsList lê o mesmo selected do contexto).
+// Seletor de cliente (workspace do Venus), AMARRADO aos clientes do sunOS:
+// só aparecem os workspaces do Venus que também existem como cliente no sunOS
+// (casados por slug — ambos os sistemas geram slug = nome normalizado/lowercase).
+// Assim, cliente que só existe no Venus não aparece aqui.
+// A lista do Venus já vem filtrada pela BU do usuário no backend (admin vê todos).
 function WorkspaceSwitcher() {
   const { workspaces, selected, select, loading } = useWorkspace();
+  const { clients } = useClients();
 
-  if (loading) {
+  // Slugs dos clientes do sunOS (lowercase defensivo).
+  const sunosSlugs = useMemo(
+    () => new Set((clients ?? []).map((c) => (c.slug || "").toLowerCase()).filter(Boolean)),
+    [clients]
+  );
+
+  // Interseção: workspaces do Venus presentes no sunOS por slug.
+  const visible = useMemo(
+    () => workspaces.filter((w) => sunosSlugs.has((w.slug || "").toLowerCase())),
+    [workspaces, sunosSlugs]
+  );
+
+  // Corrige a seleção: o WorkspaceProvider auto-seleciona o 1º workspace do Venus,
+  // que pode ser um cliente que não existe no sunOS. Se o selecionado não está na
+  // interseção, troca pro 1º visível.
+  useEffect(() => {
+    if (!visible.length) return;
+    if (!selected || !visible.some((w) => w.id === selected)) {
+      select(visible[0].id);
+    }
+  }, [visible, selected, select]);
+
+  // Espera o Venus E a lista de clientes do sunOS carregarem antes de decidir
+  // "nenhum cliente" (clients vazio = ainda carregando; ClientsContext não expõe
+  // flag de loading).
+  const clientsReady = clients && clients.length > 0;
+  if (loading || !clientsReady) {
     return <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Carregando clientes…</span>;
   }
-  if (!workspaces.length) {
-    return <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Nenhum cliente disponível</span>;
+  if (!visible.length) {
+    return (
+      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+        Nenhum cliente do sunOS encontrado no Venus
+      </span>
+    );
   }
   return (
     <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -64,7 +99,7 @@ function WorkspaceSwitcher() {
           cursor: "pointer",
         }}
       >
-        {workspaces.map((w) => (
+        {visible.map((w) => (
           <option key={w.id} value={w.id}>{w.name}</option>
         ))}
       </select>
