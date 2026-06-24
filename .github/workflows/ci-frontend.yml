@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main, master]
 
+# Necessário para o npm ci instalar o pacote privado @koro-creators/projetos do
+# GitHub Packages (o .npmrc usa ${NODE_AUTH_TOKEN}; o GITHUB_TOKEN da Action lê
+# pacotes da mesma org).
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   typecheck:
     name: TypeScript typecheck
@@ -17,6 +24,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npx tsc --noEmit
 
   lint:
@@ -29,6 +38,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npx next lint
 
   build:
@@ -42,4 +53,6 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run build
