@@ -1,6 +1,6 @@
 "use client";
 
-import { ProjetosProvider, type NodeType } from "@koro-creators/projetos";
+import { ProjetosProvider, WorkspaceProvider, type NodeType } from "@koro-creators/projetos";
 
 // Token do Firebase do sunOS (mesmo projeto do Venus → valida no backend do
 // Venus). Definido fora do componente: não depende de props e evita recriar a
@@ -29,12 +29,17 @@ const ENABLED_NODES: NodeType[] = [
 
 export default function ProjetosClient({ children }: { children: React.ReactNode }) {
   return (
+    // ProjetosProvider injeta base/token ANTES do WorkspaceProvider (que chama
+    // listWorkspaces no backend do Venus). O WorkspaceProvider é obrigatório: as
+    // telas do pacote usam useWorkspace() — no Venus ele vem do root layout, mas
+    // o sunOS não tem o conceito de workspace, então montamos aqui, escopado às
+    // rotas /projetos.
     <ProjetosProvider
       apiBaseUrl="/venus"
       tokenProvider={tokenProvider}
       enabledNodes={ENABLED_NODES}
     >
-      {children}
+      <WorkspaceProvider>{children}</WorkspaceProvider>
     </ProjetosProvider>
   );
 }
