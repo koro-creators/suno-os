@@ -64,6 +64,25 @@ export default function ClientPage({
           { label: 'Home', href: '/' },
           { label: client.name, href: `/${clientSlug}` },
         ]}
+        rightSection={
+          <button
+            onClick={() => router.push(`/${clientSlug}/projetos`)}
+            title="Desdobrar peças deste cliente"
+            style={{
+              background: 'var(--sun)',
+              color: 'var(--void)',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '0.3rem 0.8rem',
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            Projetos
+          </button>
+        }
         rightLabel={`${activeContextCount} skills`}
       />
 

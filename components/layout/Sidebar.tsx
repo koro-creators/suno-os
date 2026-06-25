@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { CarbonIconType, Book, Bot, CheckmarkFilled, ChevronLeft, ChevronRight, ColorPalette, Flash, Flow, Globe, Group, Logout, Settings, Star } from '@carbon/icons-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useClients } from '@/contexts/ClientsContext';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 
 interface NavItemDef {
@@ -17,7 +18,9 @@ interface NavItemDef {
 const NAV_ITEMS: NavItemDef[] = [
   { label: 'Home', icon: Globe, href: '/' },
   { label: 'Clientes', icon: Group, href: '/clientes', adminOnly: true },
-  { label: 'Projetos', icon: Flow, href: '/projetos', adminOnly: true },
+  // Projetos é escopada por cliente (/{cliente}/projetos): sem href fixo — o
+  // destino é resolvido dinamicamente a partir do cliente atual da rota.
+  { label: 'Projetos', icon: Flow, adminOnly: true },
   { label: 'Skills', icon: Star, href: '/skills', adminOnly: true },
   { label: 'Biblioteca', icon: Book, href: '/biblioteca', adminOnly: true },
   { label: 'Workflows', icon: Flash, href: '/workflows', adminOnly: true },
@@ -33,6 +36,13 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, isAdmin, role, signOut } = useAuth();
   const { recents } = useNavigationHistory();
+  const { clients } = useClients();
+
+  // Cliente atual = 1º segmento do path que casa com um slug de cliente do sunOS
+  // (ex.: /samsung/... → "samsung"). Null em rotas globais (/skills, /clientes…).
+  const firstSeg = (pathname || "").split("/")[1] || "";
+  const currentClientSlug =
+    clients?.some((c) => c.slug === firstSeg) ? firstSeg : null;
 
   const isDev = process.env.NODE_ENV === 'development';
   const visibleNavItems = NAV_ITEMS.filter(
@@ -41,13 +51,22 @@ export default function Sidebar() {
 
   // Item ativo derivado só do pathname (fonte única de verdade).
   // Home ('/') exige match exato; demais aceitam rotas aninhadas (ex.: /skills/123).
-  const isItemActive = (href?: string) => {
+  const isItemActive = (item: NavItemDef) => {
+    // Projetos é por cliente (/{cliente}/projetos): ativo em qualquer /…/projetos.
+    if (item.label === 'Projetos') return /\/projetos(\/|$)/.test(pathname || '');
+    const href = item.href;
     if (!href) return false;
     if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(href + '/');
   };
 
   const handleNavClick = (item: NavItemDef) => {
+    // Projetos: se estou num cliente, vai pra Projetos dele; senão, leva pra Home
+    // escolher um cliente (a feature é sempre escopada a um cliente).
+    if (item.label === 'Projetos') {
+      router.push(currentClientSlug ? `/${currentClientSlug}/projetos` : '/');
+      return;
+    }
     if (item.href) {
       router.push(item.href);
     }
@@ -90,7 +109,7 @@ export default function Sidebar() {
         >
           {visibleNavItems.map((item) => {
             const { label, icon: Icon } = item;
-            const isActive = isItemActive(item.href);
+            const isActive = isItemActive(item);
             return (
               <div
                 key={label}
@@ -209,7 +228,7 @@ export default function Sidebar() {
               key={item.label}
               label={item.label}
               icon={item.icon}
-              isActive={isItemActive(item.href)}
+              isActive={isItemActive(item)}
               onClick={() => handleNavClick(item)}
             />
           ))}
