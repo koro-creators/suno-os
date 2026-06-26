@@ -48,6 +48,7 @@ import '@xyflow/react/dist/style.css';
 
 import {
   apiAvailable,
+  extractGerarPdfResult,
   setWorkflowEdges,
   validateWorkflow,
   autoLayoutWorkflow,
@@ -59,6 +60,7 @@ import { useWorkflowAutoSave } from '@/hooks/useWorkflowAutoSave';
 import { useGraphValidation } from './hooks/useGraphValidation';
 import { useAutoLayout } from './hooks/useAutoLayout';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
+import { useBiblioteca } from '@/contexts/BibliotecaContext';
 
 import type { ExecutionStatus } from './nodes/NodeShell';
 import ToolNode from './nodes/ToolNode';
@@ -68,6 +70,7 @@ import ActionNode from './nodes/ActionNode';
 import HITLNode from './nodes/HITLNode';
 import SubWorkflowNode from './nodes/SubWorkflowNode';
 import MergeNode from './nodes/MergeNode';
+import TriggerNode from './nodes/TriggerNode';
 import CustomEdge from './edges/CustomEdge';
 import NodePalette from './panels/NodePalette';
 import NodeConfigDrawer from './panels/NodeConfigDrawer';
@@ -90,8 +93,13 @@ function buildCanvasNode(payload: StepPayload, position: { x: number; y: number 
       condition_operator: payload.condition_operator ?? (payload.step_type === 'condition' ? 'if_else' : undefined),
       action_type: payload.action_type,
       workflow_id: payload.workflow_id,
-      config: payload.default_config ?? {},
+      config:
+        payload.step_type === 'trigger'
+          ? { ...payload.default_config, trigger_type: payload.trigger_type ?? 'nova_reuniao' }
+          : (payload.default_config ?? {}),
       merge_policy: payload.step_type === 'merge' ? (payload.merge_policy ?? 'all') : undefined,
+      trigger_type: payload.step_type === 'trigger' ? (payload.trigger_type ?? 'nova_reuniao') : undefined,
+      introduction: payload.default_introduction ?? '',
     },
   };
 }
@@ -104,6 +112,7 @@ const NODE_TYPES = {
   hitl: HITLNode,
   workflow: SubWorkflowNode,
   merge: MergeNode,
+  trigger: TriggerNode,
 };
 
 const EDGE_TYPES = {
@@ -282,7 +291,10 @@ function CanvasInner(props: WorkflowCanvasProps) {
 
   // Validation status — validationOk is lifted to WorkflowsContext so the
   // history page can read the same value and gate its "Executar Agora" button.
-  const { validationOk: validationOkMap, setValidationOk: setValidationOkCtx } = useWorkflows();
+  const { validationOk: validationOkMap, setValidationOk: setValidationOkCtx, runWorkflow: ctxRunWorkflow, notifyRunCompleted } = useWorkflows();
+  const { documents: bibliotecaDocs } = useBiblioteca();
+  const bibliotecaDocsRef = useRef(bibliotecaDocs);
+  useEffect(() => { bibliotecaDocsRef.current = bibliotecaDocs; });
   const validationOk = validationOkMap[workflowId] ?? false;
   const setValidationOk = (ok: boolean) => setValidationOkCtx(workflowId, ok);
 
@@ -651,16 +663,46 @@ function CanvasInner(props: WorkflowCanvasProps) {
     );
     try {
       if (apiAvailable()) {
-        const result = await runWorkflow(workflowId);
+        // Passa doc novo se existir — backend usa no trigger step (se houver).
+        const novoDoc = bibliotecaDocsRef.current.find(
+          (d) => d.docType === 'reuniao' && d.status === 'novo',
+        );
+        const result = await runWorkflow(
+          workflowId,
+          novoDoc ? { id: novoDoc.id, title: novoDoc.title, content: novoDoc.content } : undefined,
+        );
         const run = await getWorkflowRun(workflowId, result.run_id);
+        const generatedDoc = extractGerarPdfResult(run.steps_output);
+        // Passa docId e generatedDoc para que o hook possa marcar o doc e criar documento base.
+        notifyRunCompleted(workflowId, result.run_id, novoDoc?.id, generatedDoc ?? undefined);
         const next: Record<string, ExecutionStatus> = {};
         for (const log of run.step_logs) {
           next[log.step_id] = log.status === 'failed' ? 'failed' : 'completed';
         }
+        // Embedded tool calls (ex: gerar_pdf) só aparecem em steps_output, não em step_logs.
+        for (const [stepId, output] of Object.entries(run.steps_output)) {
+          if (!(stepId in next) && output != null) {
+            next[stepId] = 'completed';
+          }
+        }
         setExecutionStatus(next);
       } else {
-        // Mock-mode: no backend to execute against — nothing actually ran,
-        // so drop the "running" flash without faking a result.
+        // Mock-mode: verifica se há trigger step + doc novo e passa para o contexto.
+        // Trigger sem doc → só o step de trigger roda. Com doc → fluxo completo.
+        const hasTriggerNode = nodesRef.current.some((n) => {
+          const d = n.data as { type?: string; trigger_type?: string; config?: Record<string, unknown> };
+          const tt = d.trigger_type ?? d.config?.['trigger_type'];
+          return d.type === 'trigger' && tt === 'nova_reuniao';
+        });
+        const novoDoc = hasTriggerNode
+          ? bibliotecaDocsRef.current.find((d) => d.docType === 'reuniao' && d.status === 'novo')
+          : undefined;
+        try {
+          await ctxRunWorkflow(
+            workflowId,
+            novoDoc ? { id: novoDoc.id, title: novoDoc.title } : undefined,
+          );
+        } catch { /* ignore */ }
         setExecutionStatus(null);
       }
     } catch {
@@ -670,7 +712,7 @@ function CanvasInner(props: WorkflowCanvasProps) {
     } finally {
       setExecuting(false);
     }
-  }, [executing, workflowId]);
+  }, [executing, workflowId, ctxRunWorkflow, notifyRunCompleted]);
 
   // Surface the most recent error from either auto-save channel.
   const saveStatus = stepsAutoSave.status === 'saving' || edgesAutoSave.status === 'saving'

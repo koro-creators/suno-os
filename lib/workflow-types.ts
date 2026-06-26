@@ -30,13 +30,14 @@ export type ValidationErrorKind =
 export interface WorkflowStep {
   id: string;
   name: string;
-  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge';
+  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger';
   tool_name?: string;
   prompt?: string;
   model?: WorkflowLLMModel; // type="llm": modelo a usar (default: gemini-flash)
   agent_id?: string; // type="llm": agente (aba Agentes) cujas instructions entram como contexto
   condition_operator?: 'if_else'; // type="condition": porta lógica
   action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram'; // type="action": canal de envio
+  trigger_type?: 'nova_reuniao'; // type="trigger": sub-tipo do trigger
   workflow_id?: string;
   input_mapping?: Record<string, string>;
   config: Record<string, unknown>;
@@ -105,10 +106,20 @@ export interface CronSchedule {
   enabled: boolean;
 }
 
+export interface GeneratedDoc {
+  titulo: string;
+  conteudo: string;
+  cliente_slug: string;
+  cliente_nome: string;
+  filename: string;
+}
+
 export interface WorkflowRunSummary {
   run_id: string;
   status: string;
   completed_at: string | null;
+  triggered_doc_id?: string;
+  generated_doc?: GeneratedDoc;
 }
 
 export interface Workflow {

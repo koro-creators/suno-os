@@ -11,7 +11,7 @@ export type KnowledgeFileType =
   | 'mp4'
   | 'mov';
 
-export type KnowledgeStatus = 'processing' | 'ready' | 'error';
+export type KnowledgeStatus = 'processing' | 'ready' | 'error' | 'novo' | 'utilizado' | 'para gerar conhecimento' | 'gerado';
 
 export interface BibliotecaDocument {
   id: string;
@@ -29,9 +29,10 @@ export interface BibliotecaDocument {
   thumbnailUrl?: string;
   status?: KnowledgeStatus;
   fileSize?: number;
-  /** Phase 21 — Reuniões como sub-tipo da Biblioteca */
-  docType?: 'reuniao';
+  /** Phase 21 — Reuniões e documentos gerados como sub-tipos da Biblioteca */
+  docType?: 'reuniao' | 'base';
   meetingDate?: string;
   meetingParticipants?: string[];
   meetingDuration?: string;
+  company?: string; // empresa mencionada na ata
 }

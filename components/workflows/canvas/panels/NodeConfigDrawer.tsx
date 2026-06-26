@@ -94,13 +94,17 @@ const LABEL: React.CSSProperties = {
   display: 'block',
 };
 
-// Introductions injected automatically for state-bound tools (not configurable by users).
+// Introductions injected automatically for state/context-bound tools (not configurable by users).
 // Used as LangChain tool descriptions in bind_tools so the LLM knows when to call each.
 const STATE_BOUND_INTRODUCTIONS: Record<string, string> = {
   consultar_ontologia:
     'Use para obter o contexto completo de marca do cliente: posicionamento, persona, competidores, produto, tom de voz e briefing. Acione quando a tarefa envolver criação ou validação de conteúdo alinhado à identidade do cliente. Não use se o contexto de marca já foi obtido neste fluxo ou se a tarefa não envolve comunicação.',
   consultar_cliente:
     'Use para obter os dados cadastrais do cliente: nome, slug, descrição, cor de identidade visual, sponsor e status. Acione quando precisar identificar o cliente ou verificar informações de cadastro. Não use para obter contexto de marca ou tom de voz — para isso use "Ontologia do cliente".',
+  ler_atas_reunioes:
+    'Lê o conteúdo da ata de reunião identificada pelo gatilho. Use esta ferramenta para obter o texto da ata antes de qualquer análise.',
+  gerar_pdf:
+    "Salva o documento de conhecimento na pasta 'base'. CHAME ESTA FERRAMENTA imediatamente após analisar a ata — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo estruturado, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback se não identificar).",
 };
 
 export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkflowId }: DrawerProps) {
@@ -145,10 +149,11 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
     setToolName(tName);
     const storedIntro = (data.introduction as string) ?? '';
     const fixedIntro = STATE_BOUND_INTRODUCTIONS[tName] ?? '';
-    const resolvedIntro = storedIntro || fixedIntro;
+    // Para tools state-bound, fixedIntro é sempre a fonte da verdade — sobrescreve o valor armazenado.
+    // Garante que mudanças na introdução bloqueada cheguem ao compilador mesmo em nodes já no canvas.
+    const resolvedIntro = fixedIntro || storedIntro;
     setIntroduction(resolvedIntro);
-    // Auto-persist the fixed intro so the compiler can use it as tool description.
-    if (!storedIntro && fixedIntro) {
+    if (fixedIntro && storedIntro !== fixedIntro) {
       onChange(node.id, { ...data, introduction: fixedIntro });
     }
     setPrompt((data.prompt as string) ?? '');
@@ -187,6 +192,8 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
 
   const isGenerateText = stepType === 'tool' && toolName === 'generate_text';
   const isOntologia = stepType === 'tool' && toolName === 'consultar_ontologia';
+  const isLerAtas = stepType === 'tool' && toolName === 'ler_atas_reunioes';
+  const isGerarPdf = stepType === 'tool' && toolName === 'gerar_pdf';
   const isStateBound = stepType === 'tool' && toolName in STATE_BOUND_INTRODUCTIONS;
   const toolConfig = parseJsonOrFallback(configJson, {}) as Record<string, unknown>;
 
@@ -284,7 +291,11 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
         <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 12px' }}>
           {isOntologia
             ? 'Sem configuração. Carrega automaticamente a ontologia do cliente atual (posicionamento, persona, tom de voz, etc.).'
-            : 'Sem configuração. Carrega automaticamente os dados cadastrais do cliente selecionado (nome, slug, cor, sponsor, status).'}
+            : isLerAtas
+              ? 'Sem configuração. Carrega automaticamente o texto da ata de reunião identificada pelo step de gatilho.'
+              : isGerarPdf
+                ? "Recebe título, conteúdo e cliente do agente. O documento gerado aparece na Biblioteca com status 'Gerado'. O cliente é determinado pelo agente a partir do contexto da conversa."
+                : 'Sem configuração. Carrega automaticamente os dados cadastrais do cliente selecionado (nome, slug, cor, sponsor, status).'}
         </p>
       )}
 

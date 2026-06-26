@@ -13,7 +13,7 @@ For chat tool bridges (already @tool decorated in chat/tools/):
   Add to chat_bridge.py using register_tool().
 """
 
-from . import chat_bridge, cliente, ontologia  # noqa: F401 — trigger registration
+from . import chat_bridge, cliente, ontologia, reuniao  # noqa: F401 — trigger registration
 from .base import WorkflowTool, get_registry, register_tool, workflow_tool
 
 __all__ = ["WorkflowTool", "workflow_tool", "register_tool", "get_registry"]

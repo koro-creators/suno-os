@@ -264,6 +264,7 @@ export async function enhancePrompt(params: EnhancePromptParams): Promise<Enhanc
 import type {
   AutoLayoutResponse,
   CronSchedule,
+  GeneratedDoc,
   MigrateV2Response,
   ValidateWorkflowResponse,
   Workflow,
@@ -484,15 +485,47 @@ export async function deleteWorkflow(workflowId: string): Promise<void> {
 /** Trigger a workflow run (executes synchronously server-side, returns final status). */
 export async function runWorkflow(
   workflowId: string,
+  triggerDoc?: { id: string; title: string; content?: string },
 ): Promise<{ run_id: string; status: string; started_at: string }> {
+  const body = triggerDoc
+    ? { input_overrides: { trigger_doc: triggerDoc } }
+    : {};
   return workflowFetch(`/api/workflows/${workflowId}/run`, {
     method: 'POST',
-    body: JSON.stringify({}),
+    body: JSON.stringify(body),
   });
+}
+
+// ---------------------------------------------------------------------------
+// Mock run persistence (localStorage) — used when API is not available
+// ---------------------------------------------------------------------------
+
+const mockRunsKey = (workflowId: string) => `sunos-mock-runs-v1-${workflowId}`;
+
+/** Save a run entry to localStorage for mock mode. */
+export function saveMockRun(workflowId: string, run: WorkflowRun): void {
+  try {
+    const existing: WorkflowRun[] = JSON.parse(
+      localStorage.getItem(mockRunsKey(workflowId)) ?? '[]',
+    );
+    existing.unshift(run);
+    localStorage.setItem(mockRunsKey(workflowId), JSON.stringify(existing.slice(0, 100)));
+  } catch { /* localStorage indisponível */ }
+}
+
+/** Load runs from localStorage (mock mode). */
+export function loadMockRuns(workflowId: string): WorkflowRun[] {
+  try {
+    const raw = localStorage.getItem(mockRunsKey(workflowId));
+    return raw ? (JSON.parse(raw) as WorkflowRun[]) : [];
+  } catch {
+    return [];
+  }
 }
 
 /** List execution history for a workflow. */
 export async function listWorkflowRuns(workflowId: string): Promise<WorkflowRun[]> {
+  if (!apiAvailable()) return loadMockRuns(workflowId);
   const res = await workflowFetch<{ runs: WorkflowRun[]; total: number }>(
     `/api/workflows/${workflowId}/runs`,
   );
@@ -502,6 +535,33 @@ export async function listWorkflowRuns(workflowId: string): Promise<WorkflowRun[
 /** Get a single run, including per-step logs (status/output/timing). */
 export async function getWorkflowRun(workflowId: string, runId: string): Promise<WorkflowRun> {
   return workflowFetch<WorkflowRun>(`/api/workflows/${workflowId}/runs/${runId}`);
+}
+
+/**
+ * Varre steps_output de um run em busca do resultado do tool gerar_pdf.
+ * Retorna GeneratedDoc se encontrado, null caso contrário.
+ */
+export function extractGerarPdfResult(stepsOutput: Record<string, unknown>): GeneratedDoc | null {
+  for (const entry of Object.values(stepsOutput)) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const o = entry as Record<string, unknown>;
+
+    // Formato wrapper {input: {...}, output: {...}} — armazenado pelo compiler
+    const inner = typeof o.output === 'object' && o.output !== null
+      ? (o.output as Record<string, unknown>)
+      : o;
+
+    if (inner.saved_to === 'base' && typeof inner.titulo === 'string') {
+      return {
+        titulo: inner.titulo,
+        conteudo: (inner.conteudo as string) || '',
+        cliente_slug: (inner.cliente_slug as string) || '',
+        cliente_nome: (inner.cliente_nome as string) || '',
+        filename: (inner.filename as string) || 'document.pdf',
+      };
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -750,6 +810,8 @@ export interface ToolDescriptor {
   category: 'criacao' | 'midia' | 'planejamento' | 'controle';
   description: string;
   default_config: Record<string, unknown>;
+  default_introduction: string;
+  locked_introduction: boolean;
   role_restriction: string[] | null;
 }
 
@@ -869,6 +931,25 @@ export async function listAvailableTools(): Promise<ToolDescriptor[]> {
         category: 'planejamento',
         description: 'Persistência simples (mock).',
         default_config: {},
+        role_restriction: null,
+      },
+      {
+        tool_name: 'ler_atas_reunioes',
+        label: 'Ler atas de reuniões',
+        category: 'criacao',
+        description: 'Lê atas da pasta sincronizada e instrui a IA para gerar conhecimento estruturado.',
+        default_config: {
+          instructions: 'Leia a ata de reunião e extraia: título, empresa(s), participantes, decisões e próximos passos.',
+          source: 'pasta_reuniao',
+        },
+        role_restriction: null,
+      },
+      {
+        tool_name: 'gerar_pdf',
+        label: 'Gerar PDF',
+        category: 'planejamento',
+        description: "Salva o conhecimento como PDF e registra na Biblioteca com status 'para gerar conhecimento'.",
+        default_config: { output_folder: 'reuniao', titulo: '', empresa: '', add_to_biblioteca: true },
         role_restriction: null,
       },
     ];

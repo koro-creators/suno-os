@@ -220,6 +220,7 @@ async def _run_react_llm_step(
     resolve_template: Any,
     default_model: str,
     extra_outputs: dict | None = None,
+    run_context: dict | None = None,
 ) -> str:
     """ReAct tool-use loop: LLM decides which tools to invoke.
 
@@ -248,6 +249,7 @@ async def _run_react_llm_step(
                 client_id=client_id,
                 extra_outputs=extra_outputs,
                 step_id=ts["id"],
+                run_context=run_context,
             )
         )
 
@@ -301,16 +303,18 @@ async def _run_react_llm_step(
             matched = next((t for t in lc_tools if t.name == tc["name"]), None)
             if matched:
                 try:
-                    tool_output = str(await matched.ainvoke(tc["args"]))
+                    tool_output_raw = await matched.ainvoke(tc["args"])
                 except Exception as exc:  # noqa: BLE001
-                    tool_output = f"Erro ao executar {tc['name']}: {exc}"
+                    tool_output_raw = f"Erro ao executar {tc['name']}: {exc}"
             else:
-                tool_output = f"Ferramenta '{tc['name']}' não encontrada."
-            msgs.append(ToolMessage(content=tool_output, tool_call_id=tc["id"]))
+                tool_output_raw = f"Ferramenta '{tc['name']}' não encontrada."
+            # ToolMessage precisa de string; extra_outputs guarda o valor bruto (dict JSON-serializável)
+            tool_output_str = str(tool_output_raw) if not isinstance(tool_output_raw, str) else tool_output_raw
+            msgs.append(ToolMessage(content=tool_output_str, tool_call_id=tc["id"]))
             if extra_outputs is not None:
                 for ts in embedded_tool_steps:
                     if ts.get("tool_name") == tc["name"] and ts["id"] not in extra_outputs:
-                        extra_outputs[ts["id"]] = {"output": tool_output}
+                        extra_outputs[ts["id"]] = {"input": tc["args"], "output": tool_output_raw}
 
     # Fallback: return the last text content found in the message chain.
     for m in reversed(msgs):
@@ -442,7 +446,33 @@ class WorkflowCompiler:
         graph.add_edge(START, steps[0]["id"])
 
         for step in steps:
-            if step.get("condition"):
+            step_type = step.get("type", "")
+            trigger_subtype = step.get("trigger_type") or (
+                step.get("config") or {}
+            ).get("trigger_type", "nova_reuniao")
+
+            is_nova_reuniao_trigger = (
+                step_type == "trigger"
+                and step.get("next_step")
+                and trigger_subtype == "nova_reuniao"
+            )
+            if is_nova_reuniao_trigger:
+                # nova_reuniao: para o fluxo se não houver trigger_doc.
+                next_step = step["next_step"]
+                _step_id = step["id"]
+
+                def _v1_trigger_router(state: WorkflowState, _src: str = _step_id) -> str:
+                    output = (state.get("steps_output") or {}).get(_src, {})
+                    if isinstance(output, dict) and output.get("doc_title"):
+                        return "continue"
+                    return "stop"
+
+                graph.add_conditional_edges(
+                    step["id"],
+                    _v1_trigger_router,
+                    {"continue": next_step, "stop": END},
+                )
+            elif step.get("condition"):
                 cond = step["condition"]
                 # `cond` no formato v2 (vindo do drawer) so tem field/operator/
                 # value — then/else sao edges, nao chaves do dict. Usar .get()
@@ -622,6 +652,34 @@ class WorkflowCompiler:
         """
         src_id = source_step["id"]
         src_type = source_step["type"]
+
+        if src_type == "trigger":
+            # nova_reuniao: se não foi passado trigger_doc, o flow para aqui.
+            # doc_title presente no output → continua; ausente → vai para END.
+            trigger_subtype = source_step.get("trigger_type") or (
+                source_step.get("config") or {}
+            ).get("trigger_type", "nova_reuniao")
+            out_targets = sorted(
+                {e["target_step_id"] for e in source_edges if e["source_handle"] == "out"}
+            )
+            if not out_targets or trigger_subtype != "nova_reuniao":
+                # Sem targets definidos ou trigger de outro tipo → edges normais.
+                for tgt in out_targets:
+                    graph.add_edge(src_id, tgt)
+                return
+
+            def _trigger_router(state: WorkflowState, _src: str = src_id) -> str:
+                output = (state.get("steps_output") or {}).get(_src, {})
+                if isinstance(output, dict) and output.get("doc_title"):
+                    return "continue"
+                return "stop"
+
+            mapping: dict[str, Any] = {
+                "continue": out_targets if len(out_targets) > 1 else out_targets[0],
+                "stop": END,
+            }
+            graph.add_conditional_edges(src_id, _trigger_router, mapping)
+            return
 
         if src_type == "condition":
             mapping: dict[str, str] = {}
@@ -804,6 +862,13 @@ class WorkflowCompiler:
                     result = {"error": f"Tool '{tool_name}' not found in registry"}
                 elif wf_tool.state_bound:
                     result = wf_tool.func(state.get("client_id"))
+                elif wf_tool.context_bound:
+                    result = wf_tool.func({
+                        "config_overrides": state.get("config_overrides") or {},
+                        "steps_output": state.get("steps_output") or {},
+                        "client_id": state.get("client_id"),
+                        "step_config": resolved_config,
+                    })
                 else:
                     result = await wf_tool.ainvoke(resolved_config)
 
@@ -826,6 +891,11 @@ class WorkflowCompiler:
                         resolve_template=self._resolve_template_string,
                         default_model=default_model,
                         extra_outputs=extra_outputs,
+                        run_context={
+                            "config_overrides": state.get("config_overrides") or {},
+                            "steps_output": state.get("steps_output") or {},
+                            "client_id": state.get("client_id"),
+                        },
                     )
                 else:
                     # Deterministic mode: run all tools first, then call LLM.
@@ -842,6 +912,13 @@ class WorkflowCompiler:
                                 tresult = {"error": f"Tool '{tname}' not found in registry"}
                             elif wf_tool.state_bound:
                                 tresult = wf_tool.func(state.get("client_id"))
+                            elif wf_tool.context_bound:
+                                tresult = wf_tool.func({
+                                    "config_overrides": state.get("config_overrides") or {},
+                                    "steps_output": state.get("steps_output") or {},
+                                    "client_id": state.get("client_id"),
+                                    "step_config": tconfig,
+                                })
                             else:
                                 tresult = await wf_tool.ainvoke(tconfig)
                             if not isinstance(tresult, (dict, list)):
@@ -989,6 +1066,17 @@ class WorkflowCompiler:
                 outputs = state.get("steps_output", {})
                 merged = {sid: outputs.get(sid) for sid in (merge_inputs or [])}
                 result = {"merged": merged, "policy": step.get("merge_policy") or "all"}
+
+            elif step_type == "trigger":
+                # Trigger é ponto de entrada — passthrough no executor.
+                # O disparo real acontece no frontend (useWorkflowEventTrigger).
+                trigger_subtype = step_config.get("trigger_type", "nova_reuniao")
+                trigger_doc = (state.get("config_overrides") or {}).get("trigger_doc")
+                result: dict = {"started": True, "trigger_type": trigger_subtype}
+                if trigger_doc:
+                    result["doc_title"] = trigger_doc.get("title")
+                    result["doc_id"] = trigger_doc.get("id")
+                    result["doc_content"] = trigger_doc.get("content", "")
 
             else:
                 result = {"error": f"Unknown step type: {step_type}"}

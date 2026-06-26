@@ -12,6 +12,8 @@ import EmptyState from '@/components/ui/EmptyState';
 import Toast from '@/components/ui/Toast';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
+import { useFolderSync } from '@/hooks/useFolderSync';
+import { useBaseFolderSync } from '@/hooks/useBaseFolderSync';
 
 type ViewMode = 'table' | 'grid';
 
@@ -26,6 +28,8 @@ const TYPE_KEY_TO_EXTENSIONS: Record<string, string[]> = {
 
 export default function BibliotecaPage() {
   const { documents, createDocument, updateDocument, deleteDocument, allTags } = useBiblioteca();
+  const { status: folderSyncStatus, connect: connectFolder } = useFolderSync();
+  const { status: baseSyncStatus, connect: connectBaseFolder } = useBaseFolderSync();
 
   // Filters
   const [search, setSearch] = useState('');
@@ -175,6 +179,114 @@ export default function BibliotecaPage() {
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
                 Base de conhecimento
               </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
+                {/* Pasta reuniao */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {folderSyncStatus === 'idle' ? (
+                    <button
+                      onClick={connectFolder}
+                      style={{
+                        fontSize: '0.65rem',
+                        color: 'var(--sun)',
+                        background: 'none',
+                        border: '1px solid rgba(255,200,1,0.4)',
+                        borderRadius: 9999,
+                        padding: '2px 10px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Conectar pasta reuniao
+                    </button>
+                  ) : (
+                    <>
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          backgroundColor:
+                            folderSyncStatus === 'connected' ? '#10B981'
+                            : folderSyncStatus === 'error' ? '#EF4444'
+                            : '#F59E0B',
+                          boxShadow:
+                            folderSyncStatus === 'connected'
+                              ? '0 0 0 2px rgba(16,185,129,0.2)'
+                              : undefined,
+                        }}
+                      />
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        {folderSyncStatus === 'connected'
+                          ? 'Sincronizando pasta reuniao'
+                          : folderSyncStatus === 'error'
+                          ? 'Erro na sync'
+                          : 'Conectando...'}
+                      </span>
+                      {folderSyncStatus === 'error' && (
+                        <button
+                          onClick={connectFolder}
+                          style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        >
+                          Tentar novamente
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+                {/* Pasta base */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {baseSyncStatus === 'idle' ? (
+                    <button
+                      onClick={connectBaseFolder}
+                      style={{
+                        fontSize: '0.65rem',
+                        color: 'var(--sun)',
+                        background: 'none',
+                        border: '1px solid rgba(255,200,1,0.4)',
+                        borderRadius: 9999,
+                        padding: '2px 10px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Conectar pasta base
+                    </button>
+                  ) : (
+                    <>
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          backgroundColor:
+                            baseSyncStatus === 'connected' ? '#10B981'
+                            : baseSyncStatus === 'error' ? '#EF4444'
+                            : '#F59E0B',
+                          boxShadow:
+                            baseSyncStatus === 'connected'
+                              ? '0 0 0 2px rgba(16,185,129,0.2)'
+                              : undefined,
+                        }}
+                      />
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        {baseSyncStatus === 'connected'
+                          ? 'Sincronizando pasta base'
+                          : baseSyncStatus === 'error'
+                          ? 'Erro na sync'
+                          : 'Conectando...'}
+                      </span>
+                      {baseSyncStatus === 'error' && (
+                        <button
+                          onClick={connectBaseFolder}
+                          style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                        >
+                          Tentar novamente
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -393,13 +505,13 @@ export default function BibliotecaPage() {
       <Toast message={toast || ''} visible={!!toast} onClose={handleCloseToast} />
 
       {/* Responsive: hide sidebar on mobile */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 768px) {
           main > aside {
             display: none !important;
           }
         }
-      `}</style>
+      ` }} />
     </>
   );
 }

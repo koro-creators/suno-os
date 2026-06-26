@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { CheckmarkFilled, ChevronDown, ChevronRight, ErrorFilled, InProgress, Time } from '@carbon/icons-react';
-import { WorkflowRun, StepLog } from '@/lib/workflow-types';
+import { WorkflowRun, WorkflowStep, StepLog } from '@/lib/workflow-types';
 
 const RUN_STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   completed: { color: '#22C55E', label: 'Concluido' },
@@ -122,7 +122,43 @@ const PRE_STYLE: React.CSSProperties = {
   wordBreak: 'break-word',
 };
 
-function RunItem({ run }: { run: WorkflowRun }) {
+/**
+ * Embedded tool calls (ex: gerar_pdf chamado pelo LLM) ficam só em steps_output,
+ * não em step_logs. Esta função sintetiza entradas virtuais para exibi-las no timeline.
+ */
+function augmentStepLogs(run: WorkflowRun, workflowSteps: WorkflowStep[]): StepLog[] {
+  if (!run.steps_output) return run.step_logs;
+  const loggedIds = new Set(run.step_logs.map((l) => l.step_id));
+  const virtual: StepLog[] = [];
+
+  for (const [stepId, rawOutput] of Object.entries(run.steps_output)) {
+    if (loggedIds.has(stepId) || rawOutput == null) continue;
+    const step = workflowSteps.find((s) => s.id === stepId);
+    if (!step) continue;
+
+    const o = rawOutput as Record<string, unknown>;
+    const hasInputKey = 'input' in o;
+    virtual.push({
+      id: `virtual-${stepId}`,
+      step_id: stepId,
+      step_name: step.name,
+      status: 'completed',
+      input: hasInputKey ? (o.input as Record<string, unknown>) : null,
+      output: hasInputKey
+        ? (typeof o.output === 'string' ? { resultado: o.output } : (o.output as Record<string, unknown>))
+        : o,
+      error: null,
+      duration_ms: null,
+      started_at: run.started_at,
+      completed_at: run.completed_at,
+    });
+  }
+
+  return [...run.step_logs, ...virtual];
+}
+
+function RunItem({ run, workflowSteps }: { run: WorkflowRun; workflowSteps: WorkflowStep[] }) {
+  const logs = augmentStepLogs(run, workflowSteps);
   const [expanded, setExpanded] = useState(false);
   const cfg = RUN_STATUS_CONFIG[run.status] || RUN_STATUS_CONFIG.pending;
 
@@ -193,12 +229,12 @@ function RunItem({ run }: { run: WorkflowRun }) {
       {/* Expanded step logs */}
       {expanded && (
         <div style={{ padding: '4px 0 10px', borderTop: '1px solid var(--border-subtle)' }}>
-          {run.step_logs.length === 0 ? (
+          {logs.length === 0 ? (
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '8px 14px', margin: 0 }}>
               Sem logs de steps detalhados.
             </p>
           ) : (
-            run.step_logs.map((log) => <StepLogItem key={log.id} log={log} />)
+            logs.map((log) => <StepLogItem key={log.id} log={log} />)
           )}
           {run.error && (
             <div style={{ padding: '8px 14px', marginLeft: 14 }}>
@@ -211,7 +247,13 @@ function RunItem({ run }: { run: WorkflowRun }) {
   );
 }
 
-export default function WorkflowRunTimeline({ runs }: { runs: WorkflowRun[] }) {
+export default function WorkflowRunTimeline({
+  runs,
+  workflowSteps = [],
+}: {
+  runs: WorkflowRun[];
+  workflowSteps?: WorkflowStep[];
+}) {
   if (runs.length === 0) {
     return (
       <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 48 }}>
@@ -223,7 +265,7 @@ export default function WorkflowRunTimeline({ runs }: { runs: WorkflowRun[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {runs.map((run) => (
-        <RunItem key={run.id} run={run} />
+        <RunItem key={run.id} run={run} workflowSteps={workflowSteps} />
       ))}
     </div>
   );

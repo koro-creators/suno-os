@@ -10,6 +10,7 @@ interface BibliotecaContextValue {
   createDocument: (data: Omit<BibliotecaDocument, 'id' | 'updatedAt' | 'createdBy'>) => BibliotecaDocument;
   updateDocument: (id: string, data: Partial<BibliotecaDocument>) => void;
   deleteDocument: (id: string) => Promise<void>;
+  removeLocalDocument: (id: string) => void;
   uploadDocument: (file: File, title: string, tags: string[], scope: string[], description?: string) => Promise<BibliotecaDocument | null>;
   allTags: string[];
   isLoading: boolean;
@@ -86,6 +87,30 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
     setDocuments((prev) =>
       prev.map((d) => (d.id === id ? { ...d, ...data, updatedAt: new Date().toISOString() } : d))
     );
+    // Persiste status no sync map do folder-sync imediatamente, sem aguardar o poll de 3s.
+    // Garante que o status sobreviva a recarregamentos de página.
+    if (data.status !== undefined) {
+      persistFolderSyncStatus(id, data.status);
+    }
+  }
+
+  function persistFolderSyncStatus(docId: string, status: string) {
+    const FOLDER_SYNC_KEY = 'sunos-folder-sync-reuniao';
+    try {
+      const raw = JSON.parse(localStorage.getItem(FOLDER_SYNC_KEY) || '{}') as Record<string, unknown>;
+      for (const [filename, entry] of Object.entries(raw)) {
+        const entryId = typeof entry === 'string' ? entry : (entry as { id: string } | null)?.id;
+        if (entryId === docId) {
+          raw[filename] = { id: docId, status };
+          localStorage.setItem(FOLDER_SYNC_KEY, JSON.stringify(raw));
+          break;
+        }
+      }
+    } catch { /* localStorage indisponível */ }
+  }
+
+  function removeLocalDocument(id: string) {
+    setDocuments((prev) => prev.filter((d) => d.id !== id));
   }
 
   async function deleteDocument(id: string) {
@@ -97,9 +122,12 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
         const res = await fetch(getApiUrl(`/api/knowledge/documents/${id}`), {
           method: 'DELETE',
         });
-        if (!res.ok) return;
+        // 404 = doc só existe localmente (ex: sync de pasta). Remove da UI normalmente.
+        // 403/500 = backend rejeitou explicitamente — mantém na UI para não sumir sem deletar.
+        if (!res.ok && res.status !== 404) return;
       } catch {
-        return;
+        // Backend fora do ar — remove da UI assim mesmo.
+        // Doc criado localmente (folder sync) nunca chegou ao backend.
       }
     }
     setDocuments((prev) => prev.filter((d) => d.id !== id));
@@ -170,7 +198,7 @@ export function BibliotecaProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <BibliotecaContext.Provider value={{ documents, createDocument, updateDocument, deleteDocument, uploadDocument, allTags, isLoading }}>
+    <BibliotecaContext.Provider value={{ documents, createDocument, updateDocument, deleteDocument, removeLocalDocument, uploadDocument, allTags, isLoading }}>
       {children}
     </BibliotecaContext.Provider>
   );

@@ -12,6 +12,7 @@ import { AgentsProvider } from '@/contexts/AgentsContext';
 import { MeetingsProvider } from '@/contexts/MeetingsContext';
 import { OnboardingOraculoProvider } from '@/contexts/OnboardingOraculoContext';
 import AuthGuard from './AuthGuard';
+import WorkflowEventTriggerWatcher from './WorkflowEventTriggerWatcher';
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
@@ -26,6 +27,7 @@ export default function Providers({ children }: { children: ReactNode }) {
                     <AgentsProvider>
                     <MeetingsProvider>
                       <OnboardingOraculoProvider>
+                        <WorkflowEventTriggerWatcher />
                         {children}
                       </OnboardingOraculoProvider>
                     </MeetingsProvider>

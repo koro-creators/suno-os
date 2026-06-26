@@ -37,6 +37,8 @@ class ToolDescriptor(BaseModel):
     category: ToolCategory
     description: str
     default_config: dict = Field(default_factory=dict)
+    default_introduction: str = ""  # texto pré-preenchido no campo INTRODUÇÃO DO CANVAS
+    locked_introduction: bool = False  # True = introdução fixa, não editável no drawer
     role_restriction: list[str] | None = None  # None = available to all roles
 
 
@@ -97,6 +99,42 @@ TOOL_CATALOG: list[ToolDescriptor] = [
         category="planejamento",
         description="Persistência simples para auditoria.",
         default_config={},
+    ),
+    ToolDescriptor(
+        tool_name="ler_atas_reunioes",
+        label="Ler atas de reuniões",
+        category="criacao",
+        description=(
+            "Carrega a ata identificada pelo gatilho de nova reunião e entrega ao agente "
+            "com instrução para extração estruturada de decisões, próximos passos e participantes."
+        ),
+        default_config={},
+        default_introduction=(
+            "Lê o conteúdo da ata de reunião identificada pelo gatilho. "
+            "Use esta ferramenta para obter o texto da ata antes de qualquer análise."
+        ),
+        locked_introduction=True,
+    ),
+    ToolDescriptor(
+        tool_name="gerar_pdf",
+        label="Gerar PDF",
+        category="planejamento",
+        description=(
+            "Salva o conhecimento gerado como documento na pasta 'base' "
+            "e registra na Biblioteca com status 'gerado'. "
+            "O agente determina o cliente a partir do contexto da conversa."
+        ),
+        default_config={},
+        default_introduction=(
+            "Salva o documento de conhecimento na pasta 'base'. "
+            "CHAME ESTA FERRAMENTA imediatamente após analisar a ata — "
+            "NÃO pergunte ao usuário nenhuma informação. "
+            "Derive todos os argumentos do conteúdo da ata: "
+            "crie o titulo, escreva o conteudo estruturado, "
+            "identifique cliente_slug e cliente_nome da empresa mencionada "
+            "(use 'suno'/'Suno' como fallback se não identificar)."
+        ),
+        locked_introduction=True,
     ),
 ]
 
