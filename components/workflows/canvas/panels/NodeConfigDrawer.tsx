@@ -104,7 +104,7 @@ const STATE_BOUND_INTRODUCTIONS: Record<string, string> = {
   ler_atas_reunioes:
     'Lê o conteúdo da ata de reunião identificada pelo gatilho. Use esta ferramenta para obter o texto da ata antes de qualquer análise.',
   gerar_pdf:
-    "Salva o documento de conhecimento na pasta 'base'. CHAME ESTA FERRAMENTA imediatamente após analisar a ata — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo estruturado, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback se não identificar).",
+    "Prepara os dados do documento de conhecimento extraído da ata. CHAME imediatamente após ler e analisar a ata com ler_atas_reunioes — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo como resumo estruturado do conhecimento, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback). O step de ação conectado irá gerar e salvar o arquivo.",
 };
 
 export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkflowId }: DrawerProps) {
