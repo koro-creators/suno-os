@@ -35,7 +35,6 @@ export function loadGapi(): Promise<void> {
   if (_gapiPromise) return _gapiPromise;
   _gapiPromise = loadScript('https://apis.google.com/js/api.js').then(
     () => new Promise<void>((resolve) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).gapi.load('picker', resolve);
     }),
   );
