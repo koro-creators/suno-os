@@ -956,7 +956,7 @@ export async function listAvailableTools(): Promise<ToolDescriptor[]> {
         category: 'planejamento',
         description: "Gera o conteúdo do PDF a partir da ata. A gravação no Drive ou download é feita pelos steps de ação conectados.",
         default_config: { output_folder: 'reuniao', titulo: '', empresa: '', add_to_biblioteca: true },
-        default_introduction: "Gera o documento de conhecimento em PDF. CHAME ESTA FERRAMENTA imediatamente após analisar a ata — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo estruturado, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback se não identificar). O arquivo será salvo ou baixado pelo step de ação conectado.",
+        default_introduction: "Prepara os dados do documento de conhecimento extraído da ata. CHAME imediatamente após ler e analisar a ata com ler_atas_reunioes — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo como resumo estruturado do conhecimento, identifique cliente_slug e cliente_nome da empresa mencionada. O step de ação conectado irá gerar e salvar o arquivo.",
         locked_introduction: true,
         role_restriction: null,
       },

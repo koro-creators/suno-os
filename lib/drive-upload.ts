@@ -1,5 +1,22 @@
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
+const PDF_SCOPE_KEY = 'sunos-pdf-scope';
+
+export function storePdfClienteScope(filename: string, slug: string): void {
+  try {
+    const map: Record<string, string> = JSON.parse(localStorage.getItem(PDF_SCOPE_KEY) || '{}');
+    map[filename] = slug;
+    localStorage.setItem(PDF_SCOPE_KEY, JSON.stringify(map));
+  } catch { /* ignore */ }
+}
+
+export function getPdfClienteScope(filename: string): string {
+  try {
+    const map: Record<string, string> = JSON.parse(localStorage.getItem(PDF_SCOPE_KEY) || '{}');
+    return map[filename] ?? 'suno';
+  } catch { return 'suno'; }
+}
+
 export async function uploadFileToDrive(
   bytes: Uint8Array,
   filename: string,

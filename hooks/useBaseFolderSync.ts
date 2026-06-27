@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { KnowledgeStatus } from '@/lib/biblioteca-types';
+import { getPdfClienteScope } from '@/lib/drive-upload';
 
 const STORAGE_KEY = 'sunos-folder-sync-base';
 const POLL_MS = 3000;
@@ -170,7 +171,7 @@ export function useBaseFolderSync(): { status: BaseFolderSyncStatus; connect: ()
             title: stripExtension(filename),
             content: fileContent,
             tags: ['base'],
-            scope: ['suno'],
+            scope: [getPdfClienteScope(filename)],
             links: [],
             files: [{ name: filename, type: 'Base', size: '' }],
             docType: 'base',

@@ -25,7 +25,7 @@ import {
   saveMockRun,
 } from '@/lib/api';
 import { generatePdfBytes } from '@/lib/generate-pdf';
-import { uploadFileToDrive } from '@/lib/drive-upload';
+import { uploadFileToDrive, storePdfClienteScope } from '@/lib/drive-upload';
 import { getDriveBaseAccess } from '@/lib/drive-token-store';
 import { markReuniaoFileUtilizado } from './useDriveSync';
 import type { GeneratedDoc, WorkflowRun } from '@/lib/workflow-types';
@@ -175,6 +175,7 @@ export function useWorkflowEventTrigger() {
               updateRef.current(doc.id, { status: 'utilizado' });
               markReuniaoFileUtilizado(doc.title);
               if (generatedDoc) {
+                storePdfClienteScope(generatedDoc.filename, generatedDoc.cliente_slug);
                 const hasSalvarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'salvar_pdf');
                 const hasBaixarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'baixar_pdf');
                 if (hasSalvarPdf) void uploadPdfToDrive(generatedDoc);
@@ -240,6 +241,7 @@ export function useWorkflowEventTrigger() {
             saveMockRun(wf.id, mockRun);
 
             if (mockGerarPdfOutput) {
+              storePdfClienteScope(mockGerarPdfOutput.filename, mockGerarPdfOutput.cliente_slug);
               const hasSalvarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'salvar_pdf');
               const hasBaixarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'baixar_pdf');
               if (hasSalvarPdf) void uploadPdfToDrive(mockGerarPdfOutput);

@@ -5,6 +5,7 @@ import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { apiAvailable } from '@/lib/api';
 import { setDriveBaseAccess, clearDriveBaseAccess } from '@/lib/drive-token-store';
 import { loadGapi, loadGis } from '@/lib/drive-scripts';
+import { getPdfClienteScope } from '@/lib/drive-upload';
 import { useDriveEvents } from './useDriveEvents';
 
 const STORAGE_KEY = 'sunos-drive-sync-base';
@@ -136,7 +137,7 @@ export function useBaseDriveSync(): {
           title,
           content,
           tags: ['base'],
-          scope: ['suno'],
+          scope: [getPdfClienteScope(file.name)],
           links: file.webViewLink ? [{ label: 'Ver no Drive', url: file.webViewLink }] : [],
           files: [{ name: file.name, type: 'Base', size: '' }],
           docType: 'base',
