@@ -36,7 +36,7 @@ export interface WorkflowStep {
   model?: WorkflowLLMModel; // type="llm": modelo a usar (default: gemini-flash)
   agent_id?: string; // type="llm": agente (aba Agentes) cujas instructions entram como contexto
   condition_operator?: 'if_else'; // type="condition": porta lógica
-  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram'; // type="action": canal de envio
+  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram' | 'salvar_pdf' | 'baixar_pdf'; // type="action": canal de envio ou ação de PDF
   trigger_type?: 'nova_reuniao'; // type="trigger": sub-tipo do trigger
   workflow_id?: string;
   input_mapping?: Record<string, string>;

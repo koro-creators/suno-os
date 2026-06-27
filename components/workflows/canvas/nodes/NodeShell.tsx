@@ -365,12 +365,13 @@ export function NodeShell({
           <div
             style={{
               height: 46,
-              background: borderColor,
+              background: statusColor ?? borderColor,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
               position: 'relative',
+              transition: 'background 200ms ease',
             }}
           >
             <Icon size={20} color="white" />
@@ -521,10 +522,11 @@ export function NodeShell({
           style={{
             width: 44,
             flexShrink: 0,
-            background: borderColor,
+            background: statusColor ?? borderColor,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'background 200ms ease',
           }}
         >
           <Icon size={18} color="white" />

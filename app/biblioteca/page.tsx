@@ -12,8 +12,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import Toast from '@/components/ui/Toast';
 import { useBiblioteca } from '@/contexts/BibliotecaContext';
 import { BibliotecaDocument } from '@/lib/biblioteca-types';
-import { useFolderSync } from '@/hooks/useFolderSync';
-import { useBaseFolderSync } from '@/hooks/useBaseFolderSync';
+import { useDriveSyncContext } from '@/contexts/DriveSyncContext';
 
 type ViewMode = 'table' | 'grid';
 
@@ -28,8 +27,7 @@ const TYPE_KEY_TO_EXTENSIONS: Record<string, string[]> = {
 
 export default function BibliotecaPage() {
   const { documents, createDocument, updateDocument, deleteDocument, allTags } = useBiblioteca();
-  const { status: folderSyncStatus, connect: connectFolder } = useFolderSync();
-  const { status: baseSyncStatus, connect: connectBaseFolder } = useBaseFolderSync();
+  const { folderSyncStatus, connectFolder, changeDriveFolder, driveFolderName, baseSyncStatus, connectBaseFolder, changeBaseFolder, baseFolderName } = useDriveSyncContext();
 
   // Filters
   const [search, setSearch] = useState('');
@@ -182,20 +180,25 @@ export default function BibliotecaPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
                 {/* Pasta reuniao */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {folderSyncStatus === 'idle' ? (
+                  {folderSyncStatus === 'idle' || folderSyncStatus === 'stored' ? (
                     <button
-                      onClick={connectFolder}
+                      onClick={baseSyncStatus === 'connected' ? connectFolder : undefined}
+                      disabled={baseSyncStatus !== 'connected'}
+                      title={baseSyncStatus !== 'connected' ? 'Conecte a pasta base primeiro' : undefined}
                       style={{
                         fontSize: '0.65rem',
-                        color: 'var(--sun)',
+                        color: baseSyncStatus === 'connected' ? 'var(--sun)' : 'var(--text-muted)',
                         background: 'none',
-                        border: '1px solid rgba(255,200,1,0.4)',
+                        border: `1px solid ${baseSyncStatus === 'connected' ? 'rgba(255,200,1,0.4)' : 'var(--border-subtle)'}`,
                         borderRadius: 9999,
                         padding: '2px 10px',
-                        cursor: 'pointer',
+                        cursor: baseSyncStatus === 'connected' ? 'pointer' : 'not-allowed',
+                        opacity: baseSyncStatus === 'connected' ? 1 : 0.5,
                       }}
                     >
-                      Conectar pasta reuniao
+                      {folderSyncStatus === 'stored'
+                        ? `Reconectar reuniões${baseSyncStatus !== 'connected' ? ' (aguardando base)' : ''}`
+                        : `Sincronizar reuniões com Drive${baseSyncStatus !== 'connected' ? ' (aguardando base)' : ''}`}
                     </button>
                   ) : (
                     <>
@@ -208,6 +211,7 @@ export default function BibliotecaPage() {
                           backgroundColor:
                             folderSyncStatus === 'connected' ? '#10B981'
                             : folderSyncStatus === 'error' ? '#EF4444'
+                            : folderSyncStatus === 'stored' ? '#6B7280'
                             : '#F59E0B',
                           boxShadow:
                             folderSyncStatus === 'connected'
@@ -217,19 +221,22 @@ export default function BibliotecaPage() {
                       />
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                         {folderSyncStatus === 'connected'
-                          ? 'Sincronizando pasta reuniao'
+                          ? `Drive: ${driveFolderName ?? 'reuniões'}`
+                          : folderSyncStatus === 'stored'
+                          ? `Drive: ${driveFolderName ?? 'reuniões'}`
                           : folderSyncStatus === 'error'
                           ? 'Erro na sync'
-                          : 'Conectando...'}
+                          : 'Conectando ao Drive...'}
                       </span>
-                      {folderSyncStatus === 'error' && (
-                        <button
-                          onClick={connectFolder}
-                          style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        >
-                          Tentar novamente
-                        </button>
-                      )}
+                      <button
+                        onClick={folderSyncStatus === 'connected' ? changeDriveFolder : connectFolder}
+                        style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        {folderSyncStatus === 'connected' ? 'Trocar pasta'
+                          : folderSyncStatus === 'stored' ? 'Reconectar'
+                          : folderSyncStatus === 'error' ? 'Tentar novamente'
+                          : null}
+                      </button>
                     </>
                   )}
                 </div>
@@ -248,7 +255,7 @@ export default function BibliotecaPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      Conectar pasta base
+                      Sincronizar base com Drive
                     </button>
                   ) : (
                     <>
@@ -261,6 +268,7 @@ export default function BibliotecaPage() {
                           backgroundColor:
                             baseSyncStatus === 'connected' ? '#10B981'
                             : baseSyncStatus === 'error' ? '#EF4444'
+                            : baseSyncStatus === 'stored' ? '#6B7280'
                             : '#F59E0B',
                           boxShadow:
                             baseSyncStatus === 'connected'
@@ -270,19 +278,22 @@ export default function BibliotecaPage() {
                       />
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                         {baseSyncStatus === 'connected'
-                          ? 'Sincronizando pasta base'
+                          ? `Drive: ${baseFolderName ?? 'base'}`
+                          : baseSyncStatus === 'stored'
+                          ? `Drive: ${baseFolderName ?? 'base'}`
                           : baseSyncStatus === 'error'
                           ? 'Erro na sync'
-                          : 'Conectando...'}
+                          : 'Conectando ao Drive...'}
                       </span>
-                      {baseSyncStatus === 'error' && (
-                        <button
-                          onClick={connectBaseFolder}
-                          style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        >
-                          Tentar novamente
-                        </button>
-                      )}
+                      <button
+                        onClick={baseSyncStatus === 'connected' ? changeBaseFolder : connectBaseFolder}
+                        style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      >
+                        {baseSyncStatus === 'connected' ? 'Trocar pasta'
+                          : baseSyncStatus === 'stored' ? 'Reconectar'
+                          : baseSyncStatus === 'error' ? 'Tentar novamente'
+                          : null}
+                      </button>
                     </>
                   )}
                 </div>

@@ -6,6 +6,7 @@ import { initialWorkflows } from '@/data/workflows-admin';
 import {
   apiAvailable,
   extractGerarPdfResult,
+  getWorkflowDetail,
   getWorkflowRun,
   listWorkflows as apiListWorkflows,
   createWorkflow as apiCreateWorkflow,
@@ -65,7 +66,13 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const list = await apiListWorkflows();
-        if (!cancelled) setWorkflows(list);
+        if (cancelled) return;
+        // Lista vem sem steps — busca detalhes dos workflows ativos em paralelo
+        // para que useWorkflowEventTrigger consiga detectar trigger nova_reuniao.
+        const activeIds = list.filter((w) => w.status === 'active' && w.steps_count > 0).map((w) => w.id);
+        const details = await Promise.all(activeIds.map((id) => getWorkflowDetail(id).catch(() => null)));
+        const detailMap = new Map(details.flatMap((d) => (d ? [[d.id, d]] : [])));
+        if (!cancelled) setWorkflows(list.map((w) => detailMap.get(w.id) ?? w));
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : String(err));

@@ -38,7 +38,7 @@ class GerarPdfInput(BaseModel):
 
 @tool("gerar_pdf", args_schema=GerarPdfInput)
 def _gerar_pdf(titulo: str, conteudo: str, cliente_slug: str, cliente_nome: str) -> dict:
-    """Salva o documento de conhecimento na pasta 'base'. CHAME ESTA FERRAMENTA imediatamente após analisar a ata — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo estruturado, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback)."""  # noqa: E501
+    """Gera o documento de conhecimento em PDF. CHAME ESTA FERRAMENTA imediatamente após analisar a ata — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo estruturado, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback). O arquivo será salvo ou baixado pelo step de ação conectado."""  # noqa: E501
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     slug = titulo.lower().replace(" ", "-").replace("/", "-")[:40]
     filename = f"{slug}-{timestamp}.pdf"

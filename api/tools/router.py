@@ -120,19 +120,20 @@ TOOL_CATALOG: list[ToolDescriptor] = [
         label="Gerar PDF",
         category="planejamento",
         description=(
-            "Salva o conhecimento gerado como documento na pasta 'base' "
-            "e registra na Biblioteca com status 'gerado'. "
-            "O agente determina o cliente a partir do contexto da conversa."
+            "Gera o conteúdo do documento de conhecimento em PDF. "
+            "Não salva nem baixa o arquivo — isso é feito pelos steps de ação "
+            "'Salvar PDF no Drive' ou 'Baixar PDF' conectados à saída do agente."
         ),
         default_config={},
         default_introduction=(
-            "Salva o documento de conhecimento na pasta 'base'. "
+            "Gera o documento de conhecimento em PDF. "
             "CHAME ESTA FERRAMENTA imediatamente após analisar a ata — "
             "NÃO pergunte ao usuário nenhuma informação. "
             "Derive todos os argumentos do conteúdo da ata: "
             "crie o titulo, escreva o conteudo estruturado, "
             "identifique cliente_slug e cliente_nome da empresa mencionada "
-            "(use 'suno'/'Suno' como fallback se não identificar)."
+            "(use 'suno'/'Suno' como fallback se não identificar). "
+            "O arquivo será salvo ou baixado pelo step de ação conectado."
         ),
         locked_introduction=True,
     ),

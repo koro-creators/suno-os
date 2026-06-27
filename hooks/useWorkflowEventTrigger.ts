@@ -25,11 +25,12 @@ import {
   saveMockRun,
 } from '@/lib/api';
 import { generatePdfBytes } from '@/lib/generate-pdf';
+import { uploadFileToDrive } from '@/lib/drive-upload';
+import { getDriveBaseAccess } from '@/lib/drive-token-store';
+import { markReuniaoFileUtilizado } from './useDriveSync';
 import type { GeneratedDoc, WorkflowRun } from '@/lib/workflow-types';
 
 const FIRED_KEY = 'sunos-trigger-fired-nova-reuniao';
-const FOLDER_DB = 'sunos-folder-sync';
-const FOLDER_STORE = 'handles';
 
 function getFiredSet(): Set<string> {
   try {
@@ -50,46 +51,30 @@ export function addToFiredSet(docId: string) {
   saveFiredSet(fired);
 }
 
-// ---------- Gravação de PDF na pasta base ----------
+// ---------- Ações de PDF ----------
 
-async function loadBaseFolderHandle(): Promise<FileSystemDirectoryHandle | null> {
-  try {
-    const db = await new Promise<IDBDatabase>((res, rej) => {
-      const r = indexedDB.open(FOLDER_DB, 1);
-      r.onupgradeneeded = () => r.result.createObjectStore(FOLDER_STORE);
-      r.onsuccess = () => res(r.result);
-      r.onerror = () => rej(r.error);
-    });
-    return await new Promise<FileSystemDirectoryHandle | null>((res, rej) => {
-      const tx = db.transaction(FOLDER_STORE, 'readonly');
-      const req = tx.objectStore(FOLDER_STORE).get('base');
-      req.onsuccess = () => { db.close(); res((req.result as FileSystemDirectoryHandle) ?? null); };
-      req.onerror = () => { db.close(); rej(req.error); };
-    });
-  } catch { return null; }
-}
+type PdfDoc = { titulo: string; conteudo: string; cliente_nome: string; filename: string };
 
-async function writePdfToFolder(filename: string, bytes: Uint8Array): Promise<void> {
-  const handle = await loadBaseFolderHandle();
-  if (!handle) return;
-  try {
-    type DirH = FileSystemDirectoryHandle & {
-      requestPermission?: (o: { mode: string }) => Promise<PermissionState>;
-    };
-    const perm = await (handle as DirH).requestPermission?.({ mode: 'readwrite' });
-    if (perm !== 'granted') return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fh: any = await handle.getFileHandle(filename, { create: true });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const writable: any = await fh.createWritable();
-    await writable.write(bytes);
-    await writable.close();
-  } catch { /* pasta pode não estar conectada ou sem permissão */ }
-}
-
-function writePdfFromGenDoc(genDoc: { titulo: string; conteudo: string; cliente_nome: string; filename: string }): void {
+async function uploadPdfToDrive(genDoc: PdfDoc): Promise<void> {
+  const access = getDriveBaseAccess();
+  if (!access) return;
   const bytes = generatePdfBytes(genDoc.titulo, genDoc.conteudo, genDoc.cliente_nome);
-  void writePdfToFolder(genDoc.filename, bytes);
+  try {
+    await uploadFileToDrive(bytes, genDoc.filename, access.folderId, access.token);
+  } catch { /* token expirado ou sem conexão — não bloqueia o fluxo */ }
+}
+
+function downloadPdfLocally(genDoc: PdfDoc): void {
+  const bytes = generatePdfBytes(genDoc.titulo, genDoc.conteudo, genDoc.cliente_nome);
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = genDoc.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ---------- Hook ----------
@@ -137,12 +122,10 @@ export function useWorkflowEventTrigger() {
         const usedDoc = documents.find((d) => d.id === usedDocId && d.status === 'novo');
         if (usedDoc) {
           updateRef.current(usedDoc.id, { status: 'utilizado' });
+          markReuniaoFileUtilizado(usedDoc.title);
         }
       }
 
-      // generated_doc: grava PDF na pasta base (Biblioteca sincroniza via polling)
-      const genDoc = wf.last_run?.generated_doc;
-      if (genDoc) writePdfFromGenDoc(genDoc);
     }
   }, [workflows, documents, loading]);
 
@@ -189,8 +172,14 @@ export function useWorkflowEventTrigger() {
                 generatedDoc = extractGerarPdfResult(run.steps_output) ?? undefined;
               } catch { /* ignora — não bloqueia marcação de status */ }
               notifyRef.current(wf.id, result.run_id, doc.id, generatedDoc);
-              // Workflow concluiu com sucesso → atualiza status
               updateRef.current(doc.id, { status: 'utilizado' });
+              markReuniaoFileUtilizado(doc.title);
+              if (generatedDoc) {
+                const hasSalvarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'salvar_pdf');
+                const hasBaixarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'baixar_pdf');
+                if (hasSalvarPdf) void uploadPdfToDrive(generatedDoc);
+                if (hasBaixarPdf) downloadPdfLocally(generatedDoc);
+              }
             } catch (err) {
               console.error('[trigger] workflow falhou, status permanece novo', wf.id, err);
               // Status permanece 'novo' para nova tentativa
@@ -226,6 +215,7 @@ export function useWorkflowEventTrigger() {
               id: runId,
               workflow_id: wf.id,
               status: 'completed',
+              trigger: 'nova_reuniao',
               started_at: now,
               completed_at: now,
               error: null,
@@ -249,10 +239,14 @@ export function useWorkflowEventTrigger() {
             };
             saveMockRun(wf.id, mockRun);
 
-            // Mock mode: grava PDF na pasta base (sem criar doc na Biblioteca)
-            if (mockGerarPdfOutput) writePdfFromGenDoc(mockGerarPdfOutput);
-
+            if (mockGerarPdfOutput) {
+              const hasSalvarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'salvar_pdf');
+              const hasBaixarPdf = wf.steps.some((s) => s.type === 'action' && s.action_type === 'baixar_pdf');
+              if (hasSalvarPdf) void uploadPdfToDrive(mockGerarPdfOutput);
+              if (hasBaixarPdf) downloadPdfLocally(mockGerarPdfOutput);
+            }
             updateRef.current(doc.id, { status: 'utilizado' });
+            markReuniaoFileUtilizado(doc.title);
           }
         }
       }

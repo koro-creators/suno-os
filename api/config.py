@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     # exibido na UI para o admin saber com quem compartilhar.
     DRIVE_SA_EMAIL: str = "sunos-backend@koro-creators.iam.gserviceaccount.com"
 
+    # URL pública do backend para receber Drive Push Notifications.
+    # Em prod: URL do Cloud Run (ex: https://sunos-api-xxx.run.app)
+    # Em dev: deixar vazio — o backend descobre via cloudflared metrics API automaticamente.
+    DRIVE_WEBHOOK_URL: str = ""
+
+    # URL da API de métricas do cloudflared (descoberta automática em dev).
+    CLOUDFLARED_METRICS_URL: str = "http://cloudflared:2000"
+
     # Logging
     LOG_LEVEL: str = "INFO"
 

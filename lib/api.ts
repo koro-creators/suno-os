@@ -923,6 +923,8 @@ export async function listAvailableTools(): Promise<ToolDescriptor[]> {
         category: 'criacao',
         description: 'Pesquisa Biblioteca + web (mock).',
         default_config: { query: '' },
+        default_introduction: '',
+        locked_introduction: false,
         role_restriction: null,
       },
       {
@@ -931,6 +933,8 @@ export async function listAvailableTools(): Promise<ToolDescriptor[]> {
         category: 'planejamento',
         description: 'Persistência simples (mock).',
         default_config: {},
+        default_introduction: '',
+        locked_introduction: false,
         role_restriction: null,
       },
       {
@@ -942,14 +946,18 @@ export async function listAvailableTools(): Promise<ToolDescriptor[]> {
           instructions: 'Leia a ata de reunião e extraia: título, empresa(s), participantes, decisões e próximos passos.',
           source: 'pasta_reuniao',
         },
+        default_introduction: 'Lê o conteúdo da ata de reunião identificada pelo gatilho. Use esta ferramenta para obter o texto da ata antes de qualquer análise.',
+        locked_introduction: true,
         role_restriction: null,
       },
       {
         tool_name: 'gerar_pdf',
         label: 'Gerar PDF',
         category: 'planejamento',
-        description: "Salva o conhecimento como PDF e registra na Biblioteca com status 'para gerar conhecimento'.",
+        description: "Gera o conteúdo do PDF a partir da ata. A gravação no Drive ou download é feita pelos steps de ação conectados.",
         default_config: { output_folder: 'reuniao', titulo: '', empresa: '', add_to_biblioteca: true },
+        default_introduction: "Gera o documento de conhecimento em PDF. CHAME ESTA FERRAMENTA imediatamente após analisar a ata — NÃO pergunte ao usuário nenhuma informação. Derive todos os argumentos do conteúdo da ata: crie o titulo, escreva o conteudo estruturado, identifique cliente_slug e cliente_nome da empresa mencionada (use 'suno'/'Suno' como fallback se não identificar). O arquivo será salvo ou baixado pelo step de ação conectado.",
+        locked_introduction: true,
         role_restriction: null,
       },
     ];

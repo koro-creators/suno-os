@@ -1,6 +1,6 @@
 'use client';
 
-import { Branch, EventSchedule, Flash, Flow, Merge, Star, Tools, UserFollow } from '@carbon/icons-react';
+import { Branch, CloudUpload, Download, EventSchedule, Flash, Flow, Merge, Star, Tools, UserFollow } from '@carbon/icons-react';
 import type { CarbonIconType } from '@carbon/icons-react';
 import type { ToolDescriptor } from '@/lib/api';
 
@@ -10,7 +10,7 @@ export interface StepPayload {
   tool_name?: string;
   agent_id?: string;
   condition_operator?: 'if_else';
-  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram';
+  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram' | 'salvar_pdf' | 'baixar_pdf';
   trigger_type?: 'nova_reuniao';
   workflow_id?: string;
   merge_policy?: 'all' | 'any';
@@ -158,10 +158,12 @@ export function buildSubItems(
   }
   if (key === 'st-action') {
     return [
-      { key: 'action-slack',    icon: '#', iconColor: '#4A154B', label: 'Slack',    description: 'Enviar mensagem para canal',    payload: { step_type: 'action' as const, action_type: 'slack'    as const, name: 'Slack'    } },
-      { key: 'action-email',    icon: '@', iconColor: '#6366F1', label: 'Email',    description: 'Enviar e-mail',                 payload: { step_type: 'action' as const, action_type: 'email'    as const, name: 'Email'    } },
-      { key: 'action-whatsapp', icon: 'W', iconColor: '#25D366', label: 'WhatsApp', description: 'Enviar mensagem WhatsApp',      payload: { step_type: 'action' as const, action_type: 'whatsapp' as const, name: 'WhatsApp' } },
-      { key: 'action-telegram', icon: '✈', iconColor: '#2CA5E0', label: 'Telegram', description: 'Enviar mensagem Telegram',      payload: { step_type: 'action' as const, action_type: 'telegram' as const, name: 'Telegram' } },
+      { key: 'action-salvar-pdf', Icon: CloudUpload, iconColor: '#3B82F6', label: 'Salvar PDF no Drive', description: 'Salva o PDF gerado na pasta base do Drive.',     payload: { step_type: 'action' as const, action_type: 'salvar_pdf' as const, name: 'Salvar PDF no Drive' } },
+      { key: 'action-baixar-pdf', Icon: Download,    iconColor: '#8B5CF6', label: 'Baixar PDF',          description: 'Faz o download do PDF gerado no navegador.',   payload: { step_type: 'action' as const, action_type: 'baixar_pdf' as const, name: 'Baixar PDF'          } },
+      { key: 'action-slack',      icon: '#', iconColor: '#4A154B', label: 'Slack',    description: 'Enviar mensagem para canal',  payload: { step_type: 'action' as const, action_type: 'slack'    as const, name: 'Slack'    } },
+      { key: 'action-email',      icon: '@', iconColor: '#6366F1', label: 'Email',    description: 'Enviar e-mail',               payload: { step_type: 'action' as const, action_type: 'email'    as const, name: 'Email'    } },
+      { key: 'action-whatsapp',   icon: 'W', iconColor: '#25D366', label: 'WhatsApp', description: 'Enviar mensagem WhatsApp',    payload: { step_type: 'action' as const, action_type: 'whatsapp' as const, name: 'WhatsApp' } },
+      { key: 'action-telegram',   icon: '✈', iconColor: '#2CA5E0', label: 'Telegram', description: 'Enviar mensagem Telegram',    payload: { step_type: 'action' as const, action_type: 'telegram' as const, name: 'Telegram' } },
     ];
   }
   if (key === 'st-workflow') {

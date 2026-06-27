@@ -999,16 +999,33 @@ class WorkflowCompiler:
                 }
 
             elif step_type == "action":
-                tool_name = step.get("tool_name", "")
-                wf_tool = _get_tool_registry().get(tool_name)
-                if wf_tool and not wf_tool.state_bound:
-                    result = await wf_tool.ainvoke(resolved_config)
-                else:
+                action_type = step.get("action_type") or step_config.get("action_type", "")
+
+                if action_type in ("salvar_pdf", "baixar_pdf"):
+                    # Passa o resultado do gerar_pdf adiante para o frontend agir.
+                    # A operação real (upload ao Drive ou download no browser) é client-side.
+                    pdf_data: dict | None = None
+                    for v in state.get("steps_output", {}).values():
+                        inner = v.get("output", v) if isinstance(v, dict) else {}
+                        if isinstance(inner, dict) and inner.get("saved_to") == "base":
+                            pdf_data = inner
+                            break
                     result = {
-                        "action": tool_name,
-                        "status": "mock",
-                        "message": f"Action '{tool_name}' not yet implemented",
+                        "action_type": action_type,
+                        "status": "pending_client",
+                        **(pdf_data or {"reason": "no_pdf_data"}),
                     }
+                else:
+                    tool_name = step.get("tool_name", "")
+                    wf_tool = _get_tool_registry().get(tool_name)
+                    if wf_tool and not wf_tool.state_bound:
+                        result = await wf_tool.ainvoke(resolved_config)
+                    else:
+                        result = {
+                            "action": tool_name,
+                            "status": "mock",
+                            "message": f"Action '{tool_name}' not yet implemented",
+                        }
 
             elif step_type == "workflow":
                 target_wf_id = step.get("workflow_id")

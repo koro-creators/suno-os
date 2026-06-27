@@ -13,6 +13,7 @@ import { MeetingsProvider } from '@/contexts/MeetingsContext';
 import { OnboardingOraculoProvider } from '@/contexts/OnboardingOraculoContext';
 import AuthGuard from './AuthGuard';
 import WorkflowEventTriggerWatcher from './WorkflowEventTriggerWatcher';
+import { DriveSyncProvider } from '@/contexts/DriveSyncContext';
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
@@ -27,8 +28,10 @@ export default function Providers({ children }: { children: ReactNode }) {
                     <AgentsProvider>
                     <MeetingsProvider>
                       <OnboardingOraculoProvider>
-                        <WorkflowEventTriggerWatcher />
-                        {children}
+                        <DriveSyncProvider>
+                          <WorkflowEventTriggerWatcher />
+                          {children}
+                        </DriveSyncProvider>
                       </OnboardingOraculoProvider>
                     </MeetingsProvider>
                     </AgentsProvider>
