@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from .base import register_tool, workflow_tool
 
+
 @workflow_tool("ler_atas_reunioes", context_bound=True)
 def ler_atas_reunioes(context: dict) -> str:
     """Lê o conteúdo da ata de reunião identificada pelo gatilho. Use esta ferramenta para obter o texto da ata antes de qualquer análise."""  # noqa: E501
@@ -30,10 +31,10 @@ def ler_atas_reunioes(context: dict) -> str:
 
 
 class GerarPdfInput(BaseModel):
-    titulo: str = Field(description="Título descritivo criado a partir do conteúdo da ata — NÃO peça ao usuário")
-    conteudo: str = Field(description="Resumo estruturado do conhecimento extraído da ata — NÃO peça ao usuário")
-    cliente_slug: str = Field(description="Slug da empresa mencionada na ata (ex: 'automaserv'). Use 'suno' se não identificar — NÃO peça ao usuário")
-    cliente_nome: str = Field(description="Nome completo da empresa identificada na ata. Use 'Suno' se não identificar — NÃO peça ao usuário")
+    titulo: str = Field(description="Título descritivo criado a partir do conteúdo da ata — NÃO peça ao usuário")  # noqa: E501
+    conteudo: str = Field(description="Resumo estruturado do conhecimento extraído da ata — NÃO peça ao usuário")  # noqa: E501
+    cliente_slug: str = Field(description="Slug da empresa mencionada na ata (ex: 'automaserv'). Use 'suno' se não identificar — NÃO peça ao usuário")  # noqa: E501
+    cliente_nome: str = Field(description="Nome completo da empresa identificada na ata. Use 'Suno' se não identificar — NÃO peça ao usuário")  # noqa: E501
 
 
 @tool("gerar_pdf", args_schema=GerarPdfInput)

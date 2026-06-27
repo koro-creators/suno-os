@@ -211,7 +211,6 @@ export default function BibliotecaPage() {
                           backgroundColor:
                             folderSyncStatus === 'connected' ? '#10B981'
                             : folderSyncStatus === 'error' ? '#EF4444'
-                            : folderSyncStatus === 'stored' ? '#6B7280'
                             : '#F59E0B',
                           boxShadow:
                             folderSyncStatus === 'connected'
@@ -222,8 +221,6 @@ export default function BibliotecaPage() {
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                         {folderSyncStatus === 'connected'
                           ? `Drive: ${driveFolderName ?? 'reuniões'}`
-                          : folderSyncStatus === 'stored'
-                          ? `Drive: ${driveFolderName ?? 'reuniões'}`
                           : folderSyncStatus === 'error'
                           ? 'Erro na sync'
                           : 'Conectando ao Drive...'}
@@ -233,7 +230,6 @@ export default function BibliotecaPage() {
                         style={{ fontSize: '0.6rem', color: 'var(--sun)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                       >
                         {folderSyncStatus === 'connected' ? 'Trocar pasta'
-                          : folderSyncStatus === 'stored' ? 'Reconectar'
                           : folderSyncStatus === 'error' ? 'Tentar novamente'
                           : null}
                       </button>

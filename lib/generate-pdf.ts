@@ -42,7 +42,7 @@ export function generatePdfBytes(
   titulo: string,
   conteudo: string,
   clienteNome: string,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const now = new Date().toLocaleDateString('pt-BR');
   const pageW = 595; // A4 em pontos
   const pageH = 841;

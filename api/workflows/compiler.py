@@ -308,8 +308,10 @@ async def _run_react_llm_step(
                     tool_output_raw = f"Erro ao executar {tc['name']}: {exc}"
             else:
                 tool_output_raw = f"Ferramenta '{tc['name']}' não encontrada."
-            # ToolMessage precisa de string; extra_outputs guarda o valor bruto (dict JSON-serializável)
-            tool_output_str = str(tool_output_raw) if not isinstance(tool_output_raw, str) else tool_output_raw
+            # ToolMessage precisa de string; extra_outputs guarda o valor bruto
+            tool_output_str = (
+                str(tool_output_raw) if not isinstance(tool_output_raw, str) else tool_output_raw
+            )
             msgs.append(ToolMessage(content=tool_output_str, tool_call_id=tc["id"]))
             if extra_outputs is not None:
                 for ts in embedded_tool_steps:

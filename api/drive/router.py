@@ -536,7 +536,10 @@ async def drive_watch_register(body: WatchRegisterRequest) -> dict:
     """
     webhook_base = await _get_webhook_base_url()
     if not webhook_base:
-        logger.info("drive_watch_register: sem URL pública disponível — skip (inicie o tunnel para receber notificações)")
+        logger.info(
+            "drive_watch_register: sem URL pública disponível"
+            " — skip (inicie o tunnel para receber notificações)"
+        )
         return {"status": "skipped", "reason": "no_public_url"}
 
     webhook_address = f"{webhook_base}/api/drive/webhook"

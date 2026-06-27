@@ -150,7 +150,8 @@ export function useFolderSync(): { status: FolderSyncStatus; connect: () => void
       try {
         // 1. Read current files from folder
         const files: string[] = [];
-        for await (const [name, entry] of dirHandle.entries()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for await (const [name, entry] of (dirHandle as any).entries() as AsyncIterable<[string, FileSystemHandle]>) {
           if (!name.startsWith('.') && entry.kind === 'file') files.push(name);
         }
         if (cancelled) return;
