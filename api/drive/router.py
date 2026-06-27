@@ -532,11 +532,11 @@ async def drive_watch_register(body: WatchRegisterRequest) -> dict:
     - Em dev: via cloudflared metrics API (http://cloudflared:2000/quicktunnel)
 
     Se nenhuma URL pública estiver disponível, retorna status='skipped' sem erro —
-    o polling de 30s no frontend cobre o caso sem tunnel.
+    as notificações em tempo real ficam indisponíveis até o tunnel ser iniciado.
     """
     webhook_base = await _get_webhook_base_url()
     if not webhook_base:
-        logger.info("drive_watch_register: sem URL pública disponível — skip (polling ativo)")
+        logger.info("drive_watch_register: sem URL pública disponível — skip (inicie o tunnel para receber notificações)")
         return {"status": "skipped", "reason": "no_public_url"}
 
     webhook_address = f"{webhook_base}/api/drive/webhook"
