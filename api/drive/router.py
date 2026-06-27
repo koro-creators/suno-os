@@ -61,6 +61,7 @@ async def _get_webhook_base_url() -> str:
         pass
     return ""
 
+
 # ---------------------------------------------------------------------------
 # SSE broadcaster for Drive Push Notifications
 # Each connected client gets its own asyncio.Queue.
@@ -71,6 +72,7 @@ _sse_queues: list[asyncio.Queue] = []
 async def _broadcast(event: dict) -> None:
     for q in list(_sse_queues):
         await q.put(event)
+
 
 router = APIRouter(prefix="/drive", tags=["Drive"])
 
@@ -568,8 +570,12 @@ async def drive_watch_register(body: WatchRegisterRequest) -> dict:
             )
             watch_resp.raise_for_status()
             data = watch_resp.json()
-            logger.info("drive_watch_register: canal registrado channel_id=%s url=%s expiry=%s",
-                        channel_id, webhook_address, data.get("expiration"))
+            logger.info(
+                "drive_watch_register: canal registrado channel_id=%s url=%s expiry=%s",
+                channel_id,
+                webhook_address,
+                data.get("expiration"),
+            )
             return {
                 "status": "registered",
                 "channel_id": channel_id,

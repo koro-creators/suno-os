@@ -449,9 +449,9 @@ class WorkflowCompiler:
 
         for step in steps:
             step_type = step.get("type", "")
-            trigger_subtype = step.get("trigger_type") or (
-                step.get("config") or {}
-            ).get("trigger_type", "nova_reuniao")
+            trigger_subtype = step.get("trigger_type") or (step.get("config") or {}).get(
+                "trigger_type", "nova_reuniao"
+            )
 
             is_nova_reuniao_trigger = (
                 step_type == "trigger"
@@ -865,12 +865,14 @@ class WorkflowCompiler:
                 elif wf_tool.state_bound:
                     result = wf_tool.func(state.get("client_id"))
                 elif wf_tool.context_bound:
-                    result = wf_tool.func({
-                        "config_overrides": state.get("config_overrides") or {},
-                        "steps_output": state.get("steps_output") or {},
-                        "client_id": state.get("client_id"),
-                        "step_config": resolved_config,
-                    })
+                    result = wf_tool.func(
+                        {
+                            "config_overrides": state.get("config_overrides") or {},
+                            "steps_output": state.get("steps_output") or {},
+                            "client_id": state.get("client_id"),
+                            "step_config": resolved_config,
+                        }
+                    )
                 else:
                     result = await wf_tool.ainvoke(resolved_config)
 
@@ -915,12 +917,14 @@ class WorkflowCompiler:
                             elif wf_tool.state_bound:
                                 tresult = wf_tool.func(state.get("client_id"))
                             elif wf_tool.context_bound:
-                                tresult = wf_tool.func({
-                                    "config_overrides": state.get("config_overrides") or {},
-                                    "steps_output": state.get("steps_output") or {},
-                                    "client_id": state.get("client_id"),
-                                    "step_config": tconfig,
-                                })
+                                tresult = wf_tool.func(
+                                    {
+                                        "config_overrides": state.get("config_overrides") or {},
+                                        "steps_output": state.get("steps_output") or {},
+                                        "client_id": state.get("client_id"),
+                                        "step_config": tconfig,
+                                    }
+                                )
                             else:
                                 tresult = await wf_tool.ainvoke(tconfig)
                             if not isinstance(tresult, (dict, list)):
