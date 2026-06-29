@@ -175,9 +175,7 @@ async def _fetch_image_data_uri(
         if not token and user_id:
             token = await asyncio.to_thread(_get_drive_access_token, user_id)
         if token:
-            result = await asyncio.to_thread(
-                _fetch_image_bytes_authenticated, file_id, token
-            )
+            result = await asyncio.to_thread(_fetch_image_bytes_authenticated, file_id, token)
             if result:
                 ctype, data = result
                 return f"data:{ctype};base64,{base64.b64encode(data).decode()}"
@@ -505,10 +503,12 @@ async def _run_react_llm_step(
             # Quando gerar_pdf é chamado, injeta instrução para o LLM não adicionar
             # mensagens de confirmação ("PDF gerado", "análise salva", etc.).
             if tc["name"] == "gerar_pdf":
-                msgs.append(SystemMessage(
-                    content="Retorne APENAS o conteúdo da análise (campo 'conteudo'). "
-                            "NÃO adicione frases como 'PDF gerado', 'análise salva' ou similares."
-                ))
+                msgs.append(
+                    SystemMessage(
+                        content="Retorne APENAS o conteúdo da análise (campo 'conteudo'). "
+                        "NÃO adicione frases como 'PDF gerado', 'análise salva' ou similares."
+                    )
+                )
             if extra_outputs is not None:
                 for ts in embedded_tool_steps:
                     if ts.get("tool_name") == tc["name"] and ts["id"] not in extra_outputs:
@@ -1159,7 +1159,8 @@ class WorkflowCompiler:
                         human_content = resolved_prompt
                     response = await llm.ainvoke([HumanMessage(content=human_content)])
                     result = _clean_llm_output(
-                        response.content if isinstance(response.content, str)
+                        response.content
+                        if isinstance(response.content, str)
                         else str(response.content)
                     )
 
@@ -1379,9 +1380,7 @@ class WorkflowCompiler:
                     step.get("drive_file_name") or step_config.get("drive_file_name") or "arquivo"
                 )
                 if not file_id:
-                    result = {
-                        "error": "drive_file_id não configurado — selecione uma imagem"
-                    }
+                    result = {"error": "drive_file_id não configurado — selecione uma imagem"}
                 else:
                     result = {
                         "output": f"https://drive.google.com/uc?export=download&id={file_id}",
