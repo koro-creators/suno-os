@@ -219,7 +219,7 @@ class WorkflowState(TypedDict):
     run_id: str
     client_id: str | None  # resolved from the run; powers client-scoped tools (ontologia)
     user_id: str | None  # Firebase UID; used to fetch Drive OAuth token for image steps
-    drive_access_token: str | None  # OAuth token passado pelo frontend — prioridade sobre drive_tokens DB
+    drive_access_token: str | None  # OAuth do frontend — prioridade sobre drive_tokens DB
     # Annotated com reducers: nodes em paralelo (fan-out/fan-in, ex. condition
     # com 2 entradas in_a/in_b) escrevem essas chaves no mesmo superstep.
     # Sem reducer, LangGraph levanta INVALID_CONCURRENT_GRAPH_UPDATE.
@@ -451,7 +451,9 @@ async def _run_react_llm_step(
     # Prepara conteúdo da mensagem — multimodal se houver imagem de step arquivos
     image_url_react = _find_arquivos_image(effective_outputs)
     if image_url_react:
-        data_uri_react = await _fetch_image_data_uri(image_url_react, user_id=user_id, drive_access_token=drive_access_token)
+        data_uri_react = await _fetch_image_data_uri(
+            image_url_react, user_id=user_id, drive_access_token=drive_access_token
+        )
         if data_uri_react:
             resolved_content: Any = [
                 {"type": "image_url", "image_url": {"url": data_uri_react}},
@@ -1142,7 +1144,9 @@ class WorkflowCompiler:
                     image_url = _find_arquivos_image(effective_outputs)
                     if image_url:
                         data_uri = await _fetch_image_data_uri(
-                            image_url, user_id=state.get("user_id"), drive_access_token=state.get("drive_access_token")
+                            image_url,
+                            user_id=state.get("user_id"),
+                            drive_access_token=state.get("drive_access_token"),
                         )
                         if data_uri:
                             human_content: list = [
@@ -1248,12 +1252,17 @@ class WorkflowCompiler:
                                 break
                             if inner.get("content"):
                                 content_to_save = str(inner["content"])
-                                title_to_save = str(inner.get("title", inner.get("titulo", title_to_save)))
+                                title_to_save = str(
+                                    inner.get("title", inner.get("titulo", title_to_save))
+                                )
                                 break
-                            non_meta = {k: v2 for k, v2 in inner.items() if k not in ("status", "action_type", "saved_to", "error")}
+                            meta_keys = ("status", "action_type", "saved_to", "error")
+                            non_meta = {k: v2 for k, v2 in inner.items() if k not in meta_keys}
                             if non_meta:
                                 content_to_save = json.dumps(non_meta, ensure_ascii=False, indent=2)
-                                title_to_save = str(inner.get("titulo", inner.get("title", title_to_save)))
+                                title_to_save = str(
+                                    inner.get("titulo", inner.get("title", title_to_save))
+                                )
                                 break
                         elif isinstance(inner, str) and inner.strip():
                             content_to_save = inner
@@ -1274,7 +1283,11 @@ class WorkflowCompiler:
                             "titulo": title_to_save,
                         }
                     else:
-                        result = {"action_type": "banco_de_dados", "status": "erro", "reason": "sem_conteudo"}
+                        result = {
+                            "action_type": "banco_de_dados",
+                            "status": "erro",
+                            "reason": "sem_conteudo",
+                        }
 
                 else:
                     tool_name = step.get("tool_name", "")
@@ -1362,9 +1375,13 @@ class WorkflowCompiler:
                 # pública de download para que steps downstream (ex.: llm com visão)
                 # possam referenciar o arquivo pelo campo `output`.
                 file_id = step.get("drive_file_id") or step_config.get("drive_file_id")
-                file_name = step.get("drive_file_name") or step_config.get("drive_file_name") or "arquivo"
+                file_name = (
+                    step.get("drive_file_name") or step_config.get("drive_file_name") or "arquivo"
+                )
                 if not file_id:
-                    result = {"error": "drive_file_id não configurado — abra o nó e selecione uma imagem no Drive"}
+                    result = {
+                        "error": "drive_file_id não configurado — selecione uma imagem"
+                    }
                 else:
                     result = {
                         "output": f"https://drive.google.com/uc?export=download&id={file_id}",

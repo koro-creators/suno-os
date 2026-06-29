@@ -31,7 +31,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Close } from '@carbon/icons-react';
+import { Close, FolderOpen } from '@carbon/icons-react';
+import { useDriveFilePicker } from '@/hooks/useDriveFilePicker';
 import type { Node } from '@xyflow/react';
 import { useAgents } from '@/contexts/AgentsContext';
 import { useSkills } from '@/contexts/SkillsContext';
@@ -112,6 +113,15 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
   const { agents } = useAgents();
   const { skills } = useSkills();
   const [name, setName] = useState('');
+
+  const { pick: pickDriveFile, status: drivePickerStatus } = useDriveFilePicker(
+    ({ id, name: fileName }) => {
+      if (!node) return;
+      setDriveFileId(id);
+      setDriveFileName(fileName);
+      onChange(node.id, { ...(node.data ?? {}), drive_file_id: id, drive_file_name: fileName });
+    },
+  );
   const [toolName, setToolName] = useState('');
   const [introduction, setIntroduction] = useState('');
   const [prompt, setPrompt] = useState('');
@@ -125,6 +135,8 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
   const [mergePolicy, setMergePolicy] = useState<'all' | 'any'>('all');
   const [tools, setTools] = useState<ToolDescriptor[]>([]);
   const [agentId, setAgentId] = useState('');
+  const [driveFileId, setDriveFileId] = useState('');
+  const [driveFileName, setDriveFileName] = useState('');
 
   // Tool catalog for the `tool` step's "Tool" select (TASK-C08b).
   useEffect(() => {
@@ -169,6 +181,8 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
       ((data.config as Record<string, unknown> | undefined)?.review_instructions as string) ?? '',
     );
     setMergePolicy((data.merge_policy as 'all' | 'any') ?? 'all');
+    setDriveFileId((data.drive_file_id as string) ?? '');
+    setDriveFileName((data.drive_file_name as string) ?? '');
   }, [node]);
 
   if (!node) return null;
@@ -544,6 +558,69 @@ export default function NodeConfigDrawer({ node, onChange, onClose, currentWorkf
             {mergePolicy === 'all' ? 'all (aguarda todos)' : 'any (primeiro vence)'}
           </div>
         </div>
+      )}
+
+      {stepType === 'arquivos' && (
+        <>
+          <button
+            onClick={() => void pickDriveFile()}
+            disabled={drivePickerStatus === 'loading' || drivePickerStatus === 'picking'}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '10px 0',
+              marginBottom: 16,
+              borderRadius: 8,
+              border: '1px solid #34A853',
+              background: 'transparent',
+              color: drivePickerStatus === 'loading' || drivePickerStatus === 'picking' ? 'var(--text-muted)' : '#34A853',
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: drivePickerStatus === 'loading' || drivePickerStatus === 'picking' ? 'wait' : 'pointer',
+              transition: 'background 150ms ease',
+            }}
+          >
+            <FolderOpen size={14} />
+            {drivePickerStatus === 'loading'
+              ? 'Conectando ao Drive…'
+              : drivePickerStatus === 'picking'
+                ? 'Aguardando seleção…'
+                : driveFileId
+                  ? 'Trocar imagem no Drive'
+                  : 'Selecionar imagem no Drive'}
+          </button>
+
+          {driveFileId && (
+            <div
+              style={{
+                marginBottom: 12,
+                padding: '8px 10px',
+                borderRadius: 8,
+                background: 'var(--deep)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 2px' }}>Arquivo selecionado</p>
+              <p style={{ fontSize: 12, color: 'var(--text-primary)', margin: 0, wordBreak: 'break-all' }}>
+                {driveFileName || driveFileId}
+              </p>
+              {driveFileName && (
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '2px 0 0', fontFamily: 'monospace' }}>
+                  {driveFileId}
+                </p>
+              )}
+            </div>
+          )}
+
+          {drivePickerStatus === 'error' && (
+            <p style={{ fontSize: 11, color: '#EF4444', margin: '0 0 12px' }}>
+              Falha ao conectar com o Drive. Verifique as permissões e tente novamente.
+            </p>
+          )}
+        </>
       )}
 
     </aside>

@@ -44,6 +44,7 @@ ALLOWED_SOURCE_HANDLES_BY_TYPE: dict[str, frozenset[str]] = {
     "hitl": frozenset({"approved", "rejected", "modified"}),
     "merge": frozenset({"out"}),
     "trigger": frozenset({"out"}),  # entry node — sem target handles, emite 'out'
+    "arquivos": frozenset({"out"}),
 }
 
 _LLM_CONTROL_HANDLE = "in"

@@ -24,7 +24,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 interface NodeData {
   /** Step type — drives ALLOWED_SOURCE_HANDLES_BY_TYPE parity with backend. */
-  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger';
+  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger' | 'arquivos';
   [key: string]: unknown;
 }
 
@@ -37,6 +37,7 @@ const ALLOWED_SOURCE_HANDLES_BY_TYPE: Record<NodeData['type'], string[]> = {
   hitl: ['approved', 'rejected', 'modified'],
   merge: ['out'],
   trigger: ['out'], // trigger é entry node — sem target handles, emite 'out'
+  arquivos: ['out'],
 };
 
 const LLM_CONTROL_HANDLE = 'in';
