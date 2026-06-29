@@ -1,15 +1,19 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Workflow, WorkflowStep } from '@/lib/workflow-types';
+import { GeneratedDoc, Workflow, WorkflowStep } from '@/lib/workflow-types';
 import { initialWorkflows } from '@/data/workflows-admin';
 import {
   apiAvailable,
+  extractGerarPdfResult,
+  getWorkflowDetail,
+  getWorkflowRun,
   listWorkflows as apiListWorkflows,
   createWorkflow as apiCreateWorkflow,
   updateWorkflow as apiUpdateWorkflow,
   deleteWorkflow as apiDeleteWorkflow,
   runWorkflow as apiRunWorkflow,
+  saveMockRun,
 } from '@/lib/api';
 
 interface WorkflowCreateData {
@@ -30,7 +34,9 @@ interface WorkflowsContextValue {
   createWorkflow: (data: WorkflowCreateData) => Promise<Workflow>;
   updateWorkflow: (id: string, data: Partial<Workflow>) => Promise<void>;
   deleteWorkflow: (id: string) => Promise<void>;
-  runWorkflow: (id: string) => Promise<void>;
+  runWorkflow: (id: string, triggerDoc?: { id: string; title: string; content?: string }) => Promise<void>;
+  /** Sinaliza que um run completou. docId = doc de reunião que disparou. generatedDoc = resultado de gerar_pdf se presente. */
+  notifyRunCompleted: (id: string, runId: string, docId?: string, generatedDoc?: GeneratedDoc) => void;
   /** validationOk[workflowId] — true after the user clicks "Validar" with 0 findings. */
   validationOk: Record<string, boolean>;
   setValidationOk: (workflowId: string, ok: boolean) => void;
@@ -60,7 +66,13 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const list = await apiListWorkflows();
-        if (!cancelled) setWorkflows(list);
+        if (cancelled) return;
+        // Lista vem sem steps — busca detalhes dos workflows ativos em paralelo
+        // para que useWorkflowEventTrigger consiga detectar trigger nova_reuniao.
+        const activeIds = list.filter((w) => w.status === 'active' && w.steps_count > 0).map((w) => w.id);
+        const details = await Promise.all(activeIds.map((id) => getWorkflowDetail(id).catch(() => null)));
+        const detailMap = new Map(details.flatMap((d) => (d ? [[d.id, d]] : [])));
+        if (!cancelled) setWorkflows(list.map((w) => detailMap.get(w.id) ?? w));
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : String(err));
@@ -134,9 +146,14 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
     setWorkflows((prev) => prev.filter((w) => w.id !== id));
   }
 
-  async function runWorkflow(id: string): Promise<void> {
+  async function runWorkflow(id: string, triggerDoc?: { id: string; title: string; content?: string }): Promise<void> {
     if (apiAvailable()) {
-      const res = await apiRunWorkflow(id);
+      const res = await apiRunWorkflow(id, triggerDoc);
+      let generatedDoc: GeneratedDoc | undefined;
+      try {
+        const fullRun = await getWorkflowRun(id, res.run_id);
+        generatedDoc = extractGerarPdfResult(fullRun.steps_output) ?? undefined;
+      } catch { /* não bloqueia se o fetch falhar */ }
       setWorkflows((prev) =>
         prev.map((w) =>
           w.id === id
@@ -149,6 +166,8 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
                     res.status === 'completed' || res.status === 'failed'
                       ? new Date().toISOString()
                       : null,
+                  triggered_doc_id: triggerDoc?.id,
+                  generated_doc: generatedDoc,
                 },
                 updated_at: new Date().toISOString(),
               }
@@ -157,7 +176,101 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
       );
       return;
     }
-    // Mock: update last_run
+    // Mock: simula execução com comportamento correto do trigger step.
+    // Se o workflow tem trigger nova_reuniao mas não há doc → só o trigger step roda.
+    // Se há doc (triggerDoc) → todos os steps rodam, trigger retorna o nome do arquivo.
+    const now = new Date().toISOString();
+    const runId = `run-${crypto.randomUUID()}`;
+    const wf = workflows.find((w) => w.id === id);
+    const allSteps = wf?.steps ?? [];
+
+    const hasTriggerStep = allSteps.some((s) => {
+      const tt = s.trigger_type ?? (s.config as Record<string, unknown>)['trigger_type'];
+      return s.type === 'trigger' && tt === 'nova_reuniao';
+    });
+
+    // Sem doc disponível: apenas o trigger step roda (fluxo para ali)
+    const stepsToRun = hasTriggerStep && !triggerDoc
+      ? allSteps.filter((s) => s.type === 'trigger')
+      : allSteps;
+
+    // Detecta step gerar_pdf e simula output para que useWorkflowEventTrigger crie o doc
+    const gerarPdfStep = stepsToRun.find((s) => s.type === 'tool' && s.tool_name === 'gerar_pdf');
+    const clienteSlug = wf?.client_scope?.[0] ?? wf?.client_id ?? 'suno';
+    const mockGerarPdfOutput = gerarPdfStep && triggerDoc
+      ? {
+          titulo: `Conhecimento: ${triggerDoc.title}`,
+          conteudo: `Documento de conhecimento gerado a partir da ata "${triggerDoc.title}".\n\n[Simulado em mock-mode]`,
+          cliente_slug: clienteSlug,
+          cliente_nome: clienteSlug,
+          filename: `${triggerDoc.title.toLowerCase().replace(/\s+/g, '-').slice(0, 40)}-${Date.now()}.md`,
+          saved_to: 'base',
+          status: 'gerado',
+        }
+      : null;
+
+    const stepsOutput: Record<string, unknown> = hasTriggerStep
+      ? { trigger: triggerDoc
+          ? { status: 'triggered', doc_title: triggerDoc.title, doc_id: triggerDoc.id }
+          : { status: 'no_file', message: 'Nenhum arquivo novo disponível' } }
+      : {};
+    if (mockGerarPdfOutput && gerarPdfStep) {
+      stepsOutput[gerarPdfStep.id] = mockGerarPdfOutput;
+    }
+
+    saveMockRun(id, {
+      id: runId,
+      workflow_id: id,
+      status: 'completed',
+      trigger: triggerDoc ? 'trigger' : 'manual',
+      started_at: now,
+      completed_at: now,
+      error: null,
+      steps_output: stepsOutput,
+      step_logs: stepsToRun.map((s, i) => ({
+        id: `sl-${runId}-${i}`,
+        step_id: s.id,
+        step_name: s.name,
+        status: 'completed',
+        input: null,
+        output: s.type === 'trigger'
+          ? (triggerDoc
+              ? { status: 'triggered', doc_title: triggerDoc.title }
+              : { status: 'no_file' })
+          : s.tool_name === 'gerar_pdf' && mockGerarPdfOutput
+            ? mockGerarPdfOutput
+            : { simulated: true },
+        error: null,
+        duration_ms: s.type === 'trigger' ? 2 : 150,
+        started_at: now,
+        completed_at: now,
+      })),
+    });
+
+    const generatedDoc = mockGerarPdfOutput
+      ? extractGerarPdfResult(stepsOutput)
+      : undefined;
+
+    setWorkflows((prev) =>
+      prev.map((w) =>
+        w.id === id
+          ? {
+              ...w,
+              last_run: {
+                run_id: runId,
+                status: 'completed',
+                completed_at: now,
+                triggered_doc_id: triggerDoc?.id,
+                generated_doc: generatedDoc ?? undefined,
+              },
+              updated_at: now,
+            }
+          : w
+      )
+    );
+  }
+
+  function notifyRunCompleted(id: string, runId: string, docId?: string, generatedDoc?: GeneratedDoc) {
     const now = new Date().toISOString();
     setWorkflows((prev) =>
       prev.map((w) =>
@@ -165,9 +278,11 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
           ? {
               ...w,
               last_run: {
-                run_id: `run-${crypto.randomUUID()}`,
+                run_id: runId,
                 status: 'completed',
                 completed_at: now,
+                triggered_doc_id: docId,
+                generated_doc: generatedDoc,
               },
               updated_at: now,
             }
@@ -178,7 +293,7 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
 
   return (
     <WorkflowsContext.Provider
-      value={{ workflows, loading, error, createWorkflow, updateWorkflow, deleteWorkflow, runWorkflow, validationOk, setValidationOk }}
+      value={{ workflows, loading, error, createWorkflow, updateWorkflow, deleteWorkflow, runWorkflow, notifyRunCompleted, validationOk, setValidationOk }}
     >
       {children}
     </WorkflowsContext.Provider>

@@ -1,9 +1,16 @@
 # sunOS — ambiente de desenvolvimento completo (frontend + backend + postgres)
 #
-# Uso:
-#   docker compose up --build        # sobe os 3 serviços
-#   docker compose up -d postgres    # só o banco
-#   docker compose logs -f api       # acompanha logs da API
+# Uso normal:
+#   docker compose up --build                    # sobe os 3 serviços
+#   docker compose up -d postgres                # só o banco
+#   docker compose logs -f api                   # acompanha logs da API
+#
+# Com tunnel (Drive webhooks em dev):
+#   docker compose --profile tunnel up --build
+#   docker compose logs cloudflared | grep "trycloudflare.com"
+#   → copie a URL e adicione no .env.local:
+#       NEXT_PUBLIC_DRIVE_WEBHOOK_URL=https://xxxx.trycloudflare.com
+#   docker compose restart frontend
 #
 # Frontend:  http://localhost:3003
 # API:       http://localhost:8080  (docs em /docs)
@@ -70,6 +77,17 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Tunnel para expor a API publicamente (necessário para Drive Push Notifications em dev).
+  # Ativado apenas com: docker compose --profile tunnel up
+  # A URL pública aparece nos logs: docker compose logs cloudflared | grep trycloudflare.com
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: [tunnel]
+    command: tunnel --url http://api:8080 --metrics 0.0.0.0:2000
     depends_on:
       - api
     restart: unless-stopped

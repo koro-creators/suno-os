@@ -1,12 +1,13 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Play } from '@carbon/icons-react';
 import AppHeader from '@/components/layout/AppHeader';
 import WorkflowRunTimeline from '@/components/workflows/WorkflowRunTimeline';
 import { useWorkflows } from '@/contexts/WorkflowsContext';
-import { apiAvailable, listWorkflowRuns } from '@/lib/api';
+import { useBiblioteca } from '@/contexts/BibliotecaContext';
+import { listWorkflowRuns } from '@/lib/api';
 import { WorkflowRun } from '@/lib/workflow-types';
 
 // Mock runs for dev — in production would come from API
@@ -62,6 +63,7 @@ export default function WorkflowRunsPage() {
   const router = useRouter();
   const { workflows, runWorkflow, validationOk } = useWorkflows();
 
+  const { documents } = useBiblioteca();
   const workflowId = params.workflowId as string;
   const workflow = workflows.find((w) => w.id === workflowId);
   const [runs, setRuns] = useState<WorkflowRun[]>(MOCK_RUNS[workflowId] || []);
@@ -71,15 +73,30 @@ export default function WorkflowRunsPage() {
   // "Validar" on the canvas with 0 findings (same shared state in context).
   const canvasValidationOk = validationOk[workflowId] ?? false;
 
-  const loadRuns = useCallback(async () => {
-    if (!apiAvailable()) {
-      setRuns(MOCK_RUNS[workflowId] || []);
-      return;
-    }
+  // Verifica se o workflow tem step trigger nova_reuniao. Checa o contexto primeiro;
+  // cai para localStorage (sunos-steps-v2-*) se o auto-save do canvas ainda não atualizou
+  // o contexto (debounce não disparou antes da navegação).
+  const hasTriggerStep = useMemo(() => {
+    const isTrigger = (s: { type: string; trigger_type?: string; config: Record<string, unknown> }) =>
+      s.type === 'trigger' && (s.trigger_type ?? s.config['trigger_type']) === 'nova_reuniao';
+
+    if (workflow?.steps.some(isTrigger)) return true;
+
     try {
+      const stored = localStorage.getItem(`sunos-steps-v2-${workflowId}`);
+      if (stored) {
+        const steps = JSON.parse(stored) as Array<{ type: string; trigger_type?: string; config: Record<string, unknown> }>;
+        return steps.some(isTrigger);
+      }
+    } catch { /* ignore */ }
+    return false;
+  }, [workflow?.steps, workflowId]);
+  const loadRuns = useCallback(async () => {
+    try {
+      // listWorkflowRuns já lida com mock mode (localStorage) e API mode
       setRuns(await listWorkflowRuns(workflowId));
     } catch {
-      setRuns(MOCK_RUNS[workflowId] || []); // graceful fallback
+      setRuns(MOCK_RUNS[workflowId] || []); // fallback estático apenas se tudo falhar
     }
   }, [workflowId]);
 
@@ -87,14 +104,20 @@ export default function WorkflowRunsPage() {
     void loadRuns();
   }, [loadRuns]);
 
-  // Poll while any run is still "running"/"paused" so the status updates
-  // without a manual page reload (e.g. a scheduled run finished elsewhere).
+  // Poll enquanto há run ativo (atualiza status running→completed rapidamente).
   useEffect(() => {
     const hasActiveRun = runs.some((r) => r.status === 'running' || r.status === 'paused');
     if (!hasActiveRun) return;
     const timer = setTimeout(() => void loadRuns(), 4000);
     return () => clearTimeout(timer);
   }, [runs, loadRuns]);
+
+  // Poll periódico para capturar runs disparados por trigger enquanto o
+  // usuário já estava na página (trigger externo → sem notificação push).
+  useEffect(() => {
+    const timer = setInterval(() => void loadRuns(), 10_000);
+    return () => clearInterval(timer);
+  }, [loadRuns]);
 
   const hasActiveRun = !canvasValidationOk || isRunning || runs.some((r) => r.status === 'running' || r.status === 'paused');
 
@@ -103,12 +126,18 @@ export default function WorkflowRunsPage() {
     if (hasActiveRun) return;
     setIsRunning(true);
     try {
-      await runWorkflow(workflowId);
+      // Passa o primeiro doc novo disponível. Backend ignora trigger_doc se
+      // o workflow não tiver step de trigger — é sempre seguro passar.
+      const novoDoc = documents.find((d) => d.docType === 'reuniao' && d.status === 'novo');
+      await runWorkflow(
+        workflowId,
+        novoDoc ? { id: novoDoc.id, title: novoDoc.title, content: novoDoc.content } : undefined,
+      );
       await loadRuns();
     } finally {
       setIsRunning(false);
     }
-  }, [runWorkflow, workflowId, loadRuns, hasActiveRun]);
+  }, [runWorkflow, workflowId, loadRuns, hasActiveRun, documents]);
 
   if (!workflow) {
     return (
@@ -173,7 +202,7 @@ export default function WorkflowRunsPage() {
           </button>
         </div>
 
-        <WorkflowRunTimeline runs={runs} />
+        <WorkflowRunTimeline runs={runs} workflowSteps={workflow.steps} />
       </main>
     </>
   );

@@ -18,15 +18,61 @@ Security model (constitution §2.2 + caixa-preta RN-011):
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
+from config import settings
+
 logger = logging.getLogger(__name__)
+
+DRIVE_CHANGES_API = "https://www.googleapis.com/drive/v3/changes"
+
+
+async def _get_webhook_base_url() -> str:
+    """Resolve a URL pública do backend para receber Drive Push Notifications.
+
+    Ordem de preferência:
+    1. DRIVE_WEBHOOK_URL (env var — produção Cloud Run)
+    2. cloudflared quick-tunnel metrics API (dev com --profile tunnel)
+    3. Vazio — o caller pula o registro silenciosamente
+    """
+    if settings.DRIVE_WEBHOOK_URL:
+        return settings.DRIVE_WEBHOOK_URL.rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            resp = await client.get(f"{settings.CLOUDFLARED_METRICS_URL}/quicktunnel")
+            if resp.is_success:
+                data = resp.json()
+                # cloudflared retorna {"hostname": "xxx.trycloudflare.com"} sem "url"
+                hostname = data.get("hostname") or data.get("url", "")
+                if hostname:
+                    url = hostname if hostname.startswith("http") else f"https://{hostname}"
+                    logger.info("drive_watch: tunnel URL via cloudflared: %s", url)
+                    return url.rstrip("/")
+    except Exception:
+        pass
+    return ""
+
+
+# ---------------------------------------------------------------------------
+# SSE broadcaster for Drive Push Notifications
+# Each connected client gets its own asyncio.Queue.
+# ---------------------------------------------------------------------------
+_sse_queues: list[asyncio.Queue] = []
+
+
+async def _broadcast(event: dict) -> None:
+    for q in list(_sse_queues):
+        await q.put(event)
+
 
 router = APIRouter(prefix="/drive", tags=["Drive"])
 
@@ -412,6 +458,136 @@ async def decide_curation_suggestion(
         status,
     )
     return {"suggestion_id": suggestion_id, "status": status}
+
+
+# ---------------------------------------------------------------------------
+# Drive Push Notifications — webhook receiver + SSE relay
+# ---------------------------------------------------------------------------
+
+
+@router.post("/webhook", include_in_schema=False)
+async def drive_webhook(request: Request) -> Response:
+    """Receive Google Drive push notifications.
+
+    Google sends an initial "sync" ping to verify the channel address, then
+    "change" events for each modification.  The payload intentionally carries
+    no document content — only the signal that something changed in a watched
+    folder.  Clients call their own Drive API to diff the folder contents.
+
+    No auth required: the endpoint is public so Google can POST to it.
+    Sensitive data never appears here; a malicious caller can only cause
+    unnecessary re-sync calls on the frontend.
+    """
+    state = request.headers.get("X-Goog-Resource-State", "")
+    if state == "sync":
+        # Verification ping — acknowledge without broadcasting
+        return Response(status_code=200)
+    if state in ("add", "update", "remove", "trash", "untrash", "change"):
+        await _broadcast({"type": "folder_changed"})
+    return Response(status_code=200)
+
+
+@router.get("/events", summary="SSE stream de mudanças na pasta Drive")
+async def drive_events(request: Request) -> StreamingResponse:
+    """Server-Sent Events endpoint.  Frontend subscribes here after connecting
+    a Drive folder.  Sends ``data: {"type": "folder_changed"}`` when Google
+    notifies of a change.  Sends ``: keepalive`` comments every 30 s to keep
+    the connection alive through proxies.
+    """
+    queue: asyncio.Queue = asyncio.Queue()
+    _sse_queues.append(queue)
+
+    async def generator():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=30.0)
+                    yield f"data: {json.dumps(event)}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            try:
+                _sse_queues.remove(queue)
+            except ValueError:
+                pass
+
+    return StreamingResponse(
+        generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+class WatchRegisterRequest(BaseModel):
+    folder_id: str
+    access_token: str
+
+
+@router.post("/watch/register", summary="Registrar Drive Push Notification watch")
+async def drive_watch_register(body: WatchRegisterRequest) -> dict:
+    """Registra um canal de Push Notification do Google Drive apontando para o backend.
+
+    O backend descobre automaticamente sua URL pública:
+    - Em prod: via DRIVE_WEBHOOK_URL (env var do Cloud Run)
+    - Em dev: via cloudflared metrics API (http://cloudflared:2000/quicktunnel)
+
+    Se nenhuma URL pública estiver disponível, retorna status='skipped' sem erro —
+    as notificações em tempo real ficam indisponíveis até o tunnel ser iniciado.
+    """
+    webhook_base = await _get_webhook_base_url()
+    if not webhook_base:
+        logger.info(
+            "drive_watch_register: sem URL pública disponível"
+            " — skip (inicie o tunnel para receber notificações)"
+        )
+        return {"status": "skipped", "reason": "no_public_url"}
+
+    webhook_address = f"{webhook_base}/api/drive/webhook"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # 1. Obter startPageToken
+            pt_resp = await client.get(
+                f"{DRIVE_CHANGES_API}/startPageToken",
+                headers={"Authorization": f"Bearer {body.access_token}"},
+                params={"supportsAllDrives": "true"},
+            )
+            pt_resp.raise_for_status()
+            start_page_token = pt_resp.json()["startPageToken"]
+
+            # 2. Registrar watch channel
+            channel_id = str(uuid.uuid4())
+            watch_resp = await client.post(
+                f"{DRIVE_CHANGES_API}/watch",
+                headers={
+                    "Authorization": f"Bearer {body.access_token}",
+                    "Content-Type": "application/json",
+                },
+                params={"pageToken": start_page_token, "supportsAllDrives": "true"},
+                json={"id": channel_id, "type": "web_hook", "address": webhook_address},
+            )
+            watch_resp.raise_for_status()
+            data = watch_resp.json()
+            logger.info(
+                "drive_watch_register: canal registrado channel_id=%s url=%s expiry=%s",
+                channel_id,
+                webhook_address,
+                data.get("expiration"),
+            )
+            return {
+                "status": "registered",
+                "channel_id": channel_id,
+                "webhook_url": webhook_address,
+                "expiration": data.get("expiration"),
+            }
+    except httpx.HTTPStatusError as e:
+        logger.warning("drive_watch_register: Drive API recusou o registro: %s", e.response.text)
+        return {"status": "skipped", "reason": "drive_api_error", "detail": e.response.text}
+    except Exception as e:
+        logger.warning("drive_watch_register: erro inesperado: %s", e)
+        return {"status": "skipped", "reason": "error"}
 
 
 @router.delete("/disconnect", response_model=DriveDisconnectResponse, summary="Desconectar Drive")

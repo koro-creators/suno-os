@@ -258,8 +258,8 @@ export default function BibliotecaCard({
   }
 
   // ---------- Collapsed state ----------
-  const statusColor = doc.status === 'ready' ? '#10B981' : doc.status === 'error' ? '#EF4444' : '#F59E0B';
-  const statusLabel = doc.status === 'ready' ? 'Pronto' : doc.status === 'error' ? 'Erro' : 'Processando...';
+  const statusColor = doc.status === 'ready' ? '#10B981' : doc.status === 'error' ? '#EF4444' : doc.status === 'novo' ? '#3B82F6' : doc.status === 'utilizado' ? '#64748B' : doc.status === 'para gerar conhecimento' ? '#7C3AED' : doc.status === 'gerado' ? '#22C55E' : '#F59E0B';
+  const statusLabel = doc.status === 'ready' ? 'Pronto' : doc.status === 'error' ? 'Erro' : doc.status === 'novo' ? 'Novo' : doc.status === 'utilizado' ? 'Utilizado' : doc.status === 'para gerar conhecimento' ? 'Para gerar conhecimento' : doc.status === 'gerado' ? 'Gerado' : 'Processando...';
 
   return (
     <div

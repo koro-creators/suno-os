@@ -6,7 +6,7 @@ import { KnowledgeFileType } from '@/lib/biblioteca-types';
 interface FileTypeIconProps {
   fileType?: KnowledgeFileType | string;
   size?: number;
-  docType?: 'reuniao';
+  docType?: 'reuniao' | 'base';
 }
 
 const FILE_TYPE_CONFIG: Record<string, { icon: typeof Document; color: string }> = {
