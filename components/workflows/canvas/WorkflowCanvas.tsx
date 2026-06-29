@@ -55,6 +55,9 @@ import {
   runWorkflow,
   getWorkflowRun,
 } from '@/lib/api';
+import { generatePdfBytes } from '@/lib/generate-pdf';
+import { uploadFileToDrive, storePdfClienteScope } from '@/lib/drive-upload';
+import { getDriveBaseAccess } from '@/lib/drive-token-store';
 import type { WorkflowEdge, WorkflowStepV2 } from '@/lib/workflow-types';
 import { useWorkflowAutoSave } from '@/hooks/useWorkflowAutoSave';
 import { useGraphValidation } from './hooks/useGraphValidation';
@@ -71,6 +74,7 @@ import HITLNode from './nodes/HITLNode';
 import SubWorkflowNode from './nodes/SubWorkflowNode';
 import MergeNode from './nodes/MergeNode';
 import TriggerNode from './nodes/TriggerNode';
+import ArquivosNode from './nodes/ArquivosNode';
 import CustomEdge from './edges/CustomEdge';
 import NodePalette from './panels/NodePalette';
 import NodeConfigDrawer from './panels/NodeConfigDrawer';
@@ -113,6 +117,7 @@ const NODE_TYPES = {
   workflow: SubWorkflowNode,
   merge: MergeNode,
   trigger: TriggerNode,
+  arquivos: ArquivosNode,
 };
 
 const EDGE_TYPES = {
@@ -670,11 +675,38 @@ function CanvasInner(props: WorkflowCanvasProps) {
         const result = await runWorkflow(
           workflowId,
           novoDoc ? { id: novoDoc.id, title: novoDoc.title, content: novoDoc.content } : undefined,
+          getDriveBaseAccess()?.token,
         );
         const run = await getWorkflowRun(workflowId, result.run_id);
         const generatedDoc = extractGerarPdfResult(run.steps_output);
         // Passa docId e generatedDoc para que o hook possa marcar o doc e criar documento base.
         notifyRunCompleted(workflowId, result.run_id, novoDoc?.id, generatedDoc ?? undefined);
+        if (generatedDoc) {
+          storePdfClienteScope(generatedDoc.filename, generatedDoc.cliente_slug);
+          const actionTypes = new Set(
+            nodesRef.current
+              .filter((n) => n.type === 'action')
+              .map((n) => (n.data as Record<string, unknown>).action_type as string),
+          );
+          const bytes = generatePdfBytes(generatedDoc.titulo, generatedDoc.conteudo, generatedDoc.cliente_nome);
+          if (actionTypes.has('salvar_pdf')) {
+            const access = getDriveBaseAccess();
+            if (access) {
+              void uploadFileToDrive(bytes, generatedDoc.filename, access.folderId, access.token);
+            }
+          }
+          if (actionTypes.has('baixar_pdf')) {
+            const blob = new Blob([bytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = generatedDoc.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        }
         const next: Record<string, ExecutionStatus> = {};
         for (const log of run.step_logs) {
           next[log.step_id] = log.status === 'failed' ? 'failed' : 'completed';

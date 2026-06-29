@@ -50,6 +50,9 @@ class WorkflowStep(BaseModel):
     input_mapping: dict[str, str] | None = (
         None  # For type="workflow": map parent output → child input
     )
+    introduction: str | None = None  # For type="tool": description injected into bound LLM tools
+    drive_file_id: str | None = None  # For type="arquivos": Google Drive file ID
+    drive_file_name: str | None = None  # For type="arquivos": display name
     config: dict[str, Any] = {}
     next_step: str | None = None
     condition: dict[str, Any] | None = None
@@ -133,6 +136,7 @@ class RunWorkflowRequest(BaseModel):
     input_overrides: dict[str, Any] = {}
     model_override: str | None = None
     client_id: str | None = None  # override; defaults to the workflow's client_scope[0]
+    drive_access_token: str | None = None  # OAuth token do Drive do usuário (frontend in-memory)
 
 
 class ResumeRunRequest(BaseModel):

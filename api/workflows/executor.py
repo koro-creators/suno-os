@@ -118,6 +118,8 @@ class WorkflowExecutor:
             "workflow_id": workflow_id,
             "run_id": run_id,
             "client_id": client_id,
+            "user_id": None,
+            "drive_access_token": None,
             "steps_output": {},
             "current_step": "",
             "status": "running",
@@ -150,6 +152,8 @@ class WorkflowExecutor:
         depth: int = 0,
         edges: list[dict] | None = None,
         client_id: str | None = None,
+        user_id: str | None = None,
+        drive_access_token: str | None = None,
     ) -> dict:
         """Execute a workflow and capture real per-step logs (timing/output/status).
 
@@ -189,6 +193,8 @@ class WorkflowExecutor:
             "workflow_id": workflow_id,
             "run_id": run_id,
             "client_id": client_id,
+            "user_id": user_id,
+            "drive_access_token": drive_access_token,
             "steps_output": {},
             "current_step": "",
             "status": "running",
