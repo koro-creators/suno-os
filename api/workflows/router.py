@@ -11,14 +11,16 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 try:
+    from core.auth import resolve_user_id
     from core.db import get_session
     from workflows import repository
 except ImportError:  # test import root (repo root on sys.path)
+    from api.core.auth import resolve_user_id
     from api.core.db import get_session
     from api.workflows import repository
 
@@ -264,6 +266,7 @@ async def delete_workflow(workflow_id: str, session: Session = Depends(get_sessi
 @router.post("/{workflow_id}/run")
 async def run_workflow(
     workflow_id: str,
+    request: Request,
     req: RunWorkflowRequest = RunWorkflowRequest(),
     session: Session = Depends(get_session),
 ) -> RunWorkflowResponse:
@@ -290,6 +293,8 @@ async def run_workflow(
     client_scope = wf.get("client_scope") or []
     client_id = req.client_id or (client_scope[0] if client_scope else None)
 
+    user_id = resolve_user_id(request)
+
     executor = WorkflowExecutor()
     result = await executor.run_with_logs(
         workflow_id=workflow_id,
@@ -298,6 +303,8 @@ async def run_workflow(
         overrides=req.input_overrides,
         edges=wf.get("edges"),
         client_id=client_id,
+        user_id=user_id,
+        drive_access_token=req.drive_access_token,
     )
     status = result["status"]
     error = result["error"]

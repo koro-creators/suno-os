@@ -30,15 +30,17 @@ export type ValidationErrorKind =
 export interface WorkflowStep {
   id: string;
   name: string;
-  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger';
+  type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger' | 'arquivos';
   tool_name?: string;
   prompt?: string;
   model?: WorkflowLLMModel; // type="llm": modelo a usar (default: gemini-flash)
   agent_id?: string; // type="llm": agente (aba Agentes) cujas instructions entram como contexto
   condition_operator?: 'if_else'; // type="condition": porta lógica
-  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram' | 'salvar_pdf' | 'baixar_pdf'; // type="action": canal de envio ou ação de PDF
+  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram' | 'salvar_pdf' | 'baixar_pdf' | 'banco_de_dados'; // type="action": canal de envio ou ação de PDF
   trigger_type?: 'nova_reuniao'; // type="trigger": sub-tipo do trigger
   workflow_id?: string;
+  drive_file_id?: string; // type="arquivos": ID do arquivo no Google Drive
+  drive_file_name?: string; // type="arquivos": nome de exibição do arquivo
   input_mapping?: Record<string, string>;
   config: Record<string, unknown>;
   next_step?: string;

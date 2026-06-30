@@ -486,10 +486,12 @@ export async function deleteWorkflow(workflowId: string): Promise<void> {
 export async function runWorkflow(
   workflowId: string,
   triggerDoc?: { id: string; title: string; content?: string },
+  driveAccessToken?: string,
 ): Promise<{ run_id: string; status: string; started_at: string }> {
-  const body = triggerDoc
+  const body: Record<string, unknown> = triggerDoc
     ? { input_overrides: { trigger_doc: triggerDoc } }
     : {};
+  if (driveAccessToken) body.drive_access_token = driveAccessToken;
   return workflowFetch(`/api/workflows/${workflowId}/run`, {
     method: 'POST',
     body: JSON.stringify(body),

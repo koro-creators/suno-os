@@ -15,6 +15,9 @@ import {
   runWorkflow as apiRunWorkflow,
   saveMockRun,
 } from '@/lib/api';
+import { getDriveBaseAccess } from '@/lib/drive-token-store';
+import { generatePdfBytes } from '@/lib/generate-pdf';
+import { uploadFileToDrive, storePdfClienteScope } from '@/lib/drive-upload';
 
 interface WorkflowCreateData {
   name: string;
@@ -148,12 +151,37 @@ export function WorkflowsProvider({ children }: { children: ReactNode }) {
 
   async function runWorkflow(id: string, triggerDoc?: { id: string; title: string; content?: string }): Promise<void> {
     if (apiAvailable()) {
-      const res = await apiRunWorkflow(id, triggerDoc);
+      const res = await apiRunWorkflow(id, triggerDoc, getDriveBaseAccess()?.token);
       let generatedDoc: GeneratedDoc | undefined;
       try {
         const fullRun = await getWorkflowRun(id, res.run_id);
         generatedDoc = extractGerarPdfResult(fullRun.steps_output) ?? undefined;
       } catch { /* não bloqueia se o fetch falhar */ }
+      if (generatedDoc) {
+        const wf = workflows.find((w) => w.id === id);
+        const actionTypes = new Set(
+          (wf?.steps ?? [])
+            .filter((s) => s.type === 'action')
+            .map((s) => s.action_type as string),
+        );
+        storePdfClienteScope(generatedDoc.filename, generatedDoc.cliente_slug);
+        const bytes = generatePdfBytes(generatedDoc.titulo, generatedDoc.conteudo, generatedDoc.cliente_nome);
+        if (actionTypes.has('salvar_pdf')) {
+          const access = getDriveBaseAccess();
+          if (access) void uploadFileToDrive(bytes, generatedDoc.filename, access.folderId, access.token);
+        }
+        if (actionTypes.has('baixar_pdf')) {
+          const blob = new Blob([bytes], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = generatedDoc.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      }
       setWorkflows((prev) =>
         prev.map((w) =>
           w.id === id

@@ -164,7 +164,7 @@ export function useWorkflowEventTrigger() {
 
           if (apiAvailable()) {
             try {
-              const result = await apiRunWorkflow(wf.id, { id: doc.id, title: doc.title, content: doc.content });
+              const result = await apiRunWorkflow(wf.id, { id: doc.id, title: doc.title, content: doc.content }, getDriveBaseAccess()?.token);
               // Busca run completo para detectar output de gerar_pdf
               let generatedDoc: GeneratedDoc | undefined;
               try {

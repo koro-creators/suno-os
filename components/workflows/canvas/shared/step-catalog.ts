@@ -1,16 +1,16 @@
 'use client';
 
-import { Branch, CloudUpload, Download, EventSchedule, Flash, Flow, Merge, Star, Tools, UserFollow } from '@carbon/icons-react';
+import { Branch, CloudUpload, DataBase, Download, EventSchedule, Flash, Flow, Image, Merge, Star, Tools, UserFollow } from '@carbon/icons-react';
 import type { CarbonIconType } from '@carbon/icons-react';
 import type { ToolDescriptor } from '@/lib/api';
 
 // Unified payload — used by NodePalette (drag) and CanvasContextMenu (click).
 export interface StepPayload {
-  step_type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger';
+  step_type: 'tool' | 'llm' | 'condition' | 'action' | 'hitl' | 'workflow' | 'merge' | 'trigger' | 'arquivos';
   tool_name?: string;
   agent_id?: string;
   condition_operator?: 'if_else';
-  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram' | 'salvar_pdf' | 'baixar_pdf';
+  action_type?: 'slack' | 'email' | 'whatsapp' | 'telegram' | 'salvar_pdf' | 'baixar_pdf' | 'banco_de_dados';
   trigger_type?: 'nova_reuniao';
   workflow_id?: string;
   merge_policy?: 'all' | 'any';
@@ -117,6 +117,14 @@ export const STEP_CATALOG: StepCatalogItem[] = [
     payload: { step_type: 'merge' },
     expandable: true,
   },
+  {
+    key: 'st-arquivos',
+    label: 'Arquivos',
+    description: 'Busca imagem do Google Drive.',
+    Icon: Image,
+    color: '#34A853',
+    payload: { step_type: 'arquivos', name: 'Google Drive Imagem' },
+  },
 ];
 
 export function buildSubItems(
@@ -158,8 +166,9 @@ export function buildSubItems(
   }
   if (key === 'st-action') {
     return [
-      { key: 'action-salvar-pdf', Icon: CloudUpload, iconColor: '#3B82F6', label: 'Salvar PDF no Drive', description: 'Salva o PDF gerado na pasta base do Drive.',     payload: { step_type: 'action' as const, action_type: 'salvar_pdf' as const, name: 'Salvar PDF no Drive' } },
-      { key: 'action-baixar-pdf', Icon: Download,    iconColor: '#8B5CF6', label: 'Baixar PDF',          description: 'Faz o download do PDF gerado no navegador.',   payload: { step_type: 'action' as const, action_type: 'baixar_pdf' as const, name: 'Baixar PDF'          } },
+      { key: 'action-salvar-pdf',    Icon: CloudUpload, iconColor: '#3B82F6', label: 'Salvar PDF no Drive', description: 'Salva o PDF gerado na pasta base do Drive.',                payload: { step_type: 'action' as const, action_type: 'salvar_pdf'    as const, name: 'Salvar PDF no Drive' } },
+      { key: 'action-baixar-pdf',    Icon: Download,    iconColor: '#8B5CF6', label: 'Baixar PDF',          description: 'Faz o download do PDF gerado no navegador.',            payload: { step_type: 'action' as const, action_type: 'baixar_pdf'    as const, name: 'Baixar PDF'          } },
+      { key: 'action-banco-dados',   Icon: DataBase,    iconColor: '#10B981', label: 'Banco de Dados',      description: 'Salva o output do agente em knowledge_documents.',       payload: { step_type: 'action' as const, action_type: 'banco_de_dados' as const, name: 'Banco de Dados'    } },
       { key: 'action-slack',      icon: '#', iconColor: '#4A154B', label: 'Slack',    description: 'Enviar mensagem para canal',  payload: { step_type: 'action' as const, action_type: 'slack'    as const, name: 'Slack'    } },
       { key: 'action-email',      icon: '@', iconColor: '#6366F1', label: 'Email',    description: 'Enviar e-mail',               payload: { step_type: 'action' as const, action_type: 'email'    as const, name: 'Email'    } },
       { key: 'action-whatsapp',   icon: 'W', iconColor: '#25D366', label: 'WhatsApp', description: 'Enviar mensagem WhatsApp',    payload: { step_type: 'action' as const, action_type: 'whatsapp' as const, name: 'WhatsApp' } },

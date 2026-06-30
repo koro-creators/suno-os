@@ -21,10 +21,14 @@ fallback decays to zero before sunset (Fase D / E).
 
 from __future__ import annotations
 
+import asyncio
+import base64
 import json
 import logging
 import operator
 import re
+import urllib.request
+import uuid
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Annotated, Any, Callable, TypedDict
@@ -67,6 +71,135 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Multimodal helpers — imagem do arquivos step para LLM com visão
+# ---------------------------------------------------------------------------
+
+
+def _clean_llm_output(text: str) -> str | dict | list:
+    """Strip markdown code blocks e tenta parsear JSON.
+
+    LLMs frequentemente retornam ```json ... ``` em vez de JSON puro.
+    Se o conteúdo interno for JSON válido (dict/list), retorna o objeto
+    diretamente — assim fica navegável via {{steps.id.campo}}.
+    Caso contrário, retorna a string limpa (sem o bloco de código).
+    """
+    if not isinstance(text, str):
+        return text
+    stripped = text.strip()
+    match = re.match(r"^```(?:json)?\s*\n?(.*?)\n?```\s*$", stripped, re.DOTALL)
+    inner = match.group(1).strip() if match else stripped
+    try:
+        parsed = json.loads(inner)
+        if isinstance(parsed, (dict, list)):
+            return parsed
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return inner
+
+
+def _fetch_image_bytes(url: str) -> tuple[str, bytes] | None:
+    """Sync: baixa URL pública e retorna (content_type, bytes).
+    Retorna None se a resposta não for uma imagem (ex.: página de auth)."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            ctype = resp.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
+            if not ctype.startswith("image/"):
+                return None
+            return ctype, resp.read()
+    except Exception as exc:
+        logger.debug("_fetch_image_bytes failed (%s): %s", url, exc)
+        return None
+
+
+def _fetch_image_bytes_authenticated(file_id: str, access_token: str) -> tuple[str, bytes] | None:
+    """Sync: baixa arquivo do Drive via API v3 com OAuth token."""
+    url = f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media"
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"Authorization": f"Bearer {access_token}", "User-Agent": "Mozilla/5.0"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            ctype = resp.headers.get("Content-Type", "image/jpeg").split(";")[0].strip()
+            if not ctype.startswith("image/"):
+                return None
+            return ctype, resp.read()
+    except Exception as exc:
+        logger.debug("_fetch_image_bytes_authenticated failed (%s): %s", file_id, exc)
+        return None
+
+
+def _get_drive_access_token(user_id: str) -> str | None:
+    """Busca o access_token OAuth do Drive do usuário na tabela drive_tokens."""
+    try:
+        try:
+            from models.drive_tokens import DriveToken
+        except ImportError:
+            from api.models.drive_tokens import DriveToken
+        session = get_sync_session()
+        try:
+            token = (
+                session.query(DriveToken)
+                .filter(DriveToken.user_id == user_id, DriveToken.revoked_at.is_(None))
+                .first()
+            )
+            if token and token.access_token:
+                return token.access_token
+        finally:
+            session.close()
+    except Exception as exc:
+        logger.debug("_get_drive_access_token failed for user %s: %s", user_id, exc)
+    return None
+
+
+async def _fetch_image_data_uri(
+    url: str,
+    user_id: str | None = None,
+    drive_access_token: str | None = None,
+) -> str | None:
+    """Fetch image como data URI base64.
+
+    Prioridade:
+    1. drive_access_token passado pelo frontend (token de sessão do usuário)
+    2. Token do banco drive_tokens (pode estar expirado)
+    3. Download público (só funciona para arquivos compartilhados publicamente)
+    """
+    file_id_match = re.search(r"[?&]id=([^&]+)|/d/([^/?]+)", url)
+    if file_id_match:
+        file_id = file_id_match.group(1) or file_id_match.group(2)
+        # 1. Token do frontend (prioridade máxima — sempre fresco)
+        token = drive_access_token
+        # 2. Fallback: buscar token no banco
+        if not token and user_id:
+            token = await asyncio.to_thread(_get_drive_access_token, user_id)
+        if token:
+            result = await asyncio.to_thread(_fetch_image_bytes_authenticated, file_id, token)
+            if result:
+                ctype, data = result
+                return f"data:{ctype};base64,{base64.b64encode(data).decode()}"
+
+    # 3. Fallback público
+    result = await asyncio.to_thread(_fetch_image_bytes, url)
+    if result is None:
+        return None
+    ctype, data = result
+    return f"data:{ctype};base64,{base64.b64encode(data).decode()}"
+
+
+def _find_arquivos_image(outputs: dict) -> str | None:
+    """Procura em steps_output por um resultado do tipo arquivos e retorna a URL."""
+    for v in outputs.values():
+        if (
+            isinstance(v, dict)
+            and v.get("file_id")
+            and "drive.google.com" in str(v.get("output", ""))
+        ):
+            return v["output"]
+    return None
+
+
 def _last_value(_old: str, new: str) -> str:
     """Reducer for `current_step`: concurrent writers (fan-in) just race to
     set "last one wins" — the field is informational only, never read back
@@ -83,6 +216,8 @@ class WorkflowState(TypedDict):
     workflow_id: str
     run_id: str
     client_id: str | None  # resolved from the run; powers client-scoped tools (ontologia)
+    user_id: str | None  # Firebase UID; used to fetch Drive OAuth token for image steps
+    drive_access_token: str | None  # OAuth do frontend — prioridade sobre drive_tokens DB
     # Annotated com reducers: nodes em paralelo (fan-out/fan-in, ex. condition
     # com 2 entradas in_a/in_b) escrevem essas chaves no mesmo superstep.
     # Sem reducer, LangGraph levanta INVALID_CONCURRENT_GRAPH_UPDATE.
@@ -159,6 +294,40 @@ def _get_tool_registry() -> dict:
     return _get_registry_fn()
 
 
+def _save_to_knowledge_documents(
+    title: str,
+    content: str,
+    client_slug: str | None,
+    created_by: str | None,
+) -> str:
+    """Insert a new document in knowledge_documents from workflow output. Returns the new doc id."""
+    try:
+        from models.knowledge import KnowledgeDocument
+    except ImportError:
+        from api.models.knowledge import KnowledgeDocument
+
+    session = get_sync_session()
+    try:
+        now = datetime.now(timezone.utc)
+        doc = KnowledgeDocument(
+            id=uuid.uuid4(),
+            title=title,
+            content_text=content,
+            file_type="txt",
+            tags=["workflow", "gerado"],
+            scope=[client_slug] if client_slug else [],
+            status="ready",
+            created_by=created_by,
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(doc)
+        session.commit()
+        return str(doc.id)
+    finally:
+        session.close()
+
+
 def _lookup_agent_context(agent_id: str | None) -> str | None:
     """Load agent instructions + assigned skill descriptions for an llm step.
 
@@ -221,7 +390,9 @@ async def _run_react_llm_step(
     default_model: str,
     extra_outputs: dict | None = None,
     run_context: dict | None = None,
-) -> str:
+    user_id: str | None = None,
+    drive_access_token: str | None = None,
+) -> str | dict | list:
     """ReAct tool-use loop: LLM decides which tools to invoke.
 
     Builds LangChain tools from connected tool steps, using each step's
@@ -275,21 +446,37 @@ async def _run_react_llm_step(
 
     llm = _get_llm(step.get("model") or default_model)
 
+    # Prepara conteúdo da mensagem — multimodal se houver imagem de step arquivos
+    image_url_react = _find_arquivos_image(effective_outputs)
+    if image_url_react:
+        data_uri_react = await _fetch_image_data_uri(
+            image_url_react, user_id=user_id, drive_access_token=drive_access_token
+        )
+        if data_uri_react:
+            resolved_content: Any = [
+                {"type": "image_url", "image_url": {"url": data_uri_react}},
+                {"type": "text", "text": resolved},
+            ]
+        else:
+            resolved_content = resolved
+    else:
+        resolved_content = resolved
+
     if not lc_tools:
         # No bindable tools — plain completion with agent context.
         msgs: list[Any] = []
         if agent_instructions:
             msgs.append(SystemMessage(content=agent_instructions))
-        msgs.append(HumanMessage(content=resolved))
+        msgs.append(HumanMessage(content=resolved_content))
         resp = await llm.ainvoke(msgs)
-        return _extract_text(resp.content)
+        return _clean_llm_output(_extract_text(resp.content))
 
     llm_with_tools = llm.bind_tools(lc_tools)
 
     msgs = []
     if agent_instructions:
         msgs.append(SystemMessage(content=agent_instructions))
-    msgs.append(HumanMessage(content=resolved))
+    msgs.append(HumanMessage(content=resolved_content))
 
     MAX_ITER = 5
     for _ in range(MAX_ITER):
@@ -297,7 +484,7 @@ async def _run_react_llm_step(
         msgs.append(resp)
 
         if not getattr(resp, "tool_calls", None):
-            return _extract_text(resp.content)
+            return _clean_llm_output(_extract_text(resp.content))
 
         for tc in resp.tool_calls:
             matched = next((t for t in lc_tools if t.name == tc["name"]), None)
@@ -313,6 +500,15 @@ async def _run_react_llm_step(
                 str(tool_output_raw) if not isinstance(tool_output_raw, str) else tool_output_raw
             )
             msgs.append(ToolMessage(content=tool_output_str, tool_call_id=tc["id"]))
+            # Quando gerar_pdf é chamado, injeta instrução para o LLM não adicionar
+            # mensagens de confirmação ("PDF gerado", "análise salva", etc.).
+            if tc["name"] == "gerar_pdf":
+                msgs.append(
+                    SystemMessage(
+                        content="Retorne APENAS o conteúdo da análise (campo 'conteudo'). "
+                        "NÃO adicione frases como 'PDF gerado', 'análise salva' ou similares."
+                    )
+                )
             if extra_outputs is not None:
                 for ts in embedded_tool_steps:
                     if ts.get("tool_name") == tc["name"] and ts["id"] not in extra_outputs:
@@ -322,7 +518,7 @@ async def _run_react_llm_step(
     for m in reversed(msgs):
         text = _extract_text(getattr(m, "content", None))
         if text:
-            return text
+            return _clean_llm_output(text)
     return ""
 
 
@@ -900,6 +1096,8 @@ class WorkflowCompiler:
                             "steps_output": state.get("steps_output") or {},
                             "client_id": state.get("client_id"),
                         },
+                        user_id=state.get("user_id"),
+                        drive_access_token=state.get("drive_access_token"),
                     )
                 else:
                     # Deterministic mode: run all tools first, then call LLM.
@@ -943,8 +1141,28 @@ class WorkflowCompiler:
                     if agent_instructions:
                         resolved_prompt = f"{agent_instructions}\n\n{resolved_prompt}"
                     llm = _get_llm(step.get("model") or default_model)
-                    response = await llm.ainvoke([HumanMessage(content=resolved_prompt)])
-                    result = response.content
+                    image_url = _find_arquivos_image(effective_outputs)
+                    if image_url:
+                        data_uri = await _fetch_image_data_uri(
+                            image_url,
+                            user_id=state.get("user_id"),
+                            drive_access_token=state.get("drive_access_token"),
+                        )
+                        if data_uri:
+                            human_content: list = [
+                                {"type": "image_url", "image_url": {"url": data_uri}},
+                                {"type": "text", "text": resolved_prompt},
+                            ]
+                        else:
+                            human_content = resolved_prompt
+                    else:
+                        human_content = resolved_prompt
+                    response = await llm.ainvoke([HumanMessage(content=human_content)])
+                    result = _clean_llm_output(
+                        response.content
+                        if isinstance(response.content, str)
+                        else str(response.content)
+                    )
 
             elif step_type == "hitl":
                 last_output = state.get("steps_output", {})
@@ -1021,6 +1239,57 @@ class WorkflowCompiler:
                         "status": "pending_client",
                         **(pdf_data or {"reason": "no_pdf_data"}),
                     }
+
+                elif action_type == "banco_de_dados":
+                    # Salva o output do step anterior em knowledge_documents.
+                    content_to_save: str | None = None
+                    title_to_save = "Documento gerado pelo agente"
+                    for v in reversed(list(state.get("steps_output", {}).values())):
+                        inner = v.get("output", v) if isinstance(v, dict) else v
+                        if isinstance(inner, dict):
+                            if inner.get("conteudo"):
+                                content_to_save = str(inner["conteudo"])
+                                title_to_save = str(inner.get("titulo", title_to_save))
+                                break
+                            if inner.get("content"):
+                                content_to_save = str(inner["content"])
+                                title_to_save = str(
+                                    inner.get("title", inner.get("titulo", title_to_save))
+                                )
+                                break
+                            meta_keys = ("status", "action_type", "saved_to", "error")
+                            non_meta = {k: v2 for k, v2 in inner.items() if k not in meta_keys}
+                            if non_meta:
+                                content_to_save = json.dumps(non_meta, ensure_ascii=False, indent=2)
+                                title_to_save = str(
+                                    inner.get("titulo", inner.get("title", title_to_save))
+                                )
+                                break
+                        elif isinstance(inner, str) and inner.strip():
+                            content_to_save = inner
+                            break
+                    if content_to_save:
+                        doc_id = await asyncio.to_thread(
+                            _save_to_knowledge_documents,
+                            title_to_save,
+                            content_to_save,
+                            state.get("client_id"),
+                            state.get("user_id"),
+                        )
+                        result = {
+                            "action_type": "banco_de_dados",
+                            "status": "salvo",
+                            "table": "knowledge_documents",
+                            "doc_id": doc_id,
+                            "titulo": title_to_save,
+                        }
+                    else:
+                        result = {
+                            "action_type": "banco_de_dados",
+                            "status": "erro",
+                            "reason": "sem_conteudo",
+                        }
+
                 else:
                     tool_name = step.get("tool_name", "")
                     wf_tool = _get_tool_registry().get(tool_name)
@@ -1100,6 +1369,25 @@ class WorkflowCompiler:
                     result["doc_title"] = trigger_doc.get("title")
                     result["doc_id"] = trigger_doc.get("id")
                     result["doc_content"] = trigger_doc.get("content", "")
+
+            elif step_type == "arquivos":
+                # Retorna metadados e URL de acesso da imagem no Google Drive.
+                # O token OAuth fica no cliente (picker); aqui construímos a URL
+                # pública de download para que steps downstream (ex.: llm com visão)
+                # possam referenciar o arquivo pelo campo `output`.
+                file_id = step.get("drive_file_id") or step_config.get("drive_file_id")
+                file_name = (
+                    step.get("drive_file_name") or step_config.get("drive_file_name") or "arquivo"
+                )
+                if not file_id:
+                    result = {"error": "drive_file_id não configurado — selecione uma imagem"}
+                else:
+                    result = {
+                        "output": f"https://drive.google.com/uc?export=download&id={file_id}",
+                        "file_id": file_id,
+                        "file_name": file_name,
+                        "view_url": f"https://drive.google.com/file/d/{file_id}/view",
+                    }
 
             else:
                 result = {"error": f"Unknown step type: {step_type}"}
